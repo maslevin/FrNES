@@ -289,7 +289,7 @@ int bf_char_index(char str)
 
 //WidthsArray must be NUM_CHARS bytes long
 //HeightsArray must be NUM_CHARS bytes long
-void bf_load_file_pvr(char* filename, uint32 PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray)
+void bf_load_file_pvr(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray)
 {
 	BMF_Character TempFont[NUM_CHARS];
 	uint16 TexBuffer[64*64];
@@ -315,7 +315,7 @@ void bf_load_file_pvr(char* filename, uint32 PVR_Offset, uint32 MaxBytesPerChar,
 						TexBuffer[j + (64 * k)] = 0x0000;
 		}
 
-		ta_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, MaxBytesPerChar);
+		pvr_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, MaxBytesPerChar);
 		WidthsArray[i] = TempFont[i].width;
 		HeightsArray[i] = TempFont[i].height;
 	
@@ -329,7 +329,7 @@ void bf_load_file_pvr(char* filename, uint32 PVR_Offset, uint32 MaxBytesPerChar,
 
 //WidthsArray must be NUM_CHARS bytes long
 //HeightsArray must be NUM_CHARS bytes long
-void bf_load_file_pvr_colors(char* filename, uint32 PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor)
+void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor)
 {
 	BMF_Character TempFont[NUM_CHARS];
 	uint16 TexBuffer[64*64];
@@ -355,7 +355,7 @@ void bf_load_file_pvr_colors(char* filename, uint32 PVR_Offset, uint32 MaxBytesP
 						TexBuffer[j + (64 * k)] = fontcolor;
 		}
 
-		ta_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, 64 * 64 * 2);
+		pvr_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, 64 * 64 * 2);
 		WidthsArray[i] = TempFont[i].width;
 		HeightsArray[i] = TempFont[i].height;
 	
@@ -367,77 +367,37 @@ void bf_load_file_pvr_colors(char* filename, uint32 PVR_Offset, uint32 MaxBytesP
 	bf_free_font(TempFont);
 }
 
-
-void bf_ta_submit_character(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height)
+void bf_ta_submit_character_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha)
 {
-	poly_hdr_t my_pheader;
-	vertex_ot_t my_vertex;
-	ta_poly_hdr_txr(&my_pheader, TA_TRANSLUCENT, TA_ARGB1555, 64, 64, PVR_Offset, TA_BILINEAR_FILTER);
-	ta_commit_poly_hdr(&my_pheader);
+	pvr_poly_hdr_t hdr;
+	pvr_vertex_t vert;
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
-	my_vertex.x = xposition;
-	my_vertex.y = yposition + screenheight;
-	my_vertex.z = zposition;
-	my_vertex.u = 0.0f;
-	my_vertex.v = ((float) height) / 64.0f;
-	my_vertex.a = 1.0f;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	my_vertex.dummy1 = 0;
-	my_vertex.dummy2 = 0;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	vert.flags = PVR_CMD_VERTEX;
+	vert.x = xposition;
+	vert.y = yposition + screenheight;
+	vert.z = zposition;
+	vert.u = 0;
+	vert.v = ((float) height) / 64.0f;
+	vert.argb = PVR_PACK_COLOR(alpha, 1.0f, 1.0f, 1.0f);
+	vert.oargb = PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	pvr_prim(&vert, sizeof(vert));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
-	my_vertex.y = yposition;
-	my_vertex.u = 0.0f;
-	my_vertex.v = 0.0f;
-	my_vertex.a = 1.0f;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	vert.y = yposition;
+	vert.v = 0;
+	pvr_prim(&vert, sizeof(vert));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
-	my_vertex.x = xposition + screenwidth;
-	my_vertex.y = yposition + screenheight;
-	my_vertex.u = ((float) width) / 64.0f;
-	my_vertex.v = ((float) height) / 64.0f;
-	my_vertex.a = 1.0f;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	vert.x = xposition + screenwidth;
+	vert.y = yposition + screenheight;
+	vert.u = ((float) width) / 64.0f;	
+	vert.v = ((float) height) / 64.0f;	
+	pvr_prim(&vert, sizeof(vert));
 
-	my_vertex.flags = TA_VERTEX_EOL;
-	my_vertex.y = yposition;
-	my_vertex.u = ((float) width) / 64.0f;
-	my_vertex.v = 0.0f;
-	my_vertex.a = 1.0f;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	vert.y = yposition;
+	vert.v = 0;
+	pvr_prim(&vert, sizeof(vert));
 }
 
-void bf_ta_submit_string(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string)
+void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha)
 {
 	int largestwidth;
 	int tempwidth;
@@ -474,109 +434,7 @@ void bf_ta_submit_string(uint32 PVR_Offset, float xposition, float yposition, fl
 	}
 }
 
-
-void bf_ta_submit_character_alpha(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha)
+void bf_ta_submit_string(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string)
 {
-	poly_hdr_t my_pheader;
-	vertex_ot_t my_vertex;
-	ta_poly_hdr_txr(&my_pheader, TA_TRANSLUCENT, TA_ARGB1555, 64, 64, PVR_Offset, TA_BILINEAR_FILTER);
-	ta_commit_poly_hdr(&my_pheader);
-
-	my_vertex.flags = TA_VERTEX_NORMAL;
-	my_vertex.x = xposition;
-	my_vertex.y = yposition + screenheight;
-	my_vertex.z = zposition;
-	my_vertex.u = 0.0f;
-	my_vertex.v = ((float) height) / 64.0f;
-	my_vertex.a = alpha;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	my_vertex.dummy1 = 0;
-	my_vertex.dummy2 = 0;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.flags = TA_VERTEX_NORMAL;
-	my_vertex.y = yposition;
-	my_vertex.u = 0.0f;
-	my_vertex.v = 0.0f;
-	my_vertex.a = alpha;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.flags = TA_VERTEX_NORMAL;
-	my_vertex.x = xposition + screenwidth;
-	my_vertex.y = yposition + screenheight;
-	my_vertex.u = ((float) width) / 64.0f;
-	my_vertex.v = ((float) height) / 64.0f;
-	my_vertex.a = alpha;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.flags = TA_VERTEX_EOL;
-	my_vertex.y = yposition;
-	my_vertex.u = ((float) width) / 64.0f;
-	my_vertex.v = 0.0f;
-	my_vertex.a = alpha;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
-}
-
-void bf_ta_submit_string_alpha(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha)
-{
-	int largestwidth;
-	int tempwidth;
-	int totalwidth;
-	int tempindex;
-	int i;
-	float xstart;
-	float xwidth;
-
-	largestwidth = 0;
-	totalwidth = 0;
-	for (i = 0; i < strlen(my_string); i++)
-	{
-		tempwidth = fontwidths[bf_char_index(my_string[i])];
-		totalwidth += tempwidth;
-		if (largestwidth < tempwidth)
-			largestwidth = tempwidth;
-	}
-	
-	xstart = xposition;
-	for (i = 0;	i < strlen(my_string); i++)
-	{
-		tempindex = bf_char_index(my_string[i]);
-		xwidth = ((float) fontwidths[tempindex]) / totalwidth * screenwidth;
-		if ((tempindex == 27) && (my_string[i] != (char) 98))
-		{
-			xstart += xwidth;		
-		}
-		else
-		{
-			bf_ta_submit_character_alpha(PVR_Offset + (tempindex * 64 * 64 * 2), xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex], alpha);
-			xstart += (xwidth - 2);
-		}
-	}
+	bf_ta_submit_string_alpha(PVR_Offset, xposition, yposition, zposition, screenwidth, screenheight, fontwidths, fontheights, my_string, 1.0f);
 }

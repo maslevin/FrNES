@@ -1,4 +1,4 @@
-#include <KOS.h>
+#include <kos.h>
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"

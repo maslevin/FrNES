@@ -11,7 +11,7 @@
 #ifndef PNESX_DRAWLINE_BG_ASM
 #define PNESX_DRAWLINE_BG_ASM
 
-#include <KOS.h>
+#include <kos.h>
 
 void pNesX_DrawLine_BG(PPU_Info* ppuinfo, void* PPUBANK, void* RenderBG, void* Palette);
 unsigned char pNesX_DrawLine_Spr(PPU_Info* ppuinfo, void* SPRRAM, void* CHARRAM, void* RenderSPR);

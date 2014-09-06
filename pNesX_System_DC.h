@@ -9,7 +9,7 @@
 #ifndef __PNESX_SYS_DC_H
 #define __PNESX_SYS_DC_H
 
-#include <KOS.h>
+#include <kos.h>
 #include "BMFFile.h"
 #include "BMFConsts.h"
 #include "BMF2PVR.h"
