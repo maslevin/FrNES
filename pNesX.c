@@ -12,7 +12,6 @@
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 
-#include <kos.h>
 #include "pNesX.h"
 #include "pNesX_System.h"
 #include "pNesX_Mapper.h"

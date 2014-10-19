@@ -1,5 +1,5 @@
 /*
-File:        BMFFile.c
+File:        BMFFont.c
 Project:     Platform Development Tools
 Date:        December. 11th, 2000
 Programmer:  ReGex
@@ -22,11 +22,12 @@ uint32 myfd;
 int bf_open(char* filename)
 {
 	filesize = 0;
-	myfd = iso_open(filename, O_RDONLY);
+//	myfd = iso_open(filename, O_RDONLY);
+	myfd = fs_open(filename, O_RDONLY);	
 	//Read up to 1 meg. of file
-	if (myfd >= 0)
+	if (myfd > 0)
 	{
-		filesize = iso_read(myfd, (void *) my_cd_buffer, BUFFER_SIZE );
+		filesize = fs_read(myfd, (void *) my_cd_buffer, BUFFER_SIZE );
 		my_file_pointer = my_cd_buffer;
 		return 1;
 	}
@@ -36,7 +37,7 @@ int bf_open(char* filename)
 
 void bf_close()
 {
-	iso_close(myfd);
+	fs_close(myfd);
 	my_cd_buffer = NULL;
 	my_file_pointer = NULL;
 }

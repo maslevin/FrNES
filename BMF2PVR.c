@@ -289,13 +289,14 @@ int bf_char_index(char str)
 
 //WidthsArray must be NUM_CHARS bytes long
 //HeightsArray must be NUM_CHARS bytes long
-void bf_load_file_pvr(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray)
+void bf_load_file_pvr(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, pvr_poly_hdr_t* hdr)
 {
 	BMF_Character TempFont[NUM_CHARS];
 	uint16 TexBuffer[64*64];
 	uint32 i;
 	uint32 j;
 	uint32 k;
+	pvr_poly_cxt_t tmp;
 
 	//Flash temp ram
 	for (i = 0; i < (64*64); i++)
@@ -325,21 +326,26 @@ void bf_load_file_pvr(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, 
 	}
 
 	bf_free_font(TempFont);
+
+    pvr_poly_cxt_txr(&tmp, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED,
+                     8192, 64, PVR_Offset, PVR_FILTER_NONE);
+    pvr_poly_compile(hdr, &tmp);	
 }
 
 //WidthsArray must be NUM_CHARS bytes long
 //HeightsArray must be NUM_CHARS bytes long
-void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor)
+void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor, pvr_poly_hdr_t* hdr)
 {
-	BMF_Character TempFont[NUM_CHARS];
-	uint16 TexBuffer[64*64];
+/*	BMF_Character TempFont[NUM_CHARS];
+	uint16* texptr = (uint16*)PVR_Offset;
 	uint32 i;
 	uint32 j;
 	uint32 k;
+	pvr_poly_cxt_t tmp;
 
 	//Flash temp ram
-	for (i = 0; i < (64*64); i++)
-		TexBuffer[i] = 0x0000;
+	for (i = 0; i < (64*64*66); i++)
+		texptr[i] = 0x0000;
 
 	bf_load_file(filename, TempFont);
 
@@ -350,33 +356,31 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 			for (j = 0; j < (TempFont[i].width); j++)
 				for (k = 0; k < (TempFont[i].height); k++)
 					if (TempFont[i].bitdata[j + (TempFont[i].width * k)] == 1)
-						TexBuffer[j + (64 * k)] = bgcolor;
+						texptr[(i * 64) + j + (8192 * k)] = bgcolor;
 					else
-						TexBuffer[j + (64 * k)] = fontcolor;
+						texptr[(i * 64) + j + (8192 * k)] = fontcolor;
 		}
 
-		pvr_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, 64 * 64 * 2);
 		WidthsArray[i] = TempFont[i].width;
 		HeightsArray[i] = TempFont[i].height;
-	
-		//Flash Temp Ram
-		for (j = 0; j < 64*64; j++)
-			TexBuffer[j] = 0x0000;
 	}
 
 	bf_free_font(TempFont);
+
+    pvr_poly_cxt_txr(&tmp, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED,
+                     8192, 64, PVR_Offset, PVR_FILTER_NONE);
+    pvr_poly_compile(hdr, &tmp);	*/
 }
 
-void bf_ta_submit_character_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha)
+void bf_ta_submit_character_alpha(float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha, float u)
 {
-	pvr_poly_hdr_t hdr;
-	pvr_vertex_t vert;
+/*	pvr_vertex_t vert;
 
 	vert.flags = PVR_CMD_VERTEX;
 	vert.x = xposition;
 	vert.y = yposition + screenheight;
 	vert.z = zposition;
-	vert.u = 0;
+	vert.u = u;
 	vert.v = ((float) height) / 64.0f;
 	vert.argb = PVR_PACK_COLOR(alpha, 1.0f, 1.0f, 1.0f);
 	vert.oargb = PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
@@ -388,24 +392,26 @@ void bf_ta_submit_character_alpha(void* PVR_Offset, float xposition, float yposi
 
 	vert.x = xposition + screenwidth;
 	vert.y = yposition + screenheight;
-	vert.u = ((float) width) / 64.0f;	
+	vert.u = u + ((float) width) / 64.0f;	
 	vert.v = ((float) height) / 64.0f;	
 	pvr_prim(&vert, sizeof(vert));
 
+	vert.flags = PVR_CMD_VERTEX_EOL;
 	vert.y = yposition;
 	vert.v = 0;
-	pvr_prim(&vert, sizeof(vert));
+	pvr_prim(&vert, sizeof(vert));*/
 }
 
-void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha)
+void bf_ta_submit_string_alpha(pvr_poly_hdr_t* font_header, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha)
 {
-	int largestwidth;
+/*	int largestwidth;
 	int tempwidth;
 	int totalwidth;
 	int tempindex;
 	int i;
 	float xstart;
 	float xwidth;
+	float u;
 
 	largestwidth = 0;
 	totalwidth = 0;
@@ -416,11 +422,14 @@ void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float ypositio
 		if (largestwidth < tempwidth)
 			largestwidth = tempwidth;
 	}
+
+	pvr_prim(font_header, sizeof(pvr_poly_hdr_t));
 	
 	xstart = xposition;
 	for (i = 0;	i < strlen(my_string); i++)
 	{
 		tempindex = bf_char_index(my_string[i]);
+		u = ((float)tempindex / 66.0f) * 0.515625f;
 		xwidth = ((float) fontwidths[tempindex]) / totalwidth * screenwidth;
 		if ((tempindex == 27) && (my_string[i] != (char) 98))
 		{
@@ -428,13 +437,13 @@ void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float ypositio
 		}
 		else
 		{
-			bf_ta_submit_character(PVR_Offset + (tempindex * 64 * 64 * 2), xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex]);
+			bf_ta_submit_character_alpha(xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex], alpha, u);
 			xstart += (xwidth - 2);
 		}
-	}
+	}*/
 }
 
-void bf_ta_submit_string(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string)
+void bf_ta_submit_string(pvr_poly_hdr_t* font_header, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string)
 {
-	bf_ta_submit_string_alpha(PVR_Offset, xposition, yposition, zposition, screenwidth, screenheight, fontwidths, fontheights, my_string, 1.0f);
+//	bf_ta_submit_string_alpha(font_header, xposition, yposition, zposition, screenwidth, screenheight, fontwidths, fontheights, my_string, 1.0f);
 }

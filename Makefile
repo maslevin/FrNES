@@ -1,15 +1,30 @@
-# KallistiOS 1.1.5
+# KallistiOS 2.0.0
 #
-# FrNES 0.60/Makefile
-# (c)2001 ReGex
+# FrNES 1.0/Makefile
+# (c)2014 Matt Slevinsky
+#
 
+all: rm-elf frnes.elf
 
-BIN = pNesX
-#OBJS = BMFFile.o pNesX_System_DC.o pNesX.o TextWindow.o pNesX_Sound_DC.o K6502.o vmu_dc.o K6502_rw.o BMF2PVR.o ROMLoad.o pNesX_Mapper.o sincos.o aica_fw.o
-#OBJS = BMFFile.o pNesX_System_DC.o pNesX_DrawLine_Spr_Asm.o pNesX_DrawLine_BG_Asm.o pNesX_DrawLine_Merge_Asm.o pNesX_BuildCharAsm.o pNesX_PPU_DC.o pNesX.o TextWindow.o pNesX_Sound_APU.o pNesX_Sound_DC.o K6502.o vmu_dc.o K6502_rw.o BMF2PVR.o ROMLoad.o pNesX_Mapper.o aica_fw.o
-#OBJS = ROMLoad.o pNesX_Sound_APU.o aica_fw.o K6502_rw.o pNesX_DrawLine_BG_C.o pNesX_BuildCharAsm.o pNesX_Sound_DC.o K6502.o pNesX_PPU_DC.o pNesX_DrawLine_Spr_C_Map9.o pNesX_DrawLine_BG_C_Map9.o vmu_dc.o BMF2PVR.o pNesX_DrawLine_Spr_Asm.o pNesX.o pNesX_Mapper.o pNesX_Utils.o BMFFile.o GUI_VideoPage.o GUI_SystemPage.o GUI_ControlPage.o GUI_GUIPage.o pNesX_System_DC.o TextWindow.o 
-OBJS = ROMLoad.o pNesX_Sound_DC.o aica_fw.o K6502_rw.o pNesX_Sound_APU.o pNesX_BuildCharAsm.o K6502.o pNesX_DrawLine_Spr_Asm.o pNesX_PPU_DC.o pNesX_DrawLine_BG_C.o pNesX_DrawLine_Spr_C_Map9.o pNesX_DrawLine_BG_C_Map9.o BMF2PVR.o pNesX.o pNesX_Mapper.o pNesX_Utils.o BMFFile.o GUI_VideoPage.o GUI_SystemPage.o GUI_ControlPage.o GUI_GUIPage.o pNesX_System_DC.o vmu_dc.o TextWindow.o FrNESImg.o
+KOS_ROMDISK_DIR = romdisk
+include $(KOS_BASE)/Makefile.rules
 
-#pNesX_DrawLine_BG_C.o pNesX_DrawLine_Spr_C.o
+#OBJS = pNesX_System_DC.o pNesX_Utils.o TextWindow.o BMFFile.o BMF2PVR.o romdisk.o
+OBJS = pNesX_System_DC.o BMFont.o romdisk.o
 
-include ../Makefile.prefab
+clean:
+	rm -f frnes.elf $(OBJS)
+
+rm-elf:
+	rm -f frnes.elf
+	rm -f romdisk.img
+
+frnes.elf: $(OBJS)
+	kos-cc -o frnes.elf $(OBJS) -lpng -lz -lm
+
+run: frnes.elf
+	$(KOS_LOADER) frnes.elf
+
+dist:
+	rm -f $(OBJS) romdisk.*
+	$(KOS_STRIP) frnes.elf

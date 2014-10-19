@@ -31,8 +31,8 @@ extern BMF_Character largefont[];
 extern BMF_Character medfont[];
 extern BMF_Character smallfont[];
 
-extern uint32 PVR_MainWindow_Offset;
-extern uint32 PVR_SmallWindow_Offset;
+extern void* PVR_MainWindow_Offset;
+extern void* PVR_SmallWindow_Offset;
 
 extern int keyhit;
 extern int invalida;

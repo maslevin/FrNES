@@ -514,7 +514,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle)
 				tempbuffer[index - startindex] = tempptr[index];
 				index++;
 			}
-			tempbuffer[index - startindex] = ((char)NULL);
+			tempbuffer[index - startindex] = (char)NULL;
 
 			//If checked was found
 			if (strstr(tempptr, CHECKBOX_CHECKED) != NULL)

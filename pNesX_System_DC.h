@@ -9,12 +9,7 @@
 #ifndef __PNESX_SYS_DC_H
 #define __PNESX_SYS_DC_H
 
-#include <kos.h>
-#include "BMFFile.h"
-#include "BMFConsts.h"
-#include "BMF2PVR.h"
-#include "TextWindow.h"
-#include "ROMLoad.h"
+#include "pNesX.h"
 
 //#define table for GUI
 #define PAGE_ROMSELECT          0
@@ -35,7 +30,7 @@
 #define MENUNUM_HELP            7
 #define MENUNUM_CREDITS         8
 
-void pNesX_Texture_Write( void *dest, void* src);
+void pNesX_Texture_Write(void *dest, void* src);
 void pNesX_Texture_Fill(void *dest, uint32 val);
 
 void pNesX_StartLog ();
