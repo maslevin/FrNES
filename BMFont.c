@@ -184,7 +184,7 @@ void readPage(BMFont* font, char* pagePath) {
 	uint32 row_stride;   /* physical row width in output buffer */
 	uint32 channels;           /* 3 for RGB 4 for RGBA */
 	uint32 w,h;
-	uint32 mask = PNG_NO_ALPHA;
+	uint32 mask = PNG_MASK_ALPHA;
 
 	FILE* fd = fopen(pagePath, "r");
 	if (fd != NULL) {
@@ -396,7 +396,7 @@ void destroy_BMF(BMFont* font) {
 	deleteAllPages(font);
 }
 
-void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidth, int texHeight) {
+void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidth, int texHeight, int baseline) {
     pvr_vertex_t    vert;
     float           u1, v1, u2, v2;
 
@@ -404,12 +404,11 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     v1 = (float)descriptor -> srcY / (float)texHeight;
     u2 = ((float)descriptor -> srcX + (float)descriptor -> srcW) / (float)texWidth;
     v2 = ((float)descriptor -> srcY + (float)descriptor -> srcH) / (float)texHeight;
-
-    printf("drawchar: %c x:%f y:%f u1:%f v1:%f u2:%f v2:%f\n", (char)descriptor -> id, (double)xPos, (double)yPos, (double)u1, (double)v1, (double)u2, (double)v2);
+//    printf("drawchar: %c x:%f y:%f u1:%f v1:%f u2:%f v2:%f\n", (char)descriptor -> id, (double)xPos, (double)yPos, (double)u1, (double)v1, (double)u2, (double)v2);
 
     vert.flags = PVR_CMD_VERTEX;
     vert.x = xPos;
-    vert.y = yPos + descriptor -> srcH;
+    vert.y = yPos + baseline;
     vert.z = 514.0f;
     vert.u = u1;
     vert.v = v2;
@@ -417,19 +416,19 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     vert.oargb = 0;
     pvr_prim(&vert, sizeof(vert));
 
-    vert.y = yPos;
+    vert.y = yPos + baseline - descriptor -> srcH;
     vert.u = u1;
     vert.v = v1;
     pvr_prim(&vert, sizeof(vert));
 
     vert.x = xPos + descriptor -> srcW;
-    vert.y = yPos + descriptor -> srcH;
+    vert.y = yPos + baseline;
     vert.u = u2;
     vert.v = v2;
     pvr_prim(&vert, sizeof(vert));
 
     vert.flags = PVR_CMD_VERTEX_EOL;
-    vert.y = yPos;
+    vert.y = yPos + baseline - descriptor -> srcH;
     vert.u = u2;
     vert.v = v1;
     pvr_prim(&vert, sizeof(vert));	
@@ -452,15 +451,15 @@ void drawString(BMFont* font, char* string, float xPos, float yPos) {
 		HASH_FIND_INT(*descriptors, &id, descriptor);
 		if (descriptor != NULL) {
 			if (descriptor -> page != currentPage) {
-				printf("Selected texture at index %i\n", descriptor -> page);
+				//printf("Selected texture at index %i\n", descriptor -> page);
 
 				page = (BMFPage*)utarray_eltptr(font -> pages, descriptor -> page);
 
 				if (page != NULL) {
 					currentPage = descriptor -> page;
-					printf("Load font texture of resolution %i x %i\n", (short)page -> width, (short)page -> height);
+					//printf("Load font texture of resolution %i x %i\n", (short)page -> width, (short)page -> height);
 					pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
-			    	pvr_poly_cxt_txr(&cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565 | PVR_TXRFMT_NONTWIDDLED, page -> width, page -> height, page -> texture, PVR_FILTER_NONE);
+			    	pvr_poly_cxt_txr(&cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, page -> width, page -> height, page -> texture, PVR_FILTER_NONE);
 			    	pvr_poly_compile(&hdr, &cxt);
     				pvr_prim(&hdr, sizeof(hdr));
 			    } else {
@@ -469,7 +468,7 @@ void drawString(BMFont* font, char* string, float xPos, float yPos) {
 			}
 
 			if (currentPage != -1) {
-				drawChar(descriptor, drawX, yPos, page -> width, page -> height);
+				drawChar(descriptor, drawX, yPos, page -> width, page -> height, (int)font -> base);
 			}
 
 			drawX += descriptor -> xAdv;

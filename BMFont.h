@@ -65,6 +65,7 @@ typedef struct BMFPage {
 } BMFPage;
 
 BMFont* load_BMF(const char* filepath);
+void drawString(BMFont* font, char* string, float xPos, float yPos);
 void destroy_BMF(BMFont* font);
 
 #endif
