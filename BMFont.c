@@ -139,6 +139,12 @@ void png_copy_texture(uint8 *buffer, uint16 *temp_tex,
   uint32 i,j;
   uint16 *ourbuffer;
   uint8 *pRow;
+
+  if (channels == 3) {
+  	printf("Detected 3 color channel mode\n");
+  } else if (channels == 4) {
+  	printf("Detected 4 color channel mode\n");
+  }
   
   for(i = 0; i < h; i++)
   {
@@ -147,7 +153,6 @@ void png_copy_texture(uint8 *buffer, uint16 *temp_tex,
     
     if (channels == 3)
     {
-    	//printf("Detected 3 color channel mode\n");
       if (mask == PNG_NO_ALPHA)
         for(j = 0; j < w; j++)
           ourbuffer[j] = LOAD565(pRow[j*3], pRow[j*3+1], pRow[j*3+2]);
@@ -161,18 +166,24 @@ void png_copy_texture(uint8 *buffer, uint16 *temp_tex,
     }
     else if (channels == 4)
     {
-    	//printf("Detected 4 color channel mode\n");    	
       if (mask == PNG_NO_ALPHA)
       {
         for(j = 0; j < w; j++)
           ourbuffer[j] = LOAD565(pRow[j*4], pRow[j*4+1], pRow[j*4+2]);
       }
       else if (mask == PNG_MASK_ALPHA)
-        for(j = 0; j < w; j++)
+        for(j = 0; j < w; j++) {
           ourbuffer[j] = LOAD1555(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
+        }
       else if (mask == PNG_FULL_ALPHA)
-        for(j = 0; j < w; j++)
-          ourbuffer[j] = LOAD4444(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
+        for(j = 0; j < w; j++) {
+        	if (pRow[j*4+3] != 0) {
+          		ourbuffer[j] = LOAD4444(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
+          	} else {
+          		ourbuffer[j] = 0x0000;
+          	}
+//          printf("RGBA : %i %i %i %i converted to %04x\n", pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3], ourbuffer[j]);          
+         }
     }
   }
 }
@@ -184,7 +195,7 @@ void readPage(BMFont* font, char* pagePath) {
 	uint32 row_stride;   /* physical row width in output buffer */
 	uint32 channels;           /* 3 for RGB 4 for RGBA */
 	uint32 w,h;
-	uint32 mask = PNG_MASK_ALPHA;
+	uint32 mask = PNG_FULL_ALPHA;
 
 	FILE* fd = fopen(pagePath, "r");
 	if (fd != NULL) {
@@ -412,7 +423,7 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     vert.z = 514.0f;
     vert.u = u1;
     vert.v = v2;
-    vert.argb = PVR_PACK_COLOR(0.0f, 1.0f, 1.0f, 1.0f);
+    vert.argb = PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
     vert.oargb = 0;
     pvr_prim(&vert, sizeof(vert));
 
@@ -434,7 +445,7 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     pvr_prim(&vert, sizeof(vert));	
 }
 
-void drawString(BMFont* font, char* string, float xPos, float yPos) {
+void drawString(BMFont* font, int currentList, char* string, float xPos, float yPos) {
     pvr_poly_cxt_t cxt;
     pvr_poly_hdr_t hdr;
 
@@ -458,8 +469,8 @@ void drawString(BMFont* font, char* string, float xPos, float yPos) {
 				if (page != NULL) {
 					currentPage = descriptor -> page;
 					//printf("Load font texture of resolution %i x %i\n", (short)page -> width, (short)page -> height);
-					pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
-			    	pvr_poly_cxt_txr(&cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, page -> width, page -> height, page -> texture, PVR_FILTER_NONE);
+					pvr_poly_cxt_col(&cxt, currentList);
+			    	pvr_poly_cxt_txr(&cxt, currentList, PVR_TXRFMT_ARGB4444 | PVR_TXRFMT_NONTWIDDLED, page -> width, page -> height, page -> texture, PVR_FILTER_BILINEAR);
 			    	pvr_poly_compile(&hdr, &cxt);
     				pvr_prim(&hdr, sizeof(hdr));
 			    } else {

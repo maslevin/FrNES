@@ -411,8 +411,7 @@ extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);	
 KOS_INIT_ROMDISK(romdisk);
 
-uint16 MakeRGB(int red, int green, int blue)
-{
+uint16 MakeRGB(int red, int green, int blue) {
 	return ((red << 10 | green << 5 | blue << 0) | 0x8000);
 }
 
@@ -420,11 +419,8 @@ uint16 MakeRGB(int red, int green, int blue)
 void draw_screen(BMFont* font) {
 	pvr_vertex_t my_vertex;
 
-	vid_border_color(255, 0, 0);
 	pvr_wait_ready();
-	vid_border_color(0, 255, 0);
 	pvr_scene_begin();
-
 
 	pvr_list_begin(PVR_LIST_OP_POLY);
 
@@ -455,9 +451,16 @@ void draw_screen(BMFont* font) {
 	my_vertex.argb = PVR_PACK_COLOR(1.0f, 0.5f, 0.5f, 0.5f);	
 	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	drawString(font, "Test", 10.0f, 10.0f);
+	drawString(font, PVR_LIST_OP_POLY, "Test", 10.0f, 30.0f);
 
 	pvr_list_finish();
+
+	pvr_list_begin(PVR_LIST_TR_POLY);
+
+	drawString(font, PVR_LIST_TR_POLY, "Test", 10.0f, 10.0f);
+
+	pvr_list_finish();
+
 /*
 	pvr_list_begin(PVR_LIST_OP_POLY);
 
@@ -536,8 +539,6 @@ void draw_screen(BMFont* font) {
 //	pvr_list_finish();
 
 	pvr_scene_finish();	
-
-	vid_border_color(255, 255, 0);
 }
 
 /*
@@ -1057,6 +1058,8 @@ int main()
 	} else {
 		printf("Loaded font\n");
 	}
+
+	printf("Font baseline : %i\n", (int)font -> base);
 
 	//Christmas Colors
 /*	GUI_BGColor = 0x0000FF80;
