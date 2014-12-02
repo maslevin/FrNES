@@ -451,13 +451,11 @@ void draw_screen(BMFont* font) {
 	my_vertex.argb = PVR_PACK_COLOR(1.0f, 0.5f, 0.5f, 0.5f);	
 	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	drawString(font, PVR_LIST_OP_POLY, "Test", 10.0f, 30.0f);
-
 	pvr_list_finish();
 
 	pvr_list_begin(PVR_LIST_TR_POLY);
 
-	drawString(font, PVR_LIST_TR_POLY, "Test", 10.0f, 10.0f);
+	drawString(font, PVR_LIST_TR_POLY, "Test", 10.0f, 10.0f, PVR_PACK_COLOR(1.0f, 0.0f, 0.0f, 0.0f));
 
 	pvr_list_finish();
 

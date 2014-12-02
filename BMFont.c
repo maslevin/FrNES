@@ -407,7 +407,7 @@ void destroy_BMF(BMFont* font) {
 	deleteAllPages(font);
 }
 
-void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidth, int texHeight, int baseline) {
+void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidth, int texHeight, int baseline, uint32 color) {
     pvr_vertex_t    vert;
     float           u1, v1, u2, v2;
 
@@ -415,7 +415,6 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     v1 = (float)descriptor -> srcY / (float)texHeight;
     u2 = ((float)descriptor -> srcX + (float)descriptor -> srcW) / (float)texWidth;
     v2 = ((float)descriptor -> srcY + (float)descriptor -> srcH) / (float)texHeight;
-//    printf("drawchar: %c x:%f y:%f u1:%f v1:%f u2:%f v2:%f\n", (char)descriptor -> id, (double)xPos, (double)yPos, (double)u1, (double)v1, (double)u2, (double)v2);
 
     vert.flags = PVR_CMD_VERTEX;
     vert.x = xPos;
@@ -423,7 +422,7 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     vert.z = 514.0f;
     vert.u = u1;
     vert.v = v2;
-    vert.argb = PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
+    vert.argb = color;
     vert.oargb = 0;
     pvr_prim(&vert, sizeof(vert));
 
@@ -445,7 +444,7 @@ void drawChar(BMFCharDescriptor* descriptor, float xPos, float yPos, int texWidt
     pvr_prim(&vert, sizeof(vert));	
 }
 
-void drawString(BMFont* font, int currentList, char* string, float xPos, float yPos) {
+void drawString(BMFont* font, int currentList, char* string, float xPos, float yPos, uint32 color) {
     pvr_poly_cxt_t cxt;
     pvr_poly_hdr_t hdr;
 
@@ -479,7 +478,7 @@ void drawString(BMFont* font, int currentList, char* string, float xPos, float y
 			}
 
 			if (currentPage != -1) {
-				drawChar(descriptor, drawX, yPos, page -> width, page -> height, (int)font -> base);
+				drawChar(descriptor, drawX, yPos, page -> width, page -> height, (int)font -> base, color);
 			}
 
 			drawX += descriptor -> xAdv;

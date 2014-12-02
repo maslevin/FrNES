@@ -11,7 +11,7 @@ Description: A set of functions to draw a text window suitable for a GUI
 
 #include <kos.h>
 #include <string.h>
-#include "BMFFile.h"
+#include "BMFont.h"
 
 typedef struct
 {
@@ -61,8 +61,8 @@ typedef struct
 	int Highlighted_Index;
 
 	//Font Attributes
-	BMF_Character* Header_Font;
-	BMF_Character* Item_Font;
+/*	BMF_Character* Header_Font;
+	BMF_Character* Item_Font;*/
 
 	//Target Attributes
 	uint16* Target_Buffer;
