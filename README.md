@@ -1,0 +1,5 @@
+FrNES is an NES emulator for the Sega Dreamcast console.  It was based around Racoon's pNESx emulator for the original PlayStation.
+
+In 2000, I had been working on a port of Hu-Go the PC Engine emulator to the Dreamcast and ran into a few issues with the port.  I found the pNESx source online and decided to take my working menu code from the Hu-Go port and hook it up to the pNESx emulator core.  The initial port took only a few hours to get running as the playstation code translated quite well to the libdream APIs which were available at the time.  A month or so later I released the emulator to the DC Scene and spent the next year or so improving elements of the emulator.  I added the Nofrendo sound code and implemented some of the more popular mappers, and called it quits after a Christmas release of the emulator in 2002.
+
+This last year I decided to dig out the source code and try to build it against KOS 2.0.0.  Some work has been done to get the front end to work with modern KOS.  This project is sort of a hobby project, although I don't have a lot of time to put into it.  Stay tuned, some day there may be a new version.
