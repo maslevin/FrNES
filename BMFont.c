@@ -136,64 +136,57 @@ void readCommonBlock(uint32 fd, BMFont* font, int blockSize, int* outlineThickne
 void png_copy_texture(uint8 *buffer, uint16 *temp_tex,
                       uint32 channels, uint32 stride,
                       uint32 mask, uint32 w, uint32 h) {
-  uint32 i,j;
-  uint16 *ourbuffer;
-  uint8 *pRow;
+	uint32 i,j;
+	uint16 *ourbuffer;
+	uint8 *pRow;
 
-  if (channels == 3) {
-  	printf("Detected 3 color channel mode\n");
-  } else if (channels == 4) {
-  	printf("Detected 4 color channel mode\n");
-  }
-  
-  for(i = 0; i < h; i++)
-  {
-    pRow = &buffer[i*stride];
-    ourbuffer = &temp_tex[i*w];
-    
-    if (channels == 3)
-    {
-      if (mask == PNG_NO_ALPHA)
-        for(j = 0; j < w; j++)
-          ourbuffer[j] = LOAD565(pRow[j*3], pRow[j*3+1], pRow[j*3+2]);
-      else if (mask == PNG_MASK_ALPHA)
-        for(j = 0; j < w; j++)
-          ourbuffer[j] = LOAD1555(pRow[j*3],pRow[j*3+1],pRow[j*3+2],255);
-      else if (mask == PNG_FULL_ALPHA)
-        for(j = 0; j < w; j++)
-          ourbuffer[j] = LOAD4444(pRow[j*3],pRow[j*3+1],pRow[j*3+2],255);
-          
-    }
-    else if (channels == 4)
-    {
-      if (mask == PNG_NO_ALPHA)
-      {
-        for(j = 0; j < w; j++)
-          ourbuffer[j] = LOAD565(pRow[j*4], pRow[j*4+1], pRow[j*4+2]);
-      }
-      else if (mask == PNG_MASK_ALPHA)
-        for(j = 0; j < w; j++) {
-          ourbuffer[j] = LOAD1555(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
-        }
-      else if (mask == PNG_FULL_ALPHA)
-        for(j = 0; j < w; j++) {
-        	if (pRow[j*4+3] != 0) {
-          		ourbuffer[j] = LOAD4444(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
-          	} else {
-          		ourbuffer[j] = 0x0000;
-          	}
-//          printf("RGBA : %i %i %i %i converted to %04x\n", pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3], ourbuffer[j]);          
-         }
-    }
-  }
+	if (channels == 3) {
+		printf("Detected 3 color channel mode\n");
+	} else if (channels == 4) {
+		printf("Detected 4 color channel mode\n");
+	}
+
+	for (i = 0; i < h; i++) {
+		pRow = &buffer[i*stride];
+		ourbuffer = &temp_tex[i*w];
+
+		if (channels == 3) {
+			if (mask == PNG_NO_ALPHA)
+				for(j = 0; j < w; j++)
+					ourbuffer[j] = LOAD565(pRow[j*3], pRow[j*3+1], pRow[j*3+2]);
+			else if (mask == PNG_MASK_ALPHA)
+				for(j = 0; j < w; j++)
+					ourbuffer[j] = LOAD1555(pRow[j*3],pRow[j*3+1],pRow[j*3+2],255);
+			else if (mask == PNG_FULL_ALPHA)
+				for(j = 0; j < w; j++)
+					ourbuffer[j] = LOAD4444(pRow[j*3],pRow[j*3+1],pRow[j*3+2],255);
+		} else if (channels == 4) {
+		if (mask == PNG_NO_ALPHA) {
+			for(j = 0; j < w; j++) {
+				ourbuffer[j] = LOAD565(pRow[j*4], pRow[j*4+1], pRow[j*4+2]);
+			}
+		} else if (mask == PNG_MASK_ALPHA) {
+			for(j = 0; j < w; j++) {
+				ourbuffer[j] = LOAD1555(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
+			}
+		} else if (mask == PNG_FULL_ALPHA)
+			for(j = 0; j < w; j++) {
+				if (pRow[j*4+3] != 0) {
+					ourbuffer[j] = LOAD4444(pRow[j*4],pRow[j*4+1],pRow[j*4+2],pRow[j*4+3]);
+				} else {
+					ourbuffer[j] = 0x0000;
+				}
+			}
+		}
+	}
 }
 
 //--END
 
 void readPage(BMFont* font, char* pagePath) {
-	uint8 *buffer;            /* Output row buffer */
+	uint8 *buffer;       /* Output row buffer */
 	uint32 row_stride;   /* physical row width in output buffer */
-	uint32 channels;           /* 3 for RGB 4 for RGBA */
+	uint32 channels;     /* 3 for RGB 4 for RGBA */
 	uint32 w,h;
 	uint32 mask = PNG_FULL_ALPHA;
 

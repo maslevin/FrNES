@@ -86,6 +86,7 @@ struct NES_ROM* loadRom(char* path) {
 				rom -> mirroringMode = VERTICAL_MIRRORING;
 			}
 
+			rom -> fourScreenVRAMEnabled = ((header -> flag6 & FLAG_FOUR_SCREEN_VRAM) != 0);
 			rom -> SRAMPresent = ((header -> flag6 & FLAG_SRAM) != 0);
 			rom -> trainerPresent = ((header -> flag6 & FLAG_TRAINER) != 0);
 			rom -> playchoice10 = ((header -> flag7 & FLAG_PC10) != 0);

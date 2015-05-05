@@ -10,7 +10,7 @@ KOS_ROMDISK_DIR = romdisk
 include $(KOS_BASE)/Makefile.rules
 
 #OBJS = pNesX_System_DC.o pNesX_Utils.o TextWindow.o BMFFile.o BMF2PVR.o romdisk.o
-OBJS = pNesX_System_DC.o BMFont.o romdisk.o
+OBJS = pNesX_System_DC.o BMFont.o romdisk.o TextWindow.o nesrom.o
 
 clean:
 	rm -f frnes.elf $(OBJS)

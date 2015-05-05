@@ -29,6 +29,9 @@
 #include <kos.h>
 #include "TextWindow.h"
 #include "BMFont.h"
+//#include "6502.h"
+#include "nesrom.h"
+
 
 /*
 #include "ROMLoad.h"
@@ -1034,22 +1037,10 @@ int main()
 	printf("FrNES 1.0/KallistiOS 2.0.0 starting\n");
 
 	printf("Initializing PVR\n");
-//	pvr_init(&params);
 	pvr_setup();
-
 	printf("Initialized PVR\n");
 
-//	initializeMemory();
-
-/*
-	printf("Setting up main menu\n");
-	setup_main_menu();
-*/
-
 	printf("Loading font files\n");
-//	bf_load_file_pvr_colors("/FONTS/LGFONT.BMF", PVR_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0x8000);
-//	bf_load_file_pvr_colors("/rd/FONTS/LGFONT.BMF", PVR_White_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0xFFFF, &fontHeader);
-
 	BMFont* font = load_BMF("/rd/neuro.fnt");
 	if (font == NULL) {
 		printf("Unable to load font\n");
@@ -1058,16 +1049,13 @@ int main()
 	}
 
 	printf("Font baseline : %i\n", (int)font -> base);
-
-	//Christmas Colors
-/*	GUI_BGColor = 0x0000FF80;
-	GUI_TextColor = 0x8000;
-	GUI_SelectedTextColor = MakeRGB(13, 28, 8);
-	GUI_InsideWindowColor = MakeRGB(31, 8, 8);
-	GUI_OutsideWindowColor = MakeRGB(31, 31, 31);
-
-	isMainChanged = 1;
-	isSmallChanged = 1;*/
+/*
+	printf("Calling printf from assembly language\n");
+	test();
+*/
+	printf("Loading NES Rom\n");
+	struct NES_ROM* rom = loadRom("/rd/SMB.nes");
+	printRomInfo(rom);
 
     while(1) {
         if((cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER)) != NULL) {
@@ -1085,6 +1073,7 @@ int main()
 
     printf("Unloading font\n");
     destroy_BMF(font);
+    destroyRom(rom);
 
 //	initialize_controllers();
 //	rescan_controllers();
