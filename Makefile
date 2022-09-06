@@ -1,15 +1,75 @@
-# KallistiOS 1.1.5
+# KallistiOS 2.0.0
 #
-# FrNES 0.60/Makefile
-# (c)2001 ReGex
+# FrNES/Makefile
+# (c)2000-2022 Matt Slevinsky
+#
 
+KOS_ROMDISK_DIR = romdisk
+include $(KOS_BASE)/Makefile.rules
 
-BIN = pNesX
-#OBJS = BMFFile.o pNesX_System_DC.o pNesX.o TextWindow.o pNesX_Sound_DC.o K6502.o vmu_dc.o K6502_rw.o BMF2PVR.o ROMLoad.o pNesX_Mapper.o sincos.o aica_fw.o
-#OBJS = BMFFile.o pNesX_System_DC.o pNesX_DrawLine_Spr_Asm.o pNesX_DrawLine_BG_Asm.o pNesX_DrawLine_Merge_Asm.o pNesX_BuildCharAsm.o pNesX_PPU_DC.o pNesX.o TextWindow.o pNesX_Sound_APU.o pNesX_Sound_DC.o K6502.o vmu_dc.o K6502_rw.o BMF2PVR.o ROMLoad.o pNesX_Mapper.o aica_fw.o
-#OBJS = ROMLoad.o pNesX_Sound_APU.o aica_fw.o K6502_rw.o pNesX_DrawLine_BG_C.o pNesX_BuildCharAsm.o pNesX_Sound_DC.o K6502.o pNesX_PPU_DC.o pNesX_DrawLine_Spr_C_Map9.o pNesX_DrawLine_BG_C_Map9.o vmu_dc.o BMF2PVR.o pNesX_DrawLine_Spr_Asm.o pNesX.o pNesX_Mapper.o pNesX_Utils.o BMFFile.o GUI_VideoPage.o GUI_SystemPage.o GUI_ControlPage.o GUI_GUIPage.o pNesX_System_DC.o TextWindow.o 
-OBJS = ROMLoad.o pNesX_Sound_DC.o aica_fw.o K6502_rw.o pNesX_Sound_APU.o pNesX_BuildCharAsm.o K6502.o pNesX_DrawLine_Spr_Asm.o pNesX_PPU_DC.o pNesX_DrawLine_BG_C.o pNesX_DrawLine_Spr_C_Map9.o pNesX_DrawLine_BG_C_Map9.o BMF2PVR.o pNesX.o pNesX_Mapper.o pNesX_Utils.o BMFFile.o GUI_VideoPage.o GUI_SystemPage.o GUI_ControlPage.o GUI_GUIPage.o pNesX_System_DC.o vmu_dc.o TextWindow.o FrNESImg.o
+SRCS = aica_fw.c BMF2PVR.c BMFFile.c FrNESImg.c GUI_ControlPage.c GUI_GUIPage.c GUI_SystemPage.c GUI_VideoPage.c K6502_rw.c K6502.c pNesX_DrawLine_BG_C_Map9.c pNesX_DrawLine_BG_C.c pNesX_DrawLine_Spr_C_Map9.c pNesX_DrawLine_Spr_C.c pNesX_Mapper.c pNesX_PPU_DC.c pNesX_Sound_APU.c pNesX_Sound_DC.c pNesX_System_DC.c pNesX_Utils.c pNesX.c ROMLoad.c TextWindow.c vmu_dc.c
+ASCRS = pNesX_BuildCharAsm.s pNesX_DrawLine_BG_Asm.s pNesX_DrawLine_Spr_Asm.s
+OBJS = $(SRCS:.c=.o)
+PROJECTNAME = FrNES
+ELFFILE = $(PROJECTNAME).elf
+BINFILE = $(PROJECTNAME).bin
 
-#pNesX_DrawLine_BG_C.o pNesX_DrawLine_Spr_C.o
+#DEBUG BUILD SETTINGS
+DBGDIR = debug
+DBGEXE = $(DBGDIR)/$(ELFFILE)
+DBGOBJS = $(addprefix $(DBGDIR)/, $(OBJS))
+DBGCFLAGS = -g -O0 -DDEBUG
 
-include ../Makefile.prefab
+#RELEASE BUILD SETTINGS
+RELDIR = release
+RELEXE = $(RELDIR)/$(ELFFILE)
+RELBIN = $(RELDIR)/$(BINFILE)
+RELOBJS = $(addprefix $(RELDIR)/, $(OBJS))
+
+#CDI BUILD SETTINGS
+ISODIR = iso
+ISOBIN = $(ISODIR)/1ST_READ.BIN
+CDIDIR = cdi
+CDIISO = $(CDIDIR)/$(PROJECTNAME).iso
+CDIIPBIN = $(CDIDIR)/IP.BIN
+CDIBOOTSTRAPISO = $(CDIDIR)/$(PROJECTNAME)-bootstrap.iso
+CDIFILE = $(CDIDIR)/$(PROJECTNAME).cdi
+
+.DEFAULT_GOAL := release
+
+prepdbgdir:
+	@mkdir -p $(DBGDIR)
+
+prepreldir:
+	@mkdir -p $(RELDIR)
+
+prepcdidir:
+	@mkdir -p $(CDIDIR) $(ISODIR)
+
+debug: $(DBGEXE)
+
+$(DBGEXE): $(DBGOBJS)
+	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lstdc++ -lm $(KOS_LIBS)
+
+$(DBGDIR)/%.o: %.c | prepdbgdir
+	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
+
+release: $(RELEXE)
+
+$(RELEXE): $(RELOBJS)
+	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(RELEXE) $^ -lstdc++ -lm $(KOS_LIBS)
+	$(KOS_STRIP) $(RELEXE)
+	$(KOS_OBJCOPY) -R .stack -O binary $(RELEXE) $(RELBIN)
+
+$(RELDIR)/%.o: %.c | prepreldir
+	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
+
+cdi: release | prepcdidir
+	/opt/toolchains/dc/kos/utils/scramble/scramble $(RELBIN) $(ISOBIN)
+	mkisofs -V $(PROJECTNAME) -l -C 0,11702 -o $(CDIISO) ./$(ISODIR)
+	makeip ip.txt $(CDIIPBIN)
+	( cat $(CDIIPBIN); dd if=$(CDIISO) bs=2048 skip=16 ) > $(CDIBOOTSTRAPISO)
+	cdi4dc $(CDIBOOTSTRAPISO) $(CDIFILE)
+
+clean:
+	rm -rf debug release cdi iso

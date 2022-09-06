@@ -15,9 +15,13 @@
 #include <kos.h>
 
 int bf_char_index(char str);
-void bf_load_file_pvr(char* filename, uint32 PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightArray);
-void bf_load_file_pvr_colors(char* filename, uint32 PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor);
-void bf_ta_submit_character(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height);
-void bf_ta_submit_string(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string);
-void bf_ta_submit_string_alpha(uint32 PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha);
+void bf_load_file_pvr(char* filename, 
+    void* PVR_Offset,
+    uint32 MaxBytesPerChar,
+    unsigned char* WidthsArray,
+    unsigned char* HeightArray);
+void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor);
+void bf_ta_submit_character(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height);
+void bf_ta_submit_string(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string);
+void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha);
 #endif

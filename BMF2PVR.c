@@ -289,7 +289,11 @@ int bf_char_index(char str)
 
 //WidthsArray must be NUM_CHARS bytes long
 //HeightsArray must be NUM_CHARS bytes long
-void bf_load_file_pvr(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray)
+void bf_load_file_pvr(char* filename, 
+	void* PVR_Offset, 
+	uint32 MaxBytesPerChar, 
+	unsigned char* WidthsArray, 
+	unsigned char* HeightsArray)
 {
 	BMF_Character TempFont[NUM_CHARS];
 	uint16 TexBuffer[64*64];
