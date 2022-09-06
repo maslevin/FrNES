@@ -9,7 +9,7 @@ include $(KOS_BASE)/Makefile.rules
 
 SRCS = aica_fw.c BMF2PVR.c BMFFile.c FrNESImg.c GUI_ControlPage.c GUI_GUIPage.c GUI_SystemPage.c GUI_VideoPage.c K6502_rw.c K6502.c pNesX_DrawLine_BG_C_Map9.c pNesX_DrawLine_BG_C.c pNesX_DrawLine_Spr_C_Map9.c pNesX_DrawLine_Spr_C.c pNesX_Mapper.c pNesX_PPU_DC.c pNesX_Sound_APU.c pNesX_Sound_DC.c pNesX_System_DC.c pNesX_Utils.c pNesX.c ROMLoad.c TextWindow.c vmu_dc.c
 ASMS = pNesX_BuildCharAsm.s pNesX_DrawLine_BG_Asm.s pNesX_DrawLine_Spr_Asm.s
-OBJS = $(SRCS:.c=.o) $(ASMS:.s=.o)
+OBJS = $(SRCS:.c=.o) $(ASMS:.s=.o) romdisk.o
 PROJECTNAME = FrNES
 ELFFILE = $(PROJECTNAME).elf
 BINFILE = $(PROJECTNAME).bin
@@ -51,6 +51,9 @@ debug: $(DBGEXE)
 $(DBGEXE): $(DBGOBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lstdc++ -lm $(KOS_LIBS)
 
+$(DBGDIR)/romdisk.o: romdisk.o
+	cp romdisk.o $(DBGDIR)/romdisk.o
+
 $(DBGDIR)/%.o: %.c | prepdbgdir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
@@ -63,6 +66,9 @@ $(RELEXE): $(RELOBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(RELEXE) $^ -lstdc++ -lm $(KOS_LIBS)
 	$(KOS_STRIP) $(RELEXE)
 	$(KOS_OBJCOPY) -R .stack -O binary $(RELEXE) $(RELBIN)
+
+$(RELDIR)/romdisk.o: romdisk.o
+	cp romdisk.o $(RELDIR)/romdisk.o
 
 $(RELDIR)/%.o: %.c | prepreldir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
