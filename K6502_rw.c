@@ -71,8 +71,8 @@ inline unsigned char K6502_Read( uint16 wAddr )
     case 0x2000:  /* PPU */
       if ( (wAddr & 7) == 7 )
       {
-		uint16 addr;
-		addr = ppuinfo.PPU_Addr;
+        uint16 addr;
+        addr = ppuinfo.PPU_Addr;
         // Increment PPU Address
         ppuinfo.PPU_Addr += PPU_Increment;
         addr &= 0x3fff;
@@ -194,12 +194,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           ppuinfo.PPU_SP_Base = ( ppuinfo.PPU_R0 & R0_SP_ADDR ) ? ChrBuf + 256 * 64 : ChrBuf;
           ppuinfo.PPU_SP_Height = ( ppuinfo.PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
 
-		  //Account for Loopy's scrolling discoveries
-		  PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
-		  break;
+          //Account for Loopy's scrolling discoveries
+          PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
+          break;
 
         case 1:   /* 0x2001 */
-		  PPU_R1 = byData;
+		      PPU_R1 = byData;
           break;
 
         case 2:   /* 0x2002 */
@@ -220,74 +220,74 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           // Set Scroll Register
           if ( PPU_Latch_Flag )
           {
-			//Added : more Loopy Stuff
-			PPU_Temp = (PPU_Temp & 0xFC1F) | ( (((uint16)byData) & 0xF8) << 2);
-			PPU_Temp = (PPU_Temp & 0x8FFF) | ( (((uint16)byData) & 0x07) << 12);
+            //Added : more Loopy Stuff
+            PPU_Temp = (PPU_Temp & 0xFC1F) | ( (((uint16)byData) & 0xF8) << 2);
+            PPU_Temp = (PPU_Temp & 0x8FFF) | ( (((uint16)byData) & 0x07) << 12);
           }
           else
           {
-			ppuinfo.PPU_Scr_H_Bit = byData & 7;
-			PPU_Temp = (PPU_Temp & 0xFFE0) | ( (((uint16)byData) & 0xF8) >> 3);
-	      }
+            ppuinfo.PPU_Scr_H_Bit = byData & 7;
+            PPU_Temp = (PPU_Temp & 0xFFE0) | ( (((uint16)byData) & 0xF8) >> 3);
+	        }
           PPU_Latch_Flag ^= 1;
           break;
 
         case 6:   /* 0x2006 */
-			// Set PPU Address
-		  if ( PPU_Latch_Flag )
-		  {
-			PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
-			ppuinfo.PPU_Addr = PPU_Temp;
-		  }
-		  else
-		  {
-			PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
-		  }
-		  PPU_Latch_Flag ^= 1;
+          // Set PPU Address
+          if ( PPU_Latch_Flag )
+          {
+            PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
+            ppuinfo.PPU_Addr = PPU_Temp;
+          }
+          else
+          {
+            PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
+          }
+          PPU_Latch_Flag ^= 1;
           break;
 
         case 7:/* 0x2007 */
-		{
-			uint16 addr;
-			addr = ppuinfo.PPU_Addr;
-			ppuinfo.PPU_Addr += PPU_Increment;
-			addr &= 0x3FFF;
+          {
+            uint16 addr;
+            addr = ppuinfo.PPU_Addr;
+            ppuinfo.PPU_Addr += PPU_Increment;
+            addr &= 0x3FFF;
 
-			if (addr >= 0x3000)
-			{
-				if (addr >= 0x3F00)
-				{
-					byData &= 0x3F;
-					// If it's the Zero Entry
-					if ( !( addr & 0xf ) )  /* 0x3f00 or 0x3f10 */
-					{
-						// Palette mirror
-						PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-						PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
-						// Flag the High bit so it can be used for transparency purposes
-						PalTable[ 0x00 ] = PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] =
-						PalTable[ 0x10 ] = PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ] = NesPalette[ byData ] | 0x8000;
-					}
-					else
-					if ( addr & 3 )
-					{
-						// Palette
-						PPURAM[ addr ] = byData;
-						PalTable[ addr & 0x1f ] = NesPalette[ byData ];
-					}
-					return;
-				}
-				addr &= 0xEFFF;
-			}
+            if (addr >= 0x3000)
+            {
+              if (addr >= 0x3F00)
+              {
+                byData &= 0x3F;
+                // If it's the Zero Entry
+                if ( !( addr & 0xf ) )  /* 0x3f00 or 0x3f10 */
+                {
+                  // Palette mirror
+                  PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
+                  PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
+                  // Flag the High bit so it can be used for transparency purposes
+                  PalTable[ 0x00 ] = PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] =
+                  PalTable[ 0x10 ] = PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ] = NesPalette[ byData ] | 0x8000;
+                }
+                else
+                if ( addr & 3 )
+                {
+                  // Palette
+                  PPURAM[ addr ] = byData;
+                  PalTable[ addr & 0x1f ] = NesPalette[ byData ];
+                }
+                return;
+              }
+              addr &= 0xEFFF;
+            }
 
-			PPUBANK[addr >> 10][addr & 0x3FF] = byData;
-			ChrBufUpdate |= ( 1 << ( addr >> 10 ) );
+            PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+            ChrBufUpdate |= ( 1 << ( addr >> 10 ) );
 
-		  // Increment PPU Address
-		  //PPU_Addr += PPU_Increment;
-		  //PPU_Addr &= 0x3fff;
-          break;
-		}
+            // Increment PPU Address
+            //PPU_Addr += PPU_Increment;
+            //PPU_Addr &= 0x3fff;
+                break;
+          }
       }
       break;
 

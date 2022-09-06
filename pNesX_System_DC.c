@@ -638,7 +638,7 @@ void setup_about_screen()
 	helpdata.Num_Strings = Num_Text_Keys;
 	helpdata.Highlighted_Index = Num_Text_Keys;
 	helpdata.Top_Index = 0;
-	helpdata.Target_Buffer = (ta_txr_map(PVR_SmallWindow_Offset));
+	helpdata.Target_Buffer = (uint16*)PVR_SmallWindow_Offset;
 }
 
 void setup_help_screen()
@@ -1019,6 +1019,7 @@ int main()
 
 	// System initiation
 	KOS_INIT_FLAGS(INIT_DEFAULT);
+	pvr_setup();
 //	kos_init_all(IRQ_ENABLE | TA_ENABLE , ROMDISK_NONE);
 
 	Allocate_Video_Options();
@@ -1133,7 +1134,7 @@ int main()
 		case 1:
 		{
 			keyhit = 0;
-			cont_get_cond(Controllers[0], &my_cond);
+//			cont_get_cond(Controllers[0], &my_cond);
 
 //			while (my_cond.buttons & CONT_Y)
 			while (1) 
@@ -1453,7 +1454,7 @@ int main()
 
 				draw_screen();
 				
-				cont_get_cond(Controllers[0], &my_cond);
+//				cont_get_cond(Controllers[0], &my_cond);
 			}
 		}
 		break;
@@ -1478,8 +1479,8 @@ int main()
 	Free_System_Options();
 	Free_Control_Options();
 
-	ta_txr_release_all();
-	ta_shutdown();
+//	ta_txr_release_all();
+//	ta_shutdown();
 	bf_free_font(medfont);
 	bf_free_font(largefont);
 	return 0;
@@ -1506,9 +1507,9 @@ int pNesX_ReadRom ( const char *pszFileName)
 
 	strcat (textbuffer, pszFileName);
 
-	my_fd = iso_open(textbuffer, O_RDONLY);
-	iso_read(my_fd, ROM_Buffer, myRomInfos[mydata.Highlighted_Index].FileSize);
-	iso_close(my_fd);
+	my_fd = fs_open(textbuffer, O_RDONLY);
+	fs_read(my_fd, ROM_Buffer, myRomInfos[mydata.Highlighted_Index].FileSize);
+	fs_close(my_fd);
 
 	//Assume there's an NesHeader to read..  .nes files only supported
 	for (i = 0; i < sizeof (NesHeader); i++)
@@ -1633,7 +1634,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 	//Grab data from controller 0
 	if (Controllers[0] != (int8) NULL)
 	{
-		cont_get_cond(Controllers[0], &my_cond);
+		//cont_get_cond(Controllers[0], &my_cond);
 		//Start first
 		*pdwPad1 = (( !(my_cond.buttons & CONT_START      ) != 0 ) << 3);
 		switch (*opt_P1AKey)
@@ -1725,7 +1726,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 	//Grab data from controller 1
 	if (Controllers[1] != (int8) NULL)
 	{
-		cont_get_cond(Controllers[1], &my_cond);
+//		cont_get_cond(Controllers[1], &my_cond);
 		//Start first
 		*pdwPad2 = (( !(my_cond.buttons & CONT_START      ) != 0 ) << 3);
 		switch (*opt_P2AKey)

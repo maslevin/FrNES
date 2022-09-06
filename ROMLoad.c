@@ -87,7 +87,7 @@ int StartFileSearch(char* Path)
 	//Reset CD drive to look for new rom CD..
 	fs_iso9660_init();
 
-	my_dir = iso_open(Path, (O_RDONLY | O_DIR));
+	my_dir = fs_open(Path, (O_RDONLY | O_DIR));
 	if (my_dir == 0)
 	{
 		return 0;
@@ -99,7 +99,7 @@ int StartFileSearch(char* Path)
 
 void EndFileSearch()
 {
-	iso_close(my_dir);
+	fs_close(my_dir);
 	currentindex = 0;
 	my_pdirent = NULL;
 }
@@ -112,7 +112,7 @@ int ReturnCurrentNumRoms()
 //Loads a fileinfo
 int LoadNextFileSimple(RomInfo* RomInfoArray)
 {
-	my_pdirent = iso_readdir(my_dir);
+	my_pdirent = fs_readdir(my_dir);
 	if (my_pdirent != NULL)
 	{
 		RomInfoArray[currentindex].FileSize = my_pdirent -> size;
@@ -140,9 +140,9 @@ uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom)
 		strcpy(textbuffer, "/ROMS/");
 	strcat (textbuffer, RomInfoArray[index].PhysFileName);
 
-	my_fd = iso_open(textbuffer, O_RDONLY);
-	iso_read(my_fd, temprom, RomInfoArray[index].FileSize);
-	iso_close(my_fd);
+	my_fd = fs_open(textbuffer, O_RDONLY);
+	fs_read(my_fd, temprom, RomInfoArray[index].FileSize);
+	fs_close(my_fd);
 
 	oldcrc32 = 0xFFFFFFFF;
 

@@ -256,7 +256,7 @@ void setup_control_options_screen()
 	helpdata.Num_Strings = Num_Options_Keys;
 	helpdata.Highlighted_Index = Num_Options_Keys;
 	helpdata.Top_Index = 0;
-	helpdata.Target_Buffer = (ta_txr_map(PVR_SmallWindow_Offset));
+	helpdata.Target_Buffer = (uint16*)PVR_SmallWindow_Offset;
 }
 
 void Handle_Control_Interface(cont_cond_t my_cond)

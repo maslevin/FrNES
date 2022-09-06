@@ -447,7 +447,7 @@ int pNesX_Reset()
   /*-------------------------------------------------------------------*/
   pNesX_SetupPPU();
   WorkFrameIdx = 0;
-  WorkFrame = ta_txr_map(PVR_NESScreen1_Offset);
+  WorkFrame = (uint16*)PVR_NESScreen1_Offset;
 
   /*-------------------------------------------------------------------*/
   /*  Initialize Mapper                                                */
@@ -772,9 +772,9 @@ void pNesX_Cycle()
         // Switching of the double buffer
         WorkFrameIdx = 1 - WorkFrameIdx;
 		if (WorkFrameIdx == 0)
-			WorkFrame = ta_txr_map(PVR_NESScreen1_Offset);
+			WorkFrame = (uint16*)PVR_NESScreen1_Offset;
 		else
-			WorkFrame = ta_txr_map(PVR_NESScreen2_Offset);
+			WorkFrame = (uint16*)PVR_NESScreen2_Offset;
 	}
 	else
 	{

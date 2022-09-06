@@ -21,16 +21,16 @@
 #include "K6502.h"
 
 // I/O Operation (User definition)
-inline unsigned char K6502_Read( uint16 wAddr);
-inline uint16 K6502_ReadW( uint16 wAddr );
-inline unsigned char K6502_ReadZp( unsigned char byAddr );
-inline uint16 K6502_ReadZpW( unsigned char byAddr );
-inline unsigned char K6502_ReadAbsX();
-inline unsigned char K6502_ReadAbsY();
-inline unsigned char K6502_ReadIY();
+unsigned char K6502_Read( uint16 wAddr);
+uint16 K6502_ReadW( uint16 wAddr );
+unsigned char K6502_ReadZp( unsigned char byAddr );
+uint16 K6502_ReadZpW( unsigned char byAddr );
+unsigned char K6502_ReadAbsX();
+unsigned char K6502_ReadAbsY();
+unsigned char K6502_ReadIY();
 
-inline void K6502_Write( uint16 wAddr, unsigned char byData );
-inline void K6502_WriteW( uint16 wAddr, uint16 wData );
+void K6502_Write( uint16 wAddr, unsigned char byData );
+void K6502_WriteW( uint16 wAddr, uint16 wData );
 
 #endif /* !K6502_RW_H_INCLUDED */
 

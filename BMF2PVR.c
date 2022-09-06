@@ -373,7 +373,7 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 
 void bf_ta_submit_character_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha)
 {
-	pvr_poly_hdr_t hdr;
+//	pvr_poly_hdr_t hdr;
 	pvr_vertex_t vert;
 
 	vert.flags = PVR_CMD_VERTEX;
@@ -432,7 +432,7 @@ void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float ypositio
 		}
 		else
 		{
-			bf_ta_submit_character(PVR_Offset + (tempindex * 64 * 64 * 2), xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex]);
+			bf_ta_submit_character_alpha(PVR_Offset + (tempindex * 64 * 64 * 2), xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex], alpha);
 			xstart += (xwidth - 2);
 		}
 	}

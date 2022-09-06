@@ -69,7 +69,7 @@ void setup_gui_options_screen()
 	mydata.Num_Strings = Num_GUI_Options;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
-	mydata.Target_Buffer = (ta_txr_map(PVR_MainWindow_Offset));
+	mydata.Target_Buffer = (uint16*)PVR_MainWindow_Offset;
 
 	//Set Up Window Style Features
 	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
@@ -95,7 +95,7 @@ void setup_gui_options_screen()
 	helpdata.Num_Strings = Num_Options_Keys;
 	helpdata.Highlighted_Index = Num_Options_Keys;
 	helpdata.Top_Index = 0;
-	helpdata.Target_Buffer = (ta_txr_map(PVR_SmallWindow_Offset));
+	helpdata.Target_Buffer = (uint16*)PVR_SmallWindow_Offset;
 }
 
 //Generates the Options GUI info from the variables in memory
