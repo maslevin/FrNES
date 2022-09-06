@@ -67,8 +67,8 @@ extern unsigned char *VROM;
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
 
-extern uint32 PVR_NESScreen1_Offset;
-extern uint32 PVR_NESScreen2_Offset;
+extern pvr_ptr_t PVR_NESScreen1_Offset;
+extern pvr_ptr_t PVR_NESScreen2_Offset;
 
 //extern void pNesX_Texture_Write( void* dest, void* src);
 

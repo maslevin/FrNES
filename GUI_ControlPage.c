@@ -230,7 +230,7 @@ void setup_control_options_screen()
 	mydata.Num_Strings = Num_Control_Options;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
-	mydata.Target_Buffer = (ta_txr_map(PVR_MainWindow_Offset));
+	mydata.Target_Buffer = (uint16*)PVR_MainWindow_Offset;
 
 	//Set Up Window Style Features
 	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;

@@ -236,20 +236,21 @@ int textheight;
 int interface_offset;
 
 //PowerVR Offsets and Font stuff
-uint32 PVR_Font_Offset;
-uint32 PVR_MainWindow_Offset;
-uint32 PVR_SmallWindow_Offset;
-uint32 PVR_NESScreen1_Offset;
-uint32 PVR_NESScreen2_Offset;
-uint32 PVR_White_Font_Offset;
-uint32 PVR_DemoTex_Offset;
-uint32 PVR_TitleScreen_Offset;
+pvr_ptr_t PVR_Font_Offset;
+pvr_ptr_t PVR_MainWindow_Offset;
+pvr_ptr_t PVR_SmallWindow_Offset;
+pvr_ptr_t PVR_NESScreen1_Offset;
+pvr_ptr_t PVR_NESScreen2_Offset;
+pvr_ptr_t PVR_White_Font_Offset;
+pvr_ptr_t PVR_DemoTex_Offset;
+pvr_ptr_t PVR_TitleScreen_Offset;
 unsigned char isMainChanged;
 unsigned char isSmallChanged;
 unsigned char PVR_Font_Widths[NUM_CHARS];
 unsigned char PVR_Font_Heights[NUM_CHARS];
-poly_hdr_t my_pheader;
-vertex_ot_t my_vertex;
+pvr_poly_hdr_t my_pheader;
+pvr_vertex_t my_vertex;
+pvr_poly_cxt_t my_cxt;
 
 //ROM data storage
 const int MAX_ROMS = 2048;
@@ -314,7 +315,8 @@ void initialize_controllers()
 
 void rescan_controllers()
 {
-	int i;
+	//MS- Controllers are totally different now 
+/*	int i;
 	int j;
 	int firstport;
 
@@ -341,6 +343,7 @@ void rescan_controllers()
 			}
 		}
 	}
+*/
 }
 
 uint16 MakeRGB(int red, int green, int blue)
@@ -350,10 +353,10 @@ uint16 MakeRGB(int red, int green, int blue)
 
 void draw_screen()
 {
-	
-	poly_hdr_t my_pheader;
-	vertex_ot_t my_vertex;
-	vertex_oc_t my_c_vertex;
+	pvr_poly_hdr_t my_pheader;
+	pvr_poly_cxt_t my_cxt;
+	pvr_vertex_t my_vertex;
+	pvr_vertex_t my_c_vertex;
 
 	if (isMainChanged)
 	{
@@ -368,123 +371,108 @@ void draw_screen()
 		isSmallChanged = 0;
 	}
 
-	ta_begin_render();
+	pvr_wait_ready();
+	pvr_scene_begin();
+
+	// STEP 1: Draw an untextured opaque screen-sized polygon
+	pvr_list_begin(PVR_LIST_OP_POLY);
+	pvr_poly_cxt_col(&my_cxt, PVR_LIST_OP_POLY);
+	pvr_poly_compile(&my_pheader, &my_cxt);
+	pvr_prim(&my_pheader, sizeof(my_pheader));
 
 	//Draw the Screen ... will be more fancy later
-	ta_poly_hdr_txr(&my_pheader, TA_OPAQUE, TA_NO_TEXTURE, 0, 0, 0, 0);
-	ta_commit_poly_hdr(&my_pheader);
 
-	my_c_vertex.flags = TA_VERTEX_NORMAL;
+	my_c_vertex.flags = PVR_CMD_VERTEX;
 	my_c_vertex.x = 0.0f;
 	my_c_vertex.y = 480.0f;
 	my_c_vertex.z = 25.0f;
-	my_c_vertex.a = 1.0f;
-	my_c_vertex.r = ((float)(GUI_BGColor >> 16) / 255);
-	my_c_vertex.g = ((float)(0x00FF & (GUI_BGColor >> 8)) / 255);
-	my_c_vertex.b = ((float)(0x00FF & GUI_BGColor) / 255);
-	ta_commit_vertex(&my_c_vertex, sizeof(my_c_vertex));
+	my_c_vertex.argb = GUI_BGColor;
+	my_c_vertex.oargb = 0;
+	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.flags = TA_VERTEX_NORMAL;
 	my_c_vertex.y = 0.0f;
-	ta_commit_vertex(&my_c_vertex, sizeof(my_c_vertex));
+	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.flags = TA_VERTEX_NORMAL;
 	my_c_vertex.x = 640.0f;
 	my_c_vertex.y = 480.0f;
-	ta_commit_vertex(&my_c_vertex, sizeof(my_c_vertex));
+	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.flags = TA_VERTEX_EOL;
+	my_c_vertex.flags = PVR_CMD_VERTEX_EOL;
 	my_c_vertex.y = 0.0f;
-	ta_commit_vertex(&my_c_vertex, sizeof(my_c_vertex));
+	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+	pvr_list_finish();
 
-	ta_commit_eol();
+	// STEP 2: Draw the UI as two translucent textures over top of that previous texture
+	pvr_list_begin(PVR_LIST_TR_POLY);
+	pvr_poly_cxt_col(&my_cxt, PVR_LIST_TR_POLY);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 512, 512, PVR_MainWindow_Offset, PVR_FILTER_BILINEAR);
+	pvr_poly_compile(&my_pheader, &my_cxt);
+	pvr_prim(&my_pheader, sizeof(my_pheader));
 
-	ta_poly_hdr_txr(&my_pheader, TA_TRANSLUCENT, TA_ARGB1555, 512, 512, PVR_MainWindow_Offset, TA_BILINEAR_FILTER);
-	ta_commit_poly_hdr(&my_pheader);
-
-	my_vertex.flags = TA_VERTEX_NORMAL;
+	my_vertex.flags = PVR_CMD_VERTEX;
 	my_vertex.x = 200.0f;
 	my_vertex.y = 440.0f;
 	my_vertex.z = 30.0f;
 	my_vertex.u = 0.0f;
 	my_vertex.v = ((float) mydata.height) / 512.0f;
-	my_vertex.a = 0.75f;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	my_vertex.dummy1 = 0;
-	my_vertex.dummy2 = 0;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	my_vertex.argb = 0xC0FFFFFF;
+	my_vertex.oargb = 0xFFFFFFFF;
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
 	my_vertex.y = 20.0f;
 	my_vertex.u = 0.0f;
 	my_vertex.v = 0.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
 	my_vertex.x = 620.0f;
 	my_vertex.y = 440.0f;
 	my_vertex.u = ((float) mydata.width - 7) / 512.0f;
 	my_vertex.v = ((float) mydata.height) / 512.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	my_vertex.flags = TA_VERTEX_EOL;
+	my_vertex.flags = PVR_CMD_VERTEX_EOL;
 	my_vertex.y = 20.0f;
 	my_vertex.u = ((float) mydata.width - 7) / 512.0f;
 	my_vertex.v = 0.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	ta_poly_hdr_txr(&my_pheader, TA_TRANSLUCENT, TA_ARGB1555, 512, 512, PVR_SmallWindow_Offset, TA_BILINEAR_FILTER);
-	ta_commit_poly_hdr(&my_pheader);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 512, 512, PVR_SmallWindow_Offset, PVR_FILTER_BILINEAR);
+	pvr_poly_compile(&my_pheader, &my_cxt);
+	pvr_prim(&my_pheader, sizeof(my_pheader));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
+	my_vertex.flags = PVR_CMD_VERTEX;
 	my_vertex.x = 20.0f;
 	my_vertex.y = 440.0f;
 	my_vertex.z = 30.0f;
 	my_vertex.u = 0.0f;
 	my_vertex.v = ((float) helpdata.height) / 512.0f;
-	my_vertex.a = 0.75f;
-	my_vertex.r = 1.0f;
-	my_vertex.g = 1.0f;
-	my_vertex.b = 1.0f;
-	my_vertex.oa = 1.0f;
-	my_vertex.or = 1.0f;
-	my_vertex.og = 1.0f;
-	my_vertex.ob = 1.0f;
-	my_vertex.dummy1 = 0;
-	my_vertex.dummy2 = 0;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	my_vertex.argb = 0xC0FFFFFF;
+	my_vertex.oargb = 0xFFFFFFFF;
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
 	my_vertex.y = 280.0f;
 	my_vertex.u = 0.0f;
 	my_vertex.v = 0.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	my_vertex.flags = TA_VERTEX_NORMAL;
 	my_vertex.x = 190.0f;
 	my_vertex.y = 440.0f;
 	my_vertex.u = ((float) helpdata.width - 7) / 512.0f;
 	my_vertex.v = ((float) helpdata.height) / 512.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	my_vertex.flags = TA_VERTEX_EOL;
+	my_vertex.flags = PVR_CMD_VERTEX_EOL;
 	my_vertex.y = 280.0f;
 	my_vertex.u = ((float) helpdata.width - 7) / 512.0f;
 	my_vertex.v = 0.0f;
-	ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
 	bf_ta_submit_string(PVR_Font_Offset, title_offset_x, title_offset_y, 32.0f, 150, 35, PVR_Font_Widths, PVR_Font_Heights, App_String);
 	bf_ta_submit_string(PVR_Font_Offset, title_offset_x, title_offset_y + 35, 32.0f, 160, 20, PVR_Font_Widths, PVR_Font_Heights, Version_String);
-	ta_commit_eol();
 
-	ta_finish_frame();
+	pvr_list_finish();
 
+	pvr_scene_finish();
 }
 
 void setup_main_menu()
@@ -503,7 +491,7 @@ void setup_main_menu()
 	mydata.Num_Strings = Num_Main;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
-	mydata.Target_Buffer = (ta_txr_map(PVR_MainWindow_Offset));
+	mydata.Target_Buffer = (uint16*)PVR_MainWindow_Offset;
 	
 	//Set Up Window Style Features
 	mystyle.Border_Inside_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
@@ -540,7 +528,7 @@ void setup_main_menu()
 	helpdata.Num_Strings = Num_Main_Keys;
 	helpdata.Highlighted_Index = Num_Main_Keys;
 	helpdata.Top_Index = 0;
-	helpdata.Target_Buffer = (ta_txr_map(PVR_SmallWindow_Offset));
+	helpdata.Target_Buffer = (uint16*)PVR_SmallWindow_Offset;
 }
 
 void setup_rom_screen()
@@ -558,7 +546,7 @@ void setup_rom_screen()
 	mydata.Num_Strings = MAX_ROMS;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
-	mydata.Target_Buffer = (ta_txr_map(PVR_MainWindow_Offset));
+	mydata.Target_Buffer = (uint16*)PVR_MainWindow_Offset;
 
 	//Set Up Window Style Features
 	mystyle.Border_Inside_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
@@ -595,7 +583,7 @@ void setup_rom_screen()
 	helpdata.Num_Strings = Num_Rom_Keys;
 	helpdata.Highlighted_Index = Num_Rom_Keys;
 	helpdata.Top_Index = 0;
-	helpdata.Target_Buffer = (ta_txr_map(PVR_SmallWindow_Offset));
+	helpdata.Target_Buffer = (uint16*)PVR_SmallWindow_Offset;
 }
 
 void setup_about_screen()
@@ -624,7 +612,7 @@ void setup_about_screen()
 	mydata.Num_Strings = Num_About_Text;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
-	mydata.Target_Buffer = (ta_txr_map(PVR_MainWindow_Offset));
+	mydata.Target_Buffer = (uint16*)PVR_MainWindow_Offset;
 
 	//Set Up Window Style Features
 	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
@@ -679,7 +667,7 @@ void setup_help_screen()
 	mydata.Num_Strings = Num_Help_Text;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
-	mydata.Target_Buffer = (ta_txr_map(PVR_MainWindow_Offset));
+	mydata.Target_Buffer = (uint16*)PVR_MainWindow_Offset;
 
 	//Set Up Window Style Features
 	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
@@ -705,9 +693,8 @@ void setup_help_screen()
 	helpdata.Num_Strings = Num_Text_Keys;
 	helpdata.Highlighted_Index = 0;
 	helpdata.Top_Index = 0;
-	helpdata.Target_Buffer = (ta_txr_map(PVR_SmallWindow_Offset));
+	helpdata.Target_Buffer = (uint16*)PVR_SmallWindow_Offset;
 }
-
 
 int LoadSRAM()
 {
@@ -803,7 +790,7 @@ void Load_VMU_Options()
 	}
 }
 
-
+/*
 void DoDemo()
 {
 	float xpos;
@@ -834,19 +821,20 @@ void DoDemo()
 	int zoomout;
 	uint16 demo_bgcolor;
 
-	poly_hdr_t my_pheader;
-	vertex_ot_t my_vertex;
-	vertex_oc_t my_c_vertex;
+	pvr_poly_hdr_t my_pheader;
+	pvr_poly_cxt_t my_cxt;
+	pvr_vertex_t my_vertex;
+	pvr_vertex_t my_c_vertex;
 
 	int8 Controller;
 	cont_cond_t my_cond;
 
-	uint32 Tex_Offset;
+	pvr_ptr_t Tex_Offset;
 	int Char_Maxbytes;
 
 	Tex_Offset = PVR_Font_Offset;
 
-	texptr = ta_txr_map(PVR_TitleScreen_Offset);
+	texptr = (uint16*)PVR_TitleScreen_Offset;
 
 	//Load the titlescreen texture
 	for (j = 0; j < imheight; j++)
@@ -999,6 +987,20 @@ void DoDemo()
 	}
 	timer_stop(TMU1);
 }
+*/
+
+pvr_init_params_t pvr_params =  {
+    /* Enable opaque and translucent polygons with size 16 */
+    { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
+
+    /* Vertex buffer size 512K */
+    512 * 1024
+};
+
+void pvr_setup() {
+    pvr_init(&pvr_params);
+    pvr_set_bg_color(0, 0, 0);
+}
 
 /*===================================================================*/
 /*                                                                   */
@@ -1016,21 +1018,22 @@ int main()
 	cont_cond_t my_cond;
 
 	// System initiation
-	kos_init_all(IRQ_ENABLE | TA_ENABLE , ROMDISK_NONE);
+	KOS_INIT_FLAGS(INIT_DEFAULT);
+//	kos_init_all(IRQ_ENABLE | TA_ENABLE , ROMDISK_NONE);
 
 	Allocate_Video_Options();
 	Allocate_System_Options();
 	Allocate_Control_Options();
 
 	//Some Memory Areas
-	PVR_Font_Offset = ta_txr_allocate(540672);
-	PVR_MainWindow_Offset = ta_txr_allocate(512 * 512 * 2);
-	PVR_SmallWindow_Offset = ta_txr_allocate(512 * 512 * 2);
+	PVR_Font_Offset = pvr_mem_malloc(540672);
+	PVR_MainWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
+	PVR_SmallWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
 
 	//32-byte align so the Store Queues can write to it.
-	PVR_NESScreen1_Offset = ta_txr_allocate(256 * 256 * 2);
-	PVR_NESScreen2_Offset = ta_txr_allocate(256 * 256 * 2);
-	PVR_White_Font_Offset = ta_txr_allocate(540672);
+	PVR_NESScreen1_Offset = pvr_mem_malloc(256 * 256 * 2);
+	PVR_NESScreen2_Offset = pvr_mem_malloc(256 * 256 * 2);
+	PVR_White_Font_Offset = pvr_mem_malloc(540672);
 
 	//Use the MainWindow Texture for Title Screen since both won't ever be used at the same time
 	PVR_TitleScreen_Offset = PVR_MainWindow_Offset;
@@ -1052,7 +1055,8 @@ int main()
 	bf_load_file_pvr_colors("/FONTS/LGFONT.BMF", PVR_White_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0xFFFF);
 
 	//Do demo
-	DoDemo();
+	// MS - comment it out
+	// DoDemo();
 
 	//Christmas Colors
 	GUI_BGColor = 0x0000FF80;
@@ -1543,111 +1547,81 @@ int pNesX_ReadRom ( const char *pszFileName)
 
 void pNesX_LoadFrame()
 {
-//	char tempbuffer1[20];
-//	char tempbuffer2[20];
+	pvr_wait_ready();
+	pvr_scene_begin();
 
-	ta_begin_render();
-	if (*opt_Filter)
-	{
-		if (WorkFrameIdx)
-			ta_poly_hdr_txr(&my_pheader, TA_OPAQUE, TA_ARGB1555, 256, 256, PVR_NESScreen2_Offset, TA_BILINEAR_FILTER);
-		else
-			ta_poly_hdr_txr(&my_pheader, TA_OPAQUE, TA_ARGB1555, 256, 256, PVR_NESScreen1_Offset, TA_BILINEAR_FILTER);			
+	pvr_list_begin(PVR_LIST_TR_POLY);
+	pvr_poly_cxt_col(&my_cxt, PVR_LIST_TR_POLY);
 
+	uint32 filter = PVR_FILTER_BILINEAR;
+	if (!*opt_Filter) {
+		filter = PVR_FILTER_NONE;
 	}
-	else
-	{
-		if (WorkFrameIdx)
-			ta_poly_hdr_txr(&my_pheader, TA_OPAQUE, TA_ARGB1555, 256, 256, PVR_NESScreen2_Offset, TA_NO_FILTER);
-		else
-			ta_poly_hdr_txr(&my_pheader, TA_OPAQUE, TA_ARGB1555, 256, 256, PVR_NESScreen1_Offset, TA_NO_FILTER);
+	pvr_ptr_t texture = PVR_NESScreen1_Offset;
+	if (WorkFrameIdx) {
+		texture = PVR_NESScreen2_Offset;
 	}
-	ta_commit_poly_hdr(&my_pheader);
+
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 256, 256, texture, filter);
+	pvr_poly_compile(&my_pheader, &my_cxt);
+	pvr_prim(&my_pheader, sizeof(my_pheader));
 
 
-	if (*opt_Stretch)
-	{
-		my_vertex.flags = TA_VERTEX_NORMAL;
+	if (*opt_Stretch) {
+		my_vertex.flags = PVR_CMD_VERTEX;
 		my_vertex.x = 0.0f;
 		my_vertex.y = 480.0f;
 		my_vertex.z = 30.0f;
 		my_vertex.u = ((float) (opt_ClipVars[0])) / 256.0f;
 		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		my_vertex.a = 1.0f;
-		my_vertex.r = 1.0f;
-		my_vertex.g = 1.0f;
-		my_vertex.b = 1.0f;
-		my_vertex.oa = 1.0f;
-		my_vertex.or = 1.0f;
-		my_vertex.og = 1.0f;
-		my_vertex.ob = 1.0f;
-		my_vertex.dummy1 = 0;
-		my_vertex.dummy2 = 0;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+		my_vertex.argb = 0xFFFFFFFF;
+		my_vertex.oargb = 0;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = TA_VERTEX_NORMAL;
 		my_vertex.y = 0.0f;
 		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = TA_VERTEX_NORMAL;
 		my_vertex.x = 640.0f;
 		my_vertex.y = 480.0f;
 		my_vertex.u = ((float) 256 - (opt_ClipVars[1])) / 256.0f;
 		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = TA_VERTEX_EOL;
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
 		my_vertex.y = 0.0f;
 		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));	
-		ta_commit_eol();
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 	}
 	else
 	{
-		my_vertex.flags = TA_VERTEX_NORMAL;
+		my_vertex.flags = PVR_CMD_VERTEX;
 		my_vertex.x = 64.0f;
 		my_vertex.y = 480.0f;
 		my_vertex.z = 30.0f;
 		my_vertex.u = ((float) (opt_ClipVars[0])) / 256.0f;
 		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		my_vertex.a = 1.0f;
-		my_vertex.r = 1.0f;
-		my_vertex.g = 1.0f;
-		my_vertex.b = 1.0f;
-		my_vertex.oa = 1.0f;
-		my_vertex.or = 1.0f;
-		my_vertex.og = 1.0f;
-		my_vertex.ob = 1.0f;
-		my_vertex.dummy1 = 0;
-		my_vertex.dummy2 = 0;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+		my_vertex.argb = 0xFFFFFFFF;
+		my_vertex.oargb = 0;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = TA_VERTEX_NORMAL;
 		my_vertex.y = 0.0f;
 		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = TA_VERTEX_NORMAL;
 		my_vertex.x = 576.0f;
 		my_vertex.y = 480.0f;
 		my_vertex.u = ((float) 256 - (opt_ClipVars[1])) / 256.0f;
 		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));
+		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = TA_VERTEX_EOL;
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
 		my_vertex.y = 0.0f;
 		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		ta_commit_vertex(&my_vertex, sizeof(my_vertex));	
-		ta_commit_eol();
+		pvr_prim(&my_vertex, sizeof(my_vertex));	
 	}
-
-	ta_poly_hdr_txr(&my_pheader, TA_TRANSLUCENT, TA_NO_TEXTURE, 0, 0, 0, 0);
-	ta_commit_poly_hdr(&my_pheader);
-
-	ta_commit_eol();
-
-	ta_finish_frame();
+	pvr_list_finish();	
+	pvr_scene_finish();
 }
 
 void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
