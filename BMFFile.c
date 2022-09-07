@@ -10,33 +10,58 @@ Updates:  October 9th, 2001 - Fix for Dynamic Memory Allocation Under KOS
 #include "BMFFile.h"
 #include "BMFConsts.h"
 
-int filesize;
+ssize_t filesize;
+file_t myfd;
 unsigned char* my_cd_buffer;
 unsigned char* my_file_pointer;
 const int BUFFER_SIZE = 1048575;
 const int NUM_CHARS = 66;
 //Maximum Height or Width of a Character
 const int MAX_DIMENSION = 64;
-uint32 myfd;
+
 
 int bf_open(char* filename)
 {
+	printf("test: opening romdisk\n");
+	file_t test = fs_open("/rd/", O_DIR);
+	dirent_t* dirent;
+	do {
+		dirent = fs_readdir(test);
+		if (dirent != NULL) {
+			printf("test: entry [%s]\n", dirent->name);
+		}
+	} while (dirent != NULL);
+	printf("test: closing up romdisk test\n");
+	fs_close(test);
+
 	filesize = 0;
+	printf("bf_open: opening file [%s]\n", filename);
 	myfd = fs_open(filename, O_RDONLY);
 	//Read up to 1 meg. of file
-	if (myfd >= 0)
-	{
+	if (myfd != -1) {
+		my_cd_buffer = malloc(BUFFER_SIZE);
+		printf("bf_open: successfully opened file with fd [%u]\n", myfd);
 		filesize = fs_read(myfd, (void *)my_cd_buffer, BUFFER_SIZE);
-		my_file_pointer = my_cd_buffer;
-		return 1;
-	}
-	else
-		return 0;
+		if (filesize == -1) {
+			printf("bf_open: reading from file failed\n");
+		} else {
+			printf("bf_open: read [%u] bytes from file\n", filesize);
+			my_file_pointer = my_cd_buffer;
+			return 1;
+		}
+	} else {
+		printf("bf_open: error unable to open file [%s]\n", filename);
+	} 
+	return 0;	
 }
 
 void bf_close()
 {
-	fs_close(myfd);
+	if (fs_close(myfd) == -1) {
+		printf("bf_close: error unable to close file with handle [%u]\n", myfd);
+	}
+	myfd = 0;
+	free(my_cd_buffer);
 	my_cd_buffer = NULL;
 	my_file_pointer = NULL;
 }
@@ -369,13 +394,16 @@ int bf_load_file(char* filename, BMF_Character* mychars)
 
 	if (bf_open(filename) == 1)
 	{
+		printf("bf_load_file: bf_open succeeded\n");
 		if (((char*) my_file_pointer)[0] == 'B')
 		{
+			printf("bf_load_file: first byte check passed\n");
 			i = 0;
 			my_file_pointer += 6;
 
 			while (i < NUM_CHARS)
 			{
+				printf("bf_load_file: loading character [%i]\n", i);
 				mychars[i].width = bf_read16();
 				mychars[i].height = bf_read16();
 
@@ -394,6 +422,7 @@ int bf_load_file(char* filename, BMF_Character* mychars)
 				i++;
 			}
 
+			printf("bf_load_file: file loaded, closing file\n");
 			bf_close();
 
 			if (notperfect)
@@ -406,13 +435,16 @@ int bf_load_file(char* filename, BMF_Character* mychars)
 		else
 		{
 			//Not a BMF File
+			printf("bf_load_file: file not a BMF file, closing file\n");			
 			bf_close();
 			return 2;
 		}
 	}
-	else
-		//File Not Found
+	else {
+		//File Not Found		
+		printf("bf_load_file: bf_open failed\n");
 		return 0;
+	}
 }
 
 void bf_free_font(BMF_Character* font)

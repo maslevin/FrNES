@@ -34,6 +34,10 @@
 #include "GUI_GUIPage.h"
 #include "FrNESImg.h"
 
+extern uint8 romdisk[];
+KOS_INIT_FLAGS(INIT_DEFAULT);
+KOS_INIT_ROMDISK(romdisk);
+
 /*-------------------------------------------------------------------*/
 /*  Interface variables                                              */
 /*-------------------------------------------------------------------*/
@@ -353,6 +357,7 @@ uint16 MakeRGB(int red, int green, int blue)
 
 void draw_screen()
 {
+	//printf("Drawing Screen\n");
 	pvr_poly_hdr_t my_pheader;
 	pvr_poly_cxt_t my_cxt;
 	pvr_vertex_t my_vertex;
@@ -1009,6 +1014,7 @@ void pvr_setup() {
 /*===================================================================*/
 int main()
 {
+	printf("Starting Main\n");
 	int result;
 	int romselstatus;
 
@@ -1018,10 +1024,10 @@ int main()
 	cont_cond_t my_cond;
 
 	// System initiation
-	KOS_INIT_FLAGS(INIT_DEFAULT);
+	printf("Initializing PVR\n");
 	pvr_setup();
-//	kos_init_all(IRQ_ENABLE | TA_ENABLE , ROMDISK_NONE);
 
+	printf("Initializing FrNES GUI\n");	
 	Allocate_Video_Options();
 	Allocate_System_Options();
 	Allocate_Control_Options();
@@ -1042,18 +1048,19 @@ int main()
 	isMainChanged = 1;
 	isSmallChanged = 1;
 
+	printf("Initializing Controllers\n");	
 	initialize_controllers();
 	rescan_controllers();
 
 	//Load Fonts
-	fs_iso9660_init();
-	bf_load_file("/FONTS/LGFONT.BMF", largefont);
-	bf_load_file("/FONTS/SMLFONT.BMF", smallfont);
-	result = bf_load_file("/FONTS/MEDFONT.BMF", medfont);
+	printf("Initializing Fonts\n");
+	bf_load_file("/rd/LGFONT.BMF", largefont);
+	bf_load_file("/rd/SMLFONT.BMF", smallfont);
+	result = bf_load_file("/rd/MEDFONT.BMF", medfont);
 
 	//Load Fonts from CD into PVR memory
-	bf_load_file_pvr_colors("/FONTS/LGFONT.BMF", PVR_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0x8000);
-	bf_load_file_pvr_colors("/FONTS/LGFONT.BMF", PVR_White_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0xFFFF);
+	bf_load_file_pvr_colors("/rd/LGFONT.BMF", PVR_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0x8000);
+	bf_load_file_pvr_colors("/rd/LGFONT.BMF", PVR_White_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0xFFFF);
 
 	//Do demo
 	// MS - comment it out
@@ -1097,6 +1104,7 @@ int main()
 	*opt_DiscFormat = default_Format;
 	*opt_SRAM = default_SRAM;
 
+	printf("Initializing VMUs\n");
 	//If the default Memory card is present
 	if (VMUs[default_VMUPort] != 0)
 	{
@@ -1127,6 +1135,7 @@ int main()
 		}
 	}
 
+	printf("Setting up main menu\n");
 	setup_main_menu();
 
 	switch (result)

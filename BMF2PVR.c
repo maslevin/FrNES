@@ -296,7 +296,7 @@ void bf_load_file_pvr(char* filename,
 	unsigned char* HeightsArray)
 {
 	BMF_Character TempFont[NUM_CHARS];
-	uint16 TexBuffer[64*64];
+	uint16* TexBuffer = memalign(64,64*64*2);
 	uint32 i;
 	uint32 j;
 	uint32 k;
@@ -328,6 +328,7 @@ void bf_load_file_pvr(char* filename,
 			TexBuffer[j] = 0x0000;
 	}
 
+	free(TexBuffer);
 	bf_free_font(TempFont);
 }
 
@@ -336,7 +337,7 @@ void bf_load_file_pvr(char* filename,
 void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor)
 {
 	BMF_Character TempFont[NUM_CHARS];
-	uint16 TexBuffer[64*64];
+	uint16* TexBuffer = memalign(64,64*64*2);
 	uint32 i;
 	uint32 j;
 	uint32 k;
@@ -345,10 +346,12 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 	for (i = 0; i < (64*64); i++)
 		TexBuffer[i] = 0x0000;
 
+	printf("bf_load_file_pvr_colors: loading template font\n");
 	bf_load_file(filename, TempFont);
 
 	for (i = 0; i < NUM_CHARS; i++)
 	{
+		printf("bf_load_file_pvr_colors: loading character [%i]\n", i);
 		if (TempFont[i].bitdata != NULL)
 		{
 			for (j = 0; j < (TempFont[i].width); j++)
@@ -359,6 +362,7 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 						TexBuffer[j + (64 * k)] = fontcolor;
 		}
 
+		printf("bf_load_file_pvr_colors: uploading character [%i] data to PVR texture\n", i);
 		pvr_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, 64 * 64 * 2);
 		WidthsArray[i] = TempFont[i].width;
 		HeightsArray[i] = TempFont[i].height;
@@ -368,6 +372,8 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 			TexBuffer[j] = 0x0000;
 	}
 
+	free(TexBuffer);
+	printf("bf_load_file_pvr_colors: freeing template font\n");
 	bf_free_font(TempFont);
 }
 
