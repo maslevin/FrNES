@@ -342,15 +342,15 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 	uint32 j;
 	uint32 k;
 
-	//Flash temp ram
-	for (i = 0; i < (64*64); i++)
-		TexBuffer[i] = 0x0000;
-
 	printf("bf_load_file_pvr_colors: loading template font\n");
 	bf_load_file(filename, TempFont);
 
 	for (i = 0; i < NUM_CHARS; i++)
 	{
+		//Flash temp ram
+		for (j = 0; j < (64*64); j++)
+			TexBuffer[j] = 0x0000;
+
 		printf("bf_load_file_pvr_colors: loading character [%i]\n", i);
 		if (TempFont[i].bitdata != NULL)
 		{
@@ -363,13 +363,10 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 		}
 
 		printf("bf_load_file_pvr_colors: uploading character [%i] data to PVR texture\n", i);
-		pvr_txr_load(PVR_Offset + (i * MaxBytesPerChar), TexBuffer, 64 * 64 * 2);
+		pvr_ptr_t destination_address = PVR_Offset + (i * MaxBytesPerChar);
+		pvr_txr_load(TexBuffer, destination_address, 64 * 64 * 2);
 		WidthsArray[i] = TempFont[i].width;
 		HeightsArray[i] = TempFont[i].height;
-	
-		//Flash Temp Ram
-		for (j = 0; j < 64*64; j++)
-			TexBuffer[j] = 0x0000;
 	}
 
 	free(TexBuffer);
@@ -377,10 +374,14 @@ void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPe
 	bf_free_font(TempFont);
 }
 
-void bf_ta_submit_character_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha)
+void bf_ta_submit_character_alpha(pvr_poly_cxt_t* cxt, void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char width, unsigned char height, float alpha)
 {
-//	pvr_poly_hdr_t hdr;
+	pvr_poly_hdr_t hdr;
 	pvr_vertex_t vert;
+
+	pvr_poly_cxt_txr(cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 64, 64, PVR_Offset, PVR_FILTER_BILINEAR);
+	pvr_poly_compile(&hdr, cxt);
+	pvr_prim(&hdr, sizeof(hdr));
 
 	vert.flags = PVR_CMD_VERTEX;
 	vert.x = xposition;
@@ -407,7 +408,7 @@ void bf_ta_submit_character_alpha(void* PVR_Offset, float xposition, float yposi
 	pvr_prim(&vert, sizeof(vert));
 }
 
-void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha)
+void bf_ta_submit_string_alpha(pvr_poly_cxt_t* cxt, void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string, float alpha)
 {
 	int largestwidth;
 	int tempwidth;
@@ -438,13 +439,13 @@ void bf_ta_submit_string_alpha(void* PVR_Offset, float xposition, float ypositio
 		}
 		else
 		{
-			bf_ta_submit_character_alpha(PVR_Offset + (tempindex * 64 * 64 * 2), xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex], alpha);
+			bf_ta_submit_character_alpha(cxt, PVR_Offset + (tempindex * 64 * 64 * 2), xstart, yposition, zposition, xwidth, screenheight, fontwidths[tempindex], fontheights[tempindex], alpha);
 			xstart += (xwidth - 2);
 		}
 	}
 }
 
-void bf_ta_submit_string(void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string)
+void bf_ta_submit_string(pvr_poly_cxt_t* cxt, void* PVR_Offset, float xposition, float yposition, float zposition, float screenwidth, float screenheight, unsigned char* fontwidths, unsigned char* fontheights, char* my_string)
 {
-	bf_ta_submit_string_alpha(PVR_Offset, xposition, yposition, zposition, screenwidth, screenheight, fontwidths, fontheights, my_string, 1.0f);
+	bf_ta_submit_string_alpha(cxt, PVR_Offset, xposition, yposition, zposition, screenwidth, screenheight, fontwidths, fontheights, my_string, 1.0f);
 }

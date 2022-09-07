@@ -472,8 +472,8 @@ void draw_screen()
 	my_vertex.v = 0.0f;
 	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	bf_ta_submit_string(PVR_Font_Offset, title_offset_x, title_offset_y, 32.0f, 150, 35, PVR_Font_Widths, PVR_Font_Heights, App_String);
-	bf_ta_submit_string(PVR_Font_Offset, title_offset_x, title_offset_y + 35, 32.0f, 160, 20, PVR_Font_Widths, PVR_Font_Heights, Version_String);
+	bf_ta_submit_string(&my_cxt, PVR_Font_Offset, title_offset_x, title_offset_y, 32.0f, 150, 35, PVR_Font_Widths, PVR_Font_Heights, App_String);
+	bf_ta_submit_string(&my_cxt, PVR_Font_Offset, title_offset_x, title_offset_y + 35, 32.0f, 160, 20, PVR_Font_Widths, PVR_Font_Heights, Version_String);
 
 	pvr_list_finish();
 
@@ -1033,13 +1033,13 @@ int main()
 	Allocate_Control_Options();
 
 	//Some Memory Areas
-	PVR_Font_Offset = pvr_mem_malloc(540672);
 	PVR_MainWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
 	PVR_SmallWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
 
 	//32-byte align so the Store Queues can write to it.
 	PVR_NESScreen1_Offset = pvr_mem_malloc(256 * 256 * 2);
 	PVR_NESScreen2_Offset = pvr_mem_malloc(256 * 256 * 2);
+	PVR_Font_Offset = pvr_mem_malloc(540672);
 	PVR_White_Font_Offset = pvr_mem_malloc(540672);
 
 	//Use the MainWindow Texture for Title Screen since both won't ever be used at the same time
@@ -1488,8 +1488,6 @@ int main()
 	Free_System_Options();
 	Free_Control_Options();
 
-//	ta_txr_release_all();
-//	ta_shutdown();
 	bf_free_font(medfont);
 	bf_free_font(largefont);
 	return 0;

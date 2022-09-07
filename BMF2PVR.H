@@ -10,9 +10,10 @@
 #ifndef __BMF2PVR_H
 #define __BMF2PVR_H
 
+#include <kos.h>
+
 #include "BMFFile.h"
 #include "BMFConsts.h"
-#include <kos.h>
 
 int bf_char_index(char str);
 void bf_load_file_pvr(char* filename, 
@@ -27,7 +28,8 @@ void bf_load_file_pvr_colors(char* filename,
     unsigned char* HeightsArray, 
     uint16 fontcolor, 
     uint16 bgcolor);
-void bf_ta_submit_character(void* PVR_Offset, 
+void bf_ta_submit_character(pvr_poly_cxt_t* cxt, 
+    void* PVR_Offset, 
     float xposition, 
     float yposition, 
     float zposition, 
@@ -35,7 +37,8 @@ void bf_ta_submit_character(void* PVR_Offset,
     float screenheight, 
     unsigned char width, 
     unsigned char height);
-void bf_ta_submit_string(void* PVR_Offset, 
+void bf_ta_submit_string(pvr_poly_cxt_t* cxt, 
+    void* PVR_Offset, 
     float xposition, 
     float yposition, 
     float zposition, 
@@ -44,7 +47,9 @@ void bf_ta_submit_string(void* PVR_Offset,
     unsigned char* fontwidths, 
     unsigned char* fontheights, 
     char* my_string);
-void bf_ta_submit_string_alpha(void* PVR_Offset, 
+void bf_ta_submit_string_alpha(
+    pvr_poly_cxt_t* cxt, 
+    void* PVR_Offset, 
     float xposition, 
     float yposition, 
     float zposition, 
