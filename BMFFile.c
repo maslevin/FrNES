@@ -22,6 +22,8 @@ const int MAX_DIMENSION = 64;
 
 int bf_open(char* filename)
 {
+	/*
+	// MS - sample of directory listing
 	printf("test: opening romdisk\n");
 	file_t test = fs_open("/rd/", O_DIR);
 	dirent_t* dirent;
@@ -33,6 +35,7 @@ int bf_open(char* filename)
 	} while (dirent != NULL);
 	printf("test: closing up romdisk test\n");
 	fs_close(test);
+	*/
 
 	filesize = 0;
 	printf("bf_open: opening file [%s]\n", filename);
