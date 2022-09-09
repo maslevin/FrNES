@@ -6,3 +6,5 @@
 
 release
 debug
+
+romdisk/*.nes
