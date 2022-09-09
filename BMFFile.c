@@ -9,6 +9,7 @@ Updates:  October 9th, 2001 - Fix for Dynamic Memory Allocation Under KOS
 
 #include "BMFFile.h"
 #include "BMFConsts.h"
+#include "macros.h"
 
 ssize_t filesize;
 file_t myfd;
@@ -460,6 +461,7 @@ void bf_free_font(BMF_Character* font)
 
 void bf_draw_str(BMF_Character* font, uint16 color, uint16* buffer, int bufwidth, char* str)
 {
+	printf("Attempting to draw string [%s]\n", str);	
 	int i;
 	int j;
 	int k;
@@ -493,6 +495,7 @@ void bf_draw_str(BMF_Character* font, uint16 color, uint16* buffer, int bufwidth
 
 void bf_bgdraw_str(BMF_Character* font, uint16 color, uint16 bgcolor, uint16* buffer, int bufwidth, char* str)
 {
+	printf("Attempting to draw string [%s]\n", str);
 	int i;
 	int j;
 	int k;
@@ -533,6 +536,7 @@ void bf_bgdraw_str(BMF_Character* font, uint16 color, uint16 bgcolor, uint16* bu
 
 void bf_draw_str_widthclip(BMF_Character* font, uint16 color, uint16* buffer, int bufwidth, char* str, int maxwidth)
 {
+	printf("Attempting to draw string [%s]\n", str);
 	int i;
 	int j;
 	int k;
@@ -566,6 +570,7 @@ void bf_draw_str_widthclip(BMF_Character* font, uint16 color, uint16* buffer, in
 
 void bf_bgdraw_str_widthclip(BMF_Character* font, uint16 color, uint16 bgcolor, uint16* buffer, int bufwidth, char* str, int maxwidth)
 {
+	printf("Attempting to draw string [%s]\n", str);	
 	int i;
 	int j;
 	int k;
@@ -614,6 +619,7 @@ void bf_bgdraw_str_widthclip(BMF_Character* font, uint16 color, uint16 bgcolor, 
 
 void bf_draw_str_rlalign(BMF_Character* font, uint16 color, uint16* buffer, int bufwidth, char* str, int maxwidth)
 {
+	printf("Attempting to draw string [%s]\n", str);	
 	int i;
 	int j;
 	int k;
@@ -701,6 +707,7 @@ void bf_draw_str_rlalign(BMF_Character* font, uint16 color, uint16* buffer, int 
 
 void bf_bgdraw_str_rlalign(BMF_Character* font, uint16 color, uint16 bgcolor, uint16* buffer, int bufwidth, char* str, int maxwidth)
 {
+	printf("Attempting to draw string [%s]\n", str);	
 	int i;
 	int j;
 	int k;

@@ -8,13 +8,15 @@
 /*===================================================================*/
 
 #include <kos.h>
+#include "macros.h"
+
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_DrawLine_BG_C_Map9.h"
 #include "pNesX_DrawLine_BG_C.h"
 #include "pNesX_DrawLine_BG_Asm.h"
-#include "pNesX_DrawLine_Spr_C.h"
+//#include "pNesX_DrawLine_Spr_C.h"
 #include "pNesX_Utils.h"
 
 extern int16* WorkFrame;
@@ -48,17 +50,19 @@ void pNesX_DrawLine()
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &WorkFrame[ ppuinfo.PPU_Scanline * 256 ];
-
-	if ( !( PPU_R1 & R1_SHOW_SCR ) )
-	{
-		pNesX_Texture_Fill(texture_address, 0x00000000);
-		return;
-	}
 	
 	if (Scanline_Buffer == NULL) {
 		Scanline_Buffer = memalign(32, 256 * 2);
 	}
 	pPoint = Scanline_Buffer;
+
+	if ( !( PPU_R1 & R1_SHOW_SCR ) )
+	{
+		memset(Scanline_Buffer, 0, 512);
+		pvr_txr_load(Scanline_Buffer, texture_address, 512);
+		return;
+	}
+
 
 	if (MapperNo == 9)
 	{
@@ -77,6 +81,11 @@ void pNesX_DrawLine()
 	{
 		pNesX_DrawLine_BG_C(pPoint);
 		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+
+		/* // ASM VERSION
+		pNesX_DrawLine_BG(&ppuinfo, PPUBANK, Scanline_Buffer, PalTable);
+		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+		*/
 	}
 
 	if (nSprCnt)
@@ -93,5 +102,5 @@ void pNesX_DrawLine()
 	if ( nSprCnt == 8 )
 		PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
 
-	pNesX_Texture_Write(texture_address, pPoint);
+	pvr_txr_load(pPoint, texture_address, 512);
 }

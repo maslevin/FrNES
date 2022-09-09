@@ -13,6 +13,8 @@
 /*-------------------------------------------------------------------*/
 
 #include <kos.h>
+#include "macros.h"
+
 #include "pNesX.h"
 #include "pNesX_System.h"
 #include "pNesX_Mapper.h"
@@ -79,8 +81,6 @@ unsigned char PPU_R7;
 
 /* Flag for PPU Address and Scroll Latch */
 unsigned char PPU_Latch_Flag;
-
-uint16* WorkFrame;
 
 /* PPU Address */
 uint16 PPU_Temp;
@@ -761,15 +761,17 @@ void pNesX_Cycle()
 
 	if (FrameCnt == 0)
 	{
-		//clear out sprite buffers
+		// 
 		pNesX_LoadFrame();
 
         // Switching of the double buffer
-/*        WorkFrameIdx = 1 - WorkFrameIdx;
-		if (WorkFrameIdx == 0)*/
+		/*
+        WorkFrameIdx = 1 - WorkFrameIdx;
+		if (WorkFrameIdx == 0)
 			WorkFrame = (uint16*)PVR_NESScreen1_Offset;
-/*		else
-			WorkFrame = (uint16*)PVR_NESScreen2_Offset;*/
+		else
+			WorkFrame = (uint16*)PVR_NESScreen2_Offset;		
+		*/
 	}
 	else
 	{
@@ -783,6 +785,8 @@ void pNesX_Cycle()
 		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
 	pNesX_VSync();
 	MapperVSync();
+
+//	vid_waitvbl();	
 
 //	PPU_R2 ^= R2_HIT_SP;
 

@@ -8,6 +8,7 @@
 /*===================================================================*/
 
 #include "BMF2PVR.h"
+#include "macros.h"
 
 extern const int NUM_CHARS;
 

@@ -7,6 +7,8 @@
 /*===================================================================*/
 
 #include <kos.h>
+#include "macros.h"
+
 #include "pNesX_Utils.h"
 
 char pNesX_nibtoc(uint32 nibble)

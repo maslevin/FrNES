@@ -8,6 +8,8 @@
 /*===================================================================*/
 
 #include "GUI_SystemPage.h"
+#include "macros.h"
+
 #include "pNesX_System_DC.h"
 #include "pNesX_Utils.h"
 

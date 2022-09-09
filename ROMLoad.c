@@ -7,6 +7,8 @@
 /*===================================================================*/
 
 #include "ROMLoad.h"
+#include "macros.h"
+
 #include "GUI_SystemPage.h"
 #include "pNesX_System_DC.h"
 

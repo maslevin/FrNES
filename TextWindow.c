@@ -8,6 +8,8 @@ Updated:     December 7th, 2001 - Added Scoll Bar Control to code
 */
 
 #include "TextWindow.h"
+#include "macros.h"
+
 #include "pNesX_Utils.h"
 
 //Corner of the window - Gets automatically flipped and whatever
@@ -501,13 +503,14 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_
 	//Now Draw the Text In the Window
 	for (i = 0; (i < winstyle -> Max_Items) && (i < windata -> Num_Strings); i++)
 	{
-		if (windata -> Data_Strings[i + windata -> Top_Index] != NULL) {
+		char* text = windata -> Data_Strings[i + windata -> Top_Index];
+		if ((text != NULL) && (text[0] != NULL)) {
 			printf("win_draw_textwindow: drawing line [%i]\n", i);
 			//But if the tag was found, pass it to the Checkbox Control Module
-			if (strstr((windata -> Data_Strings)[i + windata -> Top_Index], Tag_CheckBox) != NULL)
+			if (strstr(text, Tag_CheckBox) != NULL)
 			{
 				printf("win_draw_textwindow: drawing checkbox\n");
-				tempptr = (windata -> Data_Strings)[i + windata -> Top_Index];
+				tempptr = text;
 				//Parse the text field
 				index = 0;
 				while (tempptr[index] != '>')
@@ -543,7 +546,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_
 			}
 			//Check for the Slider Tag
 			else
-			if (strstr((windata -> Data_Strings)[i + windata -> Top_Index], Tag_Slider) != NULL)
+			if (strstr(text, Tag_Slider) != NULL)
 			{
 				printf("win_draw_textwindow: drawing slider\n");			
 				int max;
@@ -552,7 +555,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_
 				char* substrval;
 				char numbuffer[255];
 
-				tempptr = (windata -> Data_Strings)[i + windata -> Top_Index];
+				tempptr = text;
 
 				//Parse to find the Max value for the sliderbox
 				max = 0;
@@ -616,16 +619,16 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_
 			}
 			//If the Checkbox Tag wasn't found in the string -> Bitmap it like normal
 			else
-			if (strstr((windata -> Data_Strings)[i + windata -> Top_Index], Tag_RLAlign) != NULL)
+			if (strstr(text, Tag_RLAlign) != NULL)
 			{
 				printf("win_draw_textwindow: drawing regular line of text right aligned\n");
 				if (i + windata -> Top_Index != windata -> Highlighted_Index)
 				{
-					bf_draw_str_rlalign(windata -> Item_Font, winstyle -> Text_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, (windata -> Data_Strings)[i + windata -> Top_Index], windata -> width - 50);
+					bf_draw_str_rlalign(windata -> Item_Font, winstyle -> Text_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, text, windata -> width - 50);
 				}
 				else
 				{
-					bf_bgdraw_str_rlalign(windata -> Item_Font, winstyle -> Selected_Text_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, (windata -> Data_Strings)[i + windata -> Top_Index], windata -> width - 50);
+					bf_bgdraw_str_rlalign(windata -> Item_Font, winstyle -> Selected_Text_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, text, windata -> width - 50);
 				}
 				yposition += bf_str_height(windata -> Item_Font, "A");
 			}
@@ -634,11 +637,11 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_
 				printf("win_draw_textwindow: drawing regular line of text\n");						
 				if (i + windata -> Top_Index != windata -> Highlighted_Index)
 				{
-					bf_draw_str_widthclip(windata -> Item_Font, winstyle -> Text_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, (windata -> Data_Strings)[i + windata -> Top_Index], windata -> width - 50);
+					bf_draw_str_widthclip(windata -> Item_Font, winstyle -> Text_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, text, windata -> width - 50);
 				}
 				else
 				{
-					bf_bgdraw_str_widthclip(windata -> Item_Font, winstyle -> Selected_Text_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, (windata -> Data_Strings)[i + windata -> Top_Index], windata -> width - 50);
+					bf_bgdraw_str_widthclip(windata -> Item_Font, winstyle -> Selected_Text_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, text, windata -> width - 50);
 				}
 				yposition += bf_str_height(windata -> Item_Font, "A");
 			}
@@ -647,5 +650,6 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_
 		}
 	}
 
+	//vid_waitvbl();
 	pvr_txr_load(windata -> Target_Buffer, target, 512*512*2);
 }

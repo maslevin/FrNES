@@ -8,6 +8,8 @@
 /*===================================================================*/
 
 #include "pNesX_Sound_APU.h"
+#include "macros.h"
+
 #include "K6502_rw.h"
 
 #define  APU_VOLUME_DECAY(x)  ((x) -= ((x) >> 7))

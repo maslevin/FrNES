@@ -4,6 +4,7 @@ Adapted from the NesterDC source
 */
 
 #include "vmu_dc.h"
+#include "macros.h"
 
 const char FILENAME_STRING[] = "FrNES .60   ";
 

@@ -8,6 +8,8 @@
 /*===================================================================*/
 
 #include "GUI_ControlPage.h"
+#include "macros.h"
+
 #include "pNesX_System_DC.h"
 
 //Control Options Text

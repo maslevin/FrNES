@@ -8,6 +8,8 @@
 /*===================================================================*/
 
 #include "pNesX_Sound_APU.h"
+#include "macros.h"
+
 #include "pNesX_Sound_DC.h"
 
 /* look up table madness */

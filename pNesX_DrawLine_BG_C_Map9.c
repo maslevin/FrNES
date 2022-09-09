@@ -1,4 +1,6 @@
 #include <kos.h>
+#include "macros.h"
+
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
 //#include "pNesX_System_DC.h"

@@ -23,6 +23,8 @@
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 #include "pNesX.h"
+#include "macros.h"
+
 #include "pNesX_System.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Utils.h"
@@ -1416,7 +1418,7 @@ int main()
 
 					//A Button Hit... send the rom path to the PnesX Main, init the emulator and prepare for return to main upon exit
 					if ((my_state -> buttons & CONT_A) && 
-//						(invalida == 0) && 
+						(invalida == 0) && 
 						(disable_rom_interface == 0))
 					{
 						printf("main: loading rom [%s]\n", myRomInfos[mydata.Highlighted_Index].PhysFileName);
@@ -1602,11 +1604,11 @@ void pNesX_LoadFrame()
 		filter = PVR_FILTER_NONE;
 	}
 	pvr_ptr_t texture = PVR_NESScreen1_Offset;
-	if (WorkFrameIdx) {
+/*	if (WorkFrameIdx) {
 		texture = PVR_NESScreen2_Offset;
-	}
+	}*/
 
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565 | PVR_TXRFMT_NONTWIDDLED, 256, 256, texture, filter);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 256, 256, texture, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
 
@@ -1671,9 +1673,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 {
 	maple_device_t* my_controller;
 	cont_state_t* my_state;
-	uint32 dwTemp;
 
-	dwTemp = 0;
 	//Grab data from controller 0
 	if (numControllers > 0)
 	{
@@ -1761,7 +1761,6 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 		*pdwPad1 = 0;
 	}
 
-
 	// Increment Exit Counter if Required
 	if (numControllers > 0)
 	{
@@ -1833,21 +1832,19 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 					*pdwPad2 |= (my_state -> ltrig != 0) << 2;
 					break;
 			}
-			if (*opt_P2AnalogEnabled)
-			{
+			if (*opt_P2AnalogEnabled) {
 				*pdwPad2 |= 
 					( (my_state -> joyy < 114) << 4) | // Up
 					( (my_state -> joyy > 140) << 5) | // Down
 					( (my_state -> joyx < 114) << 6) | // Left
 					( (my_state -> joyx > 140) << 7); // Right
-			}
-			else
+			} else {
 				*pdwPad2 |= 
 					( ( (my_state -> buttons & CONT_DPAD_UP    ) != 0 ) << 4) | // Up
 					( ( (my_state -> buttons & CONT_DPAD_DOWN  ) != 0 ) << 5) | // Down
 					( ( (my_state -> buttons & CONT_DPAD_LEFT  ) != 0 ) << 6) | // Left
 					( ( (my_state -> buttons & CONT_DPAD_RIGHT ) != 0 ) << 7); // Right
-
+			}
 
 			*pdwPad2 = *pdwPad2 | ( *pdwPad2 << 8);
 		} else {
@@ -1860,120 +1857,19 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 
 uint32* pNesX_MemoryCopy( uint32* dest, uint32* src, int count)
 {
-	while (count)
-	{
-		*dest++ = *src++;
-		count-=4;
-	}
-	return dest;
+	return memcpy(dest, src, count);
 }
 
 //Inefficient and dirty
 void *pNesX_MemorySet( void *dest, int c, int count)
 {
-	int i;
-	int numdwords;
-	uint32* bigdest;
-	uint32 bigc;
-	unsigned char* smalldest;
-	bigc = c << 24 | c << 16 | c << 8 | c;
-	bigdest = (uint32*) dest;
-	smalldest = (unsigned char*) dest;
-
-	numdwords = count / 4;
-	for (i = 0; i < numdwords; i++)
-		bigdest[i] = bigc;
-	for (i = numdwords * 4; i < count; i++)
-		smalldest[i] = c;
-
-	return dest;
+	return memset(dest, c, count);
 }
 
 //Inefficient and dirty
 void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
 {
-	int i;
-	uint32* bigdest;
-
-	bigdest = (uint32*) dest;
-
-	for (i = 0; i < count; i++)
-		bigdest[i] = val;
-
-	return dest;
-}
-
-void Do_Prestore(uint32 address)
-{
-	asm("pref @r4");
-}
-
-void pNesX_Texture_Write( void *dest, void* src)
-{
-	int i;
-	int j;
-	volatile unsigned long *regs = (unsigned long*)0xff000038;
-	unsigned long formatted_address;
-	uint32* SQPtr;
-
-	regs[0] = regs[1] = ((unsigned long)dest >> 24);
-	SQPtr = ((uint32*) 0xe0000000);
-
-	formatted_address = 0xe0000000 | (((unsigned long)dest) & 0x03FFFFFF); 
-
-	//For the 16 transfers associated with one scanline = 16 transfers * 32 bytes = 512 bytes
-	for (i = 0; i < 16; i++)
-	{
-		//32-byte copy to the correct area of the Storage Queues
-		if ((i % 2) == 0) // SQ0 write
-		{
-			for (j = 0; j < 8; j++)
-			{
-				SQPtr[j] = ((uint32*) src)[(i*8) + j];
-			}
-
-			Do_Prestore(formatted_address);
-		}
-		else // SQ1 write
-		{
-			for (j = 0; j < 8; j++)
-			{
-				SQPtr[j + 8] = ((uint32*) src)[(i*8) + j];
-			}
-
-			Do_Prestore(formatted_address);
-		}
-
-		formatted_address += 32;
-	}
-}
-
-void pNesX_Texture_Fill(void *dest, uint32 val)
-{
-	int i;
-	int j;
-	volatile unsigned long *regs = (unsigned long*)0xff000038;
-	unsigned long formatted_address;
-	uint32* SQPtr;
-
-	regs[0] = regs[1] = ((unsigned long)dest >> 24);
-	SQPtr = ((uint32*) 0xe0000000);
-
-	formatted_address = 0xe0000000 | (((unsigned long)dest) & 0x03FFFFFF); 
-
-
-	//Fill the SQ Buffer area with the fill value
-	for (j = 0; j < 16; j++)
-	{
-		SQPtr[j] = val;
-	}
-
-	//For the 16 transfers associated with one scanline = 16 transfers * 32 bytes = 512 bytes
-	for (i = 0; i < 16; i++)
-	{
-		Do_Prestore(formatted_address);
-		formatted_address += 32;
-	}
+	return memset(dest, val, count);
 }
 
 //No debugging support

@@ -8,6 +8,8 @@
 /*===================================================================*/
 
 #include "GUI_VideoPage.h"
+#include "macros.h"
+
 #include "pNesX_System_Dc.h"
 #include "pNesX_Utils.h"
 

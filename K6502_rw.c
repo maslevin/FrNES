@@ -8,6 +8,7 @@
 /*===================================================================*/
 
 #include "K6502_rw.h"
+#include "macros.h"
 
 extern void apu_write(uint32 address, uint8 value);
 extern uint8 apu_read(uint32 address);
