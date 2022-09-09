@@ -296,7 +296,7 @@ void bf_load_file_pvr(char* filename,
 	unsigned char* HeightsArray)
 {
 	BMF_Character TempFont[NUM_CHARS];
-	uint16* TexBuffer = memalign(64,64*64*2);
+	uint16* TexBuffer = memalign(32, 64 * 64 * 2);
 	uint32 i;
 	uint32 j;
 	uint32 k;
@@ -337,7 +337,7 @@ void bf_load_file_pvr(char* filename,
 void bf_load_file_pvr_colors(char* filename, void* PVR_Offset, uint32 MaxBytesPerChar, unsigned char* WidthsArray, unsigned char* HeightsArray, uint16 fontcolor, uint16 bgcolor)
 {
 	BMF_Character TempFont[NUM_CHARS];
-	uint16* TexBuffer = memalign(64,64*64*2);
+	uint16* TexBuffer = memalign(32,64*64*2);
 	uint32 i;
 	uint32 j;
 	uint32 k;

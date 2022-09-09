@@ -17,7 +17,7 @@
 //Function Definitions
 void setup_video_options_screen();
 void Generate_Video_Options_List();
-void Handle_Video_Interface(cont_cond_t my_cond);
+void Handle_Video_Interface(cont_state_t* my_state);
 void Allocate_Video_Options();
 void Free_Video_Options();
 

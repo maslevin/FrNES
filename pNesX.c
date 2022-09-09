@@ -705,12 +705,7 @@ void pNesX_Cycle()
 		pNesX_Scanline_Since_Audio++;
 		
 		// Always call the renderer if Mapper 9 is involved
-		if (MapperNo == 9)
-		{
-			pNesX_DrawLine();
-		}
-		else
-		if (FrameCnt == 0)
+		if ((MapperNo == 9) || (FrameCnt == 0))
 		{
 			pNesX_DrawLine();
 		}
@@ -770,11 +765,11 @@ void pNesX_Cycle()
 		pNesX_LoadFrame();
 
         // Switching of the double buffer
-        WorkFrameIdx = 1 - WorkFrameIdx;
-		if (WorkFrameIdx == 0)
+/*        WorkFrameIdx = 1 - WorkFrameIdx;
+		if (WorkFrameIdx == 0)*/
 			WorkFrame = (uint16*)PVR_NESScreen1_Offset;
-		else
-			WorkFrame = (uint16*)PVR_NESScreen2_Offset;
+/*		else
+			WorkFrame = (uint16*)PVR_NESScreen2_Offset;*/
 	}
 	else
 	{

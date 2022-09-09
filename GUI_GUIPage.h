@@ -17,7 +17,7 @@
 //Function Definitions
 void setup_gui_options_screen();
 void Generate_GUI_Options_List();
-void Handle_GUI_Interface(cont_cond_t my_cond);
+void Handle_GUI_Interface(cont_state_t* my_state);
 void Allocate_GUI_Options();
 void Free_GUI_Options();
 

@@ -166,10 +166,12 @@ void Generate_Video_Options_List()
 	Video_Options[5] = ClipBX_Buffer;
 }
 
-void Handle_Video_Interface(cont_cond_t my_cond)
+void Handle_Video_Interface(cont_state_t* my_state)
 {
 	//Down Key Hit and Key is Ready to be hit
-	if ((!(my_cond.buttons & CONT_DPAD_DOWN)) && (mydata.Highlighted_Index < Num_Video_Options) && (keyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
+		(mydata.Highlighted_Index < Num_Video_Options) && 
+		(keyhit == 0))
 	{
 		mydata.Highlighted_Index++;
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
@@ -179,7 +181,9 @@ void Handle_Video_Interface(cont_cond_t my_cond)
 	}
 
 	//Up Key Hit and Key is Ready to be hit
-	if ((!(my_cond.buttons & CONT_DPAD_UP)) && (mydata.Highlighted_Index > 0) && (keyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_UP) && 
+		(mydata.Highlighted_Index > 0) && 
+		(keyhit == 0))
 	{
 		mydata.Highlighted_Index--;
 		if (mydata.Top_Index > mydata.Highlighted_Index)
@@ -189,7 +193,8 @@ void Handle_Video_Interface(cont_cond_t my_cond)
 	}
 
 	//Handle the toggle boxes
-	if (!(my_cond.buttons & CONT_A) && (invalida == 0))
+	if ((my_state -> buttons & CONT_A) && 
+		(invalida == 0))
 	{
 		switch(mydata.Highlighted_Index)
 		{
@@ -209,7 +214,8 @@ void Handle_Video_Interface(cont_cond_t my_cond)
 	}
 
 	//Handle the modify boxes
-	if (!(my_cond.buttons & CONT_DPAD_LEFT) && (xkeyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_LEFT) && 
+		(xkeyhit == 0))
 	{
 		switch(mydata.Highlighted_Index)
 		{
@@ -252,7 +258,8 @@ void Handle_Video_Interface(cont_cond_t my_cond)
 		}
 	}					
 
-	if (!(my_cond.buttons & CONT_DPAD_RIGHT) && (xkeyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_RIGHT) && 
+		(xkeyhit == 0))
 	{
 		switch(mydata.Highlighted_Index)
 		{
@@ -296,7 +303,8 @@ void Handle_Video_Interface(cont_cond_t my_cond)
 	}					
 	
 	// Handle Return to Main Menu
-	if (!(my_cond.buttons & CONT_B) && (keyhit == 0))
+	if ((my_state -> buttons & CONT_B) && 
+		(keyhit == 0))
 	{
 		setup_main_menu();
 		menuscreen = MENUNUM_MAIN;

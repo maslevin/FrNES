@@ -17,7 +17,7 @@
 //Function Definitions
 void setup_system_options_screen();
 void Generate_System_Options_List();
-void Handle_System_Interface(cont_cond_t my_cond);
+void Handle_System_Interface(cont_state_t* my_state);
 void Allocate_System_Options();
 void Free_System_Options();
 
@@ -48,7 +48,7 @@ extern char* Main_Keys[];
 extern char* Options_Keys[];
 extern const int Num_Options_Keys;
 
-extern int8 VMUs[];
+extern maple_device_t VMUs[];
 
 extern uint16 GUI_OutsideWindowColor;
 extern uint16 GUI_InsideWindowColor;

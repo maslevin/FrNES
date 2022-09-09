@@ -18,12 +18,12 @@
 #include "pNesX_Utils.h"
 
 extern int16* WorkFrame;
-extern uint16 Scanline_Buffer[];
+extern uint16* Scanline_Buffer;
 extern PPU_Info ppuinfo;
 
 unsigned char pSprBuf[264];
 
-uint16 Scanline_Buffer[256];
+uint16* Scanline_Buffer = NULL;
 extern int SpriteJustHit;
 //extern uint16 PPU_Addr;
 extern uint16 PPU_Temp;
@@ -55,6 +55,9 @@ void pNesX_DrawLine()
 		return;
 	}
 	
+	if (Scanline_Buffer == NULL) {
+		Scanline_Buffer = memalign(32, 256 * 2);
+	}
 	pPoint = Scanline_Buffer;
 
 	if (MapperNo == 9)

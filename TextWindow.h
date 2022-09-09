@@ -69,6 +69,6 @@ typedef struct
 	int Target_Width;
 } Window_Data;
 
-void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle);
+void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_t target);
 
 #endif

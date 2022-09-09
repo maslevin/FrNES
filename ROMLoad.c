@@ -10,8 +10,9 @@
 #include "GUI_SystemPage.h"
 #include "pNesX_System_DC.h"
 
-uint32 my_dir;
-dirent_t* my_pdirent;
+file_t my_file;
+dirent_t* my_dir;
+int numberOfRoms = 0;
 int currentindex;
 
 uint32 crc_32_tab[256] = { /* CRC polynomial 0xedb88320 */
@@ -71,55 +72,63 @@ uint32 UPDC32 (unsigned char octet, uint32 crc)
 //Initializes a RomInfo array to the unread values
 void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers)
 {
-	int i;
-	for (i = 0; i < NumBuffers; i++)
-	{
+	printf("InitializeFileInfos: clearing entries\n");
+	memset(RomInfoArray, 0, sizeof(RomInfoArray) * NumBuffers);
+	for (int i = 0; i < NumBuffers; i++) {
 		RomPtrArray[i] = RomInfoArray[i].FileName;
-		RomInfoArray[i].FileName[0] = 0;
-		RomInfoArray[i].FileSize = -1;
-		RomInfoArray[i].IsRead = 0;
 	}
 };
 
 //Start the Search Process
 int StartFileSearch(char* Path)
 {
+	printf("StartFileSearch: beginning search\n");
 	//Reset CD drive to look for new rom CD..
-	fs_iso9660_init();
+//	fs_iso9660_init();
 
-	my_dir = fs_open(Path, (O_RDONLY | O_DIR));
-	if (my_dir == 0)
-	{
+	my_file = fs_open(Path, O_DIR);
+	if (my_file == -1) {
+		printf("StartFileSearch: error unable to open directory\n");
 		return 0;
+	} else {
+		printf("StartFileSearch: directory opened successfully\n");
+		numberOfRoms = 0;
+		currentindex = 0;
+		return 1;
 	}
-
-	currentindex = 0;
-	return 1;
 };
 
-void EndFileSearch()
-{
-	fs_close(my_dir);
+void EndFileSearch() {
+	printf("EndFileSearch: closing directory\n");
+	if (fs_close(my_file) == -1) {
+		printf("EndFileSearch: error, unable to close directory\n");
+	}
 	currentindex = 0;
-	my_pdirent = NULL;
 }
 
 int ReturnCurrentNumRoms()
 {
-	return currentindex + 1;
+	return numberOfRoms;
 }
 
 //Loads a fileinfo
 int LoadNextFileSimple(RomInfo* RomInfoArray)
 {
-	my_pdirent = fs_readdir(my_dir);
-	if (my_pdirent != NULL)
+	printf("LoadNextFileSimple: reading directory\n");	
+	my_dir = fs_readdir(my_file);
+	if (my_dir != NULL)
 	{
-		RomInfoArray[currentindex].FileSize = my_pdirent -> size;
-		strcpy(RomInfoArray[currentindex].FileName, my_pdirent -> name);
-		strcpy(RomInfoArray[currentindex].PhysFileName, my_pdirent -> name);
-		RomInfoArray[currentindex].IsRead = 1;
-		currentindex++;
+		printf("LoadNextFileSimple: returned new entry [%s]\n", my_dir -> name);
+		if (strstr(my_dir -> name, ".nes") != NULL) {
+			RomInfoArray[currentindex].FileSize = my_dir -> size;
+			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
+			// PhysFileName, necessary?
+			strcpy(RomInfoArray[currentindex].PhysFileName, "/rd/");
+			strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
+			RomInfoArray[currentindex].IsRead = 1;
+			currentindex++;
+			numberOfRoms++;
+		}
 		return 1;
 	}
 	else
@@ -128,21 +137,27 @@ int LoadNextFileSimple(RomInfo* RomInfoArray)
 		
 uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom)
 {
+	printf("ReturnChecksum: calculating crc32 of ROM image [%s]\n", RomInfoArray[index].PhysFileName);
 	//Temp area for ROM allocation
 	char textbuffer[256];
 	uint32 my_fd;
 	uint32 oldcrc32;
 	int i;
 
-	if (*opt_DiscFormat)
-		strcpy(textbuffer, "/GAMES/");
-	else
-		strcpy(textbuffer, "/ROMS/");
-	strcat (textbuffer, RomInfoArray[index].PhysFileName);
-
-	my_fd = fs_open(textbuffer, O_RDONLY);
-	fs_read(my_fd, temprom, RomInfoArray[index].FileSize);
-	fs_close(my_fd);
+	printf("ReturnChecksum: loading ROM image into buffer\n");
+	my_fd = fs_open(RomInfoArray[index].PhysFileName, O_RDONLY);
+	if (my_fd == -1) {
+		printf("ReturnChecksum: failed to open ROM image\n");
+		return 0;
+	}
+	if (fs_read(my_fd, temprom, RomInfoArray[index].FileSize) != RomInfoArray[index].FileSize) {
+		printf("ReturnChecksum: was not able to read ROM image from file system\n");
+		return 0;
+	}
+	if (fs_close(my_fd) == -1) {
+		printf("ReturnChecksum: failed to close ROM image file handle\n");
+		return 0;
+	}
 
 	oldcrc32 = 0xFFFFFFFF;
 
@@ -152,6 +167,7 @@ uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom)
 		oldcrc32 = UPDC32 (temprom[i], oldcrc32);
 
 	oldcrc32 = oldcrc32 ^ 0xFFFFFFFF;
+	printf("ReturnChecksum: returning CRC of [%08x]\n", oldcrc32);
 
 	return oldcrc32;
 }

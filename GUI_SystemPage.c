@@ -216,12 +216,14 @@ void Generate_System_Options_List()
 	System_Options[9] = Options_Rescan;
 }
 
-void Handle_System_Interface(cont_cond_t my_cond)
+void Handle_System_Interface(cont_state_t* my_state)
 {
 	int i;
 
 	//Down Key Hit and Key is Ready to be hit
-	if ((!(my_cond.buttons & CONT_DPAD_DOWN)) && (mydata.Highlighted_Index < Num_System_Options) && (keyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
+		(mydata.Highlighted_Index < Num_System_Options) && 
+		(keyhit == 0))
 	{
 		mydata.Highlighted_Index++;
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
@@ -231,7 +233,9 @@ void Handle_System_Interface(cont_cond_t my_cond)
 	}
 
 	//Up Key Hit and Key is Ready to be hit
-	if ((!(my_cond.buttons & CONT_DPAD_UP)) && (mydata.Highlighted_Index > 0) && (keyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_UP) && 
+		(mydata.Highlighted_Index > 0) && 
+		(keyhit == 0))
 	{
 		mydata.Highlighted_Index--;
 		if (mydata.Top_Index > mydata.Highlighted_Index)
@@ -241,7 +245,8 @@ void Handle_System_Interface(cont_cond_t my_cond)
 	}
 
 	//Handle the toggle boxes
-	if (!(my_cond.buttons & CONT_A) && (invalida == 0))
+	if ((my_state -> buttons & CONT_A) && 
+		(invalida == 0))
 	{
 		switch(mydata.Highlighted_Index)
 		{
@@ -269,6 +274,7 @@ void Handle_System_Interface(cont_cond_t my_cond)
 				break;
 			// Scan Maple Bus
 			case 9:
+/*			
 				initialize_controllers();
 				rescan_controllers();
 
@@ -289,12 +295,14 @@ void Handle_System_Interface(cont_cond_t my_cond)
 					}
 				}
 				invalida = 1;
+*/				
 				break;
 		}
 	}
 
 	//Handle the modify boxes
-	if (!(my_cond.buttons & CONT_DPAD_LEFT) && (xkeyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_LEFT) && 
+		(xkeyhit == 0))
 	{
 		switch(mydata.Highlighted_Index)
 		{
@@ -326,6 +334,7 @@ void Handle_System_Interface(cont_cond_t my_cond)
 				}
 				break;
 			case 5:
+/*			
 				if ((*opt_VMUPort) > 0)
 				{
 					for (i = (*opt_VMUPort) - 1; i >= 0; i--)
@@ -338,11 +347,13 @@ void Handle_System_Interface(cont_cond_t my_cond)
 					isMainChanged = 1;
 					xkeyhit = 1;
 				}
+*/				
 				break;
 		}
 	}					
 
-	if (!(my_cond.buttons & CONT_DPAD_RIGHT) && (xkeyhit == 0))
+	if ((my_state -> buttons & CONT_DPAD_RIGHT) && 
+		(xkeyhit == 0))
 	{
 		switch(mydata.Highlighted_Index)
 		{
@@ -374,6 +385,7 @@ void Handle_System_Interface(cont_cond_t my_cond)
 				}
 				break;
 			case 5:
+/*			
 				if ((*opt_VMUPort < 7) && (*opt_VMUPort != -1))
 				{
 					for (i = (*opt_VMUPort) + 1; i < 8; i++)
@@ -386,13 +398,15 @@ void Handle_System_Interface(cont_cond_t my_cond)
 					isMainChanged = 1;
 					xkeyhit = 1;
 				}
+*/				
 				break;
 		}
 	}					
 
 
 	// Handle Return to Main Menu
-	if (!(my_cond.buttons & CONT_B) && (keyhit == 0))
+	if ((my_state -> buttons & CONT_B) && 
+		(keyhit == 0))
 	{
 		setup_main_menu();
 		menuscreen = MENUNUM_MAIN;
