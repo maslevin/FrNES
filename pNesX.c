@@ -765,13 +765,11 @@ void pNesX_Cycle()
 		pNesX_LoadFrame();
 
         // Switching of the double buffer
-		/*
         WorkFrameIdx = 1 - WorkFrameIdx;
 		if (WorkFrameIdx == 0)
 			WorkFrame = (uint16*)PVR_NESScreen1_Offset;
 		else
 			WorkFrame = (uint16*)PVR_NESScreen2_Offset;		
-		*/
 	}
 	else
 	{
@@ -785,8 +783,6 @@ void pNesX_Cycle()
 		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
 	pNesX_VSync();
 	MapperVSync();
-
-//	vid_waitvbl();	
 
 //	PPU_R2 ^= R2_HIT_SP;
 
