@@ -1413,59 +1413,48 @@ void pNesX_LoadFrame()
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
 
-	if (*opt_Stretch) {
-		my_vertex.flags = PVR_CMD_VERTEX;
-		my_vertex.x = 0.0f;
-		my_vertex.y = 480.0f;
-		my_vertex.z = 30.0f;
-		my_vertex.u = ((float) (opt_ClipVars[0])) / 256.0f;
-		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		my_vertex.argb = 0xFFFFFFFF;
-		my_vertex.oargb = 0;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
+	float polygon_x1 = 0.0f;
+	float polygon_y1 = 0.0f;
+	float polygon_x2 = 640.0f;
+	float polygon_y2 = 480.0f;
+	float texture_u1 = (float)opt_ClipVars[0] / 256.0f;
+	float texture_v1 = (float)opt_ClipVars[2] / 256.0f;
+	float texture_u2 = (float)(256 - (opt_ClipVars[1])) / 256.0f;
+	float texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
 
-		my_vertex.y = 0.0f;
-		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
-
-		my_vertex.x = 640.0f;
-		my_vertex.y = 480.0f;
-		my_vertex.u = ((float) 256 - (opt_ClipVars[1])) / 256.0f;
-		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
-
-		my_vertex.flags = PVR_CMD_VERTEX_EOL;
-		my_vertex.y = 0.0f;
-		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
+	if (!*opt_Stretch) {
+		// Multiply clipped pixels by two because the texture is 256x256 and we are displaying as 512x512 (roughly)
+		polygon_x1 = 64.0f + (float)(opt_ClipVars[0] * 2);
+		polygon_x2 = 576.0f - (float)(opt_ClipVars[1] * 2);
+		polygon_y1 = 0.0f + (float)(opt_ClipVars[2] * 2);
+		polygon_y2 = 480.0f - (float)(opt_ClipVars[3] * 2);
 	}
-	else
-	{
-		my_vertex.flags = PVR_CMD_VERTEX;
-		my_vertex.x = 64.0f;
-		my_vertex.y = 480.0f;
-		my_vertex.z = 30.0f;
-		my_vertex.u = ((float) (opt_ClipVars[0])) / 256.0f;
-		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		my_vertex.argb = 0xFFFFFFFF;
-		my_vertex.oargb = 0;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.y = 0.0f;
-		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
+	my_vertex.flags = PVR_CMD_VERTEX;
+	my_vertex.x = polygon_x1;
+	my_vertex.y = polygon_y2;
+	my_vertex.z = 30.0f;
+	my_vertex.u = texture_u1;
+	my_vertex.v = texture_v2;
+	my_vertex.argb = 0xFFFFFFFF;
+	my_vertex.oargb = 0;
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.x = 576.0f;
-		my_vertex.y = 480.0f;
-		my_vertex.u = ((float) 256 - (opt_ClipVars[1])) / 256.0f;
-		my_vertex.v = ((float) 240 - (opt_ClipVars[3])) / 256.0f;
-		pvr_prim(&my_vertex, sizeof(my_vertex));
+	my_vertex.y = polygon_y1;
+	my_vertex.v = texture_v1;
+	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-		my_vertex.flags = PVR_CMD_VERTEX_EOL;
-		my_vertex.y = 0.0f;
-		my_vertex.v = ((float) (opt_ClipVars[2])) / 256.0f;
-		pvr_prim(&my_vertex, sizeof(my_vertex));	
-	}
+	my_vertex.x = polygon_x2;
+	my_vertex.y = polygon_y2;
+	my_vertex.u = texture_u2;
+	my_vertex.v = texture_v2;
+	pvr_prim(&my_vertex, sizeof(my_vertex));
+
+	my_vertex.flags = PVR_CMD_VERTEX_EOL;
+	my_vertex.y = polygon_y1;
+	my_vertex.v = texture_v1;
+	pvr_prim(&my_vertex, sizeof(my_vertex));
+
 	pvr_list_finish();	
 	pvr_scene_finish();
 }
