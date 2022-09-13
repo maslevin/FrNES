@@ -49,10 +49,10 @@ prepcdidir:
 debug: $(DBGEXE)
 
 $(DBGEXE): $(DBGOBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lstdc++ -lm $(KOS_LIBS)
+	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lm $(KOS_LIBS)
 
 $(DBGDIR)/%.o: %.c | prepdbgdir
-	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
+	$(KOS_CC) -std=c99 -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
 $(DBGDIR)/%.o: %.s | prepdbgdir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
@@ -63,12 +63,12 @@ $(DBGDIR)/romdisk.o: romdisk.o
 release: $(RELEXE)
 
 $(RELEXE): $(RELOBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(RELEXE) $^ -lstdc++ -lm $(KOS_LIBS)
+	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(RELEXE) $^ -lm $(KOS_LIBS)
 	$(KOS_STRIP) $(RELEXE)
 	$(KOS_OBJCOPY) -R .stack -O binary $(RELEXE) $(RELBIN)
 
 $(RELDIR)/%.o: %.c | prepreldir
-	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
+	$(KOS_CC) -std=c99 -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
 $(RELDIR)/%.o: %.s | prepreldir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
