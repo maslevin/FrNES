@@ -15,17 +15,17 @@
 #include "pNesX_System_DC.h"
 #include "pNesX_DrawLine_BG_C_Map9.h"
 #include "pNesX_DrawLine_BG_C.h"
-#include "pNesX_DrawLine_BG_Asm.h"
-//#include "pNesX_DrawLine_Spr_C.h"
+//#include "pNesX_DrawLine_BG_Asm.h"
+#include "pNesX_DrawLine_Spr_C.h"
 #include "pNesX_Utils.h"
 
-extern int16* WorkFrame;
-extern uint16* Scanline_Buffer;
+extern VQ_Texture* WorkFrame;
+extern unsigned char* Scanline_Buffer;
 extern PPU_Info ppuinfo;
 
 unsigned char pSprBuf[264];
 
-uint16* Scanline_Buffer = NULL;
+unsigned char* Scanline_Buffer = NULL;
 extern int SpriteJustHit;
 //extern uint16 PPU_Addr;
 extern uint16 PPU_Temp;
@@ -44,22 +44,22 @@ void pNesX_StartFrame()
 void pNesX_DrawLine()
 {
 	void* texture_address;
-	uint16 *pPoint;
+	unsigned char* pPoint;
 	int nSprCnt;
 	int index;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
-	texture_address = &WorkFrame[ ppuinfo.PPU_Scanline * 256 ];
+	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 	
 	if (Scanline_Buffer == NULL) {
-		Scanline_Buffer = memalign(32, 256 * 2);
+		Scanline_Buffer = memalign(32, 256);
 	}
 	pPoint = Scanline_Buffer;
 
 	if ( !( PPU_R1 & R1_SHOW_SCR ) )
 	{
-		memset(Scanline_Buffer, 0, 512);
-		pvr_txr_load(Scanline_Buffer, texture_address, 512);
+		memset(Scanline_Buffer, 0, 256);
+		pvr_txr_load(Scanline_Buffer, texture_address, 256);
 		return;
 	}
 
@@ -80,7 +80,7 @@ void pNesX_DrawLine()
 	else
 	{
 		pNesX_DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+		nSprCnt = pNesX_DrawLine_Spr_C();
 
 		/* // ASM VERSION
 		pNesX_DrawLine_BG(&ppuinfo, PPUBANK, Scanline_Buffer, PalTable);
@@ -93,8 +93,8 @@ void pNesX_DrawLine()
 		//Copy the data into the scanline buffer
 		for (index = 0; index < 256; index++)
 		{
-			if (pSprBuf[index] && ((pSprBuf[index] & 0x80) || pPoint[index] & 0x8000))
-				pPoint[index] = PalTable[ (pSprBuf[index] & 0xf) + 0x10 ];
+			if (pSprBuf[index])
+				pPoint[index] = (pSprBuf[index] & 0xf) + 0x10;
 		}
 	}
 
@@ -102,5 +102,5 @@ void pNesX_DrawLine()
 	if ( nSprCnt == 8 )
 		PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
 
-	pvr_txr_load(pPoint, texture_address, 512);
+	pvr_txr_load(pPoint, texture_address, 256);
 }

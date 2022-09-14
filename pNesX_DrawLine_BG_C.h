@@ -9,6 +9,6 @@
 #ifndef PNESX_DRAWLINE_BG_C
 #define PNESX_DRAWLINE_BG_C
 
-void pNesX_DrawLine_BG_C(uint16* pPoint);
+void pNesX_DrawLine_BG_C(unsigned char* pPoint);
 
 #endif

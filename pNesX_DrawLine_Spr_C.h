@@ -9,6 +9,8 @@
 #ifndef PNESX_DRAWLINE_SPR_C
 #define PNESX_DRAWLINE_SPR_C
 
+#include <kos.h>
+
 uint16 pNesX_DrawLine_Spr_C();
 
 #endif

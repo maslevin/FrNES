@@ -243,11 +243,13 @@ int interface_offset;
 
 //PowerVR Offsets and Font stuff
 pvr_ptr_t PVR_Font_Offset;
+pvr_ptr_t PVR_White_Font_Offset;
 pvr_ptr_t PVR_MainWindow_Offset;
 pvr_ptr_t PVR_SmallWindow_Offset;
-pvr_ptr_t PVR_NESScreen1_Offset;
-pvr_ptr_t PVR_NESScreen2_Offset;
-pvr_ptr_t PVR_White_Font_Offset;
+
+VQ_Texture* PVR_NESScreen1_Offset;
+VQ_Texture* PVR_NESScreen2_Offset;
+
 unsigned char isMainChanged;
 unsigned char isSmallChanged;
 unsigned char PVR_Font_Widths[NUM_CHARS];
@@ -829,6 +831,26 @@ void pvr_setup() {
     pvr_set_bg_color(0, 0, 0);
 }
 
+void initVQTextures() {
+	PVR_NESScreen1_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
+	PVR_NESScreen2_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));	
+
+	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
+	unsigned char* codebook = memalign(32, 2048);
+	uint16* codebookEntry = (uint16*)codebook;
+	uint32 codebookIdx;
+	for (codebookIdx = 0; codebookIdx < 64; codebookIdx++) {
+		uint16 codebookValue = NesPalette[codebookIdx];
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+	}
+
+	pvr_txr_load(codebook, PVR_NESScreen1_Offset, 2048);
+	pvr_txr_load(codebook, PVR_NESScreen2_Offset, 2048);
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*                dc_main() : Application main                       */
@@ -856,16 +878,15 @@ int main()
 	mydata.Target_Buffer = memalign(32, 512 * 512 * 2);
 	helpdata.Target_Buffer = memalign(32, 512 * 512 * 2);	
 
-	//32-byte align so the Store Queues can write to it.
-	PVR_NESScreen1_Offset = pvr_mem_malloc(256 * 256 * 2);
-	PVR_NESScreen2_Offset = pvr_mem_malloc(256 * 256 * 2);
-
 	//Some Memory Areas
 	PVR_MainWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
 	PVR_SmallWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
 
 	PVR_Font_Offset = pvr_mem_malloc(540672);
 	PVR_White_Font_Offset = pvr_mem_malloc(540672);
+
+	printf("Initializing VQ Textures\n");
+	initVQTextures();
 
 	printf("Initializing Controllers\n");	
 	initialize_controllers();
@@ -1409,7 +1430,7 @@ void pNesX_LoadFrame()
 		texture = PVR_NESScreen1_Offset;
 	}
 
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 256, 256, texture, filter);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, texture, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
 
@@ -1417,9 +1438,9 @@ void pNesX_LoadFrame()
 	float polygon_y1 = 0.0f;
 	float polygon_x2 = 640.0f;
 	float polygon_y2 = 480.0f;
-	float texture_u1 = (float)opt_ClipVars[0] / 256.0f;
+	float texture_u1 = ((float)opt_ClipVars[0] * 4) / 1024.0f;
 	float texture_v1 = (float)opt_ClipVars[2] / 256.0f;
-	float texture_u2 = (float)(256 - (opt_ClipVars[1])) / 256.0f;
+	float texture_u2 = (float)(1024 - (opt_ClipVars[1] * 4)) / 1024.0f;
 	float texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
 
 	if (!*opt_Stretch) {

@@ -67,8 +67,22 @@ extern unsigned char *VROM;
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
 
-extern pvr_ptr_t PVR_NESScreen1_Offset;
-extern pvr_ptr_t PVR_NESScreen2_Offset;
+#define FRAMEBUFFER_WIDTH 256
+#define FRAMEBUFFER_HEIGHT 256
+
+//Here we define the size of a framebuffer texture we want
+#define FRAMEBUFFER_PIXELS (FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT)
+
+//The codebook for a VQ texture is always 2048 bytes
+#define CODEBOOK_SIZE 2048
+
+typedef struct {
+	unsigned char codebook[CODEBOOK_SIZE];
+	unsigned char texture[FRAMEBUFFER_PIXELS];
+} VQ_Texture;
+
+extern VQ_Texture* PVR_NESScreen1_Offset;
+extern VQ_Texture* PVR_NESScreen2_Offset;
 
 //extern void pNesX_Texture_Write( void* dest, void* src);
 

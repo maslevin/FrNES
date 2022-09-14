@@ -56,11 +56,6 @@ unsigned char PPURAM[ PPURAM_SIZE ];
 unsigned char ChrBuf[ 256 * 2 * 8 * 8 ];
 unsigned char pSprBuf[272];
 
-//char* pBGBuf = (char*)(0x8CFC0000);
-//uint16 Scanline_Buffer[256];
-//uint16* Scanline_Buffer = (uint16*)(0x8CFB0000);
-
-
 /* VROM */
 unsigned char *VROM;
 
@@ -112,7 +107,7 @@ uint16 FrameCnt;
 int32 Auto_Frames;
 
 /* Display Buffer */
-uint16 *WorkFrame;
+VQ_Texture* WorkFrame;
 uint16 WorkFrameIdx;
 
 
@@ -447,7 +442,7 @@ int pNesX_Reset()
   /*-------------------------------------------------------------------*/
   pNesX_SetupPPU();
   WorkFrameIdx = 0;
-  WorkFrame = (uint16*)PVR_NESScreen1_Offset;
+  WorkFrame = PVR_NESScreen1_Offset;
 
   /*-------------------------------------------------------------------*/
   /*  Initialize Mapper                                                */
@@ -767,9 +762,9 @@ void pNesX_Cycle()
         // Switching of the double buffer
         WorkFrameIdx = 1 - WorkFrameIdx;
 		if (WorkFrameIdx == 0)
-			WorkFrame = (uint16*)PVR_NESScreen1_Offset;
+			WorkFrame = PVR_NESScreen1_Offset;
 		else
-			WorkFrame = (uint16*)PVR_NESScreen2_Offset;		
+			WorkFrame = PVR_NESScreen2_Offset;		
 	}
 	else
 	{
