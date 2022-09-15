@@ -15,8 +15,8 @@
 #include "pNesX_System_DC.h"
 #include "pNesX_DrawLine_BG_C_Map9.h"
 #include "pNesX_DrawLine_BG_C.h"
-//#include "pNesX_DrawLine_BG_Asm.h"
-#include "pNesX_DrawLine_Spr_C.h"
+#include "pNesX_DrawLine_BG_Asm.h"
+//#include "pNesX_DrawLine_Spr_C.h"
 #include "pNesX_Utils.h"
 
 extern VQ_Texture* WorkFrame;
@@ -80,21 +80,16 @@ void pNesX_DrawLine()
 	else
 	{
 		pNesX_DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_DrawLine_Spr_C();
-
-		/* // ASM VERSION
-		pNesX_DrawLine_BG(&ppuinfo, PPUBANK, Scanline_Buffer, PalTable);
 		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
-		*/
 	}
 
 	if (nSprCnt)
 	{
 		//Copy the data into the scanline buffer
-		for (index = 0; index < 256; index++)
-		{
-			if (pSprBuf[index])
+		for (index = 0; index < 256; index++) {
+			if (pSprBuf[index] && (pSprBuf[index] & 0x80)) {
 				pPoint[index] = (pSprBuf[index] & 0xf) + 0x10;
+			}
 		}
 	}
 
