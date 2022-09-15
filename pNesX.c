@@ -110,7 +110,6 @@ int32 Auto_Frames;
 VQ_Texture* WorkFrame;
 uint16 WorkFrameIdx;
 
-
 /* Update flag for ChrBuf */
 unsigned char ChrBufUpdate;
 
