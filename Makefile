@@ -84,4 +84,5 @@ cdi: release | prepcdidir
 	cdi4dc $(CDIBOOTSTRAPISO) $(CDIFILE)
 
 clean:
-	rm -rf debug release cdi iso
+	rm -rf debug release cdi iso romdisk.*
+
