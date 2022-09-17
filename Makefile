@@ -3,6 +3,7 @@
 # FrNES/Makefile
 # (c)2000-2022 Matt Slevinsky
 #
+# TEST
 
 KOS_ROMDISK_DIR = romdisk
 include $(KOS_BASE)/Makefile.rules
