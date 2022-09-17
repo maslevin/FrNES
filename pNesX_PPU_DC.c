@@ -85,13 +85,16 @@ void pNesX_DrawLine()
 
 	if (nSprCnt)
 	{
-		//Copy the data into the scanline buffer
+		//Merge the sprite buffer with the scanline buffer
+		pPoint = Scanline_Buffer;
 		for (index = 0; index < 256; index++) {
 			if (pSprBuf[index] && 
-				((pSprBuf[index] & 0x80) || (pPoint[index] % 4 == 0))
+				((pSprBuf[index] & 0x80) || 
+				 ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
 			) {
-				pPoint[index] = (pSprBuf[index] & 0xf) + 0x10;
+				*pPoint = (pSprBuf[index] & 0xf) + 0x10;
 			}
+			pPoint++;
 		}
 	}
 
@@ -99,5 +102,6 @@ void pNesX_DrawLine()
 	if ( nSprCnt == 8 )
 		PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
 
-	pvr_txr_load(pPoint, texture_address, 256);
+	//Move the scanline buffer to the PVR texture
+	pvr_txr_load(Scanline_Buffer, texture_address, 256);
 }
