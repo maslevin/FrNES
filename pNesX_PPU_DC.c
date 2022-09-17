@@ -87,7 +87,9 @@ void pNesX_DrawLine()
 	{
 		//Copy the data into the scanline buffer
 		for (index = 0; index < 256; index++) {
-			if (pSprBuf[index] && (pSprBuf[index] & 0x80)) {
+			if (pSprBuf[index] && 
+				((pSprBuf[index] & 0x80) || (pPoint[index] % 4 == 0))
+			) {
 				pPoint[index] = (pSprBuf[index] & 0xf) + 0x10;
 			}
 		}

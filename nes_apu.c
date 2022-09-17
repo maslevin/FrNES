@@ -1102,7 +1102,7 @@ uint8 ex_read(uint32 address)
 
 void apu_write(uint32 address, uint8 value)
 {
-   printf("apu_write: [%u], [%u]\n", address, value);
+   // printf("apu_write: [%u], [%u]\n", address, value);
    apudata_t d;
 
    switch (address)
