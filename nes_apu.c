@@ -1232,6 +1232,7 @@ void ex_write(uint32 address, uint8 value)
 
 void apu_process(void *buffer, int num_samples)
 {
+  //printf("apu_process: begin\n");
   apudata_t *d;
   uint32 elapsed_cycles;
   static int32 prev_sample = 0;
@@ -1345,6 +1346,7 @@ void apu_process(void *buffer, int num_samples)
   
   /* resync cycle counter */
   apu->elapsed_cycles = K6502_GetCycles();
+  //printf("apu_process: end\n");  
 }
 
 
@@ -1475,9 +1477,10 @@ apu_set_exsound(nes_apu_exsound_type_t ex_type)
   nes_apu_exsound_t *p = &(apu->exsound);
   
   apu->exsound_type = ex_type;
-/*  
+
   switch (ex_type)
   {
+/*    
     case NES_APU_EXSOUND_VRC6:
       p->render_func = VRC6SoundRender;
       p->write_func = VRC6SoundWrite;
@@ -1507,13 +1510,14 @@ apu_set_exsound(nes_apu_exsound_type_t ex_type)
       p->render_func = PSGSoundRender;
       p->write_func = PSGSoundWrite;
       break;
+*/      
       
     default:
       p->render_func = NULL;
       p->write_func = NULL;
       break;
   }
-*/
+
   if (!(apu->exsound_enable))
     p->render_func = NULL;
 }

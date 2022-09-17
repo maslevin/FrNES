@@ -12,6 +12,7 @@
 
 int audio_initialize() {
    apu = apu_create(APU_SAMPLE_RATE, CYCLE_RATE, 0, APU_SAMPLE_BITS);
+   apu_set_exsound(NES_APU_EXSOUND_NONE);
    if (!apu) return 0;
    audio_reset();
    return 1;
