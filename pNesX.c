@@ -19,7 +19,7 @@
 #include "pNesX_System.h"
 #include "pNesX_Mapper.h"
 #include "pNesX_System_DC.h"
-#include "pNesX_Sound_DC.h"
+#include "pNesX_Sound_APU.h"
 #include "pNesX_PPU_DC.h"
 #include "pNesX_BuildCharAsm.h"
 #include "pNesX_DrawLine_BG_Asm.h"
@@ -144,8 +144,6 @@ uint32 firmware_size = 3292;
 static volatile unsigned long *position  = (volatile unsigned long*)(0x10014 + 0xa0800000);
 static volatile unsigned long *start  = (volatile unsigned long*)(0x10000 + 0xa0800000);
 
-extern int pNesX_Scanline_Since_Audio;
-
 uint16 num_writes;
 uint16 on_frame;
 
@@ -229,9 +227,7 @@ void DC_SoundInit()
 	spu_memload(0, aica_fw, 3292);
 	spu_enable();
 
-	for (i = 0x4000; i < 0x4018; i++)
-		apu_write(i, 0);
-
+	audio_initialize();
 }
 
 void pNesX_DoSpu()
@@ -251,9 +247,8 @@ void pNesX_DoSpu()
 		this_buffer = 1;
 
 
-	if (last_buffer != this_buffer)
-	{
-		apu_process ((void*)sample_buffer, 736);
+	if (last_buffer != this_buffer) {
+		audio_do_frame(sample_buffer, 736);
 
 		if (this_buffer == 0)
 			spu_memload(0x115C0, (uint8 *)sample_buffer, 1472);
@@ -317,6 +312,7 @@ void pNesX_Fin()
 
   // Release a memory for ROM
 //  pNesX_ReleaseRom();
+	audio_shutdown();
 }
 
 
@@ -590,7 +586,6 @@ void pNesX_Main()
 	if (*opt_SoundEnabled) 
 	{
 		// Start Sound Emu
-		apu_init();
 		DC_SoundInit();
 
 		timer_init();
@@ -695,8 +690,6 @@ void pNesX_Cycle()
 		//Do Scroll Setup even if we aren't drawing the frame
 		if (do_scroll_setup)
 			ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
-
-		pNesX_Scanline_Since_Audio++;
 		
 		// Always call the renderer if Mapper 9 is involved
 		if ((MapperNo == 9) || (FrameCnt == 0))
@@ -772,7 +765,6 @@ void pNesX_Cycle()
 
 	K6502_Step(115);
 	MapperHSync();
-	pNesX_Scanline_Since_Audio++;
 	if (!(*opt_AutoFrameSkip))
 		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
 	pNesX_VSync();
@@ -783,26 +775,22 @@ void pNesX_Cycle()
 	K6502_Step(1);
 	K6502_DoNMI();
 	K6502_Step(114);
-	pNesX_Scanline_Since_Audio++;
 	MapperHSync();
 
 	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++)
 	{
 		K6502_Step(115);
 		MapperHSync();
-		pNesX_Scanline_Since_Audio++;
 	}
 
 	PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
 
 	K6502_Step(115);
 	MapperHSync();
-	pNesX_Scanline_Since_Audio++;
 
 	if (*opt_SoundEnabled)
 	{
 		pNesX_DoSpu();
-		pNesX_Scanline_Since_Audio = 0;
 	}
 }
 

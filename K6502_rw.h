@@ -17,7 +17,6 @@
 
 #include "pNesX.h"
 #include "pNesX_System.h"
-#include "pNesX_Sound_DC.h"
 #include "K6502.h"
 
 // I/O Operation (User definition)

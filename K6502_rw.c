@@ -8,10 +8,8 @@
 /*===================================================================*/
 
 #include "K6502_rw.h"
+#include "pNesX_Sound_APU.h"
 #include "macros.h"
-
-extern void apu_write(uint32 address, uint8 value);
-extern uint8 apu_read(uint32 address);
 
 extern int SpriteHitPos;
 extern uint16* opt_SoundEnabled;
@@ -128,8 +126,8 @@ inline unsigned char K6502_Read( uint16 wAddr )
         PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
         return byRet;
       }
-/*	  else
-		return apu_read(wAddr);*/
+      else
+		    return audio_read(wAddr);
 	  break;
       // The other sound registers are not readable.
 
@@ -334,22 +332,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           }
           break;
 		default:
-			APU_Reg[ wAddr & 0x1f ] = byData;
-			if (*opt_SoundEnabled)
-				apu_queue(wAddr, byData);
-			//apu_write(wAddr, byData);
-			break;
+        APU_Reg[ wAddr & 0x1f ] = byData;
+        if (*opt_SoundEnabled) {
+          audio_write(wAddr, byData);
+        }
+        break;
       }
-
-
-//	  APU_Reg[ wAddr & 0x1f ] = byData;
-//      if ( wAddr <= 0x4017 )
-//      {
-//		APU_Reg[ wAddr & 0x1f ] = byData;
-//      }
-
-//	  apu_write(wAddr, byData);
-
       break;
 
     case 0x6000:  /* SRAM */

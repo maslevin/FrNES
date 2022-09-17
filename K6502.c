@@ -22,7 +22,7 @@
 /*-------------------------------------------------------------------*/
 
 // Clock Op.
-#define CLK(a)   g_wPassedClocks += (a);
+#define CLK(a)   g_wPassedClocks += (a); totalClocks += (a);
 
 // Addressing Op.
 // Address
@@ -178,6 +178,7 @@ unsigned char NMI_Wiring;
 
 // The number of the clocks that it passed
 uint16 g_wPassedClocks;
+uint32 totalClocks;
 
 // A table for the test
 unsigned char g_byTestTable[ 256 ];
@@ -1151,6 +1152,7 @@ void K6502_Reset()
 
   // Reset Passed Clocks
   g_wPassedClocks = 0;
+  totalClocks = 0;
 }
 
 /*===================================================================*/
@@ -1276,3 +1278,16 @@ inline unsigned char K6502_ReadAbsY(){ uint16 wA0, wA1; wA0 = AA_ABS; pPC += 2; 
 //static inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = K6502_ReadZpW( K6502_Read( PC++ ) ); wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = RAM[ *pPC ] | RAM[ (unsigned char)(*pPC + 1) ] << 8; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 //static inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = *(uint16 *)&RAM[ *pPC ]; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
+
+uint8 K6502_GetByte(uint32 addr) {
+	return RAM[addr];
+}
+
+void K6502_Burn(uint16 wClocks) {
+	g_wPassedClocks += wClocks;
+	totalClocks += wClocks;
+}
+
+uint32 K6502_GetCycles() {
+	return totalClocks;
+}

@@ -10,24 +10,17 @@
 #ifndef PNESX_SOUND_DC
 #define PNESX_SOUND_DC
 
-#include "pNesX_Sound_DC.h"
+#include "nes_apu.h"
 
-#define  APU_NOISE_32K  0x7FFF
-#define  APU_NOISE_93   93
+#define APU_SAMPLE_RATE 22050
+#define CYCLE_RATE 60
+#define APU_SAMPLE_BITS 16
 
-extern apu_t apu;
-extern int32 decay_lut[];
-extern int32 vbl_lut[];
-extern int trilength_lut[128];
-
-extern void apu_build_luts(int num_samples);
-extern int32 apu_rectangle_0(void);
-extern int32 apu_rectangle_1(void);
-extern int32 apu_triangle(void);
-extern int32 apu_noise(void);
-extern void apu_dmcreload(void);
-extern int32 apu_dmc(void);
-extern void apu_init();
-void shift_register15(int8* buf, int count);
+extern int audio_initialize();
+extern void audio_reset();
+extern void audio_shutdown();
+extern uint8 audio_read(uint32 addr);
+extern void audio_write(uint32 addr, uint8 value);
+extern void audio_do_frame(uint16* sample_buffer, uint32 num_samples);
 
 #endif
