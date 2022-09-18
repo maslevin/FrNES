@@ -8,37 +8,7 @@ Adapted from the NesterDC source
 
 const char FILENAME_STRING[] = "FrNES .60   ";
 
-//Code hack so that I don't need threads to make a stable build :(
-//Sux0rs
-uint16 nullfunc()
-{
-	int i;
-
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	for (i = 0; i < 255; i++);
-	return 0;
-}
-
-// This rouine came from Marcus's website
+// This routine came from Marcus's website
 // http://mc.pp.se/dc/vms/fileheader.html
 uint16 calcCRC(const unsigned char *buf, int size)
 {
@@ -99,7 +69,7 @@ uint16 find_file (uint8 vmu_addr, char* filename)
 	uint16* buf16 = (uint16*)buf;
 	uint16 dirblock;
 	uint16 dirlength;
-	dirent_vmu* vmu_val;
+	vmu_dir_t* vmu_val;
 	int number;
 	file_hdr_vmu* hdr_ptr;
 
