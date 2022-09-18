@@ -34,7 +34,6 @@
 #include "GUI_SystemPage.h"
 #include "GUI_ControlPage.h"
 #include "GUI_GUIPage.h"
-#include "FrNESImg.h"
 
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);

@@ -590,7 +590,7 @@ void pNesX_Main()
 
 		timer_init();
 		// Start a counter to cycle at 25 times a second to wait for the sound to be done loading
-		timer_prime(TMU1, 1, 0);
+		timer_prime(TMU1, 25, 0);
 		timer_start(TMU1);
 
 		//Wait a second before you start messing with the regs...
