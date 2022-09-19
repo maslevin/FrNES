@@ -1669,6 +1669,26 @@ uint32* pNesX_MemoryCopy( uint32* dest, uint32* src, int count)
 	return memcpy(dest, src, count);
 }
 
+uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset)
+{
+	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
+	if (offset == 0) {
+		return memcpy(dest, src, count);		
+	} else {
+	// wrapping behaviour for sprite DMA operations
+		unsigned char* u8dest = (unsigned char*)dest;
+		unsigned char* u8src = (unsigned char*) src;		
+		for (int i = 0; i < (count - offset); i++) {
+			u8dest[i + offset] = u8src[i];
+		}
+		for (int i = 0; i < offset; i++) {
+			u8dest[i] = u8src[i + (count - offset)];
+		}
+		return dest;
+	}
+}
+
+
 //Inefficient and dirty
 void *pNesX_MemorySet( void *dest, int c, int count)
 {

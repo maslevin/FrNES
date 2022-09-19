@@ -47,7 +47,6 @@ _pNesX_DrawLine_Spr:
 .start_spr_render_loop:
 	mov.b         @r8, r10
 	extu.b        r10, r10
-	add           #1, r10
 
 	!if nY > PPU_Scanline
 	cmp/hi        r3, r10

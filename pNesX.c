@@ -216,8 +216,7 @@ void DC_SoundInit()
 	last_write = 0;
 	last_buffer = 0;
 
-	for (i = 0; i < (num_bytes / 2); i++)
-		((uint16*)sample_buffer)[i] = 0;
+	memset(sample_buffer, num_bytes, 0);
 
 	spu_memload(current_address, (uint8 *)sample_buffer, num_bytes);
 
@@ -670,9 +669,6 @@ void pNesX_Cycle()
 	int i;
 	int do_scroll_setup;
 
-	// 05-08-2001 An attempt at more accurate timing
-	PPU_R2 = 0;
-
 	//Update Character Data
 	if (FrameCnt == 0)
 		pNesX_SetupChr();
@@ -682,19 +678,17 @@ void pNesX_Cycle()
 	
 	pNesX_GetSprHitY();
 
-	// First 240 scanlines
+	// Dummy scanline -1;
+	K6502_Step(115);
+
+	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++)
 	{
 		do_scroll_setup = ((PPU_R1 & 0x10) || (PPU_R1 & 0x08));
 
 		//Do Scroll Setup even if we aren't drawing the frame
-		if (do_scroll_setup)
+		if (do_scroll_setup) {
 			ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
-		
-		// Always call the renderer if Mapper 9 is involved
-		if ((MapperNo == 9) || (FrameCnt == 0))
-		{
-			pNesX_DrawLine();
 		}
 
 		// Account for rendering even if we aren't drawing the frame
@@ -703,7 +697,7 @@ void pNesX_Cycle()
 			if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) /* is subtile y offset == 7? */
 			{
 				ppuinfo.PPU_Addr &= 0x8FFF; /* subtile y offset = 0 */
-//				if ((PPU_Addr & 0x03E0) == 0x03A0) /* name_tab line == 29? */
+
 				if ((ppuinfo.PPU_Addr & 0x03E0) == 0x03A0) /* name_tab line == 29? */
 				{ 
 					ppuinfo.PPU_Addr ^= 0x0800;  /* switch v nametables (bit 11) */
@@ -727,15 +721,9 @@ void pNesX_Cycle()
 			}
 		}
 
-		//Ugly little bit of code from the last version
-		//The Sprite 0 hit part is not used anymore, but the NMI on update
-		//still is ??
-		if (SpriteJustHit == ppuinfo.PPU_Scanline)
-		{
-
-//			if (SpriteHitPos == -1)
-				// Set a sprite hit flag
-				PPU_R2 |= R2_HIT_SP;
+		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
+			// Set a sprite hit flag
+			PPU_R2 |= R2_HIT_SP;
 
 			// NMI is required if there is necessity
 			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
@@ -744,10 +732,14 @@ void pNesX_Cycle()
 
 		K6502_Step(115);
 		MapperHSync();
+
+		// Always call the renderer if Mapper 9 is involved
+		if ((MapperNo == 9) || (FrameCnt == 0)) {
+			pNesX_DrawLine();
+		}		
 	}
 
-	if (FrameCnt == 0)
-	{
+	if (FrameCnt == 0) {
 		// 
 		pNesX_LoadFrame();
 
@@ -757,12 +749,20 @@ void pNesX_Cycle()
 			WorkFrame = PVR_NESScreen1_Offset;
 		else
 			WorkFrame = PVR_NESScreen2_Offset;		
-	}
-	else
-	{
+	} else {
 //		vid_waitvbl();
 	}
 
+	// Scanline 240
+	ppuinfo.PPU_Scanline = 240;	
+	if (SpriteJustHit == ppuinfo.PPU_Scanline) {
+		// Set a sprite hit flag
+		PPU_R2 |= R2_HIT_SP;
+
+		// NMI is required if there is necessity
+		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+			NMI_REQ;
+	}
 	K6502_Step(115);
 	MapperHSync();
 	if (!(*opt_AutoFrameSkip))
@@ -770,13 +770,22 @@ void pNesX_Cycle()
 	pNesX_VSync();
 	MapperVSync();
 
-//	PPU_R2 ^= R2_HIT_SP;
+	// Scanline 241
+	ppuinfo.PPU_Scanline = 241;
+	if (SpriteJustHit == ppuinfo.PPU_Scanline) {
+		// Set a sprite hit flag
+		PPU_R2 |= R2_HIT_SP;
 
+		// NMI is required if there is necessity
+		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+			NMI_REQ;
+	}	
 	K6502_Step(1);
 	K6502_DoNMI();
 	K6502_Step(114);
 	MapperHSync();
 
+	// Scanline 242-260
 	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++)
 	{
 		K6502_Step(115);
@@ -784,9 +793,6 @@ void pNesX_Cycle()
 	}
 
 	PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
-
-	K6502_Step(115);
-	MapperHSync();
 
 	if (*opt_SoundEnabled)
 	{
@@ -816,64 +822,48 @@ void pNesX_VSync()
 /*===================================================================*/
 void pNesX_GetSprHitY()
 {
-/*
- * Get a position of scanline hits sprite #0
- *
- */
+	/*
+	* Get a position of scanline hits sprite #0
+	*
+	*/
+	int nYBit;
+	uint32 *pdwChrData;
+	int nOff;
+	int i;
 
-  int nYBit;
-  uint32 *pdwChrData;
-  int nOff;
-  int i;
+	if ( SPRRAM[ SPR_ATTR ] & SPR_ATTR_V_FLIP ) {
+		// Vertical flip
+		nYBit = ( ppuinfo.PPU_SP_Height - 1 ) << 3;
+		nOff = -2;
+	} else {
+		// Non flip
+		nYBit = 0;
+		nOff = 2;
+	}
 
-  if ( SPRRAM[ SPR_ATTR ] & SPR_ATTR_V_FLIP )
-  {
-    // Vertical flip
-    nYBit = ( ppuinfo.PPU_SP_Height - 1 ) << 3;
-    nOff = -2;
-  }
-  else
-  {
-    // Non flip
-    nYBit = 0;
-    nOff = 2;
-  }
+	if ( ppuinfo.PPU_R0 & R0_SP_SIZE ) {
+		// Sprite size 8x16
+		if ( SPRRAM[ SPR_CHR ] & 1 ) {
+			pdwChrData = (uint32 *)( ChrBuf + 256 * 64 + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
+		} else {
+			pdwChrData = (uint32 *)( ChrBuf + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
+		} 
+	} else {
+		// Sprite size 8x8
+		pdwChrData = (uint32 *)( ppuinfo.PPU_SP_Base + ( SPRRAM[ SPR_CHR ] << 6 ) + nYBit );
+	}
 
-  if ( ppuinfo.PPU_R0 & R0_SP_SIZE )
-  {
-    // Sprite size 8x16
-    if ( SPRRAM[ SPR_CHR ] & 1 )
-    {
-      pdwChrData = (uint32 *)( ChrBuf + 256 * 64 + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
-    }
-    else
-    {
-      pdwChrData = (uint32 *)( ChrBuf + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
-    } 
-  }
-  else
-  {
-    // Sprite size 8x8
-    pdwChrData = (uint32 *)( ppuinfo.PPU_SP_Base + ( SPRRAM[ SPR_CHR ] << 6 ) + nYBit );
-  }
-
-
-	if ((SPRRAM[ SPR_Y ] + 1 <= 240) && (SPRRAM[SPR_Y] > 0))
-	{
-		for ( i = 0; i < ppuinfo.PPU_SP_Height; i++)
-		{
-			if ( pdwChrData[ 0 ] | pdwChrData[ 1 ] )
-			{
+	if ((SPRRAM[ SPR_Y ] + 1 <= 240) && (SPRRAM[SPR_Y] > 0)) {
+		for ( i = 0; i < ppuinfo.PPU_SP_Height; i++) {
+			if ( pdwChrData[ 0 ] | pdwChrData[ 1 ] ) {
 				SpriteJustHit = SPRRAM[SPR_Y] + 1 + i;
 				i = 256;
 			}
 			pdwChrData += nOff;
 		}
-	}
-	else
+	} else {
 		SpriteJustHit = 241;
-
-
+	}
 }
 
 /*===================================================================*/

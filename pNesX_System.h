@@ -41,6 +41,9 @@ void pNesX_PadState( uint32 *pdwPad1, uint32 *pdwPad2, uint32 *ExitCount );
 /* memcpy */
 uint32 *pNesX_MemoryCopy( uint32 *dest, uint32 *src, int count );
 
+/* memcpy with wrapping offset */
+uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset);
+
 /* memset */
 void *pNesX_MemorySet( void *dest, int c, int count );
 
