@@ -105,13 +105,18 @@ inline unsigned char K6502_Read( uint16 wAddr )
             ppuinfo.PPU_Addr += PPU_Increment;
             addr &= 0x3fff;
         
-            /* PPU Memory */
-            // Set return value;
+            if (addr >= 0x3000) {
+              if (addr >= 0x3f00) {
+                PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
+                return PPURAM[addr];
+              }
+
+              // handle mirroring
+              addr &= 0xefff;
+            }
+
             byRet = PPU_R7;
-
-            // Read PPU Memory
             PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
-
             return byRet;
         }
       }
