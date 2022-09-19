@@ -659,6 +659,8 @@ void pNesX_Main()
 	pNesX_Fin();
 }
 
+#define CYCLES_PER_LINE 113
+
 /*===================================================================*/
 /*                                                                   */
 /*              pNesX_Cycle() : The loop of emulation                */
@@ -679,7 +681,7 @@ void pNesX_Cycle()
 	pNesX_GetSprHitY();
 
 	// Dummy scanline -1;
-	K6502_Step(115);
+	K6502_Step(CYCLES_PER_LINE);
 
 	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++)
@@ -730,7 +732,7 @@ void pNesX_Cycle()
 				NMI_REQ;
 		}
 
-		K6502_Step(115);
+		K6502_Step(CYCLES_PER_LINE);
 		MapperHSync();
 
 		// Always call the renderer if Mapper 9 is involved
@@ -763,7 +765,7 @@ void pNesX_Cycle()
 		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
 			NMI_REQ;
 	}
-	K6502_Step(115);
+	K6502_Step(CYCLES_PER_LINE);
 	MapperHSync();
 	if (!(*opt_AutoFrameSkip))
 		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
@@ -782,17 +784,19 @@ void pNesX_Cycle()
 	}	
 	K6502_Step(1);
 	K6502_DoNMI();
-	K6502_Step(114);
+	K6502_Step(CYCLES_PER_LINE - 1);
 	MapperHSync();
 
 	// Scanline 242-260
 	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++)
 	{
-		K6502_Step(115);
+		K6502_Step(CYCLES_PER_LINE);
 		MapperHSync();
 	}
 
+	K6502_Step(10);
 	PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
+	K6502_Step(77);
 
 	if (*opt_SoundEnabled)
 	{
