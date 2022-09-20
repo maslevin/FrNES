@@ -794,6 +794,7 @@ void pNesX_Cycle()
 		MapperHSync();
 	}
 
+	// 87 Cycles is the remainder of the cycles from doing ALL the scanlines on the screen at 133.33 CPU cycles per scanline
 	K6502_Step(10);
 	PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
 	K6502_Step(77);
