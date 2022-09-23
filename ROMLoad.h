@@ -30,7 +30,7 @@ typedef struct
 void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers);
 
 //Start the Search Process
-int StartFileSearch(char* Path);
+int StartFileSearch(char* Path, RomInfo* RomInfoArray);
 
 //End the Search Process
 void EndFileSearch();
@@ -39,11 +39,11 @@ void EndFileSearch();
 int ReturnCurrentNumRoms();
 
 //Loads a file info without using checksum identification
-int LoadNextFileSimple(RomInfo* RomInfoArray);
+int LoadNextFileSimple(RomInfo* RomInfoArray, unsigned char* current_path);
 
 //Loads a file info using checksum identification
 int LoadNextFileComplex(RomInfo* RomInfoArray);
 
-uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom);
+uint32 ReturnChecksum(const unsigned char* filepath, uint32 filesize, unsigned char* temprom);
 
 #endif

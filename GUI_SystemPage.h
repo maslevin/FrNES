@@ -12,7 +12,8 @@
 
 #include <kos.h>
 #include "TextWindow.h"
-#include "BMFFile.h"
+
+#include "GUI_MainMenu.h"
 
 //Function Definitions
 void setup_system_options_screen();
@@ -27,20 +28,11 @@ extern Window_Data mydata;
 extern Window_Style helpstyle;
 extern Window_Data helpdata;
 
-extern BMF_Character largefont[];
-extern BMF_Character smallfont[];
-extern BMF_Character medfont[];
-
-extern pvr_ptr_t PVR_MainWindow_Offset;
-extern pvr_ptr_t PVR_SmallWindow_Offset;
-
 extern int keyhit;
 extern int invalida;
 extern int xkeyhit;
 extern int menuscreen;
 extern const int MAX_CLIP_PIXELS;
-extern unsigned char isMainChanged;
-extern unsigned char isSmallChanged;
 extern const int title_offset_y;
 extern const int Max_Frameskip;
 
@@ -50,11 +42,6 @@ extern const int Num_Options_Keys;
 
 extern maple_device_t VMUs[];
 
-extern uint16 GUI_OutsideWindowColor;
-extern uint16 GUI_InsideWindowColor;
-extern uint16 GUI_TextColor;
-extern uint16 GUI_SelectedTextColor;
-
 //Options Variables
 extern uint16* opt_SoundEnabled;
 extern uint16* opt_FrameSkip;
@@ -62,6 +49,5 @@ extern uint16* opt_AutoFrameSkip;
 extern uint16* opt_DiscFormat;
 extern int16* opt_VMUPort;
 extern uint16* opt_SRAM;
-
 
 #endif

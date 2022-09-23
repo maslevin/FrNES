@@ -10,9 +10,7 @@
 #define __PNESX_SYS_DC_H
 
 #include <kos.h>
-#include "BMFFile.h"
-#include "BMFConsts.h"
-#include "BMF2PVR.h"
+#include "font.h"
 #include "TextWindow.h"
 #include "ROMLoad.h"
 
@@ -52,7 +50,6 @@ void rescan_controllers();
 
 void itoa(uint32 i, char* buffer);
 void i32toa(uint32 i, char* buffer);
-int atoi(char* numbuffer);
 
 extern uint16 WorkFrameIdx;
 

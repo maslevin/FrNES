@@ -321,7 +321,7 @@ void pNesX_Fin()
 /*                  pNesX_Load() : Load a cassette                   */
 /*                                                                   */
 /*===================================================================*/
-int pNesX_Load( const char *pszFileName )
+int pNesX_Load( const unsigned char *filepath, uint32 filesize )
 {
 /*
  *  Load a cassette
@@ -343,7 +343,7 @@ int pNesX_Load( const char *pszFileName )
 //  pNesX_ReleaseRom();
 
   // Read a ROM image in the memory
-  if ( pNesX_ReadRom( pszFileName ) < 0 )
+  if ( pNesX_ReadRom( filepath, filesize ) < 0 )
     return -1;
 
   // Reset pNesX
@@ -590,7 +590,7 @@ void pNesX_Main()
 
 		timer_init();
 		// Start a counter to cycle at 25 times a second to wait for the sound to be done loading
-		timer_prime(TMU1, 1, 0);
+		timer_prime(TMU1, 25, 0);
 		timer_start(TMU1);
 
 		//Wait a second before you start messing with the regs...

@@ -11,29 +11,27 @@ Description: A set of functions to draw a text window suitable for a GUI
 
 #include <kos.h>
 #include <string.h>
-#include "BMFFile.h"
+#include "font.h"
 
 typedef struct
 {
 	//Visual Style Options
-	int Border_Thickness;
+	float Border_Thickness;
+	float Header_Text_Scale;
+	float Text_Scale;
 	int Max_Items;
 	int Use_Header;
 
 	//Colors to Use
-	uint16 Underline_Color_Start;
-	uint16 Underline_Color_End;
-	uint16 Border_Inside_Color;
-	uint16 Border_Outside_Color;
-
-	uint16 Inside_Color;
-	uint16 Header_Text_Color;
-	uint16 Selected_Text_Color;
-	uint16 Selected_Background_Color;
-	uint16 Text_Color;
+	uint32 Border_Color;
+	uint32 Inside_Color;
+	uint32 Header_Text_Color;
+	uint32 Selected_Text_Color;
+	uint32 Selected_Background_Color;
+	uint32 Text_Color;
 
 	//Margin Info
-	int Left_Margin;
+	float Left_Margin;
 	
 	//Not Implemented Yet -- Probably Never Will Be Either :D
 	int IsTransparent;
@@ -44,10 +42,10 @@ typedef struct
 typedef struct
 {
 	//Physical Window Position Attributes
-	int x;
-	int y;
-	int width;
-	int height;
+	float x;
+	float y;
+	float width;
+	float height;
 
 	//Data Attributes
 	char* Header_Text;
@@ -61,14 +59,9 @@ typedef struct
 	int Highlighted_Index;
 
 	//Font Attributes
-	BMF_Character* Header_Font;
-	BMF_Character* Item_Font;
-
-	//Target Attributes
-	uint16* Target_Buffer;
-	int Target_Width;
+	Font* font;
 } Window_Data;
 
-void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, pvr_ptr_t target);
+void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 list);
 
 #endif
