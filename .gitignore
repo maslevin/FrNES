@@ -9,4 +9,5 @@ debug
 
 romdisk/*.nes
 romdisk/ROMS
+romdisk/tests
 
