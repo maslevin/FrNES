@@ -8,3 +8,5 @@ release
 debug
 
 romdisk/*.nes
+romdisk/ROMS
+

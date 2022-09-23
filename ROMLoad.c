@@ -82,8 +82,7 @@ void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffe
 };
 
 //Start the Search Process
-int StartFileSearch(char* Path)
-{
+int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 	printf("StartFileSearch: beginning search\n");
 	//Reset CD drive to look for new rom CD..
 //	fs_iso9660_init();
@@ -96,6 +95,16 @@ int StartFileSearch(char* Path)
 		printf("StartFileSearch: directory opened successfully\n");
 		numberOfRoms = 0;
 		currentindex = 0;
+
+		if (strstr(Path, "/rd/") != NULL) {
+			strcpy(RomInfoArray[currentindex].FileName, ".");
+			currentindex++;
+			numberOfRoms++;	
+			strcpy(RomInfoArray[currentindex].FileName, "..");
+			currentindex++;
+			numberOfRoms++;			
+		}
+
 		return 1;
 	}
 };
@@ -114,32 +123,38 @@ int ReturnCurrentNumRoms()
 }
 
 //Loads a fileinfo
-int LoadNextFileSimple(RomInfo* RomInfoArray)
+int LoadNextFileSimple(RomInfo* RomInfoArray, unsigned char* current_path)
 {
 	printf("LoadNextFileSimple: reading directory\n");	
 	my_dir = fs_readdir(my_file);
-	if (my_dir != NULL)
-	{
-		printf("LoadNextFileSimple: returned new entry [%s]\n", my_dir -> name);
-		if (strstr(my_dir -> name, ".nes") != NULL) {
+	if (my_dir != NULL) {
+		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%X]\n", my_dir -> name, my_dir -> attr);
+		if (my_dir -> attr & 0x1000) {
+			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
+			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);
+			strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
+			RomInfoArray[currentindex].IsRead = 1;
+			currentindex++;
+			numberOfRoms++;			
+		} else if (strstr(my_dir -> name, ".nes") != NULL) {
 			RomInfoArray[currentindex].FileSize = my_dir -> size;
 			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
 			// PhysFileName, necessary?
-			strcpy(RomInfoArray[currentindex].PhysFileName, "/rd/");
+			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);
 			strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
 			RomInfoArray[currentindex].IsRead = 1;
 			currentindex++;
 			numberOfRoms++;
 		}
 		return 1;
-	}
-	else
+	} else {
 		return 0;
+	}
 }
 		
-uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom)
+uint32 ReturnChecksum(const unsigned char* filepath, uint32 filesize, unsigned char* temprom)
 {
-	printf("ReturnChecksum: calculating crc32 of ROM image [%s]\n", RomInfoArray[index].PhysFileName);
+	printf("ReturnChecksum: calculating crc32 of ROM image [%s]\n", filepath);
 	//Temp area for ROM allocation
 	char textbuffer[256];
 	uint32 my_fd;
@@ -147,12 +162,12 @@ uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom)
 	int i;
 
 	printf("ReturnChecksum: loading ROM image into buffer\n");
-	my_fd = fs_open(RomInfoArray[index].PhysFileName, O_RDONLY);
+	my_fd = fs_open(filepath, O_RDONLY);
 	if (my_fd == -1) {
 		printf("ReturnChecksum: failed to open ROM image\n");
 		return 0;
 	}
-	if (fs_read(my_fd, temprom, RomInfoArray[index].FileSize) != RomInfoArray[index].FileSize) {
+	if (fs_read(my_fd, temprom, filepath) != filesize) {
 		printf("ReturnChecksum: was not able to read ROM image from file system\n");
 		return 0;
 	}
@@ -165,7 +180,7 @@ uint32 ReturnChecksum(int index, RomInfo* RomInfoArray, unsigned char* temprom)
 
 	i = 16;
 
-	for (; i < RomInfoArray[index].FileSize; i++)
+	for (; i < filesize; i++)
 		oldcrc32 = UPDC32 (temprom[i], oldcrc32);
 
 	oldcrc32 = oldcrc32 ^ 0xFFFFFFFF;

@@ -27,7 +27,7 @@ extern uint16 NesPalette[];
 int pNesX_Menu();
 
 /* Read ROM image file */
-int pNesX_ReadRom( const char *pszFileName );
+int pNesX_ReadRom( const unsigned char *filepath, uint32 filesize );
 
 /* Release a memory for ROM */
 void pNesX_ReleaseRom();

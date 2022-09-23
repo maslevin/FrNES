@@ -320,7 +320,7 @@ void pNesX_Fin()
 /*                  pNesX_Load() : Load a cassette                   */
 /*                                                                   */
 /*===================================================================*/
-int pNesX_Load( const char *pszFileName )
+int pNesX_Load( const unsigned char *filepath, uint32 filesize )
 {
 /*
  *  Load a cassette
@@ -342,7 +342,7 @@ int pNesX_Load( const char *pszFileName )
 //  pNesX_ReleaseRom();
 
   // Read a ROM image in the memory
-  if ( pNesX_ReadRom( pszFileName ) < 0 )
+  if ( pNesX_ReadRom( filepath, filesize ) < 0 )
     return -1;
 
   // Reset pNesX

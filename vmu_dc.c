@@ -552,7 +552,6 @@ int16 load_user_settings(uint8 vmu_addr)
 	GUI_InsideWindowColor = (*settings_ptr).GUI_InsideWindowColor;
 	GUI_TextColor = (*settings_ptr).GUI_TextColor;
 	GUI_SelectedTextColor = (*settings_ptr).GUI_SelectedTextColor;
-	GUI_BGColor = (*settings_ptr).GUI_BGColor;
 
 	return 1;
 }
@@ -624,7 +623,6 @@ int16 save_user_settings(uint8 vmu_addr)
 		(*settings_ptr).GUI_InsideWindowColor = GUI_InsideWindowColor;
 		(*settings_ptr).GUI_TextColor = GUI_TextColor;
 		(*settings_ptr).GUI_SelectedTextColor =	GUI_SelectedTextColor;
-		(*settings_ptr).GUI_BGColor = GUI_BGColor;
 
 //		vmu_file.crc = calcCRC(vmu_file, 1024);
 		do_crc (vmu_file, 1024);
@@ -680,7 +678,6 @@ int16 save_user_settings(uint8 vmu_addr)
 		(*settings_ptr).GUI_InsideWindowColor = GUI_InsideWindowColor;
 		(*settings_ptr).GUI_TextColor = GUI_TextColor;
 		(*settings_ptr).GUI_SelectedTextColor =	GUI_SelectedTextColor;
-		(*settings_ptr).GUI_BGColor = GUI_BGColor;		
 		
 		do_crc (vmu_file, 1024);
 

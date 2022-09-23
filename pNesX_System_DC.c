@@ -30,6 +30,9 @@
 #include "pNesX_Utils.h"
 #include "vmu_dc.h"
 #include "vmu_icons.h"
+#include "GUI_MainMenu.h"
+#include "GUI_Credits.h"
+#include "GUI_Help.h"
 #include "GUI_VideoPage.h"
 #include "GUI_SystemPage.h"
 #include "GUI_ControlPage.h"
@@ -62,15 +65,19 @@ int menuscreen;
 int invalida;
 int keyhit;
 int xkeyhit;
+int disable_trigs;
+
+int romselstatus;
+int disable_rom_interface;
 
 /*------------------------------------------------------------------*/
 /*  GUI Customization Variables                                     */
 /*------------------------------------------------------------------*/
 uint32 GUI_BGColor;
-uint16 GUI_TextColor;
-uint16 GUI_SelectedTextColor;
-uint16 GUI_InsideWindowColor;
-uint16 GUI_OutsideWindowColor;
+uint32 GUI_TextColor;
+uint32 GUI_SelectedTextColor;
+uint32 GUI_InsideWindowColor;
+uint32 GUI_OutsideWindowColor;
 
 const int title_offset_x = 25;
 const int title_offset_y = 25;
@@ -83,45 +90,13 @@ Window_Data mydata;
 Window_Style helpstyle;
 Window_Data helpdata;
 
-#define NUM_CHARS 66
-
-//Define 3 font areas
-BMF_Character smallfont[NUM_CHARS];
-BMF_Character medfont[NUM_CHARS];
-BMF_Character largefont[NUM_CHARS];
-
 //Rom buffer area ... uses dynamic memory allocation
 unsigned char *ROM;
 unsigned char *VROM;
-
 uint32 SRAM_Enabled;
 
-char FRNES_DISCSTRING[] = "/ROMS/";
-char NESTERDC_DISCSTRING[] = "/GAMES/";
-
 char App_String[] = "FrNES";
-char Version_String[] = "0.60 Final";
-
-char Main_Menu[] = "Main Menu";
-char* Main_Options[] = {
-	"Select A Rom",
-	"Video Options",
-	"Control Options",
-	"System Options",
-	"GUI Options",
-//	"Font Options",
-	"Help",
-	"FrNES Credits"
-};
-const int Num_Main = 7;
-
-//Help for the Main screen
-char* Main_Keys[] = {
-	"Main",
-	"A - Choose",
-	"DPAD - Move"
-};
-const int Num_Main_Keys = 3;
+char Version_String[] = "0.70";
 
 //Help for the Options screen
 char* Options_Keys[] = {
@@ -129,91 +104,6 @@ char* Options_Keys[] = {
 	"DPad L and R to Change"
 };
 const int Num_Options_Keys = 2;
-
-
-//Help for the ROM loading screen
-char* Rom_Keys[] = {
-	"Rom Select Screen",
-	"A - Sel",
-	"B - Back",
-//	"X - Identify",
-	"DPAD - Scroll", 
-	"LTrig - PgUp",
-	"RTrig - PgDn"
-};
-const int Num_Rom_Keys = 6;
-
-//About Screen Comments
-char* About_Text[] = {
-	"FrNES is a NES emulator for",
-	"Sega Dreamcast. It was based",
-	"on the first release of",
-	"Racoons NES emulator for",
-	"Playstation, pNesX.",
-	"Now it has so much new",
-	"code in it, it cannot",
-	"truly be considered a",
-	"port of the original",
-	"",
-	"This final version of",
-	"0.6 includes new code",
-	"for the PPU renderer",
-	"written in assembly",
-	"language.  As well, new",
-	"code was introduced for",
-	"mappers 7 and 9, with",
-	"many more on their way",
-	"",
-	"",
-	"",
-	"Credits:",
-	"  ReGex - Emulator Code",
-	"        - Tools + GUI",
-	"  Miss Soy Beansprout",
-	"        - Art",
-	"  Racoon - PS Version",
-	"  Matt Conte - Sound Code",
-	"  Marat - 6502 Emulator",
-	"  Dan Potter",
-	"  Marcus Comstedt",
-	"  Jordan DeLong",
-	"  And Many More",
-	"             Kallistios",
-	"",
-	"Do not distribute this",
-	"with ROM images!"
-};
-
-const int Num_About_Text = 36;
-
-//Help Screen Comments
-char* Help_Text[] = {
-	"At the Options Screen",
-	"  Left and Right on DPad",
-	"  change Options and move",
-	"  sliders",
-	"",
-	"  A Toggles Checkboxes",
-	"",
-	"Inside the Emu",
-	"  LTrig and RTrig - Exit",
-	"",
-	"Otherwise:",
-	"  2 Players are supported",
-	"  As long as the controllers",
-	"  Have been scanned at boot",
-	"  or at the menu option."
-};
-
-const int Num_Help_Text = 14;
-
-//Generic help for other text/screens
-char* Text_Keys[] = {
-	"Keys",
-	"A - Choose",
-	"DPAD - Move"
-};
-const int Num_Text_Keys = 3;
 
 //Options Screen Menu Items
 
@@ -240,28 +130,15 @@ int textwidth;
 int textheight;
 int interface_offset;
 
-//PowerVR Offsets and Font stuff
-pvr_ptr_t PVR_Font_Offset;
-pvr_ptr_t PVR_White_Font_Offset;
-pvr_ptr_t PVR_MainWindow_Offset;
-pvr_ptr_t PVR_SmallWindow_Offset;
+Font* font;
 
 VQ_Texture* PVR_NESScreen1_Offset;
 VQ_Texture* PVR_NESScreen2_Offset;
 unsigned char* codebook;
 
-unsigned char isMainChanged;
-unsigned char isSmallChanged;
-unsigned char PVR_Font_Widths[NUM_CHARS];
-unsigned char PVR_Font_Heights[NUM_CHARS];
 pvr_poly_hdr_t my_pheader;
 pvr_vertex_t my_vertex;
 pvr_poly_cxt_t my_cxt;
-
-//ROM data storage
-const int MAX_ROMS = 2048;
-RomInfo myRomInfos[2048];
-char* myRomStrings[2048];
 
 //The crc32 of the currently selected rom
 uint32 currentCRC32;
@@ -374,21 +251,6 @@ void draw_screen()
 	pvr_vertex_t my_vertex;
 	pvr_vertex_t my_c_vertex;
 
-	if (isMainChanged)
-	{
-		//printf("draw_screen: main window changed, redrawing texture\n");
-		//vid_waitvbl();
-		win_draw_textwindow(&mydata, &mystyle, PVR_MainWindow_Offset);
-		isMainChanged = 0;
-	}
-	if (isSmallChanged)
-	{
-		//printf("draw_screen: small window changed, redrawing texture\n");		
-		//vid_waitvbl();
-		win_draw_textwindow(&helpdata, &helpstyle, PVR_SmallWindow_Offset);
-		isSmallChanged = 0;
-	}
-
 	//printf("draw_screen: waiting for PVR to be ready\n");
 	pvr_wait_ready();
 	pvr_scene_begin();
@@ -420,300 +282,26 @@ void draw_screen()
 	my_c_vertex.flags = PVR_CMD_VERTEX_EOL;
 	my_c_vertex.y = 0.0f;
 	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
-	pvr_list_finish();
+
+	win_draw_textwindow(&mydata, &mystyle, PVR_LIST_OP_POLY);
+	win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_OP_POLY);
+	pvr_list_finish();	
 
 	// STEP 2: Draw the UI as two translucent textures over top of that previous texture
 	//printf("draw_screen: drawing main window\n");
 	pvr_list_begin(PVR_LIST_TR_POLY);
-	pvr_poly_cxt_col(&my_cxt, PVR_LIST_TR_POLY);
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 512, 512, PVR_MainWindow_Offset, PVR_FILTER_BILINEAR);
-	pvr_poly_compile(&my_pheader, &my_cxt);
-	pvr_prim(&my_pheader, sizeof(my_pheader));
 
-	my_vertex.flags = PVR_CMD_VERTEX;
-	my_vertex.x = 200.0f;
-	my_vertex.y = 440.0f;
-	my_vertex.z = 30.0f;
-	my_vertex.u = 0.0f;
-	my_vertex.v = ((float) mydata.height) / 512.0f;
-	my_vertex.argb = 0xC0FFFFFF;
-	my_vertex.oargb = 0xFFFFFFFF;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
+	draw_string(font, PVR_LIST_TR_POLY, App_String, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
+	font -> scale = 0.50f;
+	draw_string(font, PVR_LIST_TR_POLY, Version_String, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
+	font -> scale = 1.00f;
 
-	my_vertex.y = 20.0f;
-	my_vertex.u = 0.0f;
-	my_vertex.v = 0.0f;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.x = 620.0f;
-	my_vertex.y = 440.0f;
-	my_vertex.u = ((float) mydata.width - 7) / 512.0f;
-	my_vertex.v = ((float) mydata.height) / 512.0f;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.flags = PVR_CMD_VERTEX_EOL;
-	my_vertex.y = 20.0f;
-	my_vertex.u = ((float) mydata.width - 7) / 512.0f;
-	my_vertex.v = 0.0f;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	//printf("draw_screen: drawing small window\n");
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED, 512, 512, PVR_SmallWindow_Offset, PVR_FILTER_BILINEAR);
-	pvr_poly_compile(&my_pheader, &my_cxt);
-	pvr_prim(&my_pheader, sizeof(my_pheader));
-
-	my_vertex.flags = PVR_CMD_VERTEX;
-	my_vertex.x = 20.0f;
-	my_vertex.y = 440.0f;
-	my_vertex.z = 30.0f;
-	my_vertex.u = 0.0f;
-	my_vertex.v = ((float) helpdata.height) / 512.0f;
-	my_vertex.argb = 0xC0FFFFFF;
-	my_vertex.oargb = 0xFFFFFFFF;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.y = 280.0f;
-	my_vertex.u = 0.0f;
-	my_vertex.v = 0.0f;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.x = 190.0f;
-	my_vertex.y = 440.0f;
-	my_vertex.u = ((float) helpdata.width - 7) / 512.0f;
-	my_vertex.v = ((float) helpdata.height) / 512.0f;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	my_vertex.flags = PVR_CMD_VERTEX_EOL;
-	my_vertex.y = 280.0f;
-	my_vertex.u = ((float) helpdata.width - 7) / 512.0f;
-	my_vertex.v = 0.0f;
-	pvr_prim(&my_vertex, sizeof(my_vertex));
-
-	// TA Submit string has some kind of a leak or bug in it, causes instability
-/*
-	printf("draw_screen: drawing text line 1\n");
-	bf_ta_submit_string(&my_cxt, PVR_Font_Offset, title_offset_x, title_offset_y, 32.0f, 150, 35, PVR_Font_Widths, PVR_Font_Heights, App_String);
-	printf("draw_screen: drawing text line 2\n");	
-	bf_ta_submit_string(&my_cxt, PVR_Font_Offset, title_offset_x, title_offset_y + 35, 32.0f, 160, 20, PVR_Font_Widths, PVR_Font_Heights, Version_String);
-*/
+	win_draw_textwindow(&mydata, &mystyle, PVR_LIST_TR_POLY);
+	win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_TR_POLY);
 
 	pvr_list_finish();
-
 	//printf("draw_screen: finishing scene\n");
 	pvr_scene_finish();
-}
-
-void setup_main_menu()
-{
-
-	//Set Up Window Data Features
-	mydata.x = 0;
-	mydata.y = 0;
-	mydata.width = 400;
-	mydata.height = 460 - (2 * title_offset_y);
-	mydata.Target_Width = 512;
-	mydata.Header_Font = largefont;
-	mydata.Item_Font = medfont;
-	mydata.Header_Text = Main_Menu;
-	mydata.Data_Strings = Main_Options;
-	mydata.Num_Strings = Num_Main;
-	mydata.Highlighted_Index = 0;
-	mydata.Top_Index = 0;
-	
-	//Set Up Window Style Features
-	mystyle.Border_Inside_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
-	mystyle.Border_Outside_Color = 0x8000;
-	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
-	mystyle.Left_Margin = 15;
-	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
-	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (35 + mydata.Header_Font[0].height)) / (mydata.Item_Font[0].height);
-	mystyle.Selected_Text_Color = GUI_TextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
-
-	//Set Up Window Style Features
-	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
-	helpstyle.Border_Outside_Color = 0x8000;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
-	helpstyle.Left_Margin = 15;
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
-	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_TextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
-
-	//Set Up Window Data Features
-	helpdata.x = 0;
-	helpdata.y = 0;
-	helpdata.width = 160;
-	helpdata.height = 160;
-	helpdata.Target_Width = 512;
-	helpdata.Header_Font = smallfont;
-	helpdata.Item_Font = smallfont;
-	helpdata.Header_Text = " ";
-	helpdata.Data_Strings = Main_Keys;
-	helpdata.Num_Strings = Num_Main_Keys;
-	helpdata.Highlighted_Index = Num_Main_Keys;
-	helpdata.Top_Index = 0;
-}
-
-void setup_rom_screen()
-{
-	//Set Up Window Data Features
-	mydata.x = 0;
-	mydata.y = 0;
-	mydata.width = 400;
-	mydata.height = 460 - (2 * title_offset_y);
-	mydata.Target_Width = 512;
-	mydata.Header_Font = largefont;
-	mydata.Item_Font = medfont;
-	mydata.Header_Text = Main_Options[0];
-	mydata.Data_Strings = myRomStrings;
-	mydata.Num_Strings = MAX_ROMS;
-	mydata.Highlighted_Index = 0;
-	mydata.Top_Index = 0;
-
-	//Set Up Window Style Features
-	mystyle.Border_Inside_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
-	mystyle.Border_Outside_Color = 0x8000;
-	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
-	mystyle.Left_Margin = 15;
-	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
-	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (35 + mydata.Header_Font[0].height)) / (mydata.Item_Font[0].height);
-	mystyle.Selected_Text_Color = GUI_TextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
-
-	//Set Up Window Style Features
-	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
-	helpstyle.Border_Outside_Color = 0x8000;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
-	helpstyle.Left_Margin = 15;
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
-	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_TextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
-
-	//Set Up Window Data Features
-	helpdata.x = 0;
-	helpdata.y = 0;
-	helpdata.width = 160; 
-	helpdata.height = 160;
-	helpdata.Target_Width = 512;
-	helpdata.Header_Font = smallfont;
-	helpdata.Item_Font = smallfont;
-	helpdata.Header_Text = " ";
-	helpdata.Data_Strings = Rom_Keys;
-	helpdata.Num_Strings = Num_Rom_Keys;
-	helpdata.Highlighted_Index = Num_Rom_Keys;
-	helpdata.Top_Index = 0;
-}
-
-void setup_about_screen()
-{
-	//Set Up Window Style Features
-	mystyle.Border_Inside_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
-	mystyle.Border_Outside_Color = 0x8000;
-	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
-	mystyle.Left_Margin = 15;
-	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
-	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (35 + mydata.Header_Font[0].height)) / (mydata.Item_Font[0].height);
-	mystyle.Selected_Text_Color = GUI_TextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
-
-	//Set Up Window Data Features
-	mydata.x = 0;
-	mydata.y = 0;
-	mydata.width = 400;
-	mydata.height = 460 - (2 * title_offset_y);
-	mydata.Target_Width = 512;
-	mydata.Header_Font = largefont;
-	mydata.Item_Font = medfont;
-	mydata.Header_Text = Main_Options[6];
-	mydata.Data_Strings = About_Text;
-	mydata.Num_Strings = Num_About_Text;
-	mydata.Highlighted_Index = 0;
-	mydata.Top_Index = 0;
-
-	//Set Up Window Style Features
-	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
-	helpstyle.Border_Outside_Color = 0x8000;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
-	helpstyle.Left_Margin = 15;
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
-	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_TextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
-
-	//Set Up Window Data Features
-	helpdata.x = 0;
-	helpdata.y = 0;
-	helpdata.width = 160;
-	helpdata.height = 160;
-	helpdata.Target_Width = 512;
-	helpdata.Header_Font = smallfont;
-	helpdata.Item_Font = smallfont;
-	helpdata.Header_Text = " ";
-	helpdata.Data_Strings = Text_Keys;
-	helpdata.Num_Strings = Num_Text_Keys;
-	helpdata.Highlighted_Index = Num_Text_Keys;
-	helpdata.Top_Index = 0;
-}
-
-void setup_help_screen()
-{
-	//Set Up Window Style Features
-	mystyle.Border_Inside_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
-	mystyle.Border_Outside_Color = 0x8000;
-	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
-	mystyle.Left_Margin = 15;
-	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
-	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (35 + mydata.Header_Font[0].height)) / (mydata.Item_Font[0].height);
-	mystyle.Selected_Text_Color = GUI_TextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
-
-	//Set Up Window Data Features
-	mydata.x = 0;
-	mydata.y = 0;
-	mydata.width = 400;
-	mydata.height = 460 - (2 * title_offset_y);
-	mydata.Target_Width = 512;
-	mydata.Header_Font = largefont;
-	mydata.Item_Font = medfont;
-	mydata.Header_Text = Main_Options[5];
-	mydata.Data_Strings = Help_Text;
-	mydata.Num_Strings = Num_Help_Text;
-	mydata.Highlighted_Index = 0;
-	mydata.Top_Index = 0;
-
-	//Set Up Window Style Features
-	helpstyle.Border_Inside_Color = GUI_OutsideWindowColor;
-	helpstyle.Border_Outside_Color = 0x8000;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
-	helpstyle.Left_Margin = 15;
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
-	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_TextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
-
-	//Set Up Window Data Features
-	helpdata.x = 0;
-	helpdata.y = 0;
-	helpdata.width = 160;
-	helpdata.height = 160;
-	helpdata.Target_Width = 512;
-	helpdata.Header_Font = smallfont;
-	helpdata.Item_Font = smallfont;
-	helpdata.Header_Text = "";
-	helpdata.Data_Strings = Text_Keys;
-	helpdata.Num_Strings = Num_Text_Keys;
-	helpdata.Highlighted_Index = 0;
-	helpdata.Top_Index = 0;
 }
 
 int LoadSRAM()
@@ -845,10 +433,6 @@ void initVQTextures() {
 int main()
 {
 	printf("Starting Main\n");
-	int romselstatus;
-
-	int disable_trigs;
-	int disable_rom_interface;
 	int i;
 	cont_state_t* my_state;
 
@@ -856,20 +440,14 @@ int main()
 	printf("Initializing PVR\n");
 	pvr_setup();
 
+	//Load Fonts
+	printf("Initializing Fonts\n");
+	font = load_font("/rd/neuro.fnt");
+
 	printf("Initializing FrNES GUI\n");	
 	Allocate_Video_Options();
 	Allocate_System_Options();
 	Allocate_Control_Options();
-
-	mydata.Target_Buffer = memalign(32, 512 * 512 * 2);
-	helpdata.Target_Buffer = memalign(32, 512 * 512 * 2);	
-
-	//Some Memory Areas
-	PVR_MainWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
-	PVR_SmallWindow_Offset = pvr_mem_malloc(512 * 512 * 2);
-
-	PVR_Font_Offset = pvr_mem_malloc(540672);
-	PVR_White_Font_Offset = pvr_mem_malloc(540672);
 
 	printf("Initializing VQ Textures\n");
 	initVQTextures();
@@ -878,32 +456,15 @@ int main()
 	initialize_controllers();
 	rescan_controllers();
 
-	//Load Fonts
-	printf("Initializing Fonts\n");
-	bf_load_file("/rd/LGFONT.BMF", largefont);
-	bf_load_file("/rd/SMLFONT.BMF", smallfont);
-	bf_load_file("/rd/MEDFONT.BMF", medfont);
-
-	//Load Fonts from CD into PVR memory
-	bf_load_file_pvr_colors("/rd/LGFONT.BMF", PVR_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0x8000);
-	bf_load_file_pvr_colors("/rd/LGFONT.BMF", PVR_White_Font_Offset, 64 * 64 * 2, PVR_Font_Widths, PVR_Font_Heights, 0x0000, 0xFFFF);
-
-	//Do demo
-	// MS - comment it out
-	// DoDemo();
-
-	//Christmas Colors
-	GUI_BGColor = 0x0000FF80;
-	GUI_TextColor = 0x8000;
-	GUI_SelectedTextColor = MakeRGB(13, 28, 8);
-	GUI_InsideWindowColor = MakeRGB(31, 8, 8);
-	GUI_OutsideWindowColor = MakeRGB(31, 31, 31);
+	GUI_BGColor = 0xFF0080FF;
+	GUI_TextColor = 0xFF000000;
+	GUI_SelectedTextColor = 0xFF00FF00;
+	GUI_InsideWindowColor = 0xFF00803f;
+	GUI_OutsideWindowColor = 0xFFFFFFFF;
 
 	interface_offset = title_offset_x + 160;
 
 	menuscreen = MENUNUM_MAIN;
-	isMainChanged = 1;
-	isSmallChanged = 1;	
 
 	romselstatus = 0;
 	invalida = 0;
@@ -967,7 +528,7 @@ int main()
 	*/
 
 	printf("Setting up main menu\n");
-	setup_main_menu();
+	setup_main_menu_screen();
 
 	keyhit = 0;
 
@@ -986,10 +547,24 @@ int main()
 				exitLoop = 1;
 			}
 
-			if (keyhit && (my_state -> buttons == 0)) {
-				keyhit = 0;
+			if (invalida && ((my_state -> buttons & CONT_A) == 0)) {
 				invalida = 0;
+				printf("Clearing A\n");
+			}
+
+			if (keyhit && ((my_state -> buttons & (CONT_DPAD_UP | CONT_DPAD_DOWN)) == 0)) {
+				keyhit = 0;
+				printf("Clearing Keyhit\n");
+			}
+
+			if (xkeyhit && ((my_state -> buttons & CONT_X) == 0)) {
 				xkeyhit = 0;
+				printf("Clearing X\n");
+			}
+
+			if (disable_trigs && ((my_state -> rtrig == 0) && (my_state -> ltrig == 0))) {
+				disable_trigs = 0;
+				printf("Clearing Triggers\n");
 			}
 
 //			printf("main loop: handling controller input\n");
@@ -1001,335 +576,56 @@ int main()
 				(my_state -> buttons & CONT_DPAD_RIGHT) ? "X" : "."
 			);
 */			
-
 			//Event handling and processing section
 			switch (menuscreen)
 			{
 				//Main Menu Screen
 				case MENUNUM_MAIN:
 //					printf("main loop: handling menu screen controller\n");
-					//Down Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-						(mydata.Highlighted_Index < (Num_Main - 1)) && 
-						(keyhit == 0))
-					{
-						mydata.Highlighted_Index++;
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-
-					//Up Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_UP) && 
-						(mydata.Highlighted_Index > 0) && 
-						(keyhit == 0))
-					{
-						mydata.Highlighted_Index--;
-
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-
-					//Choose and setup another page
-					if ((my_state -> buttons & CONT_A) && 
-						(invalida == 0))
-					{
-						switch (mydata.Highlighted_Index)
-						{
-							case PAGE_ROMSELECT:
-								//Menu Screen = Romselect
-								menuscreen = MENUNUM_ROMSELECT;
-								romselstatus = 0;
-								disable_rom_interface = 0;
-								setup_rom_screen();
-								break;
-
-							case PAGE_CREDITS:
-								//Menu Screen = About
-								menuscreen = MENUNUM_CREDITS;
-								setup_about_screen();
-								break;
-
-							case PAGE_CONTROLOPTIONS:
-								//Menu Screen = Options
-								menuscreen = MENUNUM_CONTROLOPTIONS;
-								setup_control_options_screen();
-								Generate_Control_Options_List();
-								break;
-
-							case PAGE_SYSTEMOPTIONS:
-								//Menu Screen = Options
-								menuscreen = MENUNUM_SYSTEMOPTIONS;
-								setup_system_options_screen();
-								Generate_System_Options_List();
-								break;
-
-							case PAGE_HELP:
-								//Menu Screen = Help
-								menuscreen = MENUNUM_HELP;
-								setup_help_screen();
-								break;
-
-							case PAGE_VIDEOOPTIONS:
-								menuscreen = MENUNUM_VIDEOOPTIONS;
-								setup_video_options_screen();
-								Generate_Video_Options_List();
-								break;
-
-							case PAGE_GUIOPTIONS:
-								menuscreen = MENUNUM_GUIOPTIONS;
-								setup_gui_options_screen();
-								Generate_GUI_Options_List();
-								break;
-
-	//								case PAGE_FONTOPTIONS:
-							default:
-								break;
-						}
-						isMainChanged = 1;
-						isSmallChanged = 1;
-						invalida = 1;
-					}			
+					Handle_Main_Menu_Interface(my_state);
 					break;
 
 				//GUI Options
 				case MENUNUM_GUIOPTIONS:
-					printf("main loop: handling gui options controller\n");
+//					printf("main loop: handling gui options controller\n");
 					Handle_GUI_Interface(my_state);
 					break;
 
 				//System Options
 				case MENUNUM_SYSTEMOPTIONS:
-					printf("main loop: handling system options controller\n");			
+//					printf("main loop: handling system options controller\n");			
 					Handle_System_Interface(my_state);
 					break;
 
 				//Video Options
 				case MENUNUM_VIDEOOPTIONS:
-					printf("main loop: handling video options controller\n");			
+//					printf("main loop: handling video options controller\n");			
 					Handle_Video_Interface(my_state);
 					break;
 
 				//Control Options
 				case MENUNUM_CONTROLOPTIONS:
-					printf("main loop: handling control options controller\n");			
+//					printf("main loop: handling control options controller\n");			
 					Handle_Control_Interface(my_state);
 					break;
 
 				//Rom Selection Screen
 				case MENUNUM_ROMSELECT:
-					printf("main loop: handling rom selection controller\n");			
-					switch (romselstatus)
-					{
-						case 0:
-							InitializeFileInfos(myRomInfos, myRomStrings, MAX_ROMS);
-							if (StartFileSearch("/rd/") == 1) {
-								romselstatus = 1;
-							} else {
-								mydata.Header_Text = "Rom Load Failed";
-								disable_rom_interface = 1;
-							}							
-/*							
-							if (*opt_DiscFormat)
-							{
-								if (StartFileSearch(NESTERDC_DISCSTRING) == 1)
-									romselstatus = 1;
-								else
-								{
-									mydata.Header_Text = "Rom Load Failed";
-									disable_rom_interface = 1;
-								}
-							}
-							else
-							{
-								if (StartFileSearch(FRNES_DISCSTRING) == 1)
-									romselstatus = 1;
-								else
-								{
-									mydata.Header_Text = "Rom Load Failed";
-									disable_rom_interface = 1;
-								}
-							}
-*/							
-							isMainChanged = 1;
-							break;
-						case 1:
-							if (LoadNextFileSimple(myRomInfos) != 1)
-								romselstatus = 2;
-							else
-								mydata.Num_Strings = ReturnCurrentNumRoms();
-							isMainChanged = 1;
-							break;
-						case 2:
-							EndFileSearch();
-							romselstatus = 3;
-							break;
-						default:
-							break;
-					}
-
-					//Down Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-						(mydata.Highlighted_Index < (mydata.Num_Strings - 1)))
-					{
-						mydata.Highlighted_Index++;
-						if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
-							mydata.Top_Index++;
-						isMainChanged = 1;
-					}
-
-					//Up Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_UP) && 
-						(mydata.Highlighted_Index > 0))
-					{
-						mydata.Highlighted_Index--;
-						if (mydata.Top_Index > mydata.Highlighted_Index)
-							mydata.Top_Index--;
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-					
-					//Page Down
-					if (((my_state -> rtrig > 240) && ((mydata.Highlighted_Index + mystyle.Max_Items) < (mydata.Num_Strings - 1))) && (disable_trigs == 0))
-					{
-						mydata.Highlighted_Index += mystyle.Max_Items;
-						mydata.Top_Index += mystyle.Max_Items;
-						isMainChanged = 1;
-					}
-
-					//Page Up
-					if (((my_state -> ltrig > 240) && (mydata.Highlighted_Index > (mystyle.Max_Items))) && (disable_trigs == 0))
-					{
-						mydata.Highlighted_Index -= mystyle.Max_Items;
-						if (mydata.Top_Index - mystyle.Max_Items >= 0)
-							mydata.Top_Index -= mystyle.Max_Items;
-						else
-							mydata.Top_Index = 0;
-						isMainChanged = 1;
-					}
-					else
-					if (((my_state -> ltrig > 240) && (mydata.Highlighted_Index <= (mystyle.Max_Items))) && (disable_trigs == 0))
-					{
-						mydata.Highlighted_Index = 0;
-						mydata.Top_Index = 0;
-						isMainChanged = 1;
-					};
-
-					// Handle Return to Main Menu
-					if ((my_state -> buttons & CONT_B) && 
-						(keyhit == 0))
-					{
-						EndFileSearch();
-						setup_main_menu();
-						menuscreen = MENUNUM_MAIN;
-						isMainChanged = 1;
-					}
-
-					//A Button Hit... send the rom path to the PnesX Main, init the emulator and prepare for return to main upon exit
-					if ((my_state -> buttons & CONT_A) && 
-						(invalida == 0) && 
-						(disable_rom_interface == 0))
-					{
-						printf("main: loading rom [%s]\n", myRomInfos[mydata.Highlighted_Index].PhysFileName);
-						if (pNesX_Load(myRomInfos[mydata.Highlighted_Index].PhysFileName) == 0)
-						{
-							//Load It's SaveRAM
-							if (SRAM_Enabled)
-								LoadSRAM();
-
-							pNesX_Main();
-
-							free (ROM);
-							//There are some games that don't have VROM
-							if (VROM != NULL)
-								free (VROM);
-
-							//Save It's SaveRAM
-							if (SRAM_Enabled)
-								SaveSRAM();
-						} else {
-							printf("main: error failed to start emulator!!!!\n");
-						}
-						disable_trigs = 1;
-						my_state -> rtrig = 255;
-					}
+//					printf("main loop: handling rom selection controller\n");			
+					Handle_File_Browser_Interface(my_state);
 					break;
 
 				//About HugoDC Screen
 				case MENUNUM_CREDITS:
-					printf("main loop: handling credits controller\n");			
-					//Down Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-						(mydata.Highlighted_Index < Num_About_Text))
-					{
-						mydata.Highlighted_Index++;
-						if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
-							mydata.Top_Index++;
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-
-					//Up Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_UP) && 
-						(mydata.Highlighted_Index > 0))
-					{
-						mydata.Highlighted_Index--;
-						if (mydata.Top_Index > mydata.Highlighted_Index)
-							mydata.Top_Index--;
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-					
-					// Handle Return to Main Menu
-					if ((my_state -> buttons & CONT_B) && 
-						(keyhit == 0))
-					{
-						setup_main_menu();
-						menuscreen = MENUNUM_MAIN;
-						isMainChanged = 1;
-						isSmallChanged = 1;
-					}
+					Handle_Credits_Interface(my_state);
 					break;
 
 				//Help Screen
 				case MENUNUM_HELP:
-					printf("main loop: handling help controller\n");			
-					//Down Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-						(mydata.Highlighted_Index < Num_Help_Text))
-					{
-						mydata.Highlighted_Index++;
-						if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
-							mydata.Top_Index++;
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-
-					//Up Key Hit and Key is Ready to be hit
-					if ((my_state -> buttons & CONT_DPAD_UP) && 
-						(mydata.Highlighted_Index > 0))
-					{
-						mydata.Highlighted_Index--;
-						if (mydata.Top_Index > mydata.Highlighted_Index)
-							mydata.Top_Index--;
-						keyhit = 1;
-						isMainChanged = 1;
-					}
-
-					// Handle Return to Main Menu
-					if ((my_state -> buttons & CONT_B) && 
-						(keyhit == 0))
-					{
-						setup_main_menu();
-						menuscreen = MENUNUM_MAIN;
-						isMainChanged = 1;
-						isSmallChanged = 1;
-					}
+					Handle_Help_Interface(my_state);
 					break;
 
 			}
-
-			if ((disable_trigs == 1) && ((my_state -> rtrig == 0) && (my_state -> ltrig == 0)))
-				disable_trigs = 0;
 		}
 
 //		printf("main loop: drawing screen\n");
@@ -1338,19 +634,15 @@ int main()
 
 	printf("main loop: exiting\n");
 
-	free(mydata.Target_Buffer);
-	free(helpdata.Target_Buffer);
-
 	Free_Video_Options();
 	Free_System_Options();
 	Free_Control_Options();
 
-	bf_free_font(medfont);
-	bf_free_font(largefont);
+	destroy_font(font);
 	return 0;
 }
 
-int pNesX_ReadRom ( const char *pszFileName)
+int pNesX_ReadRom (const unsigned char *filepath, uint32 filesize)
 {
 	char textbuffer[255];
 	char* ROM_Buffer;
@@ -1359,10 +651,10 @@ int pNesX_ReadRom ( const char *pszFileName)
 	int ROM_offset;
 	int VROM_offset;
 
-	ROM_Buffer = malloc(myRomInfos[mydata.Highlighted_Index].FileSize);
+	ROM_Buffer = malloc(filesize);
 
 	//MS - checksum calculation loads the rom currently, we should decouple that
-	currentCRC32 = ReturnChecksum(mydata.Highlighted_Index, myRomInfos, ROM_Buffer);
+	currentCRC32 = ReturnChecksum(filepath, filesize, ROM_Buffer);
 
 	//Assume there's an NesHeader to read..  .nes files only supported
 	for (i = 0; i < sizeof (NesHeader); i++)
