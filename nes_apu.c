@@ -738,9 +738,8 @@ static int32 apu_dmc(dmc_t *chan)
     {
       chan->phaseacc += chan->freq;
       
-      if (0 == (chan->dma_length & 7))
-      {
-        chan->cur_byte = K6502_GetByte(chan->address);
+      if (0 == (chan->dma_length & 7)) {
+        chan->cur_byte = K6502_Read(chan -> address);
         
         /* steal a cycle from CPU*/
         K6502_Burn(1);
@@ -951,7 +950,7 @@ static void apu_regwrite(uint32 address, uint8 value)
       break;
       
       /* DMC */
-    case APU_WRE0:
+    case APU_WRE0: 
       apu->apus.dmc.regs[0] = value;
       
       apu->apus.dmc.freq = APU_TO_FIXED(dmc_clocks[value & 0x0F]);
@@ -988,7 +987,6 @@ static void apu_regwrite(uint32 address, uint8 value)
       break;
       
     case APU_SMASK:
-      /* bodge for timestamp queue */
       apu->apus.dmc.enabled = (value & 0x10) ? true : false;
       
       apu->enable_reg = value;
@@ -1102,7 +1100,6 @@ uint8 ex_read(uint32 address)
 
 void apu_write(uint32 address, uint8 value)
 {
-   // printf("apu_write: [%u], [%u]\n", address, value);
    apudata_t d;
 
    switch (address)
@@ -1235,8 +1232,9 @@ void apu_process(void *buffer, int num_samples)
   //printf("apu_process: begin\n");
   apudata_t *d;
   uint32 elapsed_cycles;
-  static int32 prev_sample = 0;
-  int32 next_sample, accum;
+//  static int32 prev_sample = 0;
+//  int32 next_sample, accum;
+  int32 accum;
   uint16* i16_bptr = (uint16*)buffer;
   uint8* u8_bptr = (uint8*)buffer;
   
@@ -1346,7 +1344,6 @@ void apu_process(void *buffer, int num_samples)
   
   /* resync cycle counter */
   apu->elapsed_cycles = K6502_GetCycles();
-  //printf("apu_process: end\n");  
 }
 
 
@@ -1550,7 +1547,7 @@ void apu_setmode(int item, int mode)
 apu_t *apu_create(int sample_rate, int refresh_rate, int frag_size, int sample_bits)
 {
   apu_t *temp_apu;
-  int channel;
+//  int channel;
   
   temp_apu = malloc(sizeof(apu_t));
   if (NULL == temp_apu)

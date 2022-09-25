@@ -22,5 +22,7 @@ extern void audio_shutdown();
 extern uint8 audio_read(uint32 addr);
 extern void audio_write(uint32 addr, uint8 value);
 extern void audio_do_frame(uint16* sample_buffer, uint32 num_samples);
+extern int audio_sync_dmc_registers(uint32 cycles);
+extern void audio_sync_apu_registers();
 
 #endif

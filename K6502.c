@@ -1191,6 +1191,28 @@ void K6502_DoNMI()
 	}
 }
 
+void K6502_DoIRQ () {
+  if ( IRQ_State != IRQ_Wiring ) {
+    // IRQ Interrupt
+    // Execute IRQ if an I flag isn't being set
+    if ( !( F & FLAG_I ) ) {
+      CLK( 7 );
+
+      VIRPC;
+      PUSHW( PC );
+      PUSH( F & ~FLAG_B );
+
+      RSTF( FLAG_D );
+      SETF( FLAG_I );
+    
+      PC = K6502_ReadW( VECTOR_IRQ );
+      REALPC;
+    }
+
+  	IRQ_State = IRQ_Wiring;	
+  }
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*  K6502_Step() :                                                   */
@@ -1212,46 +1234,7 @@ void K6502_Step( uint16 wClocks )
   byD1 = 0;
   wD0 = 0;
   
-  // Moved to it's own separate function for the purpose of more accurate emulation
-  // ex-  Dispose of it if there is an interrupt requirement
-/*  if ( NMI_State != NMI_Wiring )
-  {
-    // NMI Interrupt
-    CLK( 7 );
-
-    VIRPC;
-    PUSHW( PC );
-    PUSH( F & ~FLAG_B );
-
-    RSTF( FLAG_D );
-
-    PC = K6502_ReadW( VECTOR_NMI );
-    REALPC;
-  }
-  else*/
-  if ( IRQ_State != IRQ_Wiring )
-  {
-    // IRQ Interrupt
-    // Execute IRQ if an I flag isn't being set
-    if ( !( F & FLAG_I ) )
-    {
-      CLK( 7 );
-
-      VIRPC;
-      PUSHW( PC );
-      PUSH( F & ~FLAG_B );
-
-      RSTF( FLAG_D );
-      SETF( FLAG_I );
-    
-      PC = K6502_ReadW( VECTOR_IRQ );
-      REALPC;
-    }
-  }
-
-  //Reset the state
-//  NMI_State = NMI_Wiring;
-  IRQ_State = IRQ_Wiring;
+  K6502_DoIRQ();
 
   // It has a loop until a constant clock passes
   while ( g_wPassedClocks < wClocks )
@@ -1278,10 +1261,6 @@ inline unsigned char K6502_ReadAbsY(){ uint16 wA0, wA1; wA0 = AA_ABS; pPC += 2; 
 //static inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = K6502_ReadZpW( K6502_Read( PC++ ) ); wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = RAM[ *pPC ] | RAM[ (unsigned char)(*pPC + 1) ] << 8; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 //static inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = *(uint16 *)&RAM[ *pPC ]; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
-
-uint8 K6502_GetByte(uint32 addr) {
-	return RAM[addr];
-}
 
 void K6502_Burn(uint16 wClocks) {
 	g_wPassedClocks += wClocks;

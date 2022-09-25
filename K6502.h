@@ -43,11 +43,11 @@ void K6502_Init();
 void K6502_Reset();
 void K6502_Set_Int_Wiring( unsigned char byNMI_Wiring, unsigned char byIRQ_Wiring );
 void K6502_Step( register uint16 wClocks );
-uint8 K6502_GetByte(uint32 addr);
 void K6502_Burn(uint16 wClocks);
 uint32 K6502_GetCycles();
 
 void K6502_DoNMI();
+void K6502_DoIRQ();
 
 // The state of the IRQ pin
 extern unsigned char IRQ_State;

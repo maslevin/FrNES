@@ -41,3 +41,11 @@ void audio_write(uint32 addr, uint8 value) {
 void audio_do_frame(uint16* sample_buffer, uint32 num_samples) {
    apu_process(sample_buffer, num_samples);
 }
+
+int audio_sync_dmc_registers(uint32 cycles) {
+   return sync_dmc_register(cycles);
+}
+
+void audio_sync_apu_registers() {
+   sync_apu_register();
+}
