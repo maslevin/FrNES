@@ -453,15 +453,7 @@ void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float 
 void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 list)
 {
 	int i;
-	int j;
-	uint16 tempcolor;
-	int tempscanline;
 	int yposition;
-	int xposition;
-	char tempbuffer[255];
-	char* tempptr;
-	int index;
-	int startindex;
 	//printf("win_draw_textwindow: starting text window draw\n");
 
 	if (list == PVR_LIST_OP_POLY) {
@@ -506,7 +498,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 		for (i = 0; (i < winstyle -> Max_Items) && (i < windata -> Num_Strings); i++)
 		{
 			char* text = windata -> Data_Strings[i + windata -> Top_Index];
-			if ((text != NULL) && (text[0] != NULL)) {
+			if ((text != NULL) && (text[0] != '\0')) {
 				printf("win_draw_textwindow: drawing regular line of text\n");						
 				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
 					draw_string(windata -> font, list, windata -> Data_Strings[i], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);

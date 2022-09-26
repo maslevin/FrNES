@@ -126,7 +126,7 @@ void pNesX_Map9Simulate_BG_C(uint16* pPoint)
 	/* C Background Renderer Vars */
 	uint16 nX;
 	uint16 nY;
-	uint16 nY4;
+//	uint16 nY4;
 	uint16 nYBit;
 
 	uint16 nesaddr;
@@ -139,7 +139,7 @@ void pNesX_Map9Simulate_BG_C(uint16* pPoint)
 	nX = (ppuinfo.PPU_Addr & 0x001F);
 	nY = ((ppuinfo.PPU_Addr >> 5) & 0x001F);
 	nYBit = ((ppuinfo.PPU_Addr >> 12) & 0x0007) << 3;
-	nY4 = ( ( nY & 2 ) << 1 );
+//	nY4 = ( ( nY & 2 ) << 1 );
 
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
 	pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;

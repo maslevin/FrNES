@@ -52,7 +52,7 @@ $(DBGEXE): $(DBGOBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lpng -lz -lm $(KOS_LIBS)
 
 $(DBGDIR)/%.o: %.c | prepdbgdir
-	$(KOS_CC) -std=c99 -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
+	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
 $(DBGDIR)/%.o: %.s | prepdbgdir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
@@ -68,7 +68,7 @@ $(RELEXE): $(RELOBJS)
 	$(KOS_OBJCOPY) -R .stack -O binary $(RELEXE) $(RELBIN)
 
 $(RELDIR)/%.o: %.c | prepreldir
-	$(KOS_CC) -std=c99 -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
+	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
 $(RELDIR)/%.o: %.s | prepreldir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<

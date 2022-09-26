@@ -31,6 +31,7 @@
 #include "vmu_dc.h"
 #include "vmu_icons.h"
 #include "GUI_MainMenu.h"
+#include "GUI_FileBrowser.h"
 #include "GUI_Credits.h"
 #include "GUI_Help.h"
 #include "GUI_VideoPage.h"
@@ -248,7 +249,7 @@ void draw_screen()
 	//printf("draw_screen: begin\n");
 	pvr_poly_hdr_t my_pheader;
 	pvr_poly_cxt_t my_cxt;
-	pvr_vertex_t my_vertex;
+	//pvr_vertex_t my_vertex;
 	pvr_vertex_t my_c_vertex;
 
 	//printf("draw_screen: waiting for PVR to be ready\n");
@@ -334,6 +335,7 @@ int LoadSRAM()
 	else
 		return -1;
 	*/
+	return -1;
 }
 
 int SaveSRAM()
@@ -369,6 +371,7 @@ int SaveSRAM()
 	else
 		return -1;
 	*/
+	return -1;
 }
 
 void Save_VMU_Options()
@@ -433,7 +436,6 @@ void initVQTextures() {
 int main()
 {
 	printf("Starting Main\n");
-	int i;
 	cont_state_t* my_state;
 
 	// System initiation
@@ -642,11 +644,8 @@ int main()
 	return 0;
 }
 
-int pNesX_ReadRom (const unsigned char *filepath, uint32 filesize)
-{
-	char textbuffer[255];
-	char* ROM_Buffer;
-	uint32 my_fd;
+int pNesX_ReadRom (const char *filepath, uint32 filesize) {
+	unsigned char* ROM_Buffer;
 	int i;
 	int ROM_offset;
 	int VROM_offset;
@@ -658,11 +657,10 @@ int pNesX_ReadRom (const unsigned char *filepath, uint32 filesize)
 
 	//Assume there's an NesHeader to read..  .nes files only supported
 	for (i = 0; i < sizeof (NesHeader); i++)
-		((unsigned char*) &NesHeader)[i] = ROM_Buffer[i];
+		((char*) &NesHeader)[i] = ROM_Buffer[i];
 
 	//Read past the trainer
-	if (NesHeader.byInfo1 & 4)
-	{
+	if (NesHeader.byInfo1 & 4) {
 		i += 512;
 	}
 
@@ -773,7 +771,7 @@ void pNesX_LoadFrame()
 void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 {
 	maple_device_t* my_controller;
-	cont_state_t* my_state;
+	cont_state_t* my_state = NULL;
 
 	//Grab data from controller 0
 	if (numControllers > 0)
@@ -863,12 +861,12 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 	}
 
 	// Increment Exit Counter if Required
-	if (numControllers > 0)
-	{
-		if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0))
+	if ((my_state != NULL) && (numControllers > 0)) {
+		if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) {
 			(*ExitCount)++;
-		else
+		} else {
 			ExitCount = 0;
+		}
 	}
 	
 	//Grab data from controller 1

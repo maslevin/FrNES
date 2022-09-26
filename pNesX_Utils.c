@@ -64,7 +64,7 @@ char pNesX_nibtoc(uint32 nibble)
 			return 'F';
 			break;
 		default:
-			return ((char)NULL);
+			return '\0';
 			break;
 	}
 }
@@ -129,7 +129,7 @@ void pNesX_i32toa(uint32 i, char* buffer)
 	b[6] = pNesX_nibtoc(temp);
 	temp = (i >> 0) & 0x0000000F;
 	b[7] = pNesX_nibtoc(temp);
-	b[8] = 0;
+	b[8] = '\0';
 
 	strcpy(buffer, b);
 }
@@ -161,7 +161,7 @@ void pNesX_itoa(uint32 i, char* buffer)
 	if (temp == 0)
 	{
 		buffer[0] = '0';
-		buffer[1] = (char)NULL;
+		buffer[1] = '\0';
 		return;
 	}
 
@@ -180,7 +180,7 @@ void pNesX_itoa(uint32 i, char* buffer)
 		buffer[index] = pNesX_nibtoc((temp / divisor) % 10);
 	}
 
-	buffer[index] = (char)NULL;
+	buffer[index] = '\0';
 }
 
 int pNesX_atoi(char* numbuffer)
@@ -192,13 +192,13 @@ int pNesX_atoi(char* numbuffer)
 	order = strlen(numbuffer);
 	accum = 0;
 
-	for (index = 0; index < order; index++)
-	{
+	for (index = 0; index < order; index++) {
 		temp = pNesX_ctoi(numbuffer[index]);
-		if (temp != -1)
+		if (temp != -1) {
 			accum += temp * pNesX_pow10(order - 1 - index);
-		else
+		} else {
 			return -1;
+		}
 	}
 	
 	return accum;

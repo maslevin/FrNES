@@ -123,7 +123,7 @@ int ReturnCurrentNumRoms()
 }
 
 //Loads a fileinfo
-int LoadNextFileSimple(RomInfo* RomInfoArray, unsigned char* current_path)
+int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path)
 {
 	printf("LoadNextFileSimple: reading directory\n");	
 	my_dir = fs_readdir(my_file);
@@ -152,11 +152,9 @@ int LoadNextFileSimple(RomInfo* RomInfoArray, unsigned char* current_path)
 	}
 }
 		
-uint32 ReturnChecksum(const unsigned char* filepath, uint32 filesize, unsigned char* temprom)
+uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temprom)
 {
 	printf("ReturnChecksum: calculating crc32 of ROM image [%s]\n", filepath);
-	//Temp area for ROM allocation
-	char textbuffer[256];
 	uint32 my_fd;
 	uint32 oldcrc32;
 	int i;
@@ -167,7 +165,7 @@ uint32 ReturnChecksum(const unsigned char* filepath, uint32 filesize, unsigned c
 		printf("ReturnChecksum: failed to open ROM image\n");
 		return 0;
 	}
-	if (fs_read(my_fd, temprom, filepath) != filesize) {
+	if (fs_read(my_fd, temprom, filesize) != filesize) {
 		printf("ReturnChecksum: was not able to read ROM image from file system\n");
 		return 0;
 	}

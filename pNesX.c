@@ -206,9 +206,7 @@ unsigned char ROM_Trainer;
 /* Four screen VRAM  */
 unsigned char ROM_FourScr;
 
-void DC_SoundInit()
-{
-	int i;
+void DC_SoundInit() {
 	sound_address = 0;
 	current_address = 0x11000;
 	last_pos = 0;
@@ -229,13 +227,7 @@ void DC_SoundInit()
 	audio_initialize();
 }
 
-void pNesX_DoSpu()
-{
-	uint32 diff;
-	uint32 remainder;
-	uint32 end_amount;
-	uint32 begin_amount;
-	int16* buf;
+void pNesX_DoSpu() {
 	uint32 this_buffer;
 
 	this_pos = *position;
@@ -244,7 +236,6 @@ void pNesX_DoSpu()
 		this_buffer = 0;
 	else
 		this_buffer = 1;
-
 
 	if (last_buffer != this_buffer) {
 		audio_do_frame(sample_buffer, 736);
@@ -277,6 +268,7 @@ void pNesX_Init()
   K6502_Init();
 
   // Initialize Scanline Table
+  // MS - I don't think this is required anymore, refactor it out
   for ( nIdx = 0; nIdx < 263; ++nIdx )
   {
     if ( nIdx < SCAN_ON_SCREEN_START )
@@ -320,7 +312,7 @@ void pNesX_Fin()
 /*                  pNesX_Load() : Load a cassette                   */
 /*                                                                   */
 /*===================================================================*/
-int pNesX_Load( const unsigned char *filepath, uint32 filesize )
+int pNesX_Load( const char *filepath, uint32 filesize )
 {
 /*
  *  Load a cassette
@@ -582,8 +574,7 @@ void pNesX_Main()
 	pNesX_Init();
 
 	// Initialize pNesX
-	if (*opt_SoundEnabled) 
-	{
+	if (*opt_SoundEnabled) {
 		// Start Sound Emu
 		DC_SoundInit();
 
@@ -600,8 +591,7 @@ void pNesX_Main()
 		timer_stop(TMU1);
 	}
 
-    if ( *opt_AutoFrameSkip )
-	{
+    if ( *opt_AutoFrameSkip ) {
 		//Set TMU1 at 60Hz, using interrupts
 		timer_prime(TMU1, 60, 1);
 		irq_set_handler(EXC_TMU1_TUNI1, timer_handler);
@@ -610,8 +600,7 @@ void pNesX_Main()
 	}
 
 	// Main loop
-	while ( 1 )
-	{
+	while ( 1 ) {
 		/*-------------------------------------------------------------------*/
 		/*  To the menu screen                                               */
 		/*-------------------------------------------------------------------*/
@@ -621,8 +610,7 @@ void pNesX_Main()
 		/*-------------------------------------------------------------------*/
 		/*  Manage AutoFrameSkip                                             */
 		/*-------------------------------------------------------------------*/
-		if ( *opt_AutoFrameSkip )
-		{
+		if ( *opt_AutoFrameSkip ) {
 			Auto_Frames--;
 		}
 
@@ -634,26 +622,23 @@ void pNesX_Main()
 		/*-------------------------------------------------------------------*/
 		/*  Manage AutoFrameSkip                                             */
 		/*-------------------------------------------------------------------*/
-		if ( *opt_AutoFrameSkip )
-		{
-			if ( Auto_Frames > 0)
+		if ( *opt_AutoFrameSkip ) {
+			if ( Auto_Frames > 0) {
 				FrameCnt = 1;
-			else
-			{
+			} else {
 				FrameCnt = 0;
 			}
 		}
-
 	}
 
-	if (*opt_AutoFrameSkip)
-	{
+	if (*opt_AutoFrameSkip) {
 		timer_stop(TMU1);
 		irq_set_handler(EXC_TMU1_TUNI1, NULL);
 	}
 
-	if (*opt_SoundEnabled)
+	if (*opt_SoundEnabled) {
 		spu_shutdown();
+	}
 
 	// Completion treatment
 	pNesX_Fin();
@@ -672,9 +657,7 @@ void handle_dmc_synchronization(uint32 cycles) {
 /*              pNesX_Cycle() : The loop of emulation                */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Cycle()
-{
-	int i;
+void pNesX_Cycle() {
 	int do_scroll_setup;
 
 	//Update Character Data
@@ -889,20 +872,13 @@ void pNesX_GetSprHitY()
 /*            pNesX_SetupChr() : Develop character data              */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_SetupChr()
-{
-	unsigned char *pbyBGData;
-	uint16 mypattern;
-	uint32* chrptr;
-	int nIdx;
-	int nY;
+void pNesX_SetupChr() {
 	int nOff;
 	static unsigned char *pbyPrevBank[ 8 ];
 	int nBank;
 
 	//For each bank of Character ram
-	for ( nBank = 0; nBank < 8; ++nBank )
-	{
+	for ( nBank = 0; nBank < 8; ++nBank ) {
 		//If it hasn't changed since last time, skip this bank
 		if ( pbyPrevBank[ nBank ] == PPUBANK[ nBank ] && !( ( ChrBufUpdate >> nBank ) & 1 ) )
 			continue;  // Next bank

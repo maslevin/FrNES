@@ -125,14 +125,9 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf)
 
 uint16 pNesX_Map9Simulate_Spr_C()
 {
-	int nX;
 	int nY;
-	int nYBit;
-	unsigned char *pbyChrData;
 	unsigned char *pSPRRAM;
-	int nAttr;
 	int nSprCnt;
-	unsigned char bySprCol;
 	uint16 nesaddr;
 		
 	// Render a sprite to the sprite buffer

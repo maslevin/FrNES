@@ -12,6 +12,18 @@
 
 #include "pNesX_System_DC.h"
 
+extern void setup_file_browser_screen();
+extern void setup_credits_screen();
+extern void setup_control_options_screen();
+extern void Generate_Control_Options_List();
+extern void setup_system_options_screen();
+extern void Generate_System_Options_List();
+extern void setup_help_screen();
+extern void setup_video_options_screen();
+extern void Generate_Video_Options_List();
+extern void setup_gui_options_screen();
+extern void Generate_GUI_Options_List();
+
 char Main_Menu[] = "Main Menu";
 char* Main_Options[] = {
 	"Select A Rom",

@@ -95,9 +95,8 @@ void bmfpage_copy(void *_dst, const void *_src) {
 }
 
 void bmfpage_dtor(void *_elt) {
-  FontPage *elt = (FontPage*)_elt;
+  //MS - do we need this?
   //pvr_mem_free(elt -> texture);
-  // do we need this?
 }
 
 UT_icd bmfpage_icd = {sizeof(FontPage), NULL, bmfpage_copy, bmfpage_dtor};
@@ -220,7 +219,7 @@ void readKerningPairsBlock(uint32 fd, Font* font, int blockSize) {
 
 Font* load_font(const char* filepath) {
 	uint32 fd;
-	Font* font;
+	Font* font = NULL;
 	int outlineThickness;
 
 	fd = fs_open(filepath, O_RDONLY);

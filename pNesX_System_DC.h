@@ -48,7 +48,9 @@ void Save_VMU_Options();
 void initialize_controllers();
 void rescan_controllers();
 
-void itoa(uint32 i, char* buffer);
+int LoadSRAM();
+int SaveSRAM();
+
 void i32toa(uint32 i, char* buffer);
 
 extern uint16 WorkFrameIdx;

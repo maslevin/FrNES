@@ -62,7 +62,8 @@ void pNesX_DrawLine()
 		return;
 	}
 
-
+// MS - Remove Mapper 9 support temporarily
+/*
 	if (MapperNo == 9)
 	{
 		if (FrameCnt == 0)
@@ -78,9 +79,9 @@ void pNesX_DrawLine()
 	}
 	else
 	{
-		pNesX_DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
-	}
+*/		
+	pNesX_DrawLine_BG_C(pPoint);
+	nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
 
 	if (nSprCnt)
 	{

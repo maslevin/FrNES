@@ -266,7 +266,7 @@ void pNesX_Init();
 void pNesX_Fin();
 
 /* Load a cassette */
-int pNesX_Load( const unsigned char *filepath, uint32 filename );
+int pNesX_Load( const char *filepath, uint32 filename );
 
 /* Reset pNesX */
 int pNesX_Reset();

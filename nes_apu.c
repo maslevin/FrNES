@@ -196,8 +196,8 @@ static apudata_t *ex_dequeue(void)
 ** for the white noise channel
 */
 #ifdef REALTIME_NOISE
-inline int8 shift_register15(uint8 xor_tap)
-{
+// MS - removed inline as that conflicts with static variable sreg inside it
+int8 shift_register15(uint8 xor_tap) {
   static int sreg = 0x4000;
   int bit0, tap, bit14;
   
@@ -1082,6 +1082,7 @@ uint8 ex_read(uint32 address)
   if (apu->exsound_type == NES_APU_EXSOUND_FDS)
   {
 //    return FDSSoundRead (address);
+    return 0x00;
   }
   else if (apu->exsound_type == NES_APU_EXSOUND_N106)
   {

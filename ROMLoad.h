@@ -39,11 +39,11 @@ void EndFileSearch();
 int ReturnCurrentNumRoms();
 
 //Loads a file info without using checksum identification
-int LoadNextFileSimple(RomInfo* RomInfoArray, unsigned char* current_path);
+int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path);
 
 //Loads a file info using checksum identification
 int LoadNextFileComplex(RomInfo* RomInfoArray);
 
-uint32 ReturnChecksum(const unsigned char* filepath, uint32 filesize, unsigned char* temprom);
+uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temprom);
 
 #endif

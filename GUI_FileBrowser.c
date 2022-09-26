@@ -12,6 +12,7 @@
 
 #include "pNesX_System_Dc.h"
 #include "pNesX_Utils.h"
+#include "pNesX.h"
 
 //Help for the ROM loading screen
 char* Rom_Keys[] = {
@@ -43,8 +44,8 @@ char* myRomStrings[2048];
 #define FILEBROWSER_DEVICE_PC 3
 uint32 filebrowser_device = FILEBROWSER_DEVICE_UNKNOWN;
 
-unsigned char current_directory_path[512];
-unsigned char* ROOT_PATHS[] = {
+char current_directory_path[512];
+char* ROOT_PATHS[] = {
 	"/rd",
 	"/sd",		
 	"/cd",
@@ -57,7 +58,7 @@ uint32 invalidb = 0;
 void setup_file_browser_screen()
 {
 	current_directory_path[0] = '/';
-	current_directory_path[1] = NULL;
+	current_directory_path[1] = '\0';
 
 	//Set Up Window Data Features
 	mydata.x = 208.0f;
@@ -167,7 +168,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 				mydata.Highlighted_Index = 0;
 			} else {
 				for (int i = (strlen(current_directory_path) - 2); (i > 0) && (current_directory_path[i] != '/'); i--) {
-					current_directory_path[i] = NULL;
+					current_directory_path[i] = '\0';
 				}
 				printf("Going back directory to [%s]\n", current_directory_path);
 				romselstatus = FILEBROWSER_START_LISTING_DIRECTORY;
@@ -182,7 +183,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 	if ((my_state -> buttons & CONT_A) && 
 		(invalida == 0)) {
 		invalida = 1;
-		unsigned char* selected_string = mydata.Data_Strings[mydata.Highlighted_Index];
+		char* selected_string = mydata.Data_Strings[mydata.Highlighted_Index];
 		uint32 selected_string_length = strlen(selected_string);
 		// pressed on .. - go up a level
 		if (strcmp(selected_string, ".") == 0) {
@@ -196,7 +197,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 				mydata.Num_Strings = NUM_ROOT_PATHS;
 			} else {
 				for (int i = (strlen(current_directory_path) - 2); (i > 0) && (current_directory_path[i] != '/'); i--) {
-					current_directory_path[i] = NULL;
+					current_directory_path[i] = '\0';
 				}
 				printf("Going back directory to [%s]\n", current_directory_path);
 				romselstatus = FILEBROWSER_START_LISTING_DIRECTORY;

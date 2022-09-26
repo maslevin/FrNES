@@ -698,11 +698,8 @@ void Map7_Init()
 /*-------------------------------------------------------------------*/
 /*  Mapper 7 Write Function                                          */
 /*-------------------------------------------------------------------*/
-void Map7_Write(uint16 wAddr, unsigned char byData)
-{
+void Map7_Write(uint16 wAddr, unsigned char byData) {
 	unsigned char bank;
-	char buffer[256];
-	char numbuffer[9];
 
 	bank = (byData & 0x07) << 2;
 
@@ -711,12 +708,9 @@ void Map7_Write(uint16 wAddr, unsigned char byData)
 	ROMBANK2 = ROMPAGE( bank + 2 );
 	ROMBANK3 = ROMPAGE( bank + 3 );
 
-	if (byData & 0x10)
-	{
+	if (byData & 0x10) {
 		pNesX_Mirroring_Manual(1, 1, 1, 1);
-	}
-	else
-	{
+	} else {
 		pNesX_Mirroring_Manual(0, 0, 0, 0);
 	}
 }
