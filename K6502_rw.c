@@ -373,6 +373,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
 }
 
 // Reading/Writing operation (uint16 version)
-inline uint16 K6502_ReadW( uint16 wAddr ){ return K6502_Read( wAddr ) | (uint16)K6502_Read( wAddr + 1 ) << 8; };
+inline uint16 K6502_ReadW( uint16 wAddr ){ 
+  uint16 nextWAddr = wAddr + 1;
+  if ((wAddr & 0xFF) == 0xFF) {
+    nextWAddr = wAddr & 0xFF00;
+  }
+  return K6502_Read( wAddr ) | (uint16)K6502_Read( nextWAddr ) << 8;
+};
 inline void K6502_WriteW( uint16 wAddr, uint16 wData ){ K6502_Write( wAddr, wData & 0xff ); K6502_Write( wAddr + 1, wData >> 8 ); };
 inline uint16 K6502_ReadZpW( unsigned char byAddr ){ return K6502_ReadZp( byAddr ) | ( K6502_ReadZp( byAddr + 1 ) << 8 ); };

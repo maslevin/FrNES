@@ -46,9 +46,7 @@
 //#define AA_ZPY   (unsigned char)( K6502_Read( PC++ ) + Y )
 #define AA_ZPY   (unsigned char)( *(pPC++) + Y )
 // Absolute
-//#define AA_ABS   ( K6502_Read( PC++ ) | (uint16)K6502_Read( PC++ ) << 8 )
 #define AA_ABS   ( *pPC | *(pPC + 1) << 8 )
-//#define AA_ABS   *(uint16 *)pPC
 // Absolute2 ( PC-- )
 //#define AA_ABS2  ( K6502_Read( PC++ ) | (uint16)K6502_Read( PC ) << 8 )
 #define AA_ABS2   ( *pPC | *(pPC + 1) << 8 )
