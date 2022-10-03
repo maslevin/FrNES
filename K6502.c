@@ -229,7 +229,7 @@ uint16 wD0;
 
 void Op_00()
 {
-	VIRPC; ++PC; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); RSTF( FLAG_D ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
+	VIRPC; PC++; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
 }
 
 void Op_01()  // ORA (Zpg,X)
@@ -249,7 +249,7 @@ void Op_06()  // ASL Zpg
 
 void Op_08()  // PHP
 {
-	PUSH( F ); CLK( 3 );
+	PUSH( F | FLAG_B | FLAG_R ); CLK( 3 );
 }
 
 void Op_09()  // ORA #Oper
