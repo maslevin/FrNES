@@ -650,7 +650,7 @@ void Map4_HSync()
 	{
 		if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239))
 		{
-			if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP ))
+			if (ppuinfo.PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP ))
 			{
 				if (!(Map4_IRQ_Cnt--))
 				{

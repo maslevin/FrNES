@@ -27,10 +27,10 @@ uint16 pNesX_DrawLine_Spr_C()
 	// Render a sprite to the sprite buffer
 	nSprCnt = 0;
 	
-	if ( PPU_R1 & R1_SHOW_SP )
+	if ( ppuinfo.PPU_R1 & R1_SHOW_SP )
 	{
 		// Reset Scanline Sprite Count
-		PPU_R2 &= ~R2_MAX_SP;
+		ppuinfo.PPU_R2 &= ~R2_MAX_SP;
 
 		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 )
 		{

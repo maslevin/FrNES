@@ -53,6 +53,11 @@ typedef struct
 	unsigned char* PPU_BG_Base;
 	uint32 PPU_SP_Height;
 	uint32 PPU_R0;
+	/* PPU Register */
+	unsigned char PPU_R1;
+	unsigned char PPU_R2;
+	unsigned char PPU_R3;
+	unsigned char PPU_R7;	
 	unsigned char* PPU_SP_Base;
 } PPU_Info;
 

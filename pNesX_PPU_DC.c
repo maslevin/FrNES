@@ -31,7 +31,7 @@ extern uint16 PPU_Temp;
 
 void pNesX_StartFrame()
 {
-	if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08))
+	if ((ppuinfo.PPU_R1 & 0x10) || (ppuinfo.PPU_R1 & 0x08))
 		ppuinfo.PPU_Addr = PPU_Temp;
 }
 
@@ -50,40 +50,24 @@ void pNesX_DrawLine()
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 	
+	//MS - preallocate this so we don't have to test and initialize here
 	if (Scanline_Buffer == NULL) {
 		Scanline_Buffer = memalign(32, 256);
 	}
 	pPoint = Scanline_Buffer;
 
-	if ( !( PPU_R1 & R1_SHOW_SCR ) )
+	if ( !( ppuinfo.PPU_R1 & R1_SHOW_SCR ) )
 	{
 		memset(Scanline_Buffer, 0, 256);
 		pvr_txr_load(Scanline_Buffer, texture_address, 256);
 		return;
 	}
 
+	//MS - fix the assembly language version of the background renderer at some point
+	pNesX_DrawLine_BG_C(pPoint);
+	nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
 
-	if (MapperNo == 9)
-	{
-		if (FrameCnt == 0)
-		{
-			pNesX_Map9DrawLine_BG_C(pPoint);
-			nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
-		}
-		else
-		{
-			pNesX_Map9Simulate_BG_C();
-			nSprCnt = pNesX_Map9Simulate_Spr_C();
-		}
-	}
-	else
-	{
-		pNesX_DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
-	}
-
-	if (nSprCnt)
-	{
+	if (nSprCnt) {
 		//Merge the sprite buffer with the scanline buffer
 		pPoint = Scanline_Buffer;
 		for (index = 0; index < 256; index++) {
@@ -99,7 +83,7 @@ void pNesX_DrawLine()
 
 	//Make Sure there's only 8 Sprites on a line
 	if ( nSprCnt == 8 )
-		PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
+		ppuinfo.PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
 
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(Scanline_Buffer, texture_address, 256);

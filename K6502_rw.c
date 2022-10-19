@@ -72,10 +72,10 @@ inline unsigned char K6502_Read( uint16 wAddr )
         case 0x2002: {
             /* PPU Status $2002*/
             // Set return value
-            byRet = PPU_R2;
+            byRet = ppuinfo.PPU_R2;
 
             // Reset a V-Blank flag
-            PPU_R2 &= ~R2_IN_VBLANK;
+            ppuinfo.PPU_R2 &= ~R2_IN_VBLANK;
 
             // Reset address latch
             PPU_Latch_Flag = 0;
@@ -95,7 +95,7 @@ inline unsigned char K6502_Read( uint16 wAddr )
 
         case 0x2004: {
             /* PPU Sprite RAM $2004 */
-            return SPRRAM[PPU_R3];
+            return SPRRAM[ppuinfo.PPU_R3];
         }
 
         case 0x2007: {
@@ -107,7 +107,7 @@ inline unsigned char K6502_Read( uint16 wAddr )
         
             if (addr >= 0x3000) {
               if (addr >= 0x3f00) {
-                PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
+                ppuinfo.PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
                 return PPURAM[addr];
               }
 
@@ -115,8 +115,8 @@ inline unsigned char K6502_Read( uint16 wAddr )
               addr &= 0xefff;
             }
 
-            byRet = PPU_R7;
-            PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+            byRet = ppuinfo.PPU_R7;
+            ppuinfo.PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
             return byRet;
         }
       }
@@ -210,7 +210,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           break;
 
         case 1:   /* 0x2001 */
-		      PPU_R1 = byData;
+		      ppuinfo.PPU_R1 = byData;
           break;
 
         case 2:   /* 0x2002 */
@@ -219,12 +219,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
 
         case 3:   /* 0x2003 */
           // Sprite RAM Address
-          PPU_R3 = byData;
+          ppuinfo.PPU_R3 = byData;
           break;
 
         case 4:   /* 0x2004 */
           // Write data to Sprite RAM
-          SPRRAM[ PPU_R3++ ] = byData;
+          SPRRAM[ ppuinfo.PPU_R3++ ] = byData;
           break;
 
         case 5:   /* 0x2005 */
@@ -310,27 +310,27 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           switch ( byData >> 5 )
           {
             case 0x0:  /* RAM */
-              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x7ff ], SPRRAM_SIZE, PPU_R3 );
+              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x7ff ], SPRRAM_SIZE, ppuinfo.PPU_R3 );
               break;
 
             case 0x3:  /* SRAM */
-              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, ppuinfo.PPU_R3 );
               break;
 
             case 0x4:  /* ROM BANK 0 */
-              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, ppuinfo.PPU_R3 );
               break;
 
             case 0x5:  /* ROM BANK 1 */
-              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, ppuinfo.PPU_R3 );
               break;
 
             case 0x6:  /* ROM BANK 2 */
-              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, ppuinfo.PPU_R3 );
               break;
 
             case 0x7:  /* ROM BANK 3 */
-              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+              pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, ppuinfo.PPU_R3 );
               break;
           }
           break;

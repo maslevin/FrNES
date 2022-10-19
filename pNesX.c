@@ -68,12 +68,6 @@ unsigned char SPRRAM[ SPRRAM_SIZE ];
 /* PPU Info Struct */
 PPU_Info ppuinfo;
 
-/* PPU Register */
-unsigned char PPU_R1;
-unsigned char PPU_R2;
-unsigned char PPU_R3;
-unsigned char PPU_R7;
-
 /* Flag for PPU Address and Scroll Latch */
 unsigned char PPU_Latch_Flag;
 
@@ -491,7 +485,7 @@ void pNesX_SetupPPU()
   pNesX_MemorySet( SPRRAM, 0, sizeof SPRRAM );
 
   // Reset PPU Register
-  ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
+  ppuinfo.PPU_R0 = ppuinfo.PPU_R1 = ppuinfo.PPU_R2 = ppuinfo.PPU_R3 = ppuinfo.PPU_R7 = 0;
 
   // Reset latch flag
   PPU_Latch_Flag = 0;
@@ -684,7 +678,7 @@ void pNesX_Cycle()
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
 	
-	pNesX_GetSprHitY();
+	// pNesX_GetSprHitY();
 
 	// Dummy scanline -1;
 	K6502_Step(CYCLES_PER_LINE);
@@ -693,7 +687,7 @@ void pNesX_Cycle()
 	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++)
 	{
-		do_scroll_setup = ((PPU_R1 & 0x10) || (PPU_R1 & 0x08));
+		do_scroll_setup = ((ppuinfo.PPU_R1 & 0x10) || (ppuinfo.PPU_R1 & 0x08));
 
 		//Do Scroll Setup even if we aren't drawing the frame
 		if (do_scroll_setup) {
@@ -730,23 +724,26 @@ void pNesX_Cycle()
 			}
 		}
 
+		/*
 		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
 			// Set a sprite hit flag
 			PPU_R2 |= R2_HIT_SP;
 
+			// MS - 10/17/2022 I don't think you have to do an NMI if sprite 0 is hit
 			// NMI is required if there is necessity
 			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
 				NMI_REQ;
 		}
+		*/
 
 		K6502_Step(CYCLES_PER_LINE);
 		handle_dmc_synchronization(CYCLES_PER_LINE);		
 		MapperHSync();
 
 		// Always call the renderer if Mapper 9 is involved
-		if ((MapperNo == 9) || (FrameCnt == 0)) {
-			pNesX_DrawLine();
-		}		
+//		if ((MapperNo == 9) || (FrameCnt == 0)) {
+		pNesX_DrawLine();
+//		}		
 	}
 
 	if (FrameCnt == 0) {
@@ -767,10 +764,10 @@ void pNesX_Cycle()
 	ppuinfo.PPU_Scanline = 240;	
 	if (SpriteJustHit == ppuinfo.PPU_Scanline) {
 		// Set a sprite hit flag
-		PPU_R2 |= R2_HIT_SP;
+		ppuinfo.PPU_R2 |= R2_HIT_SP;
 
 		// NMI is required if there is necessity
-		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( ppuinfo.PPU_R1 & R1_SHOW_SP ) )
 			NMI_REQ;
 	}
 	K6502_Step(CYCLES_PER_LINE);
@@ -785,10 +782,10 @@ void pNesX_Cycle()
 	ppuinfo.PPU_Scanline = 241;
 	if (SpriteJustHit == ppuinfo.PPU_Scanline) {
 		// Set a sprite hit flag
-		PPU_R2 |= R2_HIT_SP;
+		ppuinfo.PPU_R2 |= R2_HIT_SP;
 
 		// NMI is required if there is necessity
-		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( ppuinfo.PPU_R1 & R1_SHOW_SP ) )
 			NMI_REQ;
 	}	
 	K6502_Step(1);
@@ -807,7 +804,7 @@ void pNesX_Cycle()
 
 	// 87 Cycles is the remainder of the cycles from doing ALL the scanlines on the screen at 133.33 CPU cycles per scanline
 	K6502_Step(10);
-	PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
+	ppuinfo.PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
 	K6502_Step(77);
 	handle_dmc_synchronization(87);	
 
@@ -821,7 +818,7 @@ void pNesX_Cycle()
 void pNesX_VSync()
 {
 	// Set a V-Blank flag
-	PPU_R2 |= R2_IN_VBLANK;
+	ppuinfo.PPU_R2 |= R2_IN_VBLANK;
 
 	// Reset latch flag
 	PPU_Latch_Flag = 0;
