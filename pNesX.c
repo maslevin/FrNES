@@ -38,7 +38,7 @@ unsigned char RAM[ RAM_SIZE ];
 unsigned char SRAM[ SRAM_SIZE ];
 
 /* ROM */
-unsigned char *ROM;
+extern unsigned char *ROM;
 
 /* ROM BANK ( 8Kb * 4 ) */
 unsigned char *ROMBANK0;
@@ -54,10 +54,10 @@ unsigned char *ROMBANK3;
 /* PPU RAM */
 unsigned char PPURAM[ PPURAM_SIZE ];
 unsigned char ChrBuf[ 256 * 2 * 8 * 8 ];
-unsigned char pSprBuf[272];
+extern unsigned char pSprBuf[272];
 
 /* VROM */
-unsigned char *VROM;
+extern unsigned char *VROM;
 
 /* PPU BANK ( 1Kb * 16 ) */
 unsigned char *PPUBANK[ 16 ];
@@ -874,7 +874,7 @@ void pNesX_GetSprHitY()
 	if ((SPRRAM[ SPR_Y ] + 1 <= 240) && (SPRRAM[SPR_Y] > 0)) {
 		for ( i = 0; i < ppuinfo.PPU_SP_Height; i++) {
 			if ( pdwChrData[ 0 ] | pdwChrData[ 1 ] ) {
-				SpriteJustHit = SPRRAM[SPR_Y] + 1 + i;
+				SpriteJustHit = SPRRAM[SPR_Y] + i;
 				i = 256;
 			}
 			pdwChrData += nOff;
