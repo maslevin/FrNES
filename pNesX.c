@@ -558,7 +558,7 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4)
 }
 
 static void
-timer_handler(irq_t source, irq_context_t *context)
+timer_handler(irq_t source, irq_context_t *context, void* data)
 {
 	Auto_Frames++;
 }
@@ -594,7 +594,7 @@ void pNesX_Main()
     if ( *opt_AutoFrameSkip ) {
 		//Set TMU1 at 60Hz, using interrupts
 		timer_prime(TMU1, 60, 1);
-		irq_set_handler(EXC_TMU1_TUNI1, timer_handler);
+		irq_set_handler(EXC_TMU1_TUNI1, timer_handler, NULL);
 		timer_start(TMU1);
 		Auto_Frames = 1;
 	}
@@ -633,7 +633,7 @@ void pNesX_Main()
 
 	if (*opt_AutoFrameSkip) {
 		timer_stop(TMU1);
-		irq_set_handler(EXC_TMU1_TUNI1, NULL);
+		irq_set_handler(EXC_TMU1_TUNI1, NULL, NULL);
 	}
 
 	if (*opt_SoundEnabled) {

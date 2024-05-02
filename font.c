@@ -155,7 +155,7 @@ void readPagesBlock(uint32 fd, Font* font, int blockSize) {
 }
 
 void addCharacter(Font* font, CharInfo charInfo) {
-	printf("Adding character mapping for character %c\n", (char)charInfo.id);
+	//printf("Adding character mapping for character %c\n", (char)charInfo.id);
 
 	CharDescriptor* bmfChar = malloc(sizeof(CharDescriptor));
 	bmfChar -> id = charInfo.id;
@@ -198,7 +198,7 @@ void addKerningPair(Font* font, KerningPair kerningPair) {
 		CharDescriptor* descriptor;
 		HASH_FIND_INT(*characters, &(kerningPair.first), descriptor);
 		if (descriptor != NULL) {
-			printf("Adding kerning pair for character %c\n", (char)descriptor -> id);
+			//printf("Adding kerning pair for character %c\n", (char)descriptor -> id);
 			utarray_push_back(descriptor -> kerningPairs, &kerningPair.second);
 			utarray_push_back(descriptor -> kerningPairs, &kerningPair.amount);
 		}

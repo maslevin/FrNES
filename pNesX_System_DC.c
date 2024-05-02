@@ -41,7 +41,7 @@
 
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
-KOS_INIT_ROMDISK(romdisk);
+//KOS_INIT_ROMDISK(romdisk);
 
 /*-------------------------------------------------------------------*/
 /*  Interface variables                                              */
@@ -203,7 +203,7 @@ void initialize_controllers()
 			numVMUs++;
 		}
 	}
-	printf("initialize_controllers: end scan, found [%i] controllers and [%i] vmus\n", numControllers, numVMUs);
+	printf("initialize_controllers: end scan, found [%u] controllers and [%u] vmus\n", numControllers, numVMUs);
 }
 
 void rescan_controllers()
