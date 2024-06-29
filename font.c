@@ -245,7 +245,7 @@ Font* load_font(const char* filepath) {
 
 				switch( blockType ) {
 					case 1: // info
-						printf("Detected info block\n", blockSize);
+						printf("Detected info block\n");
 						readInfoBlock(fd, font, blockSize, &outlineThickness);
 						break;
 					case 2: // common
