@@ -29,7 +29,7 @@ typedef struct InfoBlock {
     uint8 spacingHoriz;
     uint8 spacingVert;
     uint8 outline;         // Added with version 2
-    char* fontName;
+    char fontName[];
 } InfoBlock;
 #pragma pack(pop)
 
@@ -149,6 +149,7 @@ void readPagesBlock(uint32 fd, Font* font, int blockSize) {
 		bytesProcessed += temp;
 
 		free(pngPath);
+		id++;
 	} while (bytesProcessed < blockSize);
 
 	free(pageNames);
@@ -244,7 +245,7 @@ Font* load_font(const char* filepath) {
 
 				switch( blockType ) {
 					case 1: // info
-						printf("Detected info block\n");
+						printf("Detected info block\n", blockSize);
 						readInfoBlock(fd, font, blockSize, &outlineThickness);
 						break;
 					case 2: // common
