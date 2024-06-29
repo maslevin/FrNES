@@ -38,6 +38,7 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf)
 				continue;  // Next sprite
 
 			if (nSprCnt == 0)
+//				memset(pSprBuf, 0, 264);
 				pNesX_Uint32MemSet( pSprBuf, 0, 66);
 
 			++nSprCnt;

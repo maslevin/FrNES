@@ -63,9 +63,7 @@ void pNesX_DrawLine()
 	}
 
 // MS - Remove Mapper 9 support temporarily
-/*
-	if (MapperNo == 9)
-	{
+	if (MapperNo == 9) {
 		if (FrameCnt == 0)
 		{
 			pNesX_Map9DrawLine_BG_C(pPoint);
@@ -76,25 +74,23 @@ void pNesX_DrawLine()
 			pNesX_Map9Simulate_BG_C();
 			nSprCnt = pNesX_Map9Simulate_Spr_C();
 		}
-	}
-	else
-	{
-*/		
-	pNesX_DrawLine_BG_C(pPoint);
-	nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+	} else {
+		pNesX_DrawLine_BG_C(pPoint);
+		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
 
-	if (nSprCnt)
-	{
-		//Merge the sprite buffer with the scanline buffer
-		pPoint = Scanline_Buffer;
-		for (index = 0; index < 256; index++) {
-			if (pSprBuf[index] && 
-				((pSprBuf[index] & 0x80) || 
-				 ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
-			) {
-				*pPoint = (pSprBuf[index] & 0xf) + 0x10;
+		if (nSprCnt)
+		{
+			//Merge the sprite buffer with the scanline buffer
+			pPoint = Scanline_Buffer;
+			for (index = 0; index < 256; index++) {
+				if (pSprBuf[index] && 
+					((pSprBuf[index] & 0x80) || 
+					((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
+				) {
+					*pPoint = (pSprBuf[index] & 0xf) + 0x10;
+				}
+				pPoint++;
 			}
-			pPoint++;
 		}
 	}
 

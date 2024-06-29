@@ -9,14 +9,14 @@
 
 extern PPU_Info ppuinfo;
 
-void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
+void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint)
 {
 	/* C Background Renderer Vars */
 	uint16 nX;
 	uint16 nY;
 	uint16 nY4;
 	uint16 nYBit;
-	uint16 *pPalTbl;
+	unsigned char pPalTbl;
 	uint16 nesaddr;
 	int nIdx;
 	int index;
@@ -35,7 +35,7 @@ void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
 	pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-	pPalTbl = &PalTable[ (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 )];
+	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 	nesaddr = ((uint32)pbyCharData - (uint32)ChrBuf) / 4;
 	if(((nesaddr) & 0x0FC0) == 0x0FC0)
@@ -48,7 +48,7 @@ void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
 
 	for (index = ppuinfo.PPU_Scr_H_Bit; index < 8; index++)
 	{
-		*(pPoint++) = pPalTbl[pbyCharData[index]];
+		*(pPoint++) = pPalTbl + pbyCharData[index];
 	}
 
 	nX++;
@@ -67,7 +67,7 @@ void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
 	for (nIdx = 1; nIdx < 32; nIdx++)
 	{
 		pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;
-		pPalTbl = &PalTable[ (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 )];
+		pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 		nesaddr = ((uint32)pbyCharData - (uint32)ChrBuf) / 4;
 		if(((nesaddr) & 0x0FC0) == 0x0FC0)
@@ -78,14 +78,14 @@ void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
 			}
 		}
 
-		pPoint[0] = pPalTbl[pbyCharData[0]];
-		pPoint[1] = pPalTbl[pbyCharData[1]];
-		pPoint[2] = pPalTbl[pbyCharData[2]];
-		pPoint[3] = pPalTbl[pbyCharData[3]];
-		pPoint[4] = pPalTbl[pbyCharData[4]];
-		pPoint[5] = pPalTbl[pbyCharData[5]];
-		pPoint[6] = pPalTbl[pbyCharData[6]];
-		pPoint[7] = pPalTbl[pbyCharData[7]];
+		pPoint[0] = pPalTbl + pbyCharData[0];
+		pPoint[1] = pPalTbl + pbyCharData[1];
+		pPoint[2] = pPalTbl + pbyCharData[2];
+		pPoint[3] = pPalTbl + pbyCharData[3];
+		pPoint[4] = pPalTbl + pbyCharData[4];
+		pPoint[5] = pPalTbl + pbyCharData[5];
+		pPoint[6] = pPalTbl + pbyCharData[6];
+		pPoint[7] = pPalTbl + pbyCharData[7];
 
 		pPoint += 8;
 		nX++;
@@ -103,7 +103,7 @@ void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
 	}
 
 	pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;
-	pPalTbl = &PalTable[ (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 )];
+	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 	nesaddr = ((uint32)pbyCharData - (uint32)ChrBuf) / 4;
 	if(((nesaddr) & 0x0FC0) == 0x0FC0)
@@ -116,12 +116,12 @@ void pNesX_Map9DrawLine_BG_C(uint16* pPoint)
 
 	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++)
 	{
-		*(pPoint++) = pPalTbl[pbyCharData[index]];
+		*(pPoint++) = pPalTbl + pbyCharData[index];
 	}
 
 }
 
-void pNesX_Map9Simulate_BG_C(uint16* pPoint)
+void pNesX_Map9Simulate_BG_C(unsigned char* pPoint)
 {
 	/* C Background Renderer Vars */
 	uint16 nX;
