@@ -71,7 +71,7 @@ void setup_credits_screen()
 
 	//Set Up Window Style Features
 	mystyle.Header_Text_Scale = 1.0f;
-	mystyle.Text_Scale = 0.40f;	
+	mystyle.Text_Scale = 0.60f;	
 	mystyle.Border_Thickness = 5.0f;
 	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
 	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
@@ -102,6 +102,7 @@ void setup_credits_screen()
 	helpstyle.Left_Margin = 15;
 	helpstyle.Header_Text_Color = GUI_TextColor;
 	helpstyle.Text_Color = GUI_TextColor;
+	helpstyle.Text_Scale = 0.40f;
 	helpstyle.Max_Items = 10;
 	helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);

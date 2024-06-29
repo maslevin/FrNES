@@ -74,7 +74,7 @@ void setup_file_browser_screen()
 
 	//Set Up Window Style Features
 	mystyle.Header_Text_Scale = 1.0f;
-	mystyle.Text_Scale = 0.40f;
+	mystyle.Text_Scale = 0.50f;
 	mystyle.Border_Thickness = 5.0f;
 	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
 	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);

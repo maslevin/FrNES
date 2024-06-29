@@ -214,7 +214,7 @@ void DC_SoundInit() {
 	last_write = 0;
 	last_buffer = 0;
 
-	memset(sample_buffer, num_bytes, 0);
+	memset(sample_buffer, 0, num_bytes);
 
 	spu_memload(current_address, (uint8 *)sample_buffer, num_bytes);
 
