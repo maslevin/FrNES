@@ -39,7 +39,8 @@ uint16 pNesX_DrawLine_Spr_C()
 				continue;  // Next sprite
 
 			if (nSprCnt == 0)
-				pNesX_Uint32MemSet( pSprBuf, 0, 66);
+				memset(pSprBuf, 0, 264);
+//				pNesX_Uint32MemSet( pSprBuf, 0, 66);
 
 			nSprCnt++;
 

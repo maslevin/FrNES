@@ -26,6 +26,8 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf)
 	// Render a sprite to the sprite buffer
 	nSprCnt = 0;
 
+//	memset(pSprBuf, 0, 264);
+
 	if ( PPU_R1 & R1_SHOW_SP )
 	{
 		// Reset Scanline Sprite Count
@@ -38,10 +40,9 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf)
 				continue;  // Next sprite
 
 			if (nSprCnt == 0)
-//				memset(pSprBuf, 0, 264);
-				pNesX_Uint32MemSet( pSprBuf, 0, 66);
+				memset(pSprBuf, 0, 264);
 
-			++nSprCnt;
+			nSprCnt++;
 
 			nAttr = pSPRRAM[ SPR_ATTR ];
 			nYBit = ppuinfo.PPU_Scanline - nY;

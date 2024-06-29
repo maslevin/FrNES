@@ -77,20 +77,19 @@ void pNesX_DrawLine()
 	} else {
 		pNesX_DrawLine_BG_C(pPoint);
 		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+	}
 
-		if (nSprCnt)
-		{
-			//Merge the sprite buffer with the scanline buffer
-			pPoint = Scanline_Buffer;
-			for (index = 0; index < 256; index++) {
-				if (pSprBuf[index] && 
-					((pSprBuf[index] & 0x80) || 
-					((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
-				) {
-					*pPoint = (pSprBuf[index] & 0xf) + 0x10;
-				}
-				pPoint++;
+	if (nSprCnt) {
+		//Merge the sprite buffer with the scanline buffer
+		pPoint = Scanline_Buffer;
+		for (index = 0; index < 256; index++) {
+			if (pSprBuf[index] && 
+				((pSprBuf[index] & 0x80) || 
+				((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
+			) {
+				*pPoint = (pSprBuf[index] & 0xf) + 0x10;
 			}
+			pPoint++;
 		}
 	}
 
