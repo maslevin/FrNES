@@ -56,8 +56,10 @@ unsigned char PPURAM[ PPURAM_SIZE ];
 unsigned char ChrBuf[ 256 * 2 * 8 * 8 ];
 extern unsigned char pSprBuf[272];
 
-/* VROM */
-extern unsigned char *VROM;
+/* Cartridge VROM */
+extern unsigned char* VROM;
+/* Cartridge VRAM */
+extern unsigned char* VRAM;
 
 /* PPU BANK ( 1Kb * 16 ) */
 unsigned char *PPUBANK[ 16 ];
@@ -435,6 +437,7 @@ int pNesX_Reset()
   /*-------------------------------------------------------------------*/
 
   // Get Mapper Table Index
+  printf("Looking for Support for Mapper [%i]\n", MapperNo);
   for ( nIdx = 0; MapperTable[ nIdx ].nMapperNo != -1; ++nIdx )
   {
     if ( MapperTable[ nIdx ].nMapperNo == MapperNo )
@@ -445,6 +448,8 @@ int pNesX_Reset()
   {
     // Non support mapper
     return -1;
+  } else {
+	printf("Mapper [%i] Supported\n", MapperTable[ nIdx ].nMapperNo);
   }
 
   // Set up a mapper initialization function
@@ -729,21 +734,18 @@ void pNesX_Cycle() {
 		// Always call the renderer if Mapper 9 is involved
 		if ((MapperNo == 9) || (FrameCnt == 0)) {
 			pNesX_DrawLine();
-		}		
+		}	
 	}
 
+	pNesX_LoadFrame();
 	if (FrameCnt == 0) {
-		// 
-		pNesX_LoadFrame();
-
         // Switching of the double buffer
         WorkFrameIdx = 1 - WorkFrameIdx;
-		if (WorkFrameIdx == 0)
+		if (WorkFrameIdx == 0) {
 			WorkFrame = PVR_NESScreen1_Offset;
-		else
-			WorkFrame = PVR_NESScreen2_Offset;		
-	} else {
-//		vid_waitvbl();
+		} else {
+			WorkFrame = PVR_NESScreen2_Offset;
+		}
 	}
 
 	// Scanline 240

@@ -36,6 +36,96 @@ struct MapperTable_tag MapperTable[] =
   { 7, Map7_Init }, // Battletoads -> RARE Mapper
   { 8, NULL },
   { 9, Map9_Init }, // Mike Tyson's Punchout!
+  { 10, NULL },
+  { 11, NULL },
+  { 12, NULL },
+  { 13, NULL },
+  { 14, NULL },
+  { 15, NULL },
+  { 16, NULL },
+  { 17, NULL }, 
+  { 18, NULL },
+  { 19, NULL },
+  { 20, NULL },
+  { 21, NULL },
+  { 22, NULL },
+  { 23, NULL },
+  { 24, NULL },
+  { 25, NULL },
+  { 26, NULL },
+  { 27, NULL },
+  { 28, NULL },
+  { 29, NULL },
+  { 30, Map30_Init }, // Battle Kid 2
+  { 31, NULL },
+  { 32, NULL },
+  { 33, NULL },
+  { 34, NULL },
+  { 35, NULL },
+  { 36, NULL },
+  { 37, NULL },
+  { 38, NULL },
+  { 39, NULL },
+  { 40, NULL },  
+  { 41, NULL },
+  { 42, NULL },
+  { 43, NULL },
+  { 44, NULL },
+  { 45, NULL },
+  { 46, NULL },
+  { 47, NULL },
+  { 48, NULL },
+  { 49, NULL },
+  { 40, NULL },  
+  { 41, NULL },
+  { 42, NULL },
+  { 43, NULL },
+  { 44, NULL },
+  { 45, NULL },
+  { 46, NULL },
+  { 47, NULL },
+  { 48, NULL },
+  { 49, NULL },
+  { 40, NULL },  
+  { 41, NULL },
+  { 42, NULL },
+  { 43, NULL },
+  { 44, NULL },
+  { 45, NULL },
+  { 46, NULL },
+  { 47, NULL },
+  { 48, NULL },
+  { 49, NULL },
+  { 50, NULL },  
+  { 51, NULL },
+  { 52, NULL },
+  { 53, NULL },
+  { 54, NULL },
+  { 55, NULL },
+  { 56, NULL },
+  { 57, NULL },
+  { 58, NULL },
+  { 59, NULL },    
+  { 60, NULL },  
+  { 61, NULL },
+  { 62, NULL },
+  { 63, NULL },
+  { 64, NULL },
+  { 65, NULL },
+  { 66, NULL },
+  { 67, NULL },
+  { 68, NULL },
+  { 69, NULL },
+  { 70, NULL },  
+  { 71, Map30_Init },
+  { 72, NULL },
+  { 73, NULL },
+  { 74, NULL },
+  { 75, NULL },
+  { 76, NULL },
+  { 77, NULL },
+  { 78, NULL },
+  { 79, NULL },    
   { -1, NULL }
 };
 
@@ -880,4 +970,40 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 			}
 			break;
 	}
+}
+
+void Map30_Init() {
+	printf("Map30_Init\n");
+	/* Initialize Mapper */
+	MapperInit = Map30_Init;
+
+	/* Write to Mapper */
+	MapperWrite = Map30_Write;
+
+	/* Callback at VSync - NULL*/
+	MapperVSync = Map0_VSync;
+
+	/* Callback at HSync - NULL */
+	MapperHSync = Map0_HSync;
+
+	ROMBANK0 = ROMPAGE( 0 );
+	ROMBANK1 = ROMPAGE( 1 );
+	ROMBANK2 = ROMPAGE( 30 );
+	ROMBANK3 = ROMPAGE( 31 );	
+}
+
+void Map30_Write( uint16 wAddr, unsigned char byData ) {
+	printf("Map30_Write: $%04X, %02X\n", wAddr, byData);
+    unsigned char prg = byData & 0x1f;
+    unsigned char chr = (byData & 0x60) >> 5;
+
+    prg &= 31;
+    ROMBANK0 = ROMPAGE( prg * 2 );
+    ROMBANK1 = ROMPAGE( (prg * 2) + 1 );
+    ROMBANK2 = ROMPAGE( 30 );
+    ROMBANK3 = ROMPAGE( 31 );	   
+
+	unsigned char c = chr * 8;
+	for ( int nPage = 0; nPage < 8; ++nPage )
+		PPUBANK[ nPage ] = &PPURAM[(nPage + c) * 0x400 ];
 }

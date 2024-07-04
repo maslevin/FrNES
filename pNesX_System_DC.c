@@ -94,6 +94,7 @@ Window_Data helpdata;
 //Rom buffer area ... uses dynamic memory allocation
 unsigned char *ROM;
 unsigned char *VROM;
+unsigned char *VRAM;
 uint32 SRAM_Enabled;
 
 char App_String[] = "FrNES";
@@ -551,22 +552,22 @@ int main()
 
 			if (invalida && ((my_state -> buttons & CONT_A) == 0)) {
 				invalida = 0;
-				printf("Clearing A\n");
+//				printf("Clearing A\n");
 			}
 
 			if (keyhit && ((my_state -> buttons & (CONT_DPAD_UP | CONT_DPAD_DOWN)) == 0)) {
 				keyhit = 0;
-				printf("Clearing Keyhit\n");
+//				printf("Clearing Keyhit\n");
 			}
 
 			if (xkeyhit && ((my_state -> buttons & CONT_X) == 0)) {
 				xkeyhit = 0;
-				printf("Clearing X\n");
+//				printf("Clearing X\n");
 			}
 
 			if (disable_trigs && ((my_state -> rtrig == 0) && (my_state -> ltrig == 0))) {
 				disable_trigs = 0;
-				printf("Clearing Triggers\n");
+//				printf("Clearing Triggers\n");
 			}
 
 //			printf("main loop: handling controller input\n");
@@ -655,38 +656,81 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 	//MS - checksum calculation loads the rom currently, we should decouple that
 	currentCRC32 = ReturnChecksum(filepath, filesize, ROM_Buffer);
 
-	//Assume there's an NesHeader to read..  .nes files only supported
-	for (i = 0; i < sizeof (NesHeader); i++)
-		((char*) &NesHeader)[i] = ROM_Buffer[i];
+	//Attempt to read an iNES header
+	memcpy(&NesHeader, ROM_Buffer, sizeof(NesHeader));
 
-	//Read past the trainer
-	if (NesHeader.byInfo1 & 4) {
-		i += 512;
+	//Check if bytes 0-3 are NES header bytes
+	int returnValue = -1;
+	if ((NesHeader.byID[0] == 0x4E) && (NesHeader.byID[1] == 0x45) && (NesHeader.byID[2] == 0x53) && (NesHeader.byID[3] == 0x1A)) {
+		if ((NesHeader.byInfo2 & 0x0C) == 0x08) {
+			printf("ReadRom: NES 2.0 Header Detected\n");
+			printf("ReadRom: Not Currently Supported\n");
+		} else {
+			printf("ReadRom: iNES Header Detected\n");			
+			MapperNo = ((NesHeader.byInfo1 & 0xF0) >> 4) | (NesHeader.byInfo2 & 0xF0);
+			printf("ReadRom: Mapper Number [%i]\n", MapperNo);
+			printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
+			if (NesHeader.byVRomSize == 0) {
+				printf("ReadRom: CHR RAM\n");
+			} else {
+				printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);
+			}
+			printf("ReadRom: Nametable Arrangement [%s]\n", (NesHeader.byInfo1 & 1) ? "horizontal mirrored" : "vertically mirrored");			
+			printf("ReadRom: Battery Backed RAM [%s]\n", (NesHeader.byInfo1 & 2) ? "present" : "not present");
+			printf("ReadRom: Trainer Present [%s]\n", (NesHeader.byInfo1 & 4) ? "true" : "false");
+			printf("ReadRom: Alternative Nametable Layout [%s]\n", (NesHeader.byInfo1 & 8) ? "present" : "not present");
+			if (NesHeader.byInfo2 & 0x01) {
+				printf("ReadRom: VS Unisystem ROM detected");
+			}
+			if (NesHeader.byInfo2 & 0x02) {
+				printf("ReadRom: PlayChoice-10 ROM detected");
+			}
+			if (NesHeader.byReserve[0] != 0) {
+				printf("ReadRom: PRG RAM [%i] * 8kB banks\n", NesHeader.byReserve[0]);
+			}
+
+			if (NesHeader.byInfo1 & 2) {
+				SRAM_Enabled = 1;
+			} else {
+				SRAM_Enabled = 0;
+			}
+
+			i = 16;
+			//Read past the trainer
+			if (NesHeader.byInfo1 & 4) {
+				i += 512;
+			}
+
+			ROM_offset = i;
+			ROM = malloc (NesHeader.byRomSize * 0x4000);
+			for (; i < (ROM_offset + (NesHeader.byRomSize * 0x4000)); i++)
+				ROM[i - ROM_offset] = ROM_Buffer[i];
+
+			if (NesHeader.byVRomSize > 0) {
+				VROM_offset = i;
+				VROM = malloc (NesHeader.byVRomSize * 0x2000);
+				for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
+					VROM[i - VROM_offset] = ROM_Buffer[i];
+			} else {
+				VROM = NULL;
+				if (MapperNo == 30) {
+					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
+					VRAM = malloc(4 * 0x2000);
+				} else {
+					VRAM = malloc(0x2000);
+				}
+			}
+
+			//Load success
+			returnValue = 0;
+		}
+	} else {
+		printf("ReadRom: NOT AN NES FILE - exiting");
 	}
-
-	if (NesHeader.byInfo1 & 2)
-		SRAM_Enabled = 1;
-	else
-		SRAM_Enabled = 0;
-	
-	ROM_offset = i;
-	ROM = malloc (NesHeader.byRomSize * 0x4000);
-	for (; i < (ROM_offset + (NesHeader.byRomSize * 0x4000)); i++)
-		ROM[i - ROM_offset] = ROM_Buffer[i];
-
-	if (NesHeader.byVRomSize > 0)
-	{
-		VROM_offset = i;
-		VROM = malloc (NesHeader.byVRomSize * 0x2000);
-		for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
-			VROM[i - VROM_offset] = ROM_Buffer[i];
-	}
-	else
-		VROM = NULL;
 
 	free(ROM_Buffer);
 
-	return 0;
+	return returnValue;
 }
 
 void pNesX_LoadFrame()

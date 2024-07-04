@@ -212,18 +212,22 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 			printf("main: loading rom [%s]\n", myRomInfos[mydata.Highlighted_Index].PhysFileName);
 			if (pNesX_Load(myRomInfos[mydata.Highlighted_Index].PhysFileName, myRomInfos[mydata.Highlighted_Index].FileSize) == 0)
 			{
-				//Load It's SaveRAM
+				//Load Its SaveRAM
 				if (SRAM_Enabled)
 					LoadSRAM();
 
+				//Stay in Emulator During Operation
 				pNesX_Main();
 
+				//Clean Up Afterwards
 				free (ROM);
 				//There are some games that don't have VROM
 				if (VROM != NULL)
 					free (VROM);
+				if (VRAM != NULL)
+					free (VRAM);
 
-				//Save It's SaveRAM
+				//Save Its SaveRAM
 				if (SRAM_Enabled)
 					SaveSRAM();
 			} else {

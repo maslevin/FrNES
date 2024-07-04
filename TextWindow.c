@@ -499,7 +499,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 		{
 			char* text = windata -> Data_Strings[i + windata -> Top_Index];
 			if ((text != NULL) && (text[0] != '\0')) {
-				printf("win_draw_textwindow: drawing regular line of text\n");						
+				//printf("win_draw_textwindow: drawing regular line of text\n");						
 				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
 					draw_string(windata -> font, list, windata -> Data_Strings[i], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
 				} else {

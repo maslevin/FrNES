@@ -61,8 +61,11 @@ extern PPU_Info ppuinfo;
 /* PPU RAM */
 extern unsigned char PPURAM[];
 
-/* VROM */
+/* Cartridge VROM */
 extern unsigned char *VROM;
+
+/* Cartridge VRAM */
+extern unsigned char *VRAM;
 
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];

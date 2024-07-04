@@ -74,4 +74,7 @@ void Map9_set_VROM_0000();
 void Map9_set_VROM_1000();
 void Map9_PPU_Latch_FDFE(uint16 wAddr);
 
+void Map30_Init();
+void Map30_Write( uint16 wAddr, unsigned char byData );
+
 #endif /* !PNESX_MAPPER_H_INCLUDED */
