@@ -223,6 +223,8 @@ extern uint32 PAD2_Bit;
 
 /* Initialize Mapper */
 extern void (*MapperInit)();
+/* Read from  Mapper */
+extern unsigned char (*MapperRead)( uint16 wAddr );
 /* Write to Mapper */
 extern void (*MapperWrite)( uint16 wAddr, unsigned char byData );
 /* Callback at VSync */

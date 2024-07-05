@@ -135,10 +135,8 @@ inline unsigned char K6502_Read( uint16 wAddr )
         return byRet;
       } else if (wAddr < 0x4016) {
 		    return audio_read(wAddr);
-      } else {
-        // MS - Set up mapper reads in the range 0x5000 - 0x5fff
-        // if MapperRead 
-        //  return  MapperRead(wAddr);
+      } else if (wAddr < 0x6000) {
+        return MapperRead(wAddr);
       }
 	  break;
       // The other sound registers are not readable.
@@ -350,9 +348,14 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           }
           break;
       }
-      if (wAddr < 0x4018) {
-        MapperWrite(wAddr, byData);
-      }
+      MapperWrite(wAddr, byData);
+      // Set Bank Table
+      VIRPC;
+      BankTable[ 4 ] = ROMBANK0;
+      BankTable[ 5 ] = ROMBANK1;
+      BankTable[ 6 ] = ROMBANK2;
+      BankTable[ 7 ] = ROMBANK3;
+      REALPC;      
       break;
 
     case 0x6000:  /* SRAM */

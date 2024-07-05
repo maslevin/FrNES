@@ -185,12 +185,15 @@ uint32 PollSkip;
 
 /* Initialize Mapper */
 void (*MapperInit)();
+/* Read from Mapper */
+unsigned char (*MapperRead)( uint16 wAddr );
 /* Write to Mapper */
 void (*MapperWrite)( uint16 wAddr, unsigned char byData );
 /* Callback at VSync */
 void (*MapperVSync)();
 /* Callback at HSync */
 void (*MapperHSync)();
+
 
 /*-------------------------------------------------------------------*/
 /*  ROM information                                                  */

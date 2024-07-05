@@ -147,6 +147,9 @@ void Map0_Init()
 	/* Write to Mapper */
 	MapperWrite = Map0_Write;
 
+	/* Read from Mapper */
+	MapperRead = Map0_Read;
+
 	/* Callback at VSync */
 	MapperVSync = Map0_VSync;
 
@@ -202,6 +205,14 @@ void Map0_Write( uint16 wAddr, unsigned char byData )
 }
 
 /*-------------------------------------------------------------------*/
+/*  Mapper 1 Read Function                                          */
+/*-------------------------------------------------------------------*/
+unsigned char Map0_Read( uint16 wAddr )
+{
+	return (unsigned char)(wAddr >> 8);
+}
+
+/*-------------------------------------------------------------------*/
 /*  Mapper 0 V-Sync Function                                         */
 /*-------------------------------------------------------------------*/
 void Map0_VSync()
@@ -243,6 +254,9 @@ void Map1_Init()
 
   /* Initialize Mapper */
   MapperInit = Map1_Init;
+
+  /* Read from Mapper */
+  MapperRead = Map0_Read;
 
   /* Write to Mapper */
   MapperWrite = Map1_Write;
@@ -425,6 +439,9 @@ void Map2_Init()
 	/* Initialize Mapper */
 	MapperInit = Map2_Init;
 
+    /* Read from Mapper */
+    MapperRead = Map0_Read;
+
 	/* Write to Mapper */
 	MapperWrite = Map2_Write;
 
@@ -472,6 +489,9 @@ void Map3_Init()
 
 	/* Initialize Mapper */
 	MapperInit = Map3_Init;
+
+    /* Read from Mapper */
+    MapperRead = Map0_Read;
 
 	/* Write to Mapper */
 	MapperWrite = Map3_Write;
@@ -551,6 +571,9 @@ void Map4_Init()
 {
 	/* Initialize Mapper */
 	MapperInit = Map4_Init;
+
+    /* Read from Mapper */
+    MapperRead = Map0_Read;
 
 	/* Write to Mapper */
 	MapperWrite = Map4_Write;
@@ -731,11 +754,6 @@ void Map4_VSync()
 /*-------------------------------------------------------------------*/
 void Map4_HSync()
 {
-/*
- *  Callback at HSync
- *
- */
-
 	if (Map4_IRQ_Enable)
 	{
 		if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239))
@@ -779,6 +797,7 @@ unsigned char Map5_split_bank;
 extern uint32 currentCRC32;
 
 void MMC5_set_WRAM_bank(unsigned char page, unsigned char bank) {
+//	printf("MMC5_set_WRAM_bank: %i, %i\n", page, bank);
 	if (bank != 8) {
 		if(Map5_wram_size == 1) bank = (bank > 3) ? 8 : 0;
 		if(Map5_wram_size == 2) bank = (bank > 3) ? 1 : 0;
@@ -795,79 +814,59 @@ void MMC5_set_WRAM_bank(unsigned char page, unsigned char bank) {
 }
 
 void MMC5_set_CPU_bank(unsigned char page, unsigned char bank) {
-	printf("MMC5_set_CPU_bank: %i, %i\n", page, bank);
+//	printf("MMC5_set_CPU_bank: %i, %i\n", page, bank);
 	if (bank & 0x80) {
 		switch (Map5_prg_size) {
 			case 0:
 				if (page == 7) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7C));
-					BankTable[5] = ROMPAGE((bank & 0x7C)+1);
-					BankTable[6] = ROMPAGE((bank & 0x7C)+2);
-					BankTable[7] = ROMPAGE((bank & 0x7C)+3);
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7C));
+					ROMBANK1 = ROMPAGE((bank & 0x7C)+1);
+					ROMBANK2 = ROMPAGE((bank & 0x7C)+2);
+					ROMBANK3 = ROMPAGE((bank & 0x7C)+3);
 					Map5_wb[4] = Map5_wb[5] = Map5_wb[6] = 8;
 				}
 				break;
 			case 1:
 				if (page == 5) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7E));
-					BankTable[5] = ROMPAGE((bank & 0x7E)+1);				
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7E));
+					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Map5_wb[4] = Map5_wb[5] = 8;
 				}
 				if (page == 7) {
-					VIRPC;
-					BankTable[6] = ROMPAGE((bank & 0x7E));
-					BankTable[7] = ROMPAGE((bank & 0x7E)+1);
-					REALPC;
+					ROMBANK2 = ROMPAGE((bank & 0x7E));
+					ROMBANK3 = ROMPAGE((bank & 0x7E)+1);
 					Map5_wb[6] = 8;
 				}			
 				break;
 			case 2:
 				if (page == 5) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7E));
-					BankTable[5] = ROMPAGE((bank & 0x7E)+1);						
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7E));
+					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Map5_wb[4] = Map5_wb[5] = 8;
 				}
 				if (page == 6) {
-					VIRPC;
-					BankTable[6] = ROMPAGE((bank & 0x7F));
-					REALPC;				
+					ROMBANK2 = ROMPAGE((bank & 0x7F));			
 					Map5_wb[6] = 8;
 				}
 				if (page == 7) {
-					VIRPC;
-					BankTable[7] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 			case 3:
 				if (page == 4) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7F));
 					Map5_wb[4] = 8;
 				}
 				if (page == 5) {
-					VIRPC;
-					BankTable[5] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK1 = ROMPAGE((bank & 0x7F));
 					Map5_wb[5] = 8;
 				}
 				if (page == 6) {
-					VIRPC;
-					BankTable[6] = ROMPAGE((bank & 0x7F));
-					REALPC;				
+					ROMBANK2 = ROMPAGE((bank & 0x7F));			
 					Map5_wb[6] = 8;
 				}
 				if (page == 7) {
-					VIRPC;
-					BankTable[7] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 		}
@@ -973,6 +972,7 @@ unsigned char Map5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
     // normal
     sync_Chr_banks(mode);
   }
+  pNesX_SetupChr();  
   return ex_pal;
 }
 
@@ -982,6 +982,9 @@ unsigned char Map5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
 void Map5_Init() {
 	/* Initialize Mapper */
 	MapperInit = Map5_Init;
+
+    /* Read from Mapper */
+    MapperRead = Map5_Read;
 
 	/* Write to Mapper */
 	MapperWrite = Map5_Write;
@@ -1065,10 +1068,31 @@ void Map5_Init() {
 }
 
 /*-------------------------------------------------------------------*/
+/*  Mapper 5 Read Function                                           */
+/*-------------------------------------------------------------------*/
+unsigned char Map5_Read(uint16 wAddr) {
+	unsigned char ret = (unsigned char)(wAddr >> 8);
+	if (wAddr == 0x5204) {
+		ret = Map5_irq_status;
+		Map5_irq_status &= ~0x80;
+	} else if (wAddr == 0x5205) {
+		ret = (unsigned char)((Map5_value0 * Map5_value1) & 0x00FF);
+	} else if (wAddr == 0x5206) {
+		ret = (unsigned char)(((Map5_value0 * Map5_value1) & 0xFF00) >> 8);
+	} else if (wAddr >= 0x5C00 && wAddr <=0x5FFF) {
+		if (Map5_gfx_mode == 2 || Map5_gfx_mode == 3) {
+			unsigned char* nametable2 = PPUBANK[NAME_TABLE2];
+			ret = nametable2[wAddr & 0x3FF];
+		}
+	}
+	return ret;
+}
+
+/*-------------------------------------------------------------------*/
 /*  Mapper 5 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Map5_Write(uint16 wAddr, unsigned char byData) {
-	printf("Map5_Write: $%04X, %02X\n", wAddr, byData);	
+//	printf("Map5_Write: $%04X, %02X\n", wAddr, byData);	
 	uint32 i;
 
 	switch(wAddr) {
@@ -1256,6 +1280,9 @@ void Map7_Init()
 
 	/* Initialize Mapper */
 	MapperInit = Map7_Init;
+
+    /* Read from Mapper */
+    MapperRead = Map0_Read;
 
 	/* Write to Mapper */
 	MapperWrite = Map7_Write;
@@ -1475,6 +1502,9 @@ void Map30_Init() {
 //	printf("Map30_Init\n");
 	/* Initialize Mapper */
 	MapperInit = Map30_Init;
+
+    /* Read from Mapper */
+    MapperRead = Map0_Read;
 
 	/* Write to Mapper */
 	MapperWrite = Map30_Write;

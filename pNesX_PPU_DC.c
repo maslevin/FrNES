@@ -80,7 +80,7 @@ void pNesX_DrawLine()
 	}
 	else
 	{
-*/		
+*/	
 	if (MapperNo == 5) {
 		Map5_PPU_Latch_RenderScreen(1, 0);
 		pNesX_DrawLine_BG_C(pPoint);

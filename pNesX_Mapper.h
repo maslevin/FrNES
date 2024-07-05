@@ -47,6 +47,7 @@ extern struct MapperTable_tag MapperTable[];
 /*-------------------------------------------------------------------*/
 
 void Map0_Init();
+unsigned char Map0_Read( uint16 wAddr );
 void Map0_Write( uint16 wAddr, unsigned char byData );
 void Map0_VSync();
 void Map0_HSync();
@@ -66,6 +67,7 @@ void Map4_VSync();
 void Map4_HSync();
 
 void Map5_Init();
+unsigned char Map5_Read( uint16 wAddr );
 void Map5_Write( uint16 wAddr, unsigned char byData );
 void Map5_HSync();
 unsigned char Map5_PPU_Latch_RenderScreen(unsigned char mode, uint32 addr);
