@@ -31,7 +31,7 @@ struct MapperTable_tag MapperTable[] =
   { 2, Map2_Init },
   { 3, Map3_Init },
   { 4, Map4_Init },
-  { 5, NULL },
+  { 5, Map5_Init },
   { 6, NULL },
   { 7, Map7_Init }, // Battletoads -> RARE Mapper
   { 8, NULL },
@@ -749,6 +749,501 @@ void Map4_HSync()
 				}
 			}
 		}
+	}
+}
+
+/*===================================================================*/
+/*                                                                   */
+/*                        Mapper 5 (MMC5)                            */
+/*                                                                   */
+/*===================================================================*/
+// MS - Ported from Nester Source
+
+uint32 Map5_wb[8];
+unsigned char Map5_wram[8 * 0x2000];
+unsigned char Map5_wram_size;
+unsigned char Map5_chr_reg[8][2];
+unsigned char Map5_irq_enabled;
+unsigned char Map5_irq_status;
+uint32 Map5_irq_line;
+uint32 Map5_value0;
+uint32 Map5_value1;
+unsigned char Map5_wram_protect0;
+unsigned char Map5_wram_protect1;
+unsigned char Map5_prg_size;
+unsigned char Map5_chr_size;
+unsigned char Map5_gfx_mode;
+unsigned char Map5_split_control;
+unsigned char Map5_split_bank;
+
+extern uint32 currentCRC32;
+
+void MMC5_set_WRAM_bank(unsigned char page, unsigned char bank) {
+	if (bank != 8) {
+		if(Map5_wram_size == 1) bank = (bank > 3) ? 8 : 0;
+		if(Map5_wram_size == 2) bank = (bank > 3) ? 1 : 0;
+		if(Map5_wram_size == 3) bank = (bank > 3) ? 8 : bank;
+		if(Map5_wram_size == 4) bank = (bank > 3) ? 4 : bank;
+	}
+	Map5_wb[page] = bank;
+
+	if (bank != 8) {
+		VIRPC;
+		BankTable[page] = Map5_wram + (bank * 0x2000);
+		REALPC;
+	}
+}
+
+void MMC5_set_CPU_bank(unsigned char page, unsigned char bank) {
+	printf("MMC5_set_CPU_bank: %i, %i\n", page, bank);
+	if (bank & 0x80) {
+		switch (Map5_prg_size) {
+			case 0:
+				if (page == 7) {
+					VIRPC;
+					BankTable[4] = ROMPAGE((bank & 0x7C));
+					BankTable[5] = ROMPAGE((bank & 0x7C)+1);
+					BankTable[6] = ROMPAGE((bank & 0x7C)+2);
+					BankTable[7] = ROMPAGE((bank & 0x7C)+3);
+					REALPC;
+					Map5_wb[4] = Map5_wb[5] = Map5_wb[6] = 8;
+				}
+				break;
+			case 1:
+				if (page == 5) {
+					VIRPC;
+					BankTable[4] = ROMPAGE((bank & 0x7E));
+					BankTable[5] = ROMPAGE((bank & 0x7E)+1);				
+					REALPC;
+					Map5_wb[4] = Map5_wb[5] = 8;
+				}
+				if (page == 7) {
+					VIRPC;
+					BankTable[6] = ROMPAGE((bank & 0x7E));
+					BankTable[7] = ROMPAGE((bank & 0x7E)+1);
+					REALPC;
+					Map5_wb[6] = 8;
+				}			
+				break;
+			case 2:
+				if (page == 5) {
+					VIRPC;
+					BankTable[4] = ROMPAGE((bank & 0x7E));
+					BankTable[5] = ROMPAGE((bank & 0x7E)+1);						
+					REALPC;
+					Map5_wb[4] = Map5_wb[5] = 8;
+				}
+				if (page == 6) {
+					VIRPC;
+					BankTable[6] = ROMPAGE((bank & 0x7F));
+					REALPC;				
+					Map5_wb[6] = 8;
+				}
+				if (page == 7) {
+					VIRPC;
+					BankTable[7] = ROMPAGE((bank & 0x7F));
+					REALPC;
+				}			
+				break;
+			case 3:
+				if (page == 4) {
+					VIRPC;
+					BankTable[4] = ROMPAGE((bank & 0x7F));
+					REALPC;
+					Map5_wb[4] = 8;
+				}
+				if (page == 5) {
+					VIRPC;
+					BankTable[5] = ROMPAGE((bank & 0x7F));
+					REALPC;
+					Map5_wb[5] = 8;
+				}
+				if (page == 6) {
+					VIRPC;
+					BankTable[6] = ROMPAGE((bank & 0x7F));
+					REALPC;				
+					Map5_wb[6] = 8;
+				}
+				if (page == 7) {
+					VIRPC;
+					BankTable[7] = ROMPAGE((bank & 0x7F));
+					REALPC;
+				}			
+				break;
+		}
+	} else {
+		switch (Map5_prg_size) {
+			case 1:
+				if (page == 5) {
+					MMC5_set_WRAM_bank(4, (bank & 0x06));
+					MMC5_set_WRAM_bank(5, (bank & 0x06)+1);
+				}			
+				break;
+
+			case 2:
+				if (page == 5) {
+					MMC5_set_WRAM_bank(4, (bank & 0x06));
+					MMC5_set_WRAM_bank(5, (bank & 0x06)+1);
+				}
+				if (page == 6) {
+					MMC5_set_WRAM_bank(6, bank & 0x07);
+				}			
+				break;
+
+			case 3:
+				if (page == 4) {
+					MMC5_set_WRAM_bank(4, bank & 0x07);
+				}
+				if (page == 5) {
+					MMC5_set_WRAM_bank(5, bank & 0x07);
+				}
+				if (page == 6) {
+					MMC5_set_WRAM_bank(6, bank & 0x07);
+				}			
+				break;
+		}
+	}	
+}
+
+void sync_Chr_banks(unsigned char mode) {
+	switch (Map5_chr_size) {
+		case 0:
+			PPUBANK[0] = VROMPAGE(Map5_chr_reg[7][mode]*8);
+			PPUBANK[1] = VROMPAGE(Map5_chr_reg[7][mode]*8+1);
+			PPUBANK[2] = VROMPAGE(Map5_chr_reg[7][mode]*8+2);
+			PPUBANK[3] = VROMPAGE(Map5_chr_reg[7][mode]*8+3);
+			PPUBANK[4] = VROMPAGE(Map5_chr_reg[7][mode]*8+4);
+			PPUBANK[5] = VROMPAGE(Map5_chr_reg[7][mode]*8+5);
+			PPUBANK[6] = VROMPAGE(Map5_chr_reg[7][mode]*8+6);
+			PPUBANK[7] = VROMPAGE(Map5_chr_reg[7][mode]*8+7);		
+			break;
+
+		case 1:
+			PPUBANK[0] = VROMPAGE(Map5_chr_reg[3][mode]*4);
+			PPUBANK[1] = VROMPAGE(Map5_chr_reg[3][mode]*4+1);
+			PPUBANK[2] = VROMPAGE(Map5_chr_reg[3][mode]*4+2);
+			PPUBANK[3] = VROMPAGE(Map5_chr_reg[3][mode]*4+3);
+			PPUBANK[4] = VROMPAGE(Map5_chr_reg[7][mode]*4);
+			PPUBANK[5] = VROMPAGE(Map5_chr_reg[7][mode]*4+1);
+			PPUBANK[6] = VROMPAGE(Map5_chr_reg[7][mode]*4+2);
+			PPUBANK[7] = VROMPAGE(Map5_chr_reg[7][mode]*4+3);
+			break;
+
+		case 2:
+			PPUBANK[0] = VROMPAGE(Map5_chr_reg[1][mode]*2);
+			PPUBANK[1] = VROMPAGE(Map5_chr_reg[1][mode]*2+1);
+			PPUBANK[2] = VROMPAGE(Map5_chr_reg[3][mode]*2);
+			PPUBANK[3] = VROMPAGE(Map5_chr_reg[3][mode]*2+1);
+			PPUBANK[4] = VROMPAGE(Map5_chr_reg[5][mode]*2);
+			PPUBANK[5] = VROMPAGE(Map5_chr_reg[5][mode]*2+1);
+			PPUBANK[6] = VROMPAGE(Map5_chr_reg[7][mode]*2);
+			PPUBANK[7] = VROMPAGE(Map5_chr_reg[7][mode]*2+1);
+			break;
+
+		default:
+			PPUBANK[0] = VROMPAGE(Map5_chr_reg[0][mode]);
+			PPUBANK[1] = VROMPAGE(Map5_chr_reg[1][mode]);
+			PPUBANK[2] = VROMPAGE(Map5_chr_reg[2][mode]);
+			PPUBANK[3] = VROMPAGE(Map5_chr_reg[3][mode]);
+			PPUBANK[4] = VROMPAGE(Map5_chr_reg[4][mode]);
+			PPUBANK[5] = VROMPAGE(Map5_chr_reg[5][mode]);
+			PPUBANK[6] = VROMPAGE(Map5_chr_reg[6][mode]);
+			PPUBANK[7] = VROMPAGE(Map5_chr_reg[7][mode]);	
+			break;
+	}
+}
+
+unsigned char Map5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
+  unsigned char ex_pal = 0;
+
+  if(Map5_gfx_mode == 1 && mode == 1) {
+    // ex gfx mode
+    unsigned char * nametable2 = PPUBANK[NAME_TABLE2];
+    uint32 bank = (nametable2[addr] & 0x3F) << 2;
+	PPUBANK[0] = VROMPAGE(bank);
+	PPUBANK[1] = VROMPAGE(bank + 1);
+	PPUBANK[2] = VROMPAGE(bank + 2);
+	PPUBANK[3] = VROMPAGE(bank + 3);
+	PPUBANK[4] = VROMPAGE(bank);
+	PPUBANK[5] = VROMPAGE(bank + 1);
+	PPUBANK[6] = VROMPAGE(bank + 2);
+	PPUBANK[7] = VROMPAGE(bank + 3);	
+    ex_pal = ((nametable2[addr] & 0xC0) >> 4) | 0x01;
+  } else {
+    // normal
+    sync_Chr_banks(mode);
+  }
+  return ex_pal;
+}
+
+/*-------------------------------------------------------------------*/
+/*  Mapper 5 Init Function                                           */
+/*-------------------------------------------------------------------*/
+void Map5_Init() {
+	/* Initialize Mapper */
+	MapperInit = Map5_Init;
+
+	/* Write to Mapper */
+	MapperWrite = Map5_Write;
+
+	/* Callback at VSync */
+	MapperVSync = Map0_VSync;
+
+	/* Callback at HSync */
+	MapperHSync = Map5_HSync;
+
+	Map5_wram_size = 1;
+
+	//MS - this should probably move to the ROM loader?
+	// NES 2.0 I think has information for this so we don't need to special case by CRC of the ROM
+    if (currentCRC32 == 0x2b548d75 || // Bandit Kings of Ancient China (J)
+    	currentCRC32 == 0xf4cd4998 || // Dai Koukai Jidai (J)
+    	currentCRC32 == 0x8fa95456 || // Ishin no Arashi (J)
+    	currentCRC32 == 0x98c8e090 || // Nobunaga no Yabou - Sengoku Gunyuu Den (J)
+    	currentCRC32 == 0x57e3218b || // L'Empereur (J)
+    	currentCRC32 == 0x2f50bd38 || // L'Empereur (U)
+    	currentCRC32 == 0x8e9a5e2f || // L'Empereur (Alt)(U)
+    	currentCRC32 == 0xb56958d1 || // Nobunaga's Ambition 2 (J)
+    	currentCRC32 == 0xe6c28c5f || // Suikoden - Tenmei no Chikai (J)
+    	currentCRC32 == 0xcd35e2e9) {  // Uncharted Waters (J)
+	    Map5_wram_size = 2;
+    }
+
+	if (currentCRC32 == 0xf4120e58 || // Aoki Ookami to Shiroki Mejika - Genchou Hishi (J)
+    	currentCRC32 == 0x286613d8 || // Nobunaga no Yabou - Bushou Fuuun Roku (J)
+    	currentCRC32 == 0x11eaad26 || // Romance of the 3 Kingdoms 2 (J)
+    	currentCRC32 == 0x95ba5733) {  // Sangokushi 2 (J)
+		Map5_wram_size = 3;
+	}
+
+	// set SaveRAM
+	uint32 i;
+	for(i = 0; i < 0x10000; i++) {
+		Map5_wram[i] = SRAM[i];
+	}
+	MMC5_set_WRAM_bank(3,0);
+
+    // Init ExSound
+	// MS - TODO: Port over MMC5 extension sound
+    // parent_NES->apu->SelectExSound(NES_APU_EXSOUND_MMC5);
+
+	// set CPU bank pointers
+	ROMBANK0 = ROMLASTPAGE(0);
+	ROMBANK1 = ROMLASTPAGE(0);
+	ROMBANK2 = ROMLASTPAGE(0);
+	ROMBANK3 = ROMLASTPAGE(0);
+
+	// set PPU bank pointers
+	PPUBANK[ 0 ] = VROMPAGE( 0 );
+	PPUBANK[ 1 ] = VROMPAGE( 1 );
+	PPUBANK[ 2 ] = VROMPAGE( 2 );
+	PPUBANK[ 3 ] = VROMPAGE( 3 );
+	PPUBANK[ 4 ] = VROMPAGE( 4 );
+	PPUBANK[ 5 ] = VROMPAGE( 5 );
+	PPUBANK[ 6 ] = VROMPAGE( 6 );
+	PPUBANK[ 7 ] = VROMPAGE( 7 );	
+
+	for(i = 0; i < 8; i++) {
+		Map5_chr_reg[i][0] = i;
+		Map5_chr_reg[i][1] = (i & 0x03) + 4;
+	}
+	Map5_wb[3] = 0;
+	Map5_wb[4] = Map5_wb[5] = Map5_wb[6] = 8;
+
+	Map5_prg_size = 3;
+	Map5_wram_protect0 = 0x02;
+	Map5_wram_protect1 = 0x01;
+	Map5_chr_size = 3;
+	Map5_gfx_mode = 0;
+
+	Map5_irq_enabled = 0;
+	Map5_irq_status = 0;
+	Map5_irq_line = 0;
+
+	Map5_split_control = 0;
+	Map5_split_bank = 0;	
+}
+
+/*-------------------------------------------------------------------*/
+/*  Mapper 5 Write Function                                          */
+/*-------------------------------------------------------------------*/
+void Map5_Write(uint16 wAddr, unsigned char byData) {
+	printf("Map5_Write: $%04X, %02X\n", wAddr, byData);	
+	uint32 i;
+
+	switch(wAddr) {
+		case 0x5100: {
+			Map5_prg_size = byData & 0x03;
+		}
+		break;
+
+		case 0x5101: {
+			Map5_chr_size = byData & 0x03;
+		}
+		break;
+
+		case 0x5102: {
+			Map5_wram_protect0 = byData & 0x03;
+		}
+		break;
+
+		case 0x5103: {
+			Map5_wram_protect1 = byData & 0x03;
+		}
+		break;
+
+		case 0x5104: {
+			Map5_gfx_mode = byData & 0x03;
+		}
+		break;
+
+		case 0x5105: {
+			PPUBANK[0x8] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			byData >>= 2;			
+			PPUBANK[0x9] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			byData >>= 2;			
+			PPUBANK[0xA] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			byData >>= 2;			
+			PPUBANK[0xB] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+		}
+		break;
+
+		case 0x5106: {
+			unsigned char* nametable3 = PPUBANK[NAME_TABLE3];
+			for (i = 0; i < 0x3C0; i++) {
+				nametable3[i] = byData;
+			}
+		}
+		break;
+
+		case 0x5107: {
+			unsigned char* nametable3 = PPUBANK[NAME_TABLE3];
+			byData &= 0x03;
+			byData = byData | (byData<<2) | (byData<<4) | (byData<<6);
+			for (i = 0x3C0; i < 0x400; i++) {
+				nametable3[i] = byData;
+			}
+		}
+		break;
+
+		case 0x5113: {
+			MMC5_set_WRAM_bank(3, byData & 0x07);
+		}
+		break;
+
+		case 0x5114:
+		case 0x5115:
+		case 0x5116:
+		case 0x5117: {
+			MMC5_set_CPU_bank(wAddr & 0x07, byData);
+		}
+		break;
+
+		case 0x5120:
+		case 0x5121:
+		case 0x5122:
+		case 0x5123:
+		case 0x5124:
+		case 0x5125:
+		case 0x5126:
+		case 0x5127: {
+			Map5_chr_reg[wAddr & 0x07][0] = byData;
+			sync_Chr_banks(0);
+		}
+		break;
+
+		case 0x5128:
+		case 0x5129:
+		case 0x512A:
+		case 0x512B: {
+			Map5_chr_reg[(wAddr & 0x03) + 0][1] = byData;
+			Map5_chr_reg[(wAddr & 0x03) + 4][1] = byData;
+		}
+		break;
+
+		case 0x5200: {
+			Map5_split_control = byData;
+		}
+		break;
+
+		case 0x5201: {
+		// Intentionally commented out from Nester Source
+		//split_scroll = data;
+		}
+		break;
+
+		case 0x5202: {
+			Map5_split_bank = byData & 0x3F;
+		}
+		break;
+
+		case 0x5203: {
+			Map5_irq_line = byData;
+		}
+		break;
+
+		case 0x5204: {
+			Map5_irq_enabled = byData;
+		}
+		break;
+
+		case 0x5205: {
+			Map5_value0 = byData;
+		}
+		break;
+
+		case 0x5206: {
+			Map5_value1 = byData;
+		}
+		break;
+
+		default:
+		{
+			if (wAddr >= 0x5000 && wAddr <= 0x5015) {
+//	MS - TODO: Add Expansion Audio Support				
+//				parent_NES->apu->ExWrite(addr, data);
+			}
+			else if (wAddr >= 0x5C00 && wAddr <= 0x5FFF) {
+				if (Map5_gfx_mode != 3) {			
+					uint8* nametable2 = PPUBANK[NAME_TABLE2];
+					nametable2[wAddr & 0x3FF] = byData; //(irq_status & 0) ? data : 0x40;
+				}
+			} else if (wAddr >= 0x8000 && wAddr <= 0x9FFF) {
+				if (Map5_wb[4] != 8) {
+					Map5_wram[Map5_wb[4]*0x2000+(wAddr&0x1FFF)] = byData;
+					SRAM[Map5_wb[4]*0x2000+(wAddr&0x1FFF)] = byData;
+				}
+			} else if (wAddr >= 0xA000 && wAddr <= 0xBFFF) {
+				if (Map5_wb[5] != 8) {
+					Map5_wram[Map5_wb[5]*0x2000+(wAddr&0x1FFF)] = byData;
+					SRAM[Map5_wb[5]*0x2000+(wAddr&0x1FFF)] = byData;
+				}
+			} else if(wAddr >= 0xC000 && wAddr <= 0xDFFF) {
+				if (Map5_wb[6] != 8) {
+					Map5_wram[Map5_wb[6]*0x2000+(wAddr&0x1FFF)] = byData;
+					SRAM[Map5_wb[6]*0x2000+(wAddr&0x1FFF)] = byData;
+				}
+			}			
+		}
+		break;
+	}
+}
+
+/*-------------------------------------------------------------------*/
+/*  Mapper 5 H-Sync Function                                         */
+/*-------------------------------------------------------------------*/
+void Map5_HSync() {
+	if(ppuinfo.PPU_Scanline <= 240) {
+		if (ppuinfo.PPU_Scanline == Map5_irq_line) {
+			if ((PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) == (R1_SHOW_SCR | R1_SHOW_SP)) {
+				Map5_irq_status |= 0x80;
+			}
+		}
+		if((Map5_irq_status & 0x80) && (Map5_irq_enabled & 0x80)) {
+			K6502_DoIRQ();
+		}
+	} else {
+		Map5_irq_status |= 0x40;
 	}
 }
 

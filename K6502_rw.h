@@ -19,6 +19,15 @@
 #include "pNesX_System.h"
 #include "K6502.h"
 
+extern uint16 PC;
+extern unsigned char* pPC;
+extern unsigned char* pPC_Offset;
+extern unsigned char* BankTable[8];
+extern uint16 BankMask[8];
+
+#define REALPC  pPC_Offset = BankTable[ PC >> 13 ] - ( PC & BankMask[ PC >> 13 ] ); pPC = pPC_Offset + PC;
+#define VIRPC   PC = pPC - pPC_Offset;
+
 // I/O Operation (User definition)
 unsigned char K6502_Read( uint16 wAddr);
 uint16 K6502_ReadW( uint16 wAddr );

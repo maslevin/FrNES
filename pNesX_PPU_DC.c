@@ -17,6 +17,7 @@
 #include "pNesX_DrawLine_BG_C.h"
 #include "pNesX_DrawLine_BG_Asm.h"
 #include "pNesX_Utils.h"
+#include "pNesX_Mapper.h"
 
 extern VQ_Texture* WorkFrame;
 extern unsigned char* Scanline_Buffer;
@@ -80,8 +81,15 @@ void pNesX_DrawLine()
 	else
 	{
 */		
-	pNesX_DrawLine_BG_C(pPoint);
-	nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+	if (MapperNo == 5) {
+		Map5_PPU_Latch_RenderScreen(1, 0);
+		pNesX_DrawLine_BG_C(pPoint);
+		Map5_PPU_Latch_RenderScreen(0, 0);
+		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);		
+	} else {
+		pNesX_DrawLine_BG_C(pPoint);
+		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+	}
 
 	if (nSprCnt)
 	{

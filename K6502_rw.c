@@ -123,23 +123,23 @@ inline unsigned char K6502_Read( uint16 wAddr )
     } break;
 
     case 0x4000:  /* Sound */
-      if ( wAddr == 0x4016 )
-      {
+      if ( wAddr == 0x4016 ) {
         // Set Joypad1 data
         byRet = (unsigned char)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
         PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
         return byRet;
-      }
-      else
-      if ( wAddr == 0x4017 )
-      {
+      } else if ( wAddr == 0x4017 ) {
         // Set Joypad2 data
         byRet = (unsigned char)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
         PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
         return byRet;
-      }
-      else
+      } else if (wAddr < 0x4016) {
 		    return audio_read(wAddr);
+      } else {
+        // MS - Set up mapper reads in the range 0x5000 - 0x5fff
+        // if MapperRead 
+        //  return  MapperRead(wAddr);
+      }
 	  break;
       // The other sound registers are not readable.
 
@@ -162,15 +162,6 @@ inline unsigned char K6502_Read( uint16 wAddr )
   return ( wAddr >> 8 ); /* when a register is not readable the upper half
                             address is returned. */
 }
-
-extern uint16 PC;
-extern unsigned char* pPC;
-extern unsigned char* pPC_Offset;
-extern unsigned char* BankTable[8];
-extern uint16 BankMask[8];
-
-#define REALPC  pPC_Offset = BankTable[ PC >> 13 ] - ( PC & BankMask[ PC >> 13 ] ); pPC = pPC_Offset + PC;
-#define VIRPC   PC = pPC - pPC_Offset;
 
 /*===================================================================*/
 /*                                                                   */
@@ -358,6 +349,9 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
             audio_write(wAddr, byData);
           }
           break;
+      }
+      if (wAddr < 0x4018) {
+        MapperWrite(wAddr, byData);
       }
       break;
 

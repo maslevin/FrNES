@@ -65,6 +65,11 @@ void Map4_Write( uint16 wAddr, unsigned char byData );
 void Map4_VSync();
 void Map4_HSync();
 
+void Map5_Init();
+void Map5_Write( uint16 wAddr, unsigned char byData );
+void Map5_HSync();
+unsigned char Map5_PPU_Latch_RenderScreen(unsigned char mode, uint32 addr);
+
 void Map7_Init();
 void Map7_Write( uint16 wAddr, unsigned char byData );
 
