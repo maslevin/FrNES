@@ -146,6 +146,8 @@
 /*  Global valiables                                                 */
 /*-------------------------------------------------------------------*/
 
+unsigned char HALT;
+
 // 6502 Register
 uint16 PC;
 unsigned char SP;
@@ -998,6 +1000,8 @@ void Op_FE () // INC Abs,X
 
 void Op_XX () // Unknown Instruction
 {
+	printf("WARNING: RUNNING UNDOCUMENTED INSTRUCTION - HALTING\n");
+	HALT = 1;
 	CLK( 2 );
 }
 
@@ -1015,6 +1019,8 @@ void K6502_Init()
  */
   unsigned char idx;
   unsigned char idx2;
+
+  HALT = 0;
 
   // The establishment of the IRQ pin
   NMI_Wiring = NMI_State = 1;
@@ -1126,6 +1132,8 @@ void K6502_Reset()
  *  Reset a CPU
  *
  */
+	HALT = 0;
+
   // Reset Bank Table
   BankTable[ 0 ] = RAM;
   BankTable[ 1 ] = RAM;
@@ -1234,15 +1242,21 @@ void K6502_Step( uint16 wClocks )
   
   K6502_DoIRQ();
 
+  unsigned char opcode;
+
   // It has a loop until a constant clock passes
   while ( g_wPassedClocks < wClocks )
   {
     // Read an instruction
-    //byCode = K6502_Read( PC++ );
-    //byCode = *(pPC++);
+    opcode = *(pPC++);
     
     // Execute an instruction, run the instruction from the jump table.
-	((OpcodeTable[*(pPC++)]).pFPtr)();
+	((OpcodeTable[opcode]).pFPtr)();
+
+	if (HALT) {
+		printf("Attempted to Run Illegal Opcode [%02X]\n", opcode);
+		break;
+	}
   }  /* end of while ... */
 
   // Correct the number of the clocks

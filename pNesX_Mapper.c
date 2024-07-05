@@ -117,7 +117,7 @@ struct MapperTable_tag MapperTable[] =
   { 68, NULL },
   { 69, NULL },
   { 70, NULL },  
-  { 71, Map30_Init },
+  { 71, NULL },
   { 72, NULL },
   { 73, NULL },
   { 74, NULL },
@@ -789,9 +789,11 @@ void Map7_Init()
 /*  Mapper 7 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Map7_Write(uint16 wAddr, unsigned char byData) {
+//	printf("Map7_Write: $%04X, %02X\n", wAddr, byData);
 	unsigned char bank;
 
 	bank = (byData & 0x07) << 2;
+//	printf("Setting ROM Bank to [%i]\n", bank);
 
 	ROMBANK0 = ROMPAGE( bank );
 	ROMBANK1 = ROMPAGE( bank + 1 );
@@ -799,9 +801,11 @@ void Map7_Write(uint16 wAddr, unsigned char byData) {
 	ROMBANK3 = ROMPAGE( bank + 3 );
 
 	if (byData & 0x10) {
-		pNesX_Mirroring_Manual(1, 1, 1, 1);
+//		printf("Setting ROM Mirroring to 1,1,1,1\n");
+		pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_HIGH);
 	} else {
-		pNesX_Mirroring_Manual(0, 0, 0, 0);
+//		printf("Setting ROM Mirroring to 0,0,0,0\n");		
+		pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_LOW);
 	}
 }
 
@@ -960,12 +964,12 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 				if(Map9_Regs[5] & 0x01)
 				{
 					//Horizontal Mirror
-					pNesX_Mirroring(0);
+					pNesX_Mirroring(MIRRORING_HORIZONTAL);
 				}
 				else
 				{
 					//Vertical Mirror
-					pNesX_Mirroring(1);
+					pNesX_Mirroring(MIRRORING_VERTICAL);
 				}
 			}
 			break;

@@ -62,7 +62,7 @@ inline unsigned char K6502_Read( uint16 wAddr )
  */
   unsigned char byRet;
 
-  switch ( wAddr & 0xe000 )
+  switch ( wAddr & 0xE000 )
   {
     case 0x0000:  /* RAM */
         return RAM[ wAddr & 0x7ff ];
@@ -162,6 +162,15 @@ inline unsigned char K6502_Read( uint16 wAddr )
   return ( wAddr >> 8 ); /* when a register is not readable the upper half
                             address is returned. */
 }
+
+extern uint16 PC;
+extern unsigned char* pPC;
+extern unsigned char* pPC_Offset;
+extern unsigned char* BankTable[8];
+extern uint16 BankMask[8];
+
+#define REALPC  pPC_Offset = BankTable[ PC >> 13 ] - ( PC & BankMask[ PC >> 13 ] ); pPC = pPC_Offset + PC;
+#define VIRPC   PC = pPC - pPC_Offset;
 
 /*===================================================================*/
 /*                                                                   */
@@ -343,12 +352,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
             PAD2_Bit = 0;
           }
           break;
-		default:
-        APU_Reg[ wAddr & 0x1f ] = byData;
-        if (*opt_SoundEnabled) {
-          audio_write(wAddr, byData);
-        }
-        break;
+		    default:
+          APU_Reg[ wAddr & 0x1f ] = byData;
+          if (*opt_SoundEnabled) {
+            audio_write(wAddr, byData);
+          }
+          break;
       }
       break;
 
@@ -364,10 +373,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
       MapperWrite( wAddr, byData );
       
       // Set Bank Table
+      VIRPC;
       BankTable[ 4 ] = ROMBANK0;
       BankTable[ 5 ] = ROMBANK1;
       BankTable[ 6 ] = ROMBANK2;
       BankTable[ 7 ] = ROMBANK3;
+      REALPC;
       break;
   }
 }

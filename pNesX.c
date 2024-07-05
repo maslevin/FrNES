@@ -56,6 +56,8 @@ unsigned char PPURAM[ PPURAM_SIZE ];
 unsigned char ChrBuf[ 256 * 2 * 8 * 8 ];
 extern unsigned char pSprBuf[272];
 
+extern unsigned char HALT;
+
 /* Cartridge VROM */
 extern unsigned char* VROM;
 /* Cartridge VRAM */
@@ -129,7 +131,8 @@ unsigned char PPU_MirrorTable[][ 4 ] =
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
   { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
   { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 }
+  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
+  { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 }
 };
 
 /*-------------------------------------------------------------------*/
@@ -623,6 +626,11 @@ void pNesX_Main()
 		/*  Manage NES emulation                                             */
 		/*-------------------------------------------------------------------*/
 		pNesX_Cycle();
+
+		if (HALT) {
+			printf ("ERROR: System Halt - exiting emulation\n");
+			break;
+		}
 
 		/*-------------------------------------------------------------------*/
 		/*  Manage AutoFrameSkip                                             */

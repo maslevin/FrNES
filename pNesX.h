@@ -131,6 +131,12 @@ extern uint16 PPU_Increment;
 extern uint16 PPU_Temp;
 extern unsigned char PPU_2007_Buffer;
 
+#define MIRRORING_HORIZONTAL 0
+#define MIRRORING_VERTICAL 1
+#define MIRRORING_FOUR_SCREEN 2
+#define MIRRORING_SINGLE_SCREEN_LOW 3
+#define MIRRORING_SINGLE_SCREEN_HIGH 4
+
 #define R0_NMI_VB      0x80
 #define R0_NMI_SP      0x40
 #define R0_SP_SIZE     0x20
