@@ -677,8 +677,8 @@ void pNesX_Cycle() {
 	int do_scroll_setup;
 
 	//Update Character Data
-	if (FrameCnt == 0)
-		pNesX_SetupChr();
+//	if (FrameCnt == 0)
+//		pNesX_SetupChr();
 
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();

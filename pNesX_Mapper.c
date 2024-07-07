@@ -181,12 +181,10 @@ void Map0_Init()
 	}
 
 	/* Set PPU Banks */
-	if ( NesHeader.byVRomSize > 0 )
-	{
+	if ( NesHeader.byVRomSize > 0 ) {
 		for ( nPage = 0; nPage < 8; ++nPage )
 			PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-
-		pNesX_SetupChr();
+//		pNesX_SetupChr();
 	}
 
 	/* Set up wiring of the interrupt pin */

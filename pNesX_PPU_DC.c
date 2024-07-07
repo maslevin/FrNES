@@ -16,6 +16,7 @@
 #include "pNesX_DrawLine_BG_C_Map9.h"
 #include "pNesX_DrawLine_BG_C.h"
 #include "pNesX_DrawLine_BG_Asm.h"
+#include "pNesX_DrawLine_Spr_C.h"
 #include "pNesX_Utils.h"
 #include "pNesX_Mapper.h"
 

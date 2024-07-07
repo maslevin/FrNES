@@ -13,8 +13,7 @@ extern unsigned char pSprBuf[];
 extern int SpriteJustHit;
 extern int SprBufClean;
 
-uint16 pNesX_DrawLine_Spr_C()
-{
+uint16 pNesX_DrawLine_Spr_C() {
 	int nX;
 	int nY;
 	int nYBit;
@@ -38,8 +37,9 @@ uint16 pNesX_DrawLine_Spr_C()
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
 				continue;  // Next sprite
 
-			if (nSprCnt == 0)
-				pNesX_Uint32MemSet( pSprBuf, 0, 66);
+			if (nSprCnt == 0) {
+				memset4(pSprBuf, 0, 66);
+			}
 
 			nSprCnt++;
 
@@ -47,8 +47,7 @@ uint16 pNesX_DrawLine_Spr_C()
 			nYBit = ppuinfo.PPU_Scanline - nY;
 			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1 ) << 3 : nYBit << 3;
 
-			if ( ppuinfo.PPU_R0 & R0_SP_SIZE )
-			{
+			if ( ppuinfo.PPU_R0 & R0_SP_SIZE ) {
 				// Sprite size 8x16
 				if ( pSPRRAM[ SPR_CHR ] & 1 )
 				{
@@ -64,6 +63,11 @@ uint16 pNesX_DrawLine_Spr_C()
 				// Sprite size 8x8
 				pbyChrData = ppuinfo.PPU_SP_Base + ( pSPRRAM[ SPR_CHR ] << 6 ) + nYBit;
 			}
+
+			unsigned char patternData[8];
+			unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
+			unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+			unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 
 			nAttr ^= SPR_ATTR_PRI;
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
