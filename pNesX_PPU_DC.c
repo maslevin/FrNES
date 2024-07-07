@@ -46,7 +46,7 @@ void pNesX_DrawLine()
 {
 	void* texture_address;
 	unsigned char* pPoint;
-	int nSprCnt;
+	int nSprCnt = 0;
 	int index;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
@@ -89,7 +89,9 @@ void pNesX_DrawLine()
 		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);		
 	} else {
 		pNesX_DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+//		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
+//		memset4(pSprBuf, 0, 66 * 4);
+		nSprCnt = pNesX_DrawLine_Spr_C();
 	}
 
 	if (nSprCnt)

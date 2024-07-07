@@ -20,11 +20,8 @@ uint16 pNesX_DrawLine_Spr_C() {
 	unsigned char *pbyChrData;
 	unsigned char *pSPRRAM;
 	int nAttr;
-	int nSprCnt;
+	int nSprCnt = 0;
 	unsigned char bySprCol;
-		
-	// Render a sprite to the sprite buffer
-	nSprCnt = 0;
 	
 	if ( PPU_R1 & R1_SHOW_SP )
 	{
@@ -33,20 +30,39 @@ uint16 pNesX_DrawLine_Spr_C() {
 
 		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 )
 		{
-			nY = pSPRRAM[ SPR_Y ] + 1;
+			nY = pSPRRAM[ SPR_Y ];
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
 				continue;  // Next sprite
 
 			if (nSprCnt == 0) {
-				memset4(pSprBuf, 0, 66);
+				memset4(pSprBuf, 0, 66 * 4);
 			}
 
 			nSprCnt++;
 
 			nAttr = pSPRRAM[ SPR_ATTR ];
 			nYBit = ppuinfo.PPU_Scanline - nY;
-			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1 ) << 3 : nYBit << 3;
+			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit ) << 3 : nYBit << 3;
 
+			unsigned char nameTableValue = (ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+				(pSPRRAM[SPR_CHR] & 0xfe) :
+				(pSPRRAM[SPR_CHR]);
+			unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6);
+			unsigned char characterIndex = (nameTableValue & 0x3F);
+			unsigned char patternData[8];
+			unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
+			unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+			unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+			patternData[ 0 ] = ( byData1 >> 6 ) & 3;
+			patternData[ 1 ] = ( byData2 >> 6 ) & 3;
+			patternData[ 2 ] = ( byData1 >> 4 ) & 3;
+			patternData[ 3 ] = ( byData2 >> 4 ) & 3;
+			patternData[ 4 ] = ( byData1 >> 2 ) & 3;
+			patternData[ 5 ] = ( byData2 >> 2 ) & 3;
+			patternData[ 6 ] = byData1 & 3;
+			patternData[ 7 ] = byData2 & 3;
+			pbyChrData = patternData;
+/*
 			if ( ppuinfo.PPU_R0 & R0_SP_SIZE ) {
 				// Sprite size 8x16
 				if ( pSPRRAM[ SPR_CHR ] & 1 )
@@ -63,11 +79,7 @@ uint16 pNesX_DrawLine_Spr_C() {
 				// Sprite size 8x8
 				pbyChrData = ppuinfo.PPU_SP_Base + ( pSPRRAM[ SPR_CHR ] << 6 ) + nYBit;
 			}
-
-			unsigned char patternData[8];
-			unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
-			unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-			unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+*/
 
 			nAttr ^= SPR_ATTR_PRI;
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
