@@ -745,7 +745,7 @@ void pNesX_LoadFrame()
 	if (!*opt_Filter) {
 		filter = PVR_FILTER_NONE;
 	}
-	printf("WorkFramIdx: [%i]\n", WorkFrameIdx);
+//	printf("WorkFramIdx: [%i]\n", WorkFrameIdx);
 	pvr_ptr_t texture = PVR_NESScreen1_Offset;
 	if (WorkFrameIdx) {
 		texture = PVR_NESScreen2_Offset;

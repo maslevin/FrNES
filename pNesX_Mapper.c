@@ -280,7 +280,7 @@ void Map1_Init()
     for ( nPage = 0; nPage < 8; ++nPage )
       PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
 
-    pNesX_SetupChr();
+    //pNesX_SetupChr();
   }
 
   /* Set up wiring of the interrupt pin */
@@ -418,7 +418,7 @@ void Map1_Write( uint16 wAddr, unsigned char byData )
         PPUBANK[ nPage ] = &VROM[ (nVBank + nPage) * 0x400 ];
     }
 
-    pNesX_SetupChr();
+    //pNesX_SetupChr();
   }
 }
 
@@ -519,7 +519,7 @@ void Map3_Init()
 	/* Set PPU Banks */
 	for ( nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-	pNesX_SetupChr();
+	//pNesX_SetupChr();
 
 	/* Set up wiring of the interrupt pin */
 	/* "DragonQuest" doesn't run if IRQ isn't made to occur in CLI */
@@ -545,7 +545,7 @@ void Map3_Write( uint16 wAddr, unsigned char byData )
 	PPUBANK[6] = &VROM[ ((base + 6) * 0x400) ];
 	PPUBANK[7] = &VROM[ ((base + 7) * 0x400) ];
 
-	pNesX_SetupChr();
+	//pNesX_SetupChr();
 }
 
 /*===================================================================*/
@@ -646,7 +646,7 @@ void Map4_set_PPU_banks()
 			PPUBANK[ 7 ] = VROMPAGE( Map4_Banks_Reg[ 5 ] );
 		}
 
-		pNesX_SetupChr();
+		//pNesX_SetupChr();
 	}
 }
 
@@ -970,7 +970,7 @@ unsigned char Map5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
     // normal
     sync_Chr_banks(mode);
   }
-  pNesX_SetupChr();  
+//  pNesX_SetupChr();
   return ex_pal;
 }
 
@@ -1299,7 +1299,7 @@ void Map7_Init()
 	for ( nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
 
-	pNesX_SetupChr();
+	//pNesX_SetupChr();
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 
@@ -1374,7 +1374,7 @@ void Map9_Init()
 
 	Map9_set_VROM_0000();
 	Map9_set_VROM_1000();
-	pNesX_SetupChr();
+	//pNesX_SetupChr();
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 
@@ -1410,8 +1410,8 @@ void Map9_set_VROM_0000()
 	PPUBANK[2] = VROMPAGE( bank_num + 2 ); 
 	PPUBANK[3] = VROMPAGE( bank_num + 3 );
 
-	if (FrameCnt == 0)
-		pNesX_SetupChr();
+//	if (FrameCnt == 0)
+		//pNesX_SetupChr();
 }
 
 void Map9_set_VROM_1000()
