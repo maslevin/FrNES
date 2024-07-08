@@ -299,10 +299,36 @@ void pNesX_VSync();
 /* Get a position of scanline hits sprite #0 */
 void pNesX_GetSprHitY();
 
-unsigned char* decompressCharacter(unsigned char bank, unsigned char index);
+inline unsigned char* decompressCharacter(unsigned char bank, unsigned char index) {
+	unsigned char* pbyBGData;
+	unsigned char byData1;
+	unsigned char byData2;
+	int nOff = (bank << 12) + (index << 6);
+	unsigned char* characterData = &ChrBuf[nOff];
+	unsigned char flagIndex = (bank << 1) + (index >> 5);
+	uint32 characterMask = (0x00000001) << (index % 32);
+	if (!(ChrBufFlags[flagIndex] & characterMask)) {
+		pbyBGData = PPUBANK[ bank ] + ( index << 4 );
+		for (int nY = 0; nY < 8; ++nY ) {
+			byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+			byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 
-/* Develop character data */
-void pNesX_SetupChr();
+			ChrBuf[ nOff ]     = ( byData1 >> 6 ) & 3;
+			ChrBuf[ nOff + 1 ] = ( byData2 >> 6 ) & 3;
+			ChrBuf[ nOff + 2 ] = ( byData1 >> 4 ) & 3;
+			ChrBuf[ nOff + 3 ] = ( byData2 >> 4 ) & 3;
+			ChrBuf[ nOff + 4 ] = ( byData1 >> 2 ) & 3;
+			ChrBuf[ nOff + 5 ] = ( byData2 >> 2 ) & 3;
+			ChrBuf[ nOff + 6 ] = byData1 & 3;
+			ChrBuf[ nOff + 7 ] = byData2 & 3;
+
+			nOff += 8;
+			pbyBGData++;
+		}
+		ChrBufFlags[flagIndex] |= characterMask;
+	}
+	return characterData;
+};
 
 void pNesX_DoSpu();
 

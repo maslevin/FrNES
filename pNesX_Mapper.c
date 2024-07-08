@@ -815,9 +815,7 @@ void MMC5_set_WRAM_bank(unsigned char page, unsigned char bank) {
 	Map5_wb[page] = bank;
 
 	if (bank != 8) {
-		VIRPC;
 		BankTable[page] = Map5_wram + (bank * 0x2000);
-		REALPC;
 	}
 }
 
@@ -1168,7 +1166,13 @@ void Map5_Write(uint16 wAddr, unsigned char byData) {
 		case 0x5115:
 		case 0x5116:
 		case 0x5117: {
+			VIRPC;
 			MMC5_set_CPU_bank(wAddr & 0x07, byData);
+			BankTable[ 4 ] = ROMBANK0;
+			BankTable[ 5 ] = ROMBANK1;
+			BankTable[ 6 ] = ROMBANK2;
+			BankTable[ 7 ] = ROMBANK3;
+			REALPC;
 		}
 		break;
 
@@ -1386,7 +1390,7 @@ void Map9_Init()
 
 	Map9_set_VROM_0000();
 	Map9_set_VROM_1000();
-	pNesX_SetupChr();
+//	pNesX_SetupChr();
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 
