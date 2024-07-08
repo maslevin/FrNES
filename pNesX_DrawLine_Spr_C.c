@@ -42,7 +42,7 @@ uint16 pNesX_DrawLine_Spr_C() {
 
 			nAttr = pSPRRAM[ SPR_ATTR ];
 			nYBit = ppuinfo.PPU_Scanline - nY;
-			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit ) << 3 : nYBit << 3;
+			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1) << 3 : nYBit << 3;
 
 			unsigned char nameTableValue = (ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
 				(pSPRRAM[SPR_CHR] & 0xfe) :
