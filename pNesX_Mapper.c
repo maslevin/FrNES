@@ -184,7 +184,7 @@ void Map0_Init()
 	if ( NesHeader.byVRomSize > 0 ) {
 		for ( nPage = 0; nPage < 8; ++nPage )
 			PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-		memset4(ChrBufFlags, 0, 64);
+		memset4(ChrBufFlags, 0, 128);
 	}
 
 	/* Set up wiring of the interrupt pin */
@@ -279,7 +279,7 @@ void Map1_Init()
   {
     for ( nPage = 0; nPage < 8; ++nPage )
       PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-	memset4(ChrBufFlags, 0, 64);
+	memset4(ChrBufFlags, 0, 128);
   }
 
   /* Set up wiring of the interrupt pin */
@@ -401,14 +401,14 @@ void Map1_Write( uint16 wAddr, unsigned char byData )
 			nVBank = Map1_Reg[ 1 ] << 2;
 			for ( nPage = 0; nPage < 4; ++nPage )
 				PPUBANK[ nPage ] = &VROM[ (nVBank + nPage) * 0x400 ];
-		    memset4(ChrBufFlags, 0, 32);
+		    memset4(ChrBufFlags, 0, 64);
 		}
 		else
 		{
 			nVBank = Map1_Reg[ 2 ] << 2;
 			for ( nPage = 0; nPage < 4; ++nPage )
 				PPUBANK[ nPage + 4 ] = &VROM[ (nVBank + nPage) * 0x400 ];
-			memset4(ChrBufFlags, 0, 32);
+			memset4(ChrBufFlags + 64, 0, 64);
 		}
     }
     else
@@ -417,7 +417,7 @@ void Map1_Write( uint16 wAddr, unsigned char byData )
       nVBank = ( Map1_Reg[ 1 ] & 0xe ) << 2;
       for ( nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = &VROM[ (nVBank + nPage) * 0x400 ];
-	  memset4(ChrBufFlags, 0, 64);		
+	  memset4(ChrBufFlags, 0, 128);		
     }
 
 //    pNesX_SetupChr();
@@ -521,7 +521,7 @@ void Map3_Init()
 	/* Set PPU Banks */
 	for ( nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-	memset4(ChrBufFlags, 0, 0);		
+	memset4(ChrBufFlags, 0, 128);		
 
 	/* Set up wiring of the interrupt pin */
 	/* "DragonQuest" doesn't run if IRQ isn't made to occur in CLI */
@@ -546,7 +546,7 @@ void Map3_Write( uint16 wAddr, unsigned char byData )
 	PPUBANK[5] = &VROM[ ((base + 5) * 0x400) ];
 	PPUBANK[6] = &VROM[ ((base + 6) * 0x400) ];
 	PPUBANK[7] = &VROM[ ((base + 7) * 0x400) ];
-	memset4(ChrBufFlags, 0, 64);
+	memset4(ChrBufFlags, 0, 128);
 }
 
 /*===================================================================*/
@@ -647,7 +647,7 @@ void Map4_set_PPU_banks()
 			PPUBANK[ 7 ] = VROMPAGE( Map4_Banks_Reg[ 5 ] );
 		}
 
-		memset4(ChrBufFlags, 0, 64);
+		memset4(ChrBufFlags, 0, 128);
 	}
 }
 
@@ -971,7 +971,7 @@ unsigned char Map5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
     // normal
     sync_Chr_banks(mode);
   }
-  memset4(ChrBufFlags, 0, 64);
+  memset4(ChrBufFlags, 0, 128);
   return ex_pal;
 }
 
@@ -1044,7 +1044,7 @@ void Map5_Init() {
 	PPUBANK[ 5 ] = VROMPAGE( 5 );
 	PPUBANK[ 6 ] = VROMPAGE( 6 );
 	PPUBANK[ 7 ] = VROMPAGE( 7 );
-	memset4(ChrBufFlags, 0, 64);	
+	memset4(ChrBufFlags, 0, 128);	
 
 	for(i = 0; i < 8; i++) {
 		Map5_chr_reg[i][0] = i;
@@ -1300,7 +1300,7 @@ void Map7_Init()
 
 	for ( nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
-	memset4(ChrBufFlags, 0, 64);
+	memset4(ChrBufFlags, 0, 128);
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 
@@ -1411,7 +1411,7 @@ void Map9_set_VROM_0000()
 	PPUBANK[2] = VROMPAGE( bank_num + 2 ); 
 	PPUBANK[3] = VROMPAGE( bank_num + 3 );
 
-	memset4(ChrBufFlags, 0, 32);
+	memset4(ChrBufFlags, 0, 64);
 }
 
 void Map9_set_VROM_1000()
@@ -1429,7 +1429,7 @@ void Map9_set_VROM_1000()
 	PPUBANK[5] = VROMPAGE( bank_num + 1 );
 	PPUBANK[6] = VROMPAGE( bank_num + 2 ); 
 	PPUBANK[7] = VROMPAGE( bank_num + 3 );
-	memset4(ChrBufFlags + (32), 0, 32);
+	memset4(ChrBufFlags + (64), 0, 64);
 }
 
 void Map9_Write(uint16 wAddr, unsigned char byData)
@@ -1528,5 +1528,5 @@ void Map30_Write( uint16 wAddr, unsigned char byData ) {
 	unsigned char c = chr * 8;
 	for ( int nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &PPURAM[(nPage + c) * 0x400 ];
-	memset4(ChrBufFlags, 0, 64);
+	memset4(ChrBufFlags, 0, 128);
 }
