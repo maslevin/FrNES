@@ -294,6 +294,9 @@ void Map1_Write( uint16 wAddr, unsigned char byData )
 /*
  * MMC1
  */
+	if (wAddr < 0x8000)
+		return;
+
 
   int nReg;
   int nROMPos;
@@ -535,6 +538,10 @@ void Map3_Init()
 /*-------------------------------------------------------------------*/
 void Map3_Write( uint16 wAddr, unsigned char byData )
 {
+	if (wAddr < 0x8000) {
+		return;
+	}
+
 	uint16 base;
 
 	byData &= ((NesHeader.byVRomSize * 8) >> 1) - 1;
@@ -1313,22 +1320,24 @@ void Map7_Init()
 /*-------------------------------------------------------------------*/
 void Map7_Write(uint16 wAddr, unsigned char byData) {
 //	printf("Map7_Write: $%04X, %02X\n", wAddr, byData);
-	unsigned char bank;
+	if (wAddr >= 0x8000) {
+		unsigned char bank;
 
-	bank = (byData & 0x07) << 2;
-//	printf("Setting ROM Bank to [%i]\n", bank);
+		bank = (byData & 0x07) << 2;
+	//	printf("Setting ROM Bank to [%i]\n", bank);
 
-	ROMBANK0 = ROMPAGE( bank );
-	ROMBANK1 = ROMPAGE( bank + 1 );
-	ROMBANK2 = ROMPAGE( bank + 2 );
-	ROMBANK3 = ROMPAGE( bank + 3 );
+		ROMBANK0 = ROMPAGE( bank );
+		ROMBANK1 = ROMPAGE( bank + 1 );
+		ROMBANK2 = ROMPAGE( bank + 2 );
+		ROMBANK3 = ROMPAGE( bank + 3 );
 
-	if (byData & 0x10) {
-//		printf("Setting ROM Mirroring to 1,1,1,1\n");
-		pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_HIGH);
-	} else {
-//		printf("Setting ROM Mirroring to 0,0,0,0\n");		
-		pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_LOW);
+		if (byData & 0x10) {
+	//		printf("Setting ROM Mirroring to 1,1,1,1\n");
+			pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_HIGH);
+		} else {
+	//		printf("Setting ROM Mirroring to 0,0,0,0\n");		
+			pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_LOW);
+		}
 	}
 }
 
@@ -1518,6 +1527,10 @@ void Map30_Init() {
 
 void Map30_Write( uint16 wAddr, unsigned char byData ) {
 //	printf("Map30_Write: $%04X, %02X\n", wAddr, byData);
+	if (wAddr < 0x8000) {
+		return;
+	}
+
     unsigned char prg = byData & 0x1f;
     unsigned char chr = (byData & 0x60) >> 5;
 

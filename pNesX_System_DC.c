@@ -427,19 +427,12 @@ void initVQTextures() {
 	PVR_NESScreen1_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
 	PVR_NESScreen2_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
  	codebook = memalign(32, 2048);
+}
 
-	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
-	uint16* codebookEntry = (uint16*)codebook;
-	uint32 codebookIdx;
-	for (codebookIdx = 0; codebookIdx < 32; codebookIdx++) {
-		uint16 codebookValue = PalTable[codebookIdx];
-		*codebookEntry++ = codebookValue;
-		*codebookEntry++ = codebookValue;
-		*codebookEntry++ = codebookValue;
-		*codebookEntry++ = codebookValue;
-	}
-	pvr_txr_load(codebook, PVR_NESScreen1_Offset, 2048);
-	pvr_txr_load(codebook, PVR_NESScreen2_Offset, 2048);
+void freeVQTextures() {
+	pvr_mem_free(PVR_NESScreen1_Offset);
+	pvr_mem_free(PVR_NESScreen2_Offset);
+	free(codebook);
 }
 
 /*===================================================================*/
@@ -464,9 +457,6 @@ int main()
 	Allocate_Video_Options();
 	Allocate_System_Options();
 	Allocate_Control_Options();
-
-	printf("Initializing VQ Textures\n");
-	initVQTextures();
 
 	printf("Initializing Controllers\n");	
 	initialize_controllers();
@@ -759,13 +749,10 @@ void pNesX_LoadFrame()
 		filter = PVR_FILTER_NONE;
 	}
 
-	pvr_ptr_t texture = PVR_NESScreen2_Offset;
-	if (WorkFrameIdx) {
-		texture = PVR_NESScreen1_Offset;
-	}
+	pvr_ptr_t texture = WorkFrameIdx ? PVR_NESScreen1_Offset : PVR_NESScreen2_Offset;
 
 	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
-	//MS - you only have to do this once when you set up the texture since the NES palette doesn't change
+	//This could change on any given frame so we need to upload it each time.
 	uint16* codebookEntry = (uint16*)codebook;
 	uint32 codebookIdx;
 	for (codebookIdx = 0; codebookIdx < 32; codebookIdx++) {
@@ -775,7 +762,7 @@ void pNesX_LoadFrame()
 		*codebookEntry++ = codebookValue;
 		*codebookEntry++ = codebookValue;
 	}
-	pvr_txr_load(codebook, texture, 2048);
+	pvr_txr_load(codebook, WorkFrame, 2048);
 
 	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, texture, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);

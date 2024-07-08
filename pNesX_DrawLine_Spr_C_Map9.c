@@ -37,8 +37,9 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf)
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
 				continue;  // Next sprite
 
-			if (nSprCnt == 0)
-				pNesX_Uint32MemSet( pSprBuf, 0, 66);
+			if (nSprCnt == 0) {
+				memset4(pSprBuf, 0, 66 * 4);
+			}
 
 			++nSprCnt;
 
@@ -46,22 +47,16 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf)
 			nYBit = ppuinfo.PPU_Scanline - nY;
 			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1 ) << 3 : nYBit << 3;
 
-			if ( ppuinfo.PPU_R0 & R0_SP_SIZE )
-			{
-				// Sprite size 8x16
-				if ( pSPRRAM[ SPR_CHR ] & 1 )
-				{
-					pbyChrData = ChrBuf + 256 * 64 + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
-				}
-				else
-				{
-					pbyChrData = ChrBuf + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
-				}
-			}
-			else
-			{
-				// Sprite size 8x8
-				pbyChrData = ppuinfo.PPU_SP_Base + ( pSPRRAM[ SPR_CHR ] << 6 ) + nYBit;
+			unsigned char nameTableValue = (ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+				(pSPRRAM[SPR_CHR] & 0xfe) :
+				(pSPRRAM[SPR_CHR]);
+			unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+				((pSPRRAM[SPR_CHR] & 1) ? 4: 0) + (nameTableValue >> 6) :
+				((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6));
+			unsigned char characterIndex = (nameTableValue & 0x3F);
+			pbyChrData = decompressCharacter(characterBank, characterIndex) + nYBit;
+			if (ppuinfo.PPU_R0 & R0_SP_SIZE) {
+				decompressCharacter(characterBank, characterIndex + 1);
 			}
 
 			nesaddr = pSPRRAM[1];

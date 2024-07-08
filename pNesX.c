@@ -591,6 +591,9 @@ void pNesX_Main()
 {
 	pNesX_Init();
 
+	printf("Initializing VQ Textures\n");
+	initVQTextures();
+
 	// Initialize pNesX
 	if (*opt_SoundEnabled) {
 		// Start Sound Emu
@@ -662,6 +665,9 @@ void pNesX_Main()
 	if (*opt_SoundEnabled) {
 		spu_shutdown();
 	}
+
+	printf("Releasing VQ Textures\n");
+	freeVQTextures();
 
 	// Completion treatment
 	pNesX_Fin();

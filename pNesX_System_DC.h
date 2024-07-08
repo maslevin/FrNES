@@ -55,4 +55,7 @@ void i32toa(uint32 i, char* buffer);
 
 extern uint16 WorkFrameIdx;
 
+void initVQTextures();
+void freeVQTextures();
+
 #endif

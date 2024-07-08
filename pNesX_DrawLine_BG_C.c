@@ -29,8 +29,6 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint)
 	nY4 = ( ( nY & 2 ) << 1 );
 
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
-	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 	unsigned char nameTableValue = *pbyNameTable;
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
