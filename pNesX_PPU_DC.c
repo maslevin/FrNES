@@ -59,7 +59,7 @@ void pNesX_DrawLine()
 
 	if ( !( PPU_R1 & R1_SHOW_SCR ) )
 	{
-		memset(Scanline_Buffer, 0, 256);
+		memset4(Scanline_Buffer, 0, 256);
 		pvr_txr_load(Scanline_Buffer, texture_address, 256);
 		return;
 	}
@@ -94,8 +94,7 @@ void pNesX_DrawLine()
 		nSprCnt = pNesX_DrawLine_Spr_C();
 	}
 
-	if (nSprCnt)
-	{
+	if (nSprCnt) {
 		//Merge the sprite buffer with the scanline buffer
 		pPoint = Scanline_Buffer;
 		for (index = 0; index < 256; index++) {

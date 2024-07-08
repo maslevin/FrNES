@@ -190,8 +190,7 @@ extern uint16 *WorkFrame;
 extern uint16 WorkFrameIdx;*/
 
 extern unsigned char ChrBuf[];
-
-extern unsigned char ChrBufUpdate;
+extern uint32 ChrBufFlags[];
 
 extern uint16 PalTable[];
 
@@ -301,6 +300,8 @@ void pNesX_VSync();
 
 /* Get a position of scanline hits sprite #0 */
 void pNesX_GetSprHitY();
+
+unsigned char* decompressCharacter(unsigned char bank, unsigned char index);
 
 /* Develop character data */
 void pNesX_SetupChr();

@@ -53,7 +53,14 @@ unsigned char *ROMBANK3;
 
 /* PPU RAM */
 unsigned char PPURAM[ PPURAM_SIZE ];
-unsigned char ChrBuf[ 256 * 2 * 8 * 8 ];
+
+/* Decompressed Character Buffer */
+/* 8 Banks of 64 8x8 Characters Encoded at 1 byte (8 bits) per pixel */
+unsigned char ChrBuf[ 8 * 64 * 8 * 8 ];
+
+/* Bitflag array representing whether the data in ChrBuf is up to date with the current state of the PPU memory banks */
+uint32 ChrBufFlags[8 * 2];
+
 extern unsigned char pSprBuf[272];
 
 extern unsigned char HALT;
@@ -878,6 +885,37 @@ void pNesX_GetSprHitY()
 	} else {
 		SpriteJustHit = 241;
 	}
+}
+
+unsigned char* decompressCharacter(unsigned char bank, unsigned char index) {
+	unsigned char* pbyBGData;
+	unsigned char byData1;
+	unsigned char byData2;
+	int nOff = (bank << 12) + (index << 6);
+	unsigned char* characterData = &ChrBuf[nOff];
+	unsigned char flagIndex = (bank << 2) + (index >> 5);
+	uint32 characterMask = (0x00000001) << (index % 32);
+	if (!(ChrBufFlags[flagIndex] & characterMask)) {
+		pbyBGData = PPUBANK[ bank ] + ( index << 4 );
+		for (int nY = 0; nY < 8; ++nY ) {
+			byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+			byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+
+			ChrBuf[ nOff ]     = ( byData1 >> 6 ) & 3;
+			ChrBuf[ nOff + 1 ] = ( byData2 >> 6 ) & 3;
+			ChrBuf[ nOff + 2 ] = ( byData1 >> 4 ) & 3;
+			ChrBuf[ nOff + 3 ] = ( byData2 >> 4 ) & 3;
+			ChrBuf[ nOff + 4 ] = ( byData1 >> 2 ) & 3;
+			ChrBuf[ nOff + 5 ] = ( byData2 >> 2 ) & 3;
+			ChrBuf[ nOff + 6 ] = byData1 & 3;
+			ChrBuf[ nOff + 7 ] = byData2 & 3;
+
+			nOff += 8;
+			pbyBGData++;
+		}
+		ChrBufFlags[flagIndex] |= characterMask;
+	}
+	return characterData;
 }
 
 /*===================================================================*/

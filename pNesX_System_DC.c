@@ -426,7 +426,20 @@ void pvr_setup() {
 void initVQTextures() {
 	PVR_NESScreen1_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
 	PVR_NESScreen2_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
- 	codebook = memalign(32, 2048);	
+ 	codebook = memalign(32, 2048);
+
+	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
+	uint16* codebookEntry = (uint16*)codebook;
+	uint32 codebookIdx;
+	for (codebookIdx = 0; codebookIdx < 32; codebookIdx++) {
+		uint16 codebookValue = PalTable[codebookIdx];
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+	}
+	pvr_txr_load(codebook, PVR_NESScreen1_Offset, 2048);
+	pvr_txr_load(codebook, PVR_NESScreen2_Offset, 2048);
 }
 
 /*===================================================================*/
@@ -745,13 +758,14 @@ void pNesX_LoadFrame()
 	if (!*opt_Filter) {
 		filter = PVR_FILTER_NONE;
 	}
-	printf("WorkFramIdx: [%i]\n", WorkFrameIdx);
-	pvr_ptr_t texture = PVR_NESScreen1_Offset;
+
+	pvr_ptr_t texture = PVR_NESScreen2_Offset;
 	if (WorkFrameIdx) {
-		texture = PVR_NESScreen2_Offset;
+		texture = PVR_NESScreen1_Offset;
 	}
 
 	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
+	//MS - you only have to do this once when you set up the texture since the NES palette doesn't change
 	uint16* codebookEntry = (uint16*)codebook;
 	uint32 codebookIdx;
 	for (codebookIdx = 0; codebookIdx < 32; codebookIdx++) {

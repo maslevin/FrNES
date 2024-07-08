@@ -29,28 +29,13 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint)
 	nY4 = ( ( nY & 2 ) << 1 );
 
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
-//	pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 	unsigned char nameTableValue = *pbyNameTable;
-//	printf("NT Value [%i]\n", nameTableValue);
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	unsigned char characterIndex = (nameTableValue & 0x3F);
-//	printf("Character Bank [%i], Character Index [%i]\n", characterBank, characterIndex);
-	unsigned char patternData[8];
-	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
-	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-    unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-	patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-	patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-	patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-	patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-	patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-	patternData[ 6 ] = byData1 & 3;
-	patternData[ 7 ] = byData2 & 3;
-	pbyCharData = patternData;
+	pbyCharData = decompressCharacter(characterBank, characterIndex) + nYBit;
 
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );	
@@ -78,20 +63,8 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint)
 		nameTableValue = *pbyNameTable;
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
-		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
-		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-		patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-		patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-		patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-		patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-		patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-		patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-		patternData[ 6 ] = byData1 & 3;
-		patternData[ 7 ] = byData2 & 3;
-		pbyCharData = patternData;
+		pbyCharData = decompressCharacter(characterBank, characterIndex) + nYBit;
 
-//		pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;
 		pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 		pPoint[0] = pPalTbl + pbyCharData[0];
@@ -121,19 +94,7 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint)
 	nameTableValue = *pbyNameTable;
 	characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	characterIndex = (nameTableValue & 0x3F);
-	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
-	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-	patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-	patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-	patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-	patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-	patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-	patternData[ 6 ] = byData1 & 3;
-	patternData[ 7 ] = byData2 & 3;
-	pbyCharData = patternData;
-	//pbyCharData = ppuinfo.PPU_BG_Base + (*pbyNameTable << 6) + nYBit;
+	pbyCharData = decompressCharacter(characterBank, characterIndex) + nYBit;
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++)

@@ -289,8 +289,18 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
               addr &= 0xEFFF;
             }
 
-            PPUBANK[addr >> 10][addr & 0x3FF] = byData;
-            ChrBufUpdate |= ( 1 << ( addr >> 10 ) );
+            unsigned char bank = addr >> 10;
+            unsigned char index = (addr & 0x3FF) >> 4;
+            PPUBANK[bank][addr & 0x3FF] = byData;
+
+            // Clear the Character Buffer Flag if we wrote into the character area of memory
+            // But we should only allow the write if the bank is a memory bank and not VROM
+            // We will need to check that.
+            if (bank < 8) {
+              uint32 flag = 0x00000001 << (index % 32);
+              unsigned char flagIndex = (bank * 2) + (index >> 5);
+              ChrBufFlags[flagIndex] &= ~flag;
+            }
 
             // Increment PPU Address
             //PPU_Addr += PPU_Increment;
