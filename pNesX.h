@@ -183,7 +183,7 @@ extern unsigned char PPU_ScanTable[];
 
 /* Frame Skip */
 extern uint16 FrameSkip;
-extern uint16 FrameCnt;
+//extern uint16 FrameCnt;
 /*
 extern uint16 DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
 extern uint16 *WorkFrame;
@@ -301,9 +301,6 @@ void pNesX_VSync();
 
 /* Get a position of scanline hits sprite #0 */
 void pNesX_GetSprHitY();
-
-/* Develop character data */
-void pNesX_SetupChr();
 
 void pNesX_DoSpu();
 

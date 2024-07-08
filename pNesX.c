@@ -105,7 +105,7 @@ int SpriteJustHit;
 /*-------------------------------------------------------------------*/
 /* Frame Skip */
 uint16 FrameSkip;
-uint16 FrameCnt;
+//uint16 FrameCnt;
 
 /* AutoFrameskip */
 int32 Auto_Frames;
@@ -413,7 +413,7 @@ int pNesX_Reset()
 
   // Reset frame skip and frame count
   FrameSkip = *opt_FrameSkip;
-  FrameCnt = 0;
+  //FrameCnt = 0;
 
   PollSkip = 6;
   PollCount = 0;
@@ -638,6 +638,7 @@ void pNesX_Main()
 		/*-------------------------------------------------------------------*/
 		/*  Manage AutoFrameSkip                                             */
 		/*-------------------------------------------------------------------*/
+/*		
 		if ( *opt_AutoFrameSkip ) {
 			if ( Auto_Frames > 0) {
 				FrameCnt = 1;
@@ -645,6 +646,7 @@ void pNesX_Main()
 				FrameCnt = 0;
 			}
 		}
+*/		
 	}
 
 	if (*opt_AutoFrameSkip) {
@@ -743,13 +745,13 @@ void pNesX_Cycle() {
 		MapperHSync();
 
 		// Always call the renderer if Mapper 9 is involved
-		if ((MapperNo == 9) || (FrameCnt == 0)) {
+//		if ((MapperNo == 9) || (FrameCnt == 0)) {
 			pNesX_DrawLine();
-		}	
+//		}	
 	}
 
 	pNesX_LoadFrame();
-	if (FrameCnt == 0) {
+//	if (FrameCnt == 0) {
         // Switching of the double buffer
         WorkFrameIdx = 1 - WorkFrameIdx;
 		if (WorkFrameIdx == 0) {
@@ -757,7 +759,7 @@ void pNesX_Cycle() {
 		} else {
 			WorkFrame = PVR_NESScreen2_Offset;
 		}
-	}
+//	}
 
 	// Scanline 240
 	ppuinfo.PPU_Scanline = 240;	
@@ -772,8 +774,8 @@ void pNesX_Cycle() {
 	K6502_Step(CYCLES_PER_LINE);
 	handle_dmc_synchronization(CYCLES_PER_LINE);	
 	MapperHSync();
-	if (!(*opt_AutoFrameSkip))
-		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
+//	if (!(*opt_AutoFrameSkip))
+//		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
 	pNesX_VSync();
 	MapperVSync();
 
@@ -878,37 +880,4 @@ void pNesX_GetSprHitY()
 	} else {
 		SpriteJustHit = 241;
 	}
-}
-
-/*===================================================================*/
-/*                                                                   */
-/*            pNesX_SetupChr() : Develop character data              */
-/*                                                                   */
-/*===================================================================*/
-void pNesX_SetupChr() {
-	int nOff;
-	static unsigned char *pbyPrevBank[ 8 ];
-	int nBank;
-
-	//For each bank of Character ram
-	for ( nBank = 0; nBank < 8; ++nBank ) {
-		//If it hasn't changed since last time, skip this bank
-		if ( pbyPrevBank[ nBank ] == PPUBANK[ nBank ] && !( ( ChrBufUpdate >> nBank ) & 1 ) )
-			continue;  // Next bank
-
-		/*-------------------------------------------------------------------*/
-		/*  An address is different from the last time                       */
-		/*    or                                                             */
-		/*  An update flag is being set                                      */
-		/*-------------------------------------------------------------------*/
-
-		nOff = ( nBank << 12 );
-		pNesX_BuildCharAsm((void*)(PPUBANK[ nBank ]), (void*)(&ChrBuf[ nOff ]));
-
-		// Keep this address
-		pbyPrevBank[ nBank ] = PPUBANK[ nBank ];
-	}
-
-	// Reset update flag
-	ChrBufUpdate = 0;
 }

@@ -1430,8 +1430,8 @@ void Map9_set_VROM_1000()
 	PPUBANK[6] = VROMPAGE( bank_num + 2 ); 
 	PPUBANK[7] = VROMPAGE( bank_num + 3 );
 
-	if (FrameCnt == 0)
-		pNesX_SetupChr();
+//	if (FrameCnt == 0)
+//		pNesX_SetupChr();
 }
 
 void Map9_Write(uint16 wAddr, unsigned char byData)
