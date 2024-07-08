@@ -466,12 +466,14 @@ void Map2_Init()
 /*-------------------------------------------------------------------*/
 void Map2_Write( uint16 wAddr, unsigned char byData )
 {
-  /* Set ROM Banks */
-  byData %= NesHeader.byRomSize;
-  byData <<= 1;
+	if (wAddr >= 0x8000) {
+		/* Set ROM Banks */
+		byData %= NesHeader.byRomSize;
+		byData <<= 1;
 
-  ROMBANK0 = ROMPAGE( byData );
-  ROMBANK1 = ROMPAGE( byData + 1 );
+		ROMBANK0 = ROMPAGE( byData );
+		ROMBANK1 = ROMPAGE( byData + 1 );
+	}
 }
 
 /*===================================================================*/

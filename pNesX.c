@@ -893,7 +893,7 @@ unsigned char* decompressCharacter(unsigned char bank, unsigned char index) {
 	unsigned char byData2;
 	int nOff = (bank << 12) + (index << 6);
 	unsigned char* characterData = &ChrBuf[nOff];
-	unsigned char flagIndex = (bank << 2) + (index >> 5);
+	unsigned char flagIndex = (bank << 1) + (index >> 5);
 	uint32 characterMask = (0x00000001) << (index % 32);
 	if (!(ChrBufFlags[flagIndex] & characterMask)) {
 		pbyBGData = PPUBANK[ bank ] + ( index << 4 );

@@ -47,9 +47,14 @@ uint16 pNesX_DrawLine_Spr_C() {
 			unsigned char nameTableValue = (ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
 				(pSPRRAM[SPR_CHR] & 0xfe) :
 				(pSPRRAM[SPR_CHR]);
-			unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6);
+			unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+				((pSPRRAM[SPR_CHR] & 1) ? 4: 0) + (nameTableValue >> 6) :
+				((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6));
 			unsigned char characterIndex = (nameTableValue & 0x3F);
 			pbyChrData = decompressCharacter(characterBank, characterIndex) + nYBit;
+			if (ppuinfo.PPU_R0 & R0_SP_SIZE) {
+				decompressCharacter(characterBank, characterIndex + 1);
+			}
 
 			nAttr ^= SPR_ATTR_PRI;
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
