@@ -32,6 +32,7 @@
 #define MENUNUM_FONTOPTIONS     6
 #define MENUNUM_HELP            7
 #define MENUNUM_CREDITS         8
+#define MENUNUM_AUTOROM         99
 
 void pNesX_Texture_Write( void *dest, void* src);
 void pNesX_Texture_Fill(void *dest, uint32 val);
