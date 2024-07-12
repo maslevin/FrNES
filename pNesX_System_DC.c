@@ -39,6 +39,8 @@
 #include "GUI_ControlPage.h"
 #include "GUI_GUIPage.h"
 
+#include "profiler.h"
+
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
 //KOS_INIT_ROMDISK(romdisk);
@@ -440,8 +442,10 @@ void freeVQTextures() {
 /*                dc_main() : Application main                       */
 /*                                                                   */
 /*===================================================================*/
-int main()
-{
+int main() {
+	profiler_init("/pc/gmon.out");
+    profiler_start();
+
 	printf("Starting Main\n");
 	cont_state_t* my_state;
 
@@ -645,6 +649,10 @@ int main()
 	Free_Control_Options();
 
 	destroy_font(font);
+
+	profiler_stop();
+    profiler_clean_up();
+
 	return 0;
 }
 
@@ -1034,10 +1042,11 @@ void *pNesX_MemorySet( void *dest, int c, int count)
 //Inefficient and dirty
 void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
 {
-	return memset(dest, val, count);
+	return memset4(dest, val, count);
 }
 
 //No debugging support
 void pNesX_DebugPrint( char *pszMsg )
 {
+	printf(pszMsg);
 }
