@@ -673,6 +673,9 @@ int main()
 			}
 		}
 
+//		printf("main loop: drawing screen\n");
+		draw_screen();
+
 		if (AutoROM) {
 			printf("main: loading rom [%s]\n", szRomName);
 			if (pNesX_Load(szRomName, RomSize) == 0)
@@ -699,10 +702,7 @@ int main()
 				printf("main: error failed to start emulator!!!!\n");
 			}
 			AutoROM = false;			
-		}
-
-//		printf("main loop: drawing screen\n");
-		draw_screen();
+		}		
 	}
 
 	printf("main loop: exiting\n");
