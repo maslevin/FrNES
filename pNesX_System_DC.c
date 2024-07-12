@@ -41,7 +41,6 @@
 
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
-//KOS_INIT_ROMDISK(romdisk);
 
 /*-------------------------------------------------------------------*/
 /*  Interface variables                                              */
@@ -156,6 +155,8 @@ int nWait;
 char szRomName[ 256 ];
 char szSaveName[ 256 ];
 int nSRAM_SaveFlag;
+uint32 RomSize;
+bool AutoROM;
 
 /*-------------------------------------------------------------------*/
 /*  Variables for Windows                                            */
@@ -261,45 +262,49 @@ void draw_screen()
 	//printf("draw_screen: drawing background polygon\n");
 	pvr_list_begin(PVR_LIST_OP_POLY);
 	pvr_poly_cxt_col(&my_cxt, PVR_LIST_OP_POLY);
-	pvr_poly_compile(&my_pheader, &my_cxt);
-	pvr_prim(&my_pheader, sizeof(my_pheader));
 
-	//Draw the Screen ... will be more fancy later
+	if (menuscreen != MENUNUM_AUTOROM) {
+		pvr_poly_compile(&my_pheader, &my_cxt);
+		pvr_prim(&my_pheader, sizeof(my_pheader));
+		//Draw the Screen ... will be more fancy later
 
-	my_c_vertex.flags = PVR_CMD_VERTEX;
-	my_c_vertex.x = 0.0f;
-	my_c_vertex.y = 480.0f;
-	my_c_vertex.z = 25.0f;
-	my_c_vertex.argb = GUI_BGColor;
-	my_c_vertex.oargb = 0;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.flags = PVR_CMD_VERTEX;
+		my_c_vertex.x = 0.0f;
+		my_c_vertex.y = 480.0f;
+		my_c_vertex.z = 25.0f;
+		my_c_vertex.argb = GUI_BGColor;
+		my_c_vertex.oargb = 0;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.y = 0.0f;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.y = 0.0f;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.x = 640.0f;
-	my_c_vertex.y = 480.0f;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.x = 640.0f;
+		my_c_vertex.y = 480.0f;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.flags = PVR_CMD_VERTEX_EOL;
-	my_c_vertex.y = 0.0f;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_c_vertex.y = 0.0f;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	win_draw_textwindow(&mydata, &mystyle, PVR_LIST_OP_POLY);
-	win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_OP_POLY);
-	pvr_list_finish();	
+		win_draw_textwindow(&mydata, &mystyle, PVR_LIST_OP_POLY);
+		win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_OP_POLY);
+		pvr_list_finish();
+	}
 
 	// STEP 2: Draw the UI as two translucent textures over top of that previous texture
 	//printf("draw_screen: drawing main window\n");
 	pvr_list_begin(PVR_LIST_TR_POLY);
 
-	draw_string(font, PVR_LIST_TR_POLY, App_String, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
-	font -> scale = 0.50f;
-	draw_string(font, PVR_LIST_TR_POLY, Version_String, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
-	font -> scale = 1.00f;
+	if (menuscreen != MENUNUM_AUTOROM) {
+		draw_string(font, PVR_LIST_TR_POLY, App_String, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
+		font -> scale = 0.50f;
+		draw_string(font, PVR_LIST_TR_POLY, Version_String, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
+		font -> scale = 1.00f;
 
-	win_draw_textwindow(&mydata, &mystyle, PVR_LIST_TR_POLY);
-	win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_TR_POLY);
+		win_draw_textwindow(&mydata, &mystyle, PVR_LIST_TR_POLY);
+		win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_TR_POLY);
+	}
 
 	pvr_list_finish();
 	//printf("draw_screen: finishing scene\n");
@@ -435,6 +440,42 @@ void freeVQTextures() {
 	free(codebook);
 }
 
+bool checkForAutoROM() {
+	bool autoromPresent = false;
+	memset(szRomName, 0, 256);
+	file_t autoromFileHandle = fs_open("/rd/autorom.txt", O_RDONLY);
+	if (autoromFileHandle != -1) {
+		printf("AutoROM: autorom.txt found\n");
+		if (fs_read(autoromFileHandle, szRomName, 256) > 0) {
+			for (int i = 0; i < strlen(szRomName); i++) {
+				if (szRomName[i] == '\n') {
+					szRomName[i] = NULL;
+				}
+			}
+			printf("AutoROM: file specified [%s]\n", szRomName);
+			fs_close(autoromFileHandle);
+
+			file_t romFileHandle = fs_open(szRomName, O_RDONLY);
+			if (romFileHandle != -1){
+				struct stat fileStat;
+				if (fs_fstat(romFileHandle, &fileStat) == 0) {
+					printf("AutoROM: detected size [%u]\n", fileStat.st_size);
+					RomSize = fileStat.st_size;
+					autoromPresent = true;
+				}
+				fs_close(romFileHandle);
+			} else {
+				printf("AutoROM: unable to load specified rom\n");
+			}
+		}
+		fs_close(autoromFileHandle);
+	} else {
+		printf("autorom.txt not present\n");
+	}
+	return autoromPresent;
+}
+
+
 /*===================================================================*/
 /*                                                                   */
 /*                dc_main() : Application main                       */
@@ -469,8 +510,6 @@ int main()
 	GUI_OutsideWindowColor = 0xFFFFFFFF;
 
 	interface_offset = title_offset_x + 160;
-
-	menuscreen = MENUNUM_MAIN;
 
 	romselstatus = 0;
 	invalida = 0;
@@ -532,6 +571,15 @@ int main()
 		}
 	}
 	*/
+
+	printf("Checking for autoROM\n");
+	AutoROM = checkForAutoROM();
+	if (AutoROM) {
+		menuscreen = MENUNUM_AUTOROM;
+	} else {
+		menuscreen = MENUNUM_MAIN;
+	}
+
 
 	printf("Setting up main menu\n");
 	setup_main_menu_screen();
@@ -630,12 +678,40 @@ int main()
 				case MENUNUM_HELP:
 					Handle_Help_Interface(my_state);
 					break;
-
 			}
 		}
 
 //		printf("main loop: drawing screen\n");
 		draw_screen();
+
+		if (AutoROM) {
+			printf("main: loading rom [%s]\n", szRomName);
+			if (pNesX_Load(szRomName, RomSize) == 0)
+			{
+				//Load Its SaveRAM
+				if (SRAM_Enabled)
+					LoadSRAM();
+
+				//Stay in Emulator During Operation
+				pNesX_Main();
+
+				//Clean Up Afterwards
+				free (ROM);
+				//There are some games that don't have VROM
+				if (VROM != NULL)
+					free (VROM);
+				if (VRAM != NULL)
+					free (VRAM);
+
+				//Save Its SaveRAM
+				if (SRAM_Enabled)
+					SaveSRAM();
+			} else {
+				printf("main: error failed to start emulator!!!!\n");
+			}
+			AutoROM = false;
+			menuscreen = MENUNUM_MAIN;		
+		}		
 	}
 
 	printf("main loop: exiting\n");
