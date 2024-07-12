@@ -41,7 +41,6 @@
 
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
-//KOS_INIT_ROMDISK(romdisk);
 
 /*-------------------------------------------------------------------*/
 /*  Interface variables                                              */
@@ -156,6 +155,8 @@ int nWait;
 char szRomName[ 256 ];
 char szSaveName[ 256 ];
 int nSRAM_SaveFlag;
+uint32 RomSize;
+bool AutoROM;
 
 /*-------------------------------------------------------------------*/
 /*  Variables for Windows                                            */
@@ -429,6 +430,42 @@ void initVQTextures() {
  	codebook = memalign(32, 2048);	
 }
 
+bool checkForAutoROM() {
+	bool autoromPresent = false;
+	memset(szRomName, 0, 256);
+	file_t autoromFileHandle = fs_open("/rd/autorom.txt", O_RDONLY);
+	if (autoromFileHandle != -1) {
+		printf("AutoROM: autorom.txt found\n");
+		if (fs_read(autoromFileHandle, szRomName, 256) > 0) {
+			for (int i = 0; i < strlen(szRomName); i++) {
+				if (szRomName[i] == '\n') {
+					szRomName[i] = NULL;
+				}
+			}
+			printf("AutoROM: file specified [%s]\n", szRomName);
+			fs_close(autoromFileHandle);
+
+			file_t romFileHandle = fs_open(szRomName, O_RDONLY);
+			if (romFileHandle != -1){
+				struct stat fileStat;
+				if (fs_fstat(romFileHandle, &fileStat) == 0) {
+					printf("AutoROM: detected size [%u]\n", fileStat.st_size);
+					RomSize = fileStat.st_size;
+					autoromPresent = true;
+				}
+				fs_close(romFileHandle);
+			} else {
+				printf("AutoROM: unable to load specified rom\n");
+			}
+		}
+		fs_close(autoromFileHandle);
+	} else {
+		printf("autorom.txt not present\n");
+	}
+	return autoromPresent;
+}
+
+
 /*===================================================================*/
 /*                                                                   */
 /*                dc_main() : Application main                       */
@@ -533,6 +570,11 @@ int main()
 	printf("Setting up main menu\n");
 	setup_main_menu_screen();
 
+	printf("Checking for autoROM\n");
+	AutoROM = checkForAutoROM();
+
+
+
 	keyhit = 0;
 
 	int exitLoop = 0;
@@ -629,6 +671,34 @@ int main()
 					break;
 
 			}
+		}
+
+		if (AutoROM) {
+			printf("main: loading rom [%s]\n", szRomName);
+			if (pNesX_Load(szRomName, RomSize) == 0)
+			{
+				//Load Its SaveRAM
+				if (SRAM_Enabled)
+					LoadSRAM();
+
+				//Stay in Emulator During Operation
+				pNesX_Main();
+
+				//Clean Up Afterwards
+				free (ROM);
+				//There are some games that don't have VROM
+				if (VROM != NULL)
+					free (VROM);
+				if (VRAM != NULL)
+					free (VRAM);
+
+				//Save Its SaveRAM
+				if (SRAM_Enabled)
+					SaveSRAM();
+			} else {
+				printf("main: error failed to start emulator!!!!\n");
+			}
+			AutoROM = false;			
 		}
 
 //		printf("main loop: drawing screen\n");
