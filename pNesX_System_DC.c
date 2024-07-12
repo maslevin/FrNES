@@ -262,45 +262,49 @@ void draw_screen()
 	//printf("draw_screen: drawing background polygon\n");
 	pvr_list_begin(PVR_LIST_OP_POLY);
 	pvr_poly_cxt_col(&my_cxt, PVR_LIST_OP_POLY);
-	pvr_poly_compile(&my_pheader, &my_cxt);
-	pvr_prim(&my_pheader, sizeof(my_pheader));
 
-	//Draw the Screen ... will be more fancy later
+	if (menuscreen != MENUNUM_AUTOROM) {
+		pvr_poly_compile(&my_pheader, &my_cxt);
+		pvr_prim(&my_pheader, sizeof(my_pheader));
+		//Draw the Screen ... will be more fancy later
 
-	my_c_vertex.flags = PVR_CMD_VERTEX;
-	my_c_vertex.x = 0.0f;
-	my_c_vertex.y = 480.0f;
-	my_c_vertex.z = 25.0f;
-	my_c_vertex.argb = GUI_BGColor;
-	my_c_vertex.oargb = 0;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.flags = PVR_CMD_VERTEX;
+		my_c_vertex.x = 0.0f;
+		my_c_vertex.y = 480.0f;
+		my_c_vertex.z = 25.0f;
+		my_c_vertex.argb = GUI_BGColor;
+		my_c_vertex.oargb = 0;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.y = 0.0f;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.y = 0.0f;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.x = 640.0f;
-	my_c_vertex.y = 480.0f;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.x = 640.0f;
+		my_c_vertex.y = 480.0f;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	my_c_vertex.flags = PVR_CMD_VERTEX_EOL;
-	my_c_vertex.y = 0.0f;
-	pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
+		my_c_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_c_vertex.y = 0.0f;
+		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
-	win_draw_textwindow(&mydata, &mystyle, PVR_LIST_OP_POLY);
-	win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_OP_POLY);
-	pvr_list_finish();	
+		win_draw_textwindow(&mydata, &mystyle, PVR_LIST_OP_POLY);
+		win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_OP_POLY);
+		pvr_list_finish();
+	}
 
 	// STEP 2: Draw the UI as two translucent textures over top of that previous texture
 	//printf("draw_screen: drawing main window\n");
 	pvr_list_begin(PVR_LIST_TR_POLY);
 
-	draw_string(font, PVR_LIST_TR_POLY, App_String, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
-	font -> scale = 0.50f;
-	draw_string(font, PVR_LIST_TR_POLY, Version_String, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
-	font -> scale = 1.00f;
+	if (menuscreen != MENUNUM_AUTOROM) {
+		draw_string(font, PVR_LIST_TR_POLY, App_String, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
+		font -> scale = 0.50f;
+		draw_string(font, PVR_LIST_TR_POLY, Version_String, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
+		font -> scale = 1.00f;
 
-	win_draw_textwindow(&mydata, &mystyle, PVR_LIST_TR_POLY);
-	win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_TR_POLY);
+		win_draw_textwindow(&mydata, &mystyle, PVR_LIST_TR_POLY);
+		win_draw_textwindow(&helpdata, &helpstyle, PVR_LIST_TR_POLY);
+	}
 
 	pvr_list_finish();
 	//printf("draw_screen: finishing scene\n");
@@ -504,8 +508,6 @@ int main()
 
 	interface_offset = title_offset_x + 160;
 
-	menuscreen = MENUNUM_MAIN;
-
 	romselstatus = 0;
 	invalida = 0;
 	xkeyhit = 0;
@@ -567,13 +569,17 @@ int main()
 	}
 	*/
 
-	printf("Setting up main menu\n");
-	setup_main_menu_screen();
-
 	printf("Checking for autoROM\n");
 	AutoROM = checkForAutoROM();
+	if (AutoROM) {
+		menuscreen = MENUNUM_AUTOROM;
+	} else {
+		menuscreen = MENUNUM_MAIN;
+	}
 
 
+	printf("Setting up main menu\n");
+	setup_main_menu_screen();
 
 	keyhit = 0;
 
@@ -669,7 +675,6 @@ int main()
 				case MENUNUM_HELP:
 					Handle_Help_Interface(my_state);
 					break;
-
 			}
 		}
 
@@ -701,7 +706,8 @@ int main()
 			} else {
 				printf("main: error failed to start emulator!!!!\n");
 			}
-			AutoROM = false;			
+			AutoROM = false;
+			menuscreen = MENUNUM_MAIN;		
 		}		
 	}
 
