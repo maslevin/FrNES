@@ -64,38 +64,20 @@ void pNesX_DrawLine()
 		return;
 	}
 
-// MS - Remove Mapper 9 support temporarily
-/*
-	if (MapperNo == 9)
-	{
-		if (FrameCnt == 0)
-		{
-			pNesX_Map9DrawLine_BG_C(pPoint);
-			nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
-		}
-		else
-		{
-			pNesX_Map9Simulate_BG_C();
-			nSprCnt = pNesX_Map9Simulate_Spr_C();
-		}
-	}
-	else
-	{
-*/	
-	if (MapperNo == 5) {
+	if (MapperNo == 9) {
+		pNesX_Map9DrawLine_BG_C(pPoint);
+		nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
+	} else if (MapperNo == 5) {
 		Map5_PPU_Latch_RenderScreen(1, 0);
 		pNesX_DrawLine_BG_C(pPoint);
 		Map5_PPU_Latch_RenderScreen(0, 0);
 		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);		
 	} else {
 		pNesX_DrawLine_BG_C(pPoint);
-//		nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
-//		memset4(pSprBuf, 0, 66 * 4);
 		nSprCnt = pNesX_DrawLine_Spr_C();
 	}
 
-	if (nSprCnt)
-	{
+	if (nSprCnt) {
 		//Merge the sprite buffer with the scanline buffer
 		pPoint = Scanline_Buffer;
 		for (index = 0; index < 256; index++) {

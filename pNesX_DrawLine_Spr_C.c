@@ -17,11 +17,15 @@ uint16 pNesX_DrawLine_Spr_C() {
 	int nX;
 	int nY;
 	int nYBit;
-	unsigned char *pbyChrData;
 	unsigned char *pSPRRAM;
 	int nAttr;
-	int nSprCnt = 0;
+	uint16 nSprCnt = 0;
 	unsigned char bySprCol;
+	unsigned char *pbyChrData;
+	unsigned char* pbyBGData;
+	unsigned char patternData[8];
+	unsigned char byData1;
+	unsigned char byData2;
 	
 	if ( PPU_R1 & R1_SHOW_SP )
 	{
@@ -35,7 +39,7 @@ uint16 pNesX_DrawLine_Spr_C() {
 				continue;  // Next sprite
 
 			if (nSprCnt == 0) {
-				memset4(pSprBuf, 0, 66 * 4);
+				memset4(pSprBuf, 0, 264);
 			}
 
 			nSprCnt++;
@@ -53,11 +57,10 @@ uint16 pNesX_DrawLine_Spr_C() {
 			unsigned char characterIndex = ((ppuinfo.PPU_R0 & R0_SP_SIZE) && (nYBit >= 8)) ?
 				(nameTableValue & 0x3F) + 1 :
 				(nameTableValue & 0x3F);
-//			unsigned char characterIndex = (nameTableValue & 0x3F);				
-			unsigned char patternData[8];
-			unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit % 8);
-			unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-			unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+
+			pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit % 8);
+			byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+			byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 			patternData[ 0 ] = ( byData1 >> 6 ) & 3;
 			patternData[ 1 ] = ( byData2 >> 6 ) & 3;
 			patternData[ 2 ] = ( byData1 >> 4 ) & 3;
@@ -72,8 +75,7 @@ uint16 pNesX_DrawLine_Spr_C() {
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
 			nX = pSPRRAM[ SPR_X ];
 
-			if ( nAttr & SPR_ATTR_H_FLIP )
-			{
+			if ( nAttr & SPR_ATTR_H_FLIP ) {
 				// Horizontal flip
 				if ( pbyChrData[ 7 ] )
 					pSprBuf[ nX + 0 ] = bySprCol | pbyChrData[ 7 ];

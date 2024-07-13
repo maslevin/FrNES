@@ -274,14 +274,11 @@ void Map1_Init()
   ROMBANK2 = ROMLASTPAGE( 1 );
   ROMBANK3 = ROMLASTPAGE( 0 );
 
-  /* Set PPU VROM Banks */
-  if ( NesHeader.byVRomSize > 0 )
-  {
-    for ( nPage = 0; nPage < 8; ++nPage )
-      PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-
-    //pNesX_SetupChr();
-  }
+    /* Set PPU VROM Banks */
+    if ( NesHeader.byVRomSize > 0 ) {
+	    for ( nPage = 0; nPage < 8; ++nPage )
+		    PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
+    }
 
   /* Set up wiring of the interrupt pin */
   K6502_Set_Int_Wiring( 1, 1 );
@@ -1374,34 +1371,29 @@ void Map9_Init()
 
 	Map9_set_VROM_0000();
 	Map9_set_VROM_1000();
-	//pNesX_SetupChr();
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
-void Map9_PPU_Latch_FDFE(uint16 wAddr)
-{
-	if(wAddr & 0x1000)
-	{
+void Map9_PPU_Latch_FDFE(uint16 wAddr) {
+	if (wAddr & 0x1000) {
 		Map9_Latch_1000 = (wAddr & 0x0FF0) >> 4;
 		Map9_set_VROM_1000();
-	}
-	else
-	{
+	} else {
 		Map9_Latch_0000 = (wAddr & 0x0FF0) >> 4;
 		Map9_set_VROM_0000();
 	}
 }
 
-void Map9_set_VROM_0000()
-{
+void Map9_set_VROM_0000() {
 	unsigned char bank_num;
 
-	if (Map9_Latch_0000 == 0xFD)
+	if (Map9_Latch_0000 == 0xFD) {
 		bank_num = Map9_Regs[1];
-	else
+	} else {
 		bank_num = Map9_Regs[2];
+	}
 
 	bank_num <<= 2;
 
@@ -1409,19 +1401,16 @@ void Map9_set_VROM_0000()
 	PPUBANK[1] = VROMPAGE( bank_num + 1 );
 	PPUBANK[2] = VROMPAGE( bank_num + 2 ); 
 	PPUBANK[3] = VROMPAGE( bank_num + 3 );
-
-//	if (FrameCnt == 0)
-		//pNesX_SetupChr();
 }
 
-void Map9_set_VROM_1000()
-{
+void Map9_set_VROM_1000() {
 	unsigned char bank_num;
 
-	if (Map9_Latch_1000 == 0xFD)
+	if (Map9_Latch_1000 == 0xFD) {
 		bank_num = Map9_Regs[3];
-	else
+	} else {
 		bank_num = Map9_Regs[4];
+	}
 
 	bank_num <<= 2;
 
@@ -1429,65 +1418,52 @@ void Map9_set_VROM_1000()
 	PPUBANK[5] = VROMPAGE( bank_num + 1 );
 	PPUBANK[6] = VROMPAGE( bank_num + 2 ); 
 	PPUBANK[7] = VROMPAGE( bank_num + 3 );
-
-//	if (FrameCnt == 0)
-//		pNesX_SetupChr();
 }
 
-void Map9_Write(uint16 wAddr, unsigned char byData)
-{
-	switch(wAddr & 0xF000)
-	{
-		case 0xA000:
-			{
+void Map9_Write(uint16 wAddr, unsigned char byData) {
+//	printf("Map9_Write: [0x%04x], [0x%02x]\n", wAddr, byData);
+	switch(wAddr & 0xF000) {
+		case 0xA000: {
 				// 8K ROM bank at $8000
 				Map9_Regs[0] = byData;
 				ROMBANK0 = ROMPAGE(Map9_Regs[0]);
 			}
 			break;
 
-		case 0xB000:
-			{
+		case 0xB000: {
 				// B000-BFFF: select 4k VROM for (0000) $FD latch
 				Map9_Regs[1] = byData;
 				Map9_set_VROM_0000();
 			}
 			break;
-		case 0xC000:
-			{
+		case 0xC000: {
 				// C000-CFFF: select 4k VROM for (0000) $FE latch
 				Map9_Regs[2] = byData;
 				Map9_set_VROM_0000();
 			}
 			break;
 
-		case 0xD000:
-			{
+		case 0xD000: {
 				// D000-DFFF: select 4k VROM for (1000) $FD latch
 				Map9_Regs[3] = byData;
 				Map9_set_VROM_1000();
 			}
 			break;
 
-		case 0xE000:
-			{
+		case 0xE000: {
 				// E000-EFFF: select 4k VROM for (1000) $FE latch
 				Map9_Regs[4] = byData;
 				Map9_set_VROM_1000();
 			}
 			break;
 
-		case 0xF000:
-			{
+		case 0xF000: {
 				Map9_Regs[5] = byData;
 
-				if(Map9_Regs[5] & 0x01)
-				{
+				if (Map9_Regs[5] & 0x01) {
 					//Horizontal Mirror
 					pNesX_Mirroring(MIRRORING_HORIZONTAL);
-				}
-				else
-				{
+				} else {
 					//Vertical Mirror
 					pNesX_Mirroring(MIRRORING_VERTICAL);
 				}

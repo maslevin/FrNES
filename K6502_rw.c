@@ -348,6 +348,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           }
           break;
       }
+/*
       MapperWrite(wAddr, byData);
       // Set Bank Table
       VIRPC;
@@ -355,7 +356,8 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
       BankTable[ 5 ] = ROMBANK1;
       BankTable[ 6 ] = ROMBANK2;
       BankTable[ 7 ] = ROMBANK3;
-      REALPC;      
+      REALPC;
+*/
       break;
 
     case 0x6000:  /* SRAM */
