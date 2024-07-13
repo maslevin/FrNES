@@ -15,8 +15,9 @@
 #include "pNesX_System_DC.h"
 #include "pNesX_DrawLine_BG_C_Map9.h"
 #include "pNesX_DrawLine_BG_C.h"
-#include "pNesX_DrawLine_BG_Asm.h"
+#include "pNesX_DrawLine_Spr_C.h"
 #include "pNesX_Utils.h"
+#include "pNesX_Mapper.h"
 
 extern VQ_Texture* WorkFrame;
 extern unsigned char* Scanline_Buffer;
@@ -44,7 +45,7 @@ void pNesX_DrawLine()
 {
 	void* texture_address;
 	unsigned char* pPoint;
-	int nSprCnt;
+	int nSprCnt = 0;
 	int index;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
@@ -62,29 +63,15 @@ void pNesX_DrawLine()
 		return;
 	}
 
-// MS - Remove Mapper 9 support temporarily
-/*
-	if (MapperNo == 9)
-	{
-		if (FrameCnt == 0)
-		{
-			pNesX_Map9DrawLine_BG_C(pPoint);
-			nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
-		}
-		else
-		{
-			pNesX_Map9Simulate_BG_C();
-			nSprCnt = pNesX_Map9Simulate_Spr_C();
-		}
+	if (MapperNo == 9) {
+		pNesX_Map9DrawLine_BG_C(pPoint);
+		nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
+	} else {
+		pNesX_DrawLine_BG_C(pPoint);
+		nSprCnt = pNesX_DrawLine_Spr_C();
 	}
-	else
-	{
-*/		
-	pNesX_DrawLine_BG_C(pPoint);
-	nSprCnt = pNesX_DrawLine_Spr(&ppuinfo, SPRRAM, ChrBuf, pSprBuf);
 
-	if (nSprCnt)
-	{
+	if (nSprCnt) {
 		//Merge the sprite buffer with the scanline buffer
 		pPoint = Scanline_Buffer;
 		for (index = 0; index < 256; index++) {

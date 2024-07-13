@@ -21,8 +21,6 @@
 #include "pNesX_System_DC.h"
 #include "pNesX_Sound_APU.h"
 #include "pNesX_PPU_DC.h"
-#include "pNesX_BuildCharAsm.h"
-#include "pNesX_DrawLine_BG_Asm.h"
 #include "GUI_SystemPage.h"
 #include "K6502.h"
 #include "aica_fw.h"
@@ -673,10 +671,6 @@ void handle_dmc_synchronization(uint32 cycles) {
 void pNesX_Cycle() {
 	int do_scroll_setup;
 
-	//Update Character Data
-	if (FrameCnt == 0)
-		pNesX_SetupChr();
-
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
 	
@@ -875,37 +869,4 @@ void pNesX_GetSprHitY()
 	} else {
 		SpriteJustHit = 241;
 	}
-}
-
-/*===================================================================*/
-/*                                                                   */
-/*            pNesX_SetupChr() : Develop character data              */
-/*                                                                   */
-/*===================================================================*/
-void pNesX_SetupChr() {
-	int nOff;
-	static unsigned char *pbyPrevBank[ 8 ];
-	int nBank;
-
-	//For each bank of Character ram
-	for ( nBank = 0; nBank < 8; ++nBank ) {
-		//If it hasn't changed since last time, skip this bank
-		if ( pbyPrevBank[ nBank ] == PPUBANK[ nBank ] && !( ( ChrBufUpdate >> nBank ) & 1 ) )
-			continue;  // Next bank
-
-		/*-------------------------------------------------------------------*/
-		/*  An address is different from the last time                       */
-		/*    or                                                             */
-		/*  An update flag is being set                                      */
-		/*-------------------------------------------------------------------*/
-
-		nOff = ( nBank << 12 );
-		pNesX_BuildCharAsm((void*)(PPUBANK[ nBank ]), (void*)(&ChrBuf[ nOff ]));
-
-		// Keep this address
-		pbyPrevBank[ nBank ] = PPUBANK[ nBank ];
-	}
-
-	// Reset update flag
-	ChrBufUpdate = 0;
 }
