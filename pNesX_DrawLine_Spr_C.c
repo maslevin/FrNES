@@ -42,15 +42,20 @@ uint16 pNesX_DrawLine_Spr_C() {
 
 			nAttr = pSPRRAM[ SPR_ATTR ];
 			nYBit = ppuinfo.PPU_Scanline - nY;
-			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1) << 3 : nYBit << 3;
+			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1) : nYBit;
 
 			unsigned char nameTableValue = (ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
 				(pSPRRAM[SPR_CHR] & 0xfe) :
 				(pSPRRAM[SPR_CHR]);
-			unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6);
-			unsigned char characterIndex = (nameTableValue & 0x3F);
+			unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+				((pSPRRAM[SPR_CHR] & 1) ? 4 : 0) + (nameTableValue >> 6) :
+				((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6));
+			unsigned char characterIndex = ((ppuinfo.PPU_R0 & R0_SP_SIZE) && (nYBit >= 8)) ?
+				(nameTableValue & 0x3F) + 1 :
+				(nameTableValue & 0x3F);
+//			unsigned char characterIndex = (nameTableValue & 0x3F);				
 			unsigned char patternData[8];
-			unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit >> 3);
+			unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit % 8);
 			unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 			unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 			patternData[ 0 ] = ( byData1 >> 6 ) & 3;
@@ -62,24 +67,6 @@ uint16 pNesX_DrawLine_Spr_C() {
 			patternData[ 6 ] = byData1 & 3;
 			patternData[ 7 ] = byData2 & 3;
 			pbyChrData = patternData;
-/*
-			if ( ppuinfo.PPU_R0 & R0_SP_SIZE ) {
-				// Sprite size 8x16
-				if ( pSPRRAM[ SPR_CHR ] & 1 )
-				{
-					pbyChrData = ChrBuf + 256 * 64 + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
-				}
-				else
-				{
-					pbyChrData = ChrBuf + ( ( pSPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit;
-				}
-			}
-			else
-			{
-				// Sprite size 8x8
-				pbyChrData = ppuinfo.PPU_SP_Base + ( pSPRRAM[ SPR_CHR ] << 6 ) + nYBit;
-			}
-*/
 
 			nAttr ^= SPR_ATTR_PRI;
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
@@ -104,9 +91,7 @@ uint16 pNesX_DrawLine_Spr_C() {
 					pSprBuf[ nX + 6 ] = bySprCol | pbyChrData[ 1 ];
 				if ( pbyChrData[ 0 ] )
 					pSprBuf[ nX + 7 ] = bySprCol | pbyChrData[ 0 ];
-			}
-			else
-			{
+			} else {
 				// Non flip
 				if ( pbyChrData[ 0 ] )
 					pSprBuf[ nX + 0 ] = bySprCol | pbyChrData[ 0 ];
