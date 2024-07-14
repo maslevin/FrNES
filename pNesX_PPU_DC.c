@@ -23,7 +23,7 @@ extern VQ_Texture* WorkFrame;
 extern unsigned char* Scanline_Buffer;
 extern PPU_Info ppuinfo;
 
-unsigned char pSprBuf[264];
+uint16 pSprBuf[264];
 
 unsigned char* Scanline_Buffer = NULL;
 extern int SpriteJustHit;
@@ -68,20 +68,36 @@ void pNesX_DrawLine()
 		nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
 	} else {
 		pNesX_DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_DrawLine_Spr_C();
+		nSprCnt = pNesX_DrawLine_Spr_C(pSprBuf);
 	}
 
 	if (nSprCnt) {
 		//Merge the sprite buffer with the scanline buffer
 		pPoint = Scanline_Buffer;
-		for (index = 0; index < 256; index++) {
-			if (pSprBuf[index] && 
-				((pSprBuf[index] & 0x80) || 
-				 ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
-			) {
-				*pPoint = (pSprBuf[index] & 0xf) + 0x10;
+		if (SpriteJustHit == 241) {
+			for (index = 0; index < 256; index++) {
+				unsigned char spritePixel = pSprBuf[index] & 0xff;
+				bool spriteZeroPixel = ((pSprBuf[index] & 0x100) != 0);
+				if (spritePixel && 
+					((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
+				) {
+					if (spriteZeroPixel && (*pPoint != 0)) {
+						SpriteJustHit = ppuinfo.PPU_Scanline;
+					}					
+					*pPoint = (spritePixel & 0xf) + 0x10;
+				}
+				pPoint++;
 			}
-			pPoint++;
+		} else {
+			for (index = 0; index < 256; index++) {
+				unsigned char spritePixel = pSprBuf[index] & 0xff;
+				if (spritePixel && 
+					((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
+				) {
+					*pPoint = (spritePixel & 0xf) + 0x10;
+				}
+				pPoint++;
+			}
 		}
 	}
 

@@ -24,7 +24,6 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
 
-
 	nNameTable = ((ppuinfo.PPU_Addr & 0x0C00) >> 10) + 8;
 	nX = (ppuinfo.PPU_Addr & 0x001F);
 	nY = ((ppuinfo.PPU_Addr >> 5) & 0x001F);
@@ -162,9 +161,8 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 
 }
 
-void pNesX_Map9Simulate_BG_C(uint16* pPoint)
-{
-	/* C Background Renderer Vars */
+void pNesX_Map9Simulate_BG_C(uint16* pPoint) {
+/*
 	uint16 nX;
 	uint16 nY;
 //	uint16 nY4;
@@ -242,4 +240,5 @@ void pNesX_Map9Simulate_BG_C(uint16* pPoint)
 			Map9_PPU_Latch_FDFE(nesaddr);
 		}
 	}
+*/
 }

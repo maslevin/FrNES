@@ -51,7 +51,6 @@ unsigned char *ROMBANK3;
 
 /* PPU RAM */
 unsigned char PPURAM[ PPURAM_SIZE ];
-unsigned char ChrBuf[ 256 * 2 * 8 * 8 ];
 extern unsigned char pSprBuf[272];
 
 extern unsigned char HALT;
@@ -111,9 +110,6 @@ int32 Auto_Frames;
 /* Display Buffer */
 VQ_Texture* WorkFrame;
 uint16 WorkFrameIdx;
-
-/* Update flag for ChrBuf */
-unsigned char ChrBufUpdate;
 
 /* Palette Table */
 uint16 PalTable[ 32 ];
@@ -413,9 +409,6 @@ int pNesX_Reset()
   PollSkip = 6;
   PollCount = 0;
 
-   // Reset update flag of ChrBuf
-  ChrBufUpdate = 0xff;
-
   // Reset palette table
   pNesX_MemorySet( PalTable, 0, sizeof PalTable );
 
@@ -506,8 +499,6 @@ void pNesX_SetupPPU()
 
   // Reset information on PPU_R0
   PPU_Increment = 1;
-  ppuinfo.PPU_BG_Base = ChrBuf;
-  ppuinfo.PPU_SP_Base = ChrBuf + 256 * 64;
   ppuinfo.PPU_SP_Height = 8;
 
   // Reset PPU banks
@@ -670,11 +661,10 @@ void handle_dmc_synchronization(uint32 cycles) {
 /*===================================================================*/
 void pNesX_Cycle() {
 	int do_scroll_setup;
+	SpriteJustHit = 241;
 
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
-	
-	pNesX_GetSprHitY();
 
 	// Dummy scanline -1;
 	K6502_Step(CYCLES_PER_LINE);
@@ -720,6 +710,8 @@ void pNesX_Cycle() {
 			}
 		}
 
+		pNesX_DrawLine();
+
 		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
 			// Set a sprite hit flag
 			PPU_R2 |= R2_HIT_SP;
@@ -732,11 +724,6 @@ void pNesX_Cycle() {
 		K6502_Step(CYCLES_PER_LINE);
 		handle_dmc_synchronization(CYCLES_PER_LINE);		
 		MapperHSync();
-
-		// Always call the renderer if Mapper 9 is involved
-		if ((MapperNo == 9) || (FrameCnt == 0)) {
-			pNesX_DrawLine();
-		}	
 	}
 
 	pNesX_LoadFrame();
@@ -818,55 +805,4 @@ void pNesX_VSync()
 	// NMI on V-Blank
 	if ( ppuinfo.PPU_R0 & R0_NMI_VB )
 		NMI_REQ;
-}
-
-/*===================================================================*/
-/*                                                                   */
-/*   pNesX_GetSprHitY() : Get a position of scanline hits sprite #0  */
-/*                                                                   */
-/*===================================================================*/
-void pNesX_GetSprHitY()
-{
-	/*
-	* Get a position of scanline hits sprite #0
-	*
-	*/
-	int nYBit;
-	uint32 *pdwChrData;
-	int nOff;
-	int i;
-
-	if ( SPRRAM[ SPR_ATTR ] & SPR_ATTR_V_FLIP ) {
-		// Vertical flip
-		nYBit = ( ppuinfo.PPU_SP_Height - 1 ) << 3;
-		nOff = -2;
-	} else {
-		// Non flip
-		nYBit = 0;
-		nOff = 2;
-	}
-
-	if ( ppuinfo.PPU_R0 & R0_SP_SIZE ) {
-		// Sprite size 8x16
-		if ( SPRRAM[ SPR_CHR ] & 1 ) {
-			pdwChrData = (uint32 *)( ChrBuf + 256 * 64 + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
-		} else {
-			pdwChrData = (uint32 *)( ChrBuf + ( ( SPRRAM[ SPR_CHR ] & 0xfe ) << 6 ) + nYBit );
-		} 
-	} else {
-		// Sprite size 8x8
-		pdwChrData = (uint32 *)( ppuinfo.PPU_SP_Base + ( SPRRAM[ SPR_CHR ] << 6 ) + nYBit );
-	}
-
-	if ((SPRRAM[ SPR_Y ] + 1 <= 240) && (SPRRAM[SPR_Y] > 0)) {
-		for ( i = 0; i < ppuinfo.PPU_SP_Height; i++) {
-			if ( pdwChrData[ 0 ] | pdwChrData[ 1 ] ) {
-				SpriteJustHit = SPRRAM[SPR_Y] + i;
-				i = 256;
-			}
-			pdwChrData += nOff;
-		}
-	} else {
-		SpriteJustHit = 241;
-	}
 }

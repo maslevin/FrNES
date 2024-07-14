@@ -210,8 +210,6 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
         case 0:    /* 0x2000 */
           ppuinfo.PPU_R0 = byData;
           PPU_Increment = ( ppuinfo.PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
-          ppuinfo.PPU_BG_Base = ( ppuinfo.PPU_R0 & R0_BG_ADDR ) ? ChrBuf + 256 * 64 : ChrBuf;
-          ppuinfo.PPU_SP_Base = ( ppuinfo.PPU_R0 & R0_SP_ADDR ) ? ChrBuf + 256 * 64 : ChrBuf;
           ppuinfo.PPU_SP_Height = ( ppuinfo.PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
 
           //Account for Loopy's scrolling discoveries
@@ -301,7 +299,6 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
             }
 
             PPUBANK[addr >> 10][addr & 0x3FF] = byData;
-            ChrBufUpdate |= ( 1 << ( addr >> 10 ) );
 
             // Increment PPU Address
             //PPU_Addr += PPU_Increment;

@@ -50,10 +50,8 @@ typedef struct
 	uint32 PPU_Addr;
 	uint32 PPU_Scr_H_Bit;
 	uint32 PPU_Scanline;
-	unsigned char* PPU_BG_Base;
 	uint32 PPU_SP_Height;
 	uint32 PPU_R0;
-	unsigned char* PPU_SP_Base;
 } PPU_Info;
 
 extern PPU_Info ppuinfo;
@@ -184,14 +182,6 @@ extern unsigned char PPU_ScanTable[];
 /* Frame Skip */
 extern uint16 FrameSkip;
 extern uint16 FrameCnt;
-/*
-extern uint16 DoubleFrame[ 2 ][ NES_DISP_WIDTH * NES_DISP_HEIGHT ];
-extern uint16 *WorkFrame;
-extern uint16 WorkFrameIdx;*/
-
-extern unsigned char ChrBuf[];
-
-extern unsigned char ChrBufUpdate;
 
 extern uint16 PalTable[];
 
@@ -296,9 +286,6 @@ void pNesX_Cycle();
 /* A function in H-Sync */
 int pNesX_HSync();
 void pNesX_VSync();
-
-/* Get a position of scanline hits sprite #0 */
-void pNesX_GetSprHitY();
 
 void pNesX_DoSpu();
 

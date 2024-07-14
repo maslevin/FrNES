@@ -11,6 +11,6 @@
 
 #include <kos.h>
 
-uint16 pNesX_DrawLine_Spr_C();
+uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf);
 
 #endif
