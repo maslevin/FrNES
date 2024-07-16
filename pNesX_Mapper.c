@@ -846,15 +846,13 @@ void Map9_Init()
 	K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
-void Map9_PPU_Latch_FDFE(uint16 wAddr)
-{
-	if(wAddr & 0x1000)
-	{
+void Map9_PPU_Latch_FDFE(uint16 wAddr) {
+	if (wAddr & 0x1000) {
+//		printf("Map9: Latching BG Addr [0x%04x]\n", wAddr);		
 		Map9_Latch_1000 = (wAddr & 0x0FF0) >> 4;
 		Map9_set_VROM_1000();
-	}
-	else
-	{
+	} else {
+//		printf("Map9: Latching Spr Addr [0x%04x]\n", wAddr);
 		Map9_Latch_0000 = (wAddr & 0x0FF0) >> 4;
 		Map9_set_VROM_0000();
 	}
@@ -901,7 +899,7 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 		case 0xA000:
 			{
 				// 8K ROM bank at $8000
-				Map9_Regs[0] = byData;
+				Map9_Regs[0] = byData & 0x0F;
 				ROMBANK0 = ROMPAGE(Map9_Regs[0]);
 			}
 			break;
@@ -909,14 +907,14 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 		case 0xB000:
 			{
 				// B000-BFFF: select 4k VROM for (0000) $FD latch
-				Map9_Regs[1] = byData;
+				Map9_Regs[1] = byData & 0x1F;
 				Map9_set_VROM_0000();
 			}
 			break;
 		case 0xC000:
 			{
 				// C000-CFFF: select 4k VROM for (0000) $FE latch
-				Map9_Regs[2] = byData;
+				Map9_Regs[2] = byData & 0x1F;
 				Map9_set_VROM_0000();
 			}
 			break;
@@ -924,7 +922,7 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 		case 0xD000:
 			{
 				// D000-DFFF: select 4k VROM for (1000) $FD latch
-				Map9_Regs[3] = byData;
+				Map9_Regs[3] = byData & 0x1F;
 				Map9_set_VROM_1000();
 			}
 			break;
@@ -932,7 +930,7 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 		case 0xE000:
 			{
 				// E000-EFFF: select 4k VROM for (1000) $FE latch
-				Map9_Regs[4] = byData;
+				Map9_Regs[4] = byData & 0x1F;
 				Map9_set_VROM_1000();
 			}
 			break;
@@ -940,14 +938,10 @@ void Map9_Write(uint16 wAddr, unsigned char byData)
 		case 0xF000:
 			{
 				Map9_Regs[5] = byData;
-
-				if(Map9_Regs[5] & 0x01)
-				{
+				if (Map9_Regs[5] & 0x01) {
 					//Horizontal Mirror
 					pNesX_Mirroring(MIRRORING_HORIZONTAL);
-				}
-				else
-				{
+				} else {
 					//Vertical Mirror
 					pNesX_Mirroring(MIRRORING_VERTICAL);
 				}

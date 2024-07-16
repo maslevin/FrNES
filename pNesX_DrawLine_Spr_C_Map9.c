@@ -28,13 +28,17 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 	// Render a sprite to the sprite buffer
 	nSprCnt = 0;
 
+//	printf("PPU Scanline: [%li]\n", ppuinfo.PPU_Scanline);
+
 	if ( PPU_R1 & R1_SHOW_SP )
 	{
 		// Reset Scanline Sprite Count
 		PPU_R2 &= ~R2_MAX_SP;
 
-		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
+//		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
+		for ( pSPRRAM = SPRRAM + 4; (pSPRRAM <= (SPRRAM + ( 63 << 2 ))); pSPRRAM += 4 ) {
 			nY = pSPRRAM[ SPR_Y ];
+
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
 				continue;  // Next sprite
 
@@ -70,10 +74,21 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 			patternData[ 7 ] = byData2 & 3;
 			pbyChrData = patternData;
 
-			nesaddr = pSPRRAM[1];
-			if (((nesaddr) & 0x0FC0) == 0x0FC0) {
-				if ((((nesaddr) & 0x0FF0) == 0x0FD0) || (((nesaddr) & 0x0FF0) == 0x0FE0)) {
-					Map9_PPU_Latch_FDFE(nesaddr);
+			if (nYBit == 0) {
+				nesaddr = (characterBank * 0x400) + (characterIndex << 4);
+				switch (nesaddr) {
+					case 0x0FD8:
+					case 0x0FE8:
+						Map9_PPU_Latch_FDFE(nesaddr);
+						break;
+					default:
+						nesaddr+=8;
+						switch (nesaddr) {
+							case 0x0FD8:
+							case 0x0FE8:
+								Map9_PPU_Latch_FDFE(nesaddr);
+								break;
+						}
 				}
 			}
 
@@ -81,8 +96,8 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 			// copy in attributes needed for merge AND flag sprite 0 pixels in the MSB of each word
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
 			nX = pSPRRAM[ SPR_X ];
-			uint16 isSpriteZeroPixel = ((pSPRRAM == SPRRAM) ? 0x0100 : 0x0000);
 
+			uint16 isSpriteZeroPixel = ((pSPRRAM == SPRRAM) ? 0x0100 : 0x0000);
 			if ( nAttr & SPR_ATTR_H_FLIP ) {
 				// Horizontal flip
 				if ( pbyChrData[ 7 ] ) {

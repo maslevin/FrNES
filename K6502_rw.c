@@ -299,12 +299,8 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
             }
 
             PPUBANK[addr >> 10][addr & 0x3FF] = byData;
-
-            // Increment PPU Address
-            //PPU_Addr += PPU_Increment;
-            //PPU_Addr &= 0x3fff;
-                break;
           }
+          break;
       }
       break;
 
