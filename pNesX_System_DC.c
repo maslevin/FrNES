@@ -42,6 +42,9 @@
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
 
+bool log_enabled;
+bool log_enabled_latch;
+
 /*-------------------------------------------------------------------*/
 /*  Interface variables                                              */
 /*-------------------------------------------------------------------*/
@@ -479,6 +482,8 @@ int main()
 {
 	printf("Starting Main\n");
 	cont_state_t* my_state;
+	log_enabled = false;
+	log_enabled_latch = false;
 
 	// System initiation
 	printf("Initializing PVR\n");
@@ -900,6 +905,13 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 		if (my_controller != NULL) {
 			my_state = (cont_state_t*)maple_dev_status(my_controller);		
 
+			if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
+				log_enabled = !log_enabled;
+				log_enabled_latch = true;
+			} else if ((my_state -> buttons & CONT_Y) == 0) {
+				log_enabled_latch = false;
+			}
+
 			//Start first
 			*pdwPad1 = (((my_state -> buttons & CONT_START) != 0 ) << 3);
 			switch (*opt_P1AKey)
@@ -1112,6 +1124,11 @@ void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
 }
 
 //No debugging support
-void pNesX_DebugPrint( char *pszMsg )
-{
+void pNesX_DebugPrint( char *fmt, ... ) {
+	if (log_enabled) {
+		va_list args;
+		va_start(args, fmt);
+		vprintf(fmt, args);
+		va_end(args);
+	}
 }

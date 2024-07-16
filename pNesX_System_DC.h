@@ -34,6 +34,8 @@
 #define MENUNUM_CREDITS         8
 #define MENUNUM_AUTOROM         99
 
+extern bool log_enabled;
+
 void pNesX_Texture_Write( void *dest, void* src);
 void pNesX_Texture_Fill(void *dest, uint32 val);
 
@@ -53,6 +55,8 @@ int LoadSRAM();
 int SaveSRAM();
 
 void i32toa(uint32 i, char* buffer);
+
+void pNesX_DebugPrint(char* fmt, ...);
 
 extern uint16 WorkFrameIdx;
 
