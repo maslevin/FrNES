@@ -35,8 +35,51 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 		// Reset Scanline Sprite Count
 		PPU_R2 &= ~R2_MAX_SP;
 
-//		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
-		for ( pSPRRAM = SPRRAM + 4; (pSPRRAM <= (SPRRAM + ( 63 << 2 ))); pSPRRAM += 4 ) {
+		pSPRRAM = SPRRAM;
+		for (int index = 0; index < 64; index++) {
+			nY = pSPRRAM[ SPR_Y ];
+
+			if (!( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )) {
+				nAttr = pSPRRAM[ SPR_ATTR ];
+				nYBit = ppuinfo.PPU_Scanline - nY;
+				nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1 ) : nYBit;
+
+				if (nYBit == 0) {
+					unsigned char nameTableValue = (ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+						(pSPRRAM[SPR_CHR] & 0xfe) :
+						(pSPRRAM[SPR_CHR]);
+					unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_SP_SIZE) ? 
+						((pSPRRAM[SPR_CHR] & 1) ? 4 : 0) + (nameTableValue >> 6) :
+						((ppuinfo.PPU_R0 & R0_SP_ADDR) ? 4 : 0) + (nameTableValue >> 6));
+					unsigned char characterIndex = ((ppuinfo.PPU_R0 & R0_SP_SIZE) && (nYBit >= 8)) ?
+						(nameTableValue & 0x3F) + 1 :
+						(nameTableValue & 0x3F);
+
+					nesaddr = (characterBank * 0x400) + (characterIndex << 4);
+					switch (nesaddr) {
+						case 0x0FD8:
+						case 0x0FE8:
+//							printf("Sprite #%u\n", (pSPRRAM - SPRRAM) / 4);
+							Map9_PPU_Latch_FDFE(nesaddr);
+							break;
+						default:
+							nesaddr+=8;
+							switch (nesaddr) {
+								case 0x0FD8:
+								case 0x0FE8:
+//									printf("Sprite #%u\n", (pSPRRAM - SPRRAM) / 4);							
+									Map9_PPU_Latch_FDFE(nesaddr);
+									break;
+							}
+					}
+				}					
+			}
+
+			pSPRRAM += 4;
+		}
+
+		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
+//		for ( pSPRRAM = SPRRAM; (pSPRRAM <= (SPRRAM + ( 63 << 2 ))); pSPRRAM += 4 ) {
 			nY = pSPRRAM[ SPR_Y ];
 
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
@@ -73,24 +116,6 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 			patternData[ 6 ] = byData1 & 3;
 			patternData[ 7 ] = byData2 & 3;
 			pbyChrData = patternData;
-
-			if (nYBit == 0) {
-				nesaddr = (characterBank * 0x400) + (characterIndex << 4);
-				switch (nesaddr) {
-					case 0x0FD8:
-					case 0x0FE8:
-						Map9_PPU_Latch_FDFE(nesaddr);
-						break;
-					default:
-						nesaddr+=8;
-						switch (nesaddr) {
-							case 0x0FD8:
-							case 0x0FE8:
-								Map9_PPU_Latch_FDFE(nesaddr);
-								break;
-						}
-				}
-			}
 
 			nAttr ^= SPR_ATTR_PRI;
 			// copy in attributes needed for merge AND flag sprite 0 pixels in the MSB of each word

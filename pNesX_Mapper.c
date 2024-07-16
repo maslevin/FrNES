@@ -852,7 +852,7 @@ void Map9_PPU_Latch_FDFE(uint16 wAddr) {
 		Map9_Latch_1000 = (wAddr & 0x0FF0) >> 4;
 		Map9_set_VROM_1000();
 	} else {
-//		printf("Map9: Latching Spr Addr [0x%04x]\n", wAddr);
+//		printf("Map9: Latching Spr Addr [0x%04x] on Scanline [%li]\n", wAddr, ppuinfo.PPU_Scanline);
 		Map9_Latch_0000 = (wAddr & 0x0FF0) >> 4;
 		Map9_set_VROM_0000();
 	}
@@ -868,6 +868,7 @@ void Map9_set_VROM_0000()
 		bank_num = Map9_Regs[2];
 
 	bank_num <<= 2;
+//	printf("Map9: Setting Sprite PPU Banks to %u, %u, %u, %u\n", bank_num, bank_num + 1, bank_num + 2, bank_num + 3);
 
 	PPUBANK[0] = VROMPAGE( bank_num );
 	PPUBANK[1] = VROMPAGE( bank_num + 1 );
