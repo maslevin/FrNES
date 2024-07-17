@@ -28,7 +28,6 @@
 #include "pNesX_System.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Utils.h"
-#include "vmu_dc.h"
 #include "vmu_icons.h"
 #include "GUI_MainMenu.h"
 #include "GUI_FileBrowser.h"
