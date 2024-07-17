@@ -814,8 +814,7 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 	return returnValue;
 }
 
-void pNesX_LoadFrame()
-{
+void pNesX_LoadFrame() {
 	pvr_wait_ready();
 	pvr_scene_begin();
 
@@ -1123,7 +1122,6 @@ void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
 }
 
 #ifdef DEBUG
-//No debugging support
 void pNesX_DebugPrint( char *fmt, ... ) {
 	if (log_enabled) {
 		va_list args;
