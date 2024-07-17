@@ -400,7 +400,7 @@ int pNesX_Reset()
   /*-------------------------------------------------------------------*/
 
   // Clear RAM
-  pNesX_MemorySet( RAM, 0, sizeof RAM );
+  memset( RAM, 0, sizeof RAM );
 
   // Reset frame skip and frame count
   FrameSkip = *opt_FrameSkip;
@@ -410,10 +410,10 @@ int pNesX_Reset()
   PollCount = 0;
 
   // Reset palette table
-  pNesX_MemorySet( PalTable, 0, sizeof PalTable );
+  memset( PalTable, 0, sizeof PalTable );
 
   // Reset APU register
-  pNesX_MemorySet( APU_Reg, 0, sizeof APU_Reg );
+  memset( APU_Reg, 0, sizeof APU_Reg );
 
   // Reset joypad
   PAD1_Latch = PAD2_Latch = ExitCount = 0;
@@ -478,8 +478,8 @@ void pNesX_SetupPPU()
   int nPage;
 
   // Clear PPU and Sprite Memory
-  pNesX_MemorySet( PPURAM, 0, sizeof PPURAM );
-  pNesX_MemorySet( SPRRAM, 0, sizeof SPRRAM );
+  memset( PPURAM, 0, sizeof PPURAM );
+  memset( SPRRAM, 0, sizeof SPRRAM );
 
   // Reset PPU Register
   ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;

@@ -251,7 +251,7 @@ void Map1_Init()
   /* Callback at HSync */
   MapperHSync = Map0_HSync;
 
-  pNesX_MemorySet( Map1_Reg, 0, sizeof Map1_Reg );
+  memset( Map1_Reg, 0, sizeof Map1_Reg );
   Map1_Cnt = Map1_Latch = 0;
 
   /* Set ROM Banks */

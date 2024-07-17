@@ -66,14 +66,12 @@ uint32 crc_32_tab[256] = { /* CRC polynomial 0xedb88320 */
 
 const int id_size = 1;
 
-uint32 UPDC32 (unsigned char octet, uint32 crc) 
-{
+uint32 UPDC32 (unsigned char octet, uint32 crc) {
     return ( ((crc) >> 8) ^ crc_32_tab [ (crc & 0x000000FF) ^ ((uint8) octet) ] );
 } 
 
 //Initializes a RomInfo array to the unread values
-void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers)
-{
+void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers) {
 	printf("InitializeFileInfos: clearing entries\n");
 	memset(RomInfoArray, 0, sizeof(RomInfoArray) * NumBuffers);
 	for (int i = 0; i < NumBuffers; i++) {
@@ -96,6 +94,7 @@ int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 		numberOfRoms = 0;
 		currentindex = 0;
 
+/*
 		if (strstr(Path, "/rd/") != NULL) {
 			strcpy(RomInfoArray[currentindex].FileName, ".");
 			currentindex++;
@@ -104,6 +103,7 @@ int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 			currentindex++;
 			numberOfRoms++;			
 		}
+*/
 
 		return 1;
 	}
@@ -117,18 +117,16 @@ void EndFileSearch() {
 	currentindex = 0;
 }
 
-int ReturnCurrentNumRoms()
-{
+int ReturnCurrentNumRoms() {
 	return numberOfRoms;
 }
 
 //Loads a fileinfo
-int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path)
-{
+int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path) {
 	printf("LoadNextFileSimple: reading directory\n");	
 	my_dir = fs_readdir(my_file);
 	if (my_dir != NULL) {
-		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%X]\n", my_dir -> name, my_dir -> attr);
+		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
 		if (my_dir -> attr & 0x1000) {
 			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
 			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);
@@ -152,8 +150,7 @@ int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path)
 	}
 }
 		
-uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temprom)
-{
+uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temprom) {
 	printf("ReturnChecksum: calculating crc32 of ROM image [%s]\n", filepath);
 	uint32 my_fd;
 	uint32 oldcrc32;
@@ -178,11 +175,12 @@ uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temp
 
 	i = 16;
 
-	for (; i < filesize; i++)
+	for (; i < filesize; i++) {
 		oldcrc32 = UPDC32 (temprom[i], oldcrc32);
+	}
 
 	oldcrc32 = oldcrc32 ^ 0xFFFFFFFF;
-	printf("ReturnChecksum: returning CRC of [%08x]\n", oldcrc32);
+	printf("ReturnChecksum: returning CRC of [%08lx]\n", oldcrc32);
 
 	return oldcrc32;
 }

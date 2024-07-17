@@ -43,7 +43,6 @@ void pNesX_StartLog ();
 void pNesX_Logstring (char* logstring);
 void pNesX_EndLog (char* pcfile);
 
-void* pNesX_Uint32MemSet(void *dest, uint32 val, int count);
 void setup_main_menu();
 
 void Load_VMU_Options();

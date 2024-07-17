@@ -445,12 +445,6 @@ int main()
 	// System initiation
 	printf("Initializing PVR\n");
 	pvr_setup();
-	printf("Initializing VMUFS...\n");
-/*	if (vmufs_init() == 0) {
-		printf("VMUFS Initialization Successful\n");
-	} else {
-		printf("Error: VMUFS Initialization Failed\n");
-	} */
 
 	//Load Fonts
 	printf("Initializing Fonts\n");
@@ -556,8 +550,7 @@ int main()
 
 	int exitLoop = 0;
 	maple_device_t* my_controller;
-	while (exitLoop == 0)
-	{
+	while (exitLoop == 0) {
 //		printf("main loop: start\n");
 
 //		printf("main loop: reading controller\n");
@@ -684,9 +677,6 @@ int main()
 	}
 
 	printf("main loop: exiting\n");
-
-	printf("Shutdown VMUFS\n");
-	//vmufs_shutdown();
 
 	Free_Video_Options();
 	Free_System_Options();
@@ -1055,11 +1045,6 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 	}
 }
 
-uint32* pNesX_MemoryCopy( uint32* dest, uint32* src, int count)
-{
-	return memcpy(dest, src, count);
-}
-
 uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset)
 {
 	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
@@ -1077,18 +1062,6 @@ uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 of
 		}
 		return dest;
 	}
-}
-
-//Inefficient and dirty
-void *pNesX_MemorySet( void *dest, int c, int count)
-{
-	return memset(dest, c, count);
-}
-
-//Inefficient and dirty
-void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
-{
-	return memset(dest, val, count);
 }
 
 // this routine came from the ghettoplay example that comes 
