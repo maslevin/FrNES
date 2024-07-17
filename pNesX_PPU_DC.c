@@ -30,8 +30,7 @@ extern int SpriteJustHit;
 //extern uint16 PPU_Addr;
 extern uint16 PPU_Temp;
 
-void pNesX_StartFrame()
-{
+void pNesX_StartFrame() {
 	if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08))
 		ppuinfo.PPU_Addr = PPU_Temp;
 }
