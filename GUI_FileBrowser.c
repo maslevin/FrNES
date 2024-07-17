@@ -10,7 +10,7 @@
 #include "GUI_FileBrowser.h"
 #include "macros.h"
 
-#include "pNesX_System_Dc.h"
+#include "pNesX_System_DC.h"
 #include "pNesX_Utils.h"
 #include "pNesX.h"
 
