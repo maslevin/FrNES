@@ -1110,7 +1110,6 @@ uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 of
 	}
 }
 
-
 //Inefficient and dirty
 void *pNesX_MemorySet( void *dest, int c, int count)
 {
@@ -1123,6 +1122,7 @@ void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
 	return memset(dest, val, count);
 }
 
+#ifdef DEBUG
 //No debugging support
 void pNesX_DebugPrint( char *fmt, ... ) {
 	if (log_enabled) {
@@ -1132,3 +1132,4 @@ void pNesX_DebugPrint( char *fmt, ... ) {
 		va_end(args);
 	}
 }
+#endif

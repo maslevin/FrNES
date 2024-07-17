@@ -56,7 +56,11 @@ int SaveSRAM();
 
 void i32toa(uint32 i, char* buffer);
 
+#ifdef DEBUG
 void pNesX_DebugPrint(char* fmt, ...);
+#else
+#define pNesX_DebugPrint(...) (0)
+#endif
 
 extern uint16 WorkFrameIdx;
 

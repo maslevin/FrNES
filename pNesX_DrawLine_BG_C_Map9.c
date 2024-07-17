@@ -71,26 +71,28 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 		case 0x1FEF:		
 			Map9_PPU_Latch_FDFE(nesaddr);
 			break;
-	}
-	nesaddr += 8;
-	switch (nesaddr) {
-		case 0x1FD8:
-		case 0x1FD9:
-		case 0x1FDA:
-		case 0x1FDB:
-		case 0x1FDC:
-		case 0x1FDD:
-		case 0x1FDE:
-		case 0x1FDF:
-		case 0x1FE8:
-		case 0x1FE9:
-		case 0x1FEA:
-		case 0x1FEB:
-		case 0x1FEC:
-		case 0x1FED:
-		case 0x1FEE:
-		case 0x1FEF:		
-			Map9_PPU_Latch_FDFE(nesaddr);
+		default:
+			nesaddr += 8;
+			switch (nesaddr) {
+				case 0x1FD8:
+				case 0x1FD9:
+				case 0x1FDA:
+				case 0x1FDB:
+				case 0x1FDC:
+				case 0x1FDD:
+				case 0x1FDE:
+				case 0x1FDF:
+				case 0x1FE8:
+				case 0x1FE9:
+				case 0x1FEA:
+				case 0x1FEB:
+				case 0x1FEC:
+				case 0x1FED:
+				case 0x1FEE:
+				case 0x1FEF:		
+					Map9_PPU_Latch_FDFE(nesaddr);
+					break;
+			}
 			break;
 	}
 
@@ -174,7 +176,6 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 				break;
 		}
 
-
 		pPoint[0] = pPalTbl + pbyCharData[0];
 		pPoint[1] = pPalTbl + pbyCharData[1];
 		pPoint[2] = pPalTbl + pbyCharData[2];
@@ -236,28 +237,30 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 		case 0x1FEF:		
 			Map9_PPU_Latch_FDFE(nesaddr);
 			break;
-	}
-	nesaddr += 8;
-	switch (nesaddr) {
-		case 0x1FD8:
-		case 0x1FD9:
-		case 0x1FDA:
-		case 0x1FDB:
-		case 0x1FDC:
-		case 0x1FDD:
-		case 0x1FDE:
-		case 0x1FDF:
-		case 0x1FE8:
-		case 0x1FE9:
-		case 0x1FEA:
-		case 0x1FEB:
-		case 0x1FEC:
-		case 0x1FED:
-		case 0x1FEE:
-		case 0x1FEF:		
-			Map9_PPU_Latch_FDFE(nesaddr);
+		default:
+			nesaddr += 8;
+			switch (nesaddr) {
+				case 0x1FD8:
+				case 0x1FD9:
+				case 0x1FDA:
+				case 0x1FDB:
+				case 0x1FDC:
+				case 0x1FDD:
+				case 0x1FDE:
+				case 0x1FDF:
+				case 0x1FE8:
+				case 0x1FE9:
+				case 0x1FEA:
+				case 0x1FEB:
+				case 0x1FEC:
+				case 0x1FED:
+				case 0x1FEE:
+				case 0x1FEF:		
+					Map9_PPU_Latch_FDFE(nesaddr);
+					break;
+			}
 			break;
-	}	
+	}
 
 	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++) {
 		*(pPoint++) = pPalTbl + pbyCharData[index];
