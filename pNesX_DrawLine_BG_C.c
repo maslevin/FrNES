@@ -135,4 +135,8 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		*(pPoint++) = pPalTbl + pbyCharData[index];
 	}
 
+	if (!(PPU_R1 & 0x02)) {
+		pPoint -= 256;
+		memset(pPoint, 0, 8);
+	}
 }

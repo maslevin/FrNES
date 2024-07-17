@@ -78,12 +78,12 @@ void pNesX_DrawLine()
 			for (index = 0; index < 256; index++) {
 				unsigned char spritePixel = pSprBuf[index] & 0xff;
 				bool spriteZeroPixel = ((pSprBuf[index] & 0x100) != 0);
+				if ((index < 255) && spriteZeroPixel && (*pPoint != 0)) {
+					SpriteJustHit = ppuinfo.PPU_Scanline;
+				}				
 				if (spritePixel && 
 					((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
-				) {
-					if (spriteZeroPixel && (*pPoint != 0)) {
-						SpriteJustHit = ppuinfo.PPU_Scanline;
-					}					
+				) {					
 					*pPoint = (spritePixel & 0xf) + 0x10;
 				}
 				pPoint++;

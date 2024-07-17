@@ -115,6 +115,10 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 					pSprBuf[ nX + 7 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 7 ];
 			}
 		}	
+
+		if (!(PPU_R1 & 0x04)) {
+			memset(pSprBuf, 0, 16);
+		}
 	}
 	return nSprCnt;
 }
