@@ -40,7 +40,7 @@
 #include "GUI_GUIPage.h"
 
 extern uint8 romdisk[];
-KOS_INIT_FLAGS(INIT_DEFAULT);
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_VMU);
 
 bool log_enabled;
 bool log_enabled_latch;
@@ -445,11 +445,11 @@ int main()
 	printf("Initializing PVR\n");
 	pvr_setup();
 	printf("Initializing VMUFS...\n");
-	if (vmufs_init() == 0) {
+/*	if (vmufs_init() == 0) {
 		printf("VMUFS Initialization Successful\n");
 	} else {
 		printf("Error: VMUFS Initialization Failed\n");
-	}
+	} */
 
 	//Load Fonts
 	printf("Initializing Fonts\n");
@@ -686,7 +686,7 @@ int main()
 	printf("main loop: exiting\n");
 
 	printf("Shutdown VMUFS\n");
-	vmufs_shutdown();
+	//vmufs_shutdown();
 
 	Free_Video_Options();
 	Free_System_Options();
