@@ -40,7 +40,7 @@ extern char* Main_Keys[];
 extern char* Options_Keys[];
 extern const int Num_Options_Keys;
 
-extern maple_device_t VMUs[];
+extern maple_device_t* VMUs[];
 
 //Options Variables
 extern uint16* opt_SoundEnabled;

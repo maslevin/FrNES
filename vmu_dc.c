@@ -463,25 +463,6 @@ void create_vmu_header(uint8 *header, const char *rom_name, const char *desc_lon
 	}*/
 }
 
-// this routine came from the ghettoplay example that comes 
-// with libdream
-void vmu_icon_draw(const char *vmu_icon, uint8 vmu) {
-	uint8 bitmap[48*32/8] = {0};
-	int x, y, xi, xb;
-
-	if (vmu_icon) {	
-		for (y=0; y<32; y++)
-			for (x=0; x<48; x++) {
-				xi = x / 8;
-				xb = 0x80 >> (x % 8);
-				if (vmu_icon[(31-y)*48+(47-x)] == '+')
-					bitmap[y*(48/8)+xi] |= xb;
-			}
-	}
-	
-	vmu_draw_lcd(vmu, bitmap);
-}
-
 // the save and load routines contain some nasty code.
 // i should rewrite these, but they seem to be working.
 int16 load_user_settings(uint8 vmu_addr)

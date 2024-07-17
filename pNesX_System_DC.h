@@ -56,6 +56,8 @@ int SaveSRAM();
 
 void i32toa(uint32 i, char* buffer);
 
+int draw_VMU_icon(maple_device_t* vmu, char* icon);
+
 #ifdef DEBUG
 void pNesX_DebugPrint(char* fmt, ...);
 #else

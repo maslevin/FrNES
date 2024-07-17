@@ -785,15 +785,13 @@ void pNesX_Cycle() {
 	K6502_Step(77);
 	handle_dmc_synchronization(87);	
 
-	if (*opt_SoundEnabled)
-	{
+	if (*opt_SoundEnabled) {
 		pNesX_DoSpu();
 	}
 	audio_sync_apu_registers();
 }
 
-void pNesX_VSync()
-{
+void pNesX_VSync() {
 	// Set a V-Blank flag
 	PPU_R2 |= R2_IN_VBLANK;
 

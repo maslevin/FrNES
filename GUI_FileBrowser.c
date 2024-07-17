@@ -213,8 +213,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 			if (pNesX_Load(myRomInfos[mydata.Highlighted_Index].PhysFileName, myRomInfos[mydata.Highlighted_Index].FileSize) == 0)
 			{
 				//Load Its SaveRAM
-				if (SRAM_Enabled)
+				if (SRAM_Enabled) {
 					LoadSRAM();
+				}
 
 				//Stay in Emulator During Operation
 				pNesX_Main();
@@ -228,8 +229,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 					free (VRAM);
 
 				//Save Its SaveRAM
-				if (SRAM_Enabled)
+				if (SRAM_Enabled) {
 					SaveSRAM();
+				}
 			} else {
 				printf("main: error failed to start emulator!!!!\n");
 			}

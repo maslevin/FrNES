@@ -100,7 +100,7 @@ unsigned char *VRAM;
 uint32 SRAM_Enabled;
 
 char App_String[] = "FrNES";
-char Version_String[] = "0.70";
+char Version_String[] = "0.7.0";
 
 //Help for the Options screen
 char* Options_Keys[] = {
@@ -182,70 +182,35 @@ uint16 NesPalette[ 64 ] =
 
 //Controllers - will store controller addresses - NULL if not found
 uint32 numControllers;
-maple_device_t Controllers[4];
+maple_device_t* Controllers[4];
 
 //VMUs - will store VMU addresses -- NULL if not found
 uint32 numVMUs;
-maple_device_t VMUs[8];
+maple_device_t* VMUs[8];
 
-void initialize_controllers()
-{
+void initialize_controllers() {
 	printf("initialize_controllers: start scan\n");
 	numControllers = 0;
 	for (int i = 0; i < 4; i++) {
 		maple_device_t* controller = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
 		if (controller != NULL) {
-			Controllers[i] = *controller;
+			Controllers[i] = controller;
 			numControllers++;
 		}
 	}
 
 	numVMUs = 0;
 	for (int i = 0; i < 8; i++) {
-		maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD | MAPLE_FUNC_LCD);
+		maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
 		if (vmu != NULL) {
-			VMUs[i] = *vmu;
+			VMUs[i] = vmu;
 			numVMUs++;
 		}
 	}
-	printf("initialize_controllers: end scan, found [%u] controllers and [%u] vmus\n", numControllers, numVMUs);
+	printf("initialize_controllers: end scan, found [%lu] controllers and [%lu] vmus\n", numControllers, numVMUs);
 }
 
-void rescan_controllers()
-{
-	//MS- Controllers are totally different now 
-/*	int i;
-	int j;
-	int firstport;
-
-	//quietly rescan the bus
-	maple_rescan_bus(1);
-	
-	//scan to make sure we have all the controllers that are plugged in
-	//don't worry about vmus for now
-	for (i = 0; i < 4; i++)
-	{
-		firstport = -1;
-		for (j = 0; j < 6; j++)
-		{
-			if (maple_device_func(i, j) & MAPLE_FUNC_CONTROLLER)
-			{
-				Controllers[i] = maple_create_addr(i, j);
-			}
-			if (maple_device_func(i, j) & MAPLE_FUNC_MEMCARD)
-			{
-				if (firstport == -1)
-					firstport = j;
-				VMUs[(i * 2) + (j - firstport)] = maple_create_addr(i, j);
-				vmu_draw_lcd(VMUs[(i * 2) + (j - firstport)], vmu_screen_normal);
-			}
-		}
-	}
-*/
-}
-
-uint16 MakeRGB(int red, int green, int blue)
-{
+uint16 MakeRGB(int red, int green, int blue) {
 	return ((red << 10 | green << 5 | blue << 0) | 0x8000);
 }
 
@@ -314,73 +279,64 @@ void draw_screen()
 	pvr_scene_finish();
 }
 
-int LoadSRAM()
-{
-	/*
-	char textbuffer[13];
+int LoadSRAM() {
+	int loadSRAM_success = -1;
+	if (*opt_SRAM == 1) {
+		printf("VMU: Attempting to Load SRAM from attached VMUs\n");
+		for (int i = 0; i < 8; i++) {
+			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
+			if (vmu == NULL)
+				break;
+			draw_VMU_icon(vmu, vmu_screen_loading);
 
-	if ((*opt_SRAM == 1) && (*opt_VMUPort != -1))
-	{
-		pNesX_i32toa(currentCRC32, textbuffer);
-		strcat(textbuffer, "    ");
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		switch (load_SRAM(VMUs[*opt_VMUPort], textbuffer, SRAM))
-		{
-			case 1:
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
+			char sramFilename[13];
+			snprintf(sramFilename, 13, "%08lx", currentCRC32);
+
+			unsigned char* readBuffer;
+			int readBufferSize;
+			if (vmufs_read(vmu, sramFilename, (void**)&readBuffer, &readBufferSize) == 0) {
+				printf("VMU: Found SRAM Save File from VMU [%i]\n", i);
+				if (readBufferSize != SRAM_SIZE) {
+					printf("VMU: Warning SRAM size does not match expected size, truncating to 0x2000 bytes\n");
+				}
+				memcpy(SRAM, readBuffer, SRAM_SIZE);
+				free(readBuffer);
+				loadSRAM_success = 1;				
+				draw_VMU_icon(vmu, vmu_screen_normal);
 				break;
-			case -2:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
-			case -3:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
-			default:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
+			} else {
+				printf("VMU: Unable to load SRAM Save File from VMU [%i]\n", i);
+				draw_VMU_icon(vmu, vmu_screen_error);
+			}
 		}
-		return 1;
 	}
-	else
-		return -1;
-	*/
-	return -1;
+	return loadSRAM_success;
 }
 
-int SaveSRAM()
-{
-	/*
-	char textbuffer[13];
-	char textbuffer2[255];
-
-	if ((*opt_SRAM == 1) && (*opt_VMUPort != -1))
-	{
-		pNesX_i32toa(currentCRC32, textbuffer);
-		strcat(textbuffer, "    ");
-
-
-		strcpy(textbuffer2, myRomInfos[mydata.Highlighted_Index].PhysFileName);
-		textbuffer2[31] = ((char)NULL);
-
-		vmu_icon_draw(vmu_screen_saving, VMUs[*opt_VMUPort]);
-		switch (save_SRAM(VMUs[*opt_VMUPort], textbuffer, textbuffer2, SRAM))
-		{
-			case 1:
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
+int SaveSRAM() {
+	int saveSRAM_success = -1;
+	if (*opt_SRAM == 1) {
+		for (int i = 0; i < numVMUs; i++) {
+			printf("VMU: Attempting to Save SRAM to VMU [%i]\n", i);
+			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
+			if (vmu == NULL)
 				break;
-			case 2:
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
+			draw_VMU_icon(vmu, vmu_screen_saving);
+
+			char sramFilename[13];
+			snprintf(sramFilename, 13, "%08lx", currentCRC32);
+			if (vmufs_write(vmu, sramFilename, SRAM, 0x2000, VMUFS_OVERWRITE) == 0) {
+				printf("VMU: Saved SRAM Save File to VMU [%i]\n", i);
+				saveSRAM_success = 1;
+				draw_VMU_icon(vmu, vmu_screen_normal);
 				break;
-			case -1:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
+			} else {
+				printf("VMU: Unable to save SRAM Save File to VMU [%i]\n", i);
+				draw_VMU_icon(vmu, vmu_screen_error);				
+			}		
 		}
-		return 1;
 	}
-	else
-		return -1;
-	*/
-	return -1;
+	return saveSRAM_success;
 }
 
 void Save_VMU_Options()
@@ -446,7 +402,7 @@ bool checkForAutoROM() {
 		if (fs_read(autoromFileHandle, szRomName, 256) > 0) {
 			for (int i = 0; i < strlen(szRomName); i++) {
 				if (szRomName[i] == '\n') {
-					szRomName[i] = NULL;
+					szRomName[i] = (char)NULL;
 				}
 			}
 			printf("AutoROM: file specified [%s]\n", szRomName);
@@ -456,7 +412,7 @@ bool checkForAutoROM() {
 			if (romFileHandle != -1){
 				struct stat fileStat;
 				if (fs_fstat(romFileHandle, &fileStat) == 0) {
-					printf("AutoROM: detected size [%u]\n", fileStat.st_size);
+					printf("AutoROM: detected size [%lu]\n", fileStat.st_size);
 					RomSize = fileStat.st_size;
 					autoromPresent = true;
 				}
@@ -488,6 +444,12 @@ int main()
 	// System initiation
 	printf("Initializing PVR\n");
 	pvr_setup();
+	printf("Initializing VMUFS...\n");
+	if (vmufs_init() == 0) {
+		printf("VMUFS Initialization Successful\n");
+	} else {
+		printf("Error: VMUFS Initialization Failed\n");
+	}
 
 	//Load Fonts
 	printf("Initializing Fonts\n");
@@ -503,7 +465,6 @@ int main()
 
 	printf("Initializing Controllers\n");	
 	initialize_controllers();
-	rescan_controllers();
 
 	GUI_BGColor = 0xFF0080FF;
 	GUI_TextColor = 0xFF000000;
@@ -542,6 +503,10 @@ int main()
 	*opt_SRAM = default_SRAM;
 
 	printf("Initializing VMUs\n");
+	for (i = 0; i < numVMUs; i++) {
+//		draw_VMU_icon(VMUs[i], vmu_screen_normal);
+	}
+
 	//If the default Memory card is present
 	/*
 	if (VMUs[default_VMUPort] != 0)
@@ -691,8 +656,9 @@ int main()
 			if (pNesX_Load(szRomName, RomSize) == 0)
 			{
 				//Load Its SaveRAM
-				if (SRAM_Enabled)
+				if (SRAM_Enabled) {
 					LoadSRAM();
+				}
 
 				//Stay in Emulator During Operation
 				pNesX_Main();
@@ -706,8 +672,9 @@ int main()
 					free (VRAM);
 
 				//Save Its SaveRAM
-				if (SRAM_Enabled)
+				if (SRAM_Enabled) {
 					SaveSRAM();
+				}
 			} else {
 				printf("main: error failed to start emulator!!!!\n");
 			}
@@ -717,6 +684,9 @@ int main()
 	}
 
 	printf("main loop: exiting\n");
+
+	printf("Shutdown VMUFS\n");
+	vmufs_shutdown();
 
 	Free_Video_Options();
 	Free_System_Options();
@@ -1119,6 +1089,24 @@ void *pNesX_MemorySet( void *dest, int c, int count)
 void *pNesX_Uint32MemSet( void *dest, uint32 val, int count)
 {
 	return memset(dest, val, count);
+}
+
+// this routine came from the ghettoplay example that comes 
+// with libdream
+int draw_VMU_icon(maple_device_t* vmu, char* icon) {
+	uint8 bitmap[48*32/8] = {0};
+	int x, y, xi, xb;
+
+	for (y=0; y<32; y++) {
+		for (x=0; x<48; x++) {
+			xi = x / 8;
+			xb = 0x80 >> (x % 8);
+			if (icon[(31-y)*48+(47-x)] == '+')
+				bitmap[y*(48/8)+xi] |= xb;
+		}
+	}
+	
+	return vmu_draw_lcd(vmu, bitmap);
 }
 
 #ifdef DEBUG
