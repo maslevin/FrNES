@@ -554,12 +554,13 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4)
 	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ (NAME_TABLE0 + bank4) * 0x400 ];
 }
 
+/*
 static void
 timer_handler(irq_t source, irq_context_t *context, void* data)
 {
 	Auto_Frames++;
 }
-
+*/
 
 /*===================================================================*/
 /*                                                                   */
@@ -575,26 +576,20 @@ void pNesX_Main()
 		// Start Sound Emu
 		DC_SoundInit();
 
-		timer_init();
-		// Start a counter to cycle at 25 times a second to wait for the sound to be done loading
-		timer_prime(TMU1, 25, 0);
-		timer_start(TMU1);
-
-		//Wait a second before you start messing with the regs...
-		while (!(timer_clear(TMU1)));
+		timer_spin_sleep(40);
 
 		*start = 0xFFFFFFFF;
-
-		timer_stop(TMU1);
 	}
 
+/*
     if ( *opt_AutoFrameSkip ) {
-		//Set TMU1 at 60Hz, using interrupts
-		timer_prime(TMU1, 60, 1);
-		irq_set_handler(EXC_TMU1_TUNI1, timer_handler, NULL);
-		timer_start(TMU1);
+		//Set TMU2 at 60Hz, using interrupts
+		timer_prime(TMU2, 60, 1);
+		irq_set_handler(EXC_TMU2_TUNI2, timer_handler, NULL);
+		timer_start(TMU2);
 		Auto_Frames = 1;
 	}
+*/
 
 	// Main loop
 	while ( 1 ) {
@@ -633,10 +628,12 @@ void pNesX_Main()
 		}
 	}
 
+/*
 	if (*opt_AutoFrameSkip) {
-		timer_stop(TMU1);
-		irq_set_handler(EXC_TMU1_TUNI1, NULL, NULL);
+		timer_stop(TMU2);
+		irq_set_handler(EXC_TMU2_TUNI2, NULL, NULL);
 	}
+*/
 
 	if (*opt_SoundEnabled) {
 		spu_shutdown();

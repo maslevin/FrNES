@@ -322,8 +322,10 @@ int SaveSRAM() {
 				break;
 			draw_VMU_icon(vmu, vmu_screen_saving);
 
+			printf("VMU: Generating filename\n");
 			char sramFilename[13];
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
+			printf("VMU: Saving SRAM as [%s]\n", sramFilename);
 			if (vmufs_write(vmu, sramFilename, SRAM, 0x2000, VMUFS_OVERWRITE) == 0) {
 				printf("VMU: Saved SRAM Save File to VMU [%i]\n", i);
 				saveSRAM_success = 1;
@@ -652,8 +654,7 @@ int main()
 
 		if (AutoROM) {
 			printf("main: loading rom [%s]\n", szRomName);
-			if (pNesX_Load(szRomName, RomSize) == 0)
-			{
+			if (pNesX_Load(szRomName, RomSize) == 0) {
 				//Load Its SaveRAM
 				if (SRAM_Enabled) {
 					LoadSRAM();
