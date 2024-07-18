@@ -36,6 +36,9 @@
 
 extern bool log_enabled;
 
+extern char szRomPath[];
+// extern char szRomName[ 256 ];
+
 void pNesX_Texture_Write( void *dest, void* src);
 void pNesX_Texture_Fill(void *dest, uint32 val);
 

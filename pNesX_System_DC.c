@@ -25,6 +25,8 @@
 #include "pNesX.h"
 #include "macros.h"
 
+#include <bzlib/bzlib.h>
+
 #include "pNesX_System.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Utils.h"
@@ -154,7 +156,8 @@ int nWait;
 /*  ROM image file information                                       */
 /*-------------------------------------------------------------------*/
 
-char szRomName[ 256 ];
+char szRomPath[ 256 ];
+// char szRomName[ 256 ];
 char szSaveName[ 256 ];
 int nSRAM_SaveFlag;
 uint32 RomSize;
@@ -294,14 +297,23 @@ int LoadSRAM() {
 			unsigned char* readBuffer;
 			int readBufferSize;
 			if (vmufs_read(vmu, sramFilename, (void**)&readBuffer, &readBufferSize) == 0) {
-				printf("VMU: Found SRAM Save File from VMU [%i]\n", i);
-				if (readBufferSize != SRAM_SIZE) {
-					printf("VMU: Warning SRAM size does not match expected size, truncating to 0x2000 bytes\n");
+				vmu_pkg_t package;
+				if (vmu_pkg_parse(readBuffer, &package) == 0) {
+					printf("VMU: Found SRAM Save File from VMU [%i]\n", i);
+
+					unsigned int destLength = 0x2000;
+					int result = BZ2_bzBuffToBuffDecompress((char*)SRAM, &destLength, (char*)package.data, readBufferSize - sizeof(vmu_pkg_t), 0, 0);
+					if (result != BZ_OK) {
+						printf("VMU: bz2 decompress error [%i]\n", result);
+					}
+					loadSRAM_success = 1;				
+					draw_VMU_icon(vmu, vmu_screen_normal);
+				} else {
+					printf("VMU: Package failed CRC check\n");
+					draw_VMU_icon(vmu, vmu_screen_error);
 				}
-				memcpy(SRAM, readBuffer, SRAM_SIZE);
+
 				free(readBuffer);
-				loadSRAM_success = 1;				
-				draw_VMU_icon(vmu, vmu_screen_normal);
 				break;
 			} else {
 				printf("VMU: Unable to load SRAM Save File from VMU [%i]\n", i);
@@ -311,6 +323,9 @@ int LoadSRAM() {
 	}
 	return loadSRAM_success;
 }
+
+#define APP_STRING "FrNES"
+#define APP_VERSION "0.7.0"
 
 int SaveSRAM() {
 	int saveSRAM_success = -1;
@@ -325,16 +340,77 @@ int SaveSRAM() {
 			printf("VMU: Generating filename\n");
 			char sramFilename[13];
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
-			printf("VMU: Saving SRAM as [%s]\n", sramFilename);
-			if (vmufs_write(vmu, sramFilename, SRAM, 0x2000, VMUFS_OVERWRITE) == 0) {
-				printf("VMU: Saved SRAM Save File to VMU [%i]\n", i);
-				saveSRAM_success = 1;
-				draw_VMU_icon(vmu, vmu_screen_normal);
+
+			printf("VMU: Compressing SRAM buffer\n");
+			const unsigned char compressedBuffer[0x2200 + 600];
+			unsigned int compressedLength = 0x2200 + 600;
+			int result = BZ2_bzBuffToBuffCompress((char*)compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 9, 0, 0);
+
+			if (result != BZ_OK) {
+				printf("VMU: bz2 Compression Failed [%i]\n", result);
 				break;
 			} else {
-				printf("VMU: Unable to save SRAM Save File to VMU [%i]\n", i);
-				draw_VMU_icon(vmu, vmu_screen_error);				
-			}		
+				printf("VMU: bz2 Compression Succeeded [%i bytes]\n", compressedLength);
+			}
+
+			printf("VMU: Generating VMU Package\n");
+			vmu_pkg_t package;
+			// Short Description
+			char description[20];
+			snprintf(description, 20, "%s %s SAVE", APP_STRING, APP_VERSION);
+			strcpy(package.desc_short, description);
+
+			// Long Description
+			char long_description[255];
+			char* beginRomName = szRomPath;
+			for (int i = 0; i < strlen(szRomPath); i++) {
+				if (szRomPath[i] == '/') {
+					beginRomName = &(szRomPath[i + 1]);
+				}
+			}
+			strcpy(long_description, beginRomName);
+			for (int i = strlen(long_description); i >= 0; i--) {
+				if (long_description[i] == '.') {
+					long_description[i] = '\0';
+				}
+			}
+			if (strlen(long_description) >= 36) {
+				long_description[35] = '\0';
+			}
+			strcpy(package.desc_long, long_description);
+
+			// App Id
+			snprintf(package.app_id, 20, "%s %s", APP_STRING, APP_VERSION);
+
+			// Final Package Fields
+			package.icon_cnt = 0;
+			package.icon_anim_speed = 0;
+			package.eyecatch_type = VMUPKG_EC_NONE;
+			memset(&package.icon_pal, 0, 16 * 2);
+			package.data_len = compressedLength;
+			package.icon_data = NULL;
+			package.eyecatch_data = NULL;
+			package.data = compressedBuffer;	
+
+			printf("VMU: Compiling Package\n");
+			unsigned char* packageBuffer;
+			int packageBufferLength;
+			if (vmu_pkg_build(&package, &packageBuffer, &packageBufferLength) == 0) {
+				printf("VMU: Saving Package to VMU as [%s]\n", sramFilename);
+				if (vmufs_write(vmu, sramFilename, packageBuffer, packageBufferLength, VMUFS_OVERWRITE) == 0) {
+					printf("VMU: Saved SRAM Save File to VMU [%i]\n", i);
+					saveSRAM_success = 1;
+					draw_VMU_icon(vmu, vmu_screen_normal);
+					break;
+				} else {
+					printf("VMU: Unable to save SRAM Save File to VMU [%i]\n", i);
+					draw_VMU_icon(vmu, vmu_screen_error);				
+				}
+
+				free(packageBuffer);
+			} else {
+				printf("VMU: Error Compiling package\n");
+			}
 		}
 	}
 	return saveSRAM_success;
@@ -396,20 +472,20 @@ void initVQTextures() {
 
 bool checkForAutoROM() {
 	bool autoromPresent = false;
-	memset(szRomName, 0, 256);
+	memset(szRomPath, 0, 256);
 	file_t autoromFileHandle = fs_open("/rd/autorom.txt", O_RDONLY);
 	if (autoromFileHandle != -1) {
 		printf("AutoROM: autorom.txt found\n");
-		if (fs_read(autoromFileHandle, szRomName, 256) > 0) {
-			for (int i = 0; i < strlen(szRomName); i++) {
-				if (szRomName[i] == '\n') {
-					szRomName[i] = (char)NULL;
+		if (fs_read(autoromFileHandle, szRomPath, 256) > 0) {
+			for (int i = 0; i < strlen(szRomPath); i++) {
+				if (szRomPath[i] == '\n') {
+					szRomPath[i] = '\0';
 				}
 			}
-			printf("AutoROM: file specified [%s]\n", szRomName);
+			printf("AutoROM: file specified [%s]\n", szRomPath);
 			fs_close(autoromFileHandle);
 
-			file_t romFileHandle = fs_open(szRomName, O_RDONLY);
+			file_t romFileHandle = fs_open(szRomPath, O_RDONLY);
 			if (romFileHandle != -1){
 				struct stat fileStat;
 				if (fs_fstat(romFileHandle, &fileStat) == 0) {
@@ -458,7 +534,7 @@ int main()
 	printf("Initializing VQ Textures\n");
 	initVQTextures();
 
-	printf("Initializing Controllers\n");	
+	printf("Initializing Controllers and VMUs\n");	
 	initialize_controllers();
 
 	GUI_BGColor = 0xFF0080FF;
@@ -646,8 +722,8 @@ int main()
 		draw_screen();
 
 		if (AutoROM) {
-			printf("main: loading rom [%s]\n", szRomName);
-			if (pNesX_Load(szRomName, RomSize) == 0) {
+			printf("main: loading rom [%s]\n", szRomPath);
+			if (pNesX_Load(szRomPath, RomSize) == 0) {
 				//Load Its SaveRAM
 				if (SRAM_Enabled) {
 					LoadSRAM();

@@ -209,9 +209,10 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 			(selected_string[selected_string_length - 3] == 'n') && 
 			(selected_string[selected_string_length - 2] == 'e') && 
 			(selected_string[selected_string_length - 1] == 's')) {
-			printf("main: loading rom [%s]\n", myRomInfos[mydata.Highlighted_Index].PhysFileName);
-			if (pNesX_Load(myRomInfos[mydata.Highlighted_Index].PhysFileName, myRomInfos[mydata.Highlighted_Index].FileSize) == 0)
-			{
+			uint32 romFileSize = myRomInfos[mydata.Highlighted_Index].FileSize;
+			strcpy(szRomPath, myRomInfos[mydata.Highlighted_Index].PhysFileName);
+			printf("main: loading rom [%s]\n", szRomPath);
+			if (pNesX_Load(szRomPath, romFileSize) == 0) {
 				//Load Its SaveRAM
 				if (SRAM_Enabled) {
 					LoadSRAM();

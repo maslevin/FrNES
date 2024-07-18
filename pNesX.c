@@ -402,6 +402,9 @@ int pNesX_Reset()
   // Clear RAM
   memset( RAM, 0, sizeof RAM );
 
+  // Clear SRAM
+  memset( SRAM, 0, sizeof SRAM );
+
   // Reset frame skip and frame count
   FrameSkip = *opt_FrameSkip;
   FrameCnt = 0;
@@ -414,6 +417,8 @@ int pNesX_Reset()
 
   // Reset APU register
   memset( APU_Reg, 0, sizeof APU_Reg );
+
+  
 
   // Reset joypad
   PAD1_Latch = PAD2_Latch = ExitCount = 0;
