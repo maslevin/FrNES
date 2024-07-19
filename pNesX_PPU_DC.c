@@ -79,10 +79,9 @@ void pNesX_DrawLine()
 				bool spriteZeroPixel = ((pSprBuf[index] & 0x100) != 0);
 				if ((index < 255) && spriteZeroPixel && (*pPoint != 0)) {
 					SpriteJustHit = ppuinfo.PPU_Scanline;
-				}				
-				if (spritePixel && 
-					((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
-				) {					
+				}
+				// If the pixel value is set, and either 1) the priority bit is set or 2) the background is set to a transparent pixel
+				if (spritePixel && ((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))) {
 					*pPoint = (spritePixel & 0xf) + 0x10;
 				}
 				pPoint++;
@@ -90,9 +89,7 @@ void pNesX_DrawLine()
 		} else {
 			for (index = 0; index < 256; index++) {
 				unsigned char spritePixel = pSprBuf[index] & 0xff;
-				if (spritePixel && 
-					((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))
-				) {
+				if (spritePixel && ((spritePixel & 0x80) || ((*pPoint % 4 == 0) && (*pPoint <= 0x1c)))) {
 					*pPoint = (spritePixel & 0xf) + 0x10;
 				}
 				pPoint++;
