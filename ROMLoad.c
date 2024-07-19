@@ -93,18 +93,6 @@ int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 		printf("StartFileSearch: directory opened successfully\n");
 		numberOfRoms = 0;
 		currentindex = 0;
-
-/*
-		if (strstr(Path, "/rd/") != NULL) {
-			strcpy(RomInfoArray[currentindex].FileName, ".");
-			currentindex++;
-			numberOfRoms++;	
-			strcpy(RomInfoArray[currentindex].FileName, "..");
-			currentindex++;
-			numberOfRoms++;			
-		}
-*/
-
 		return 1;
 	}
 };
@@ -137,7 +125,6 @@ int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path) {
 		} else if (strstr(my_dir -> name, ".nes") != NULL) {
 			RomInfoArray[currentindex].FileSize = my_dir -> size;
 			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
-			// PhysFileName, necessary?
 			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);
 			strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
 			RomInfoArray[currentindex].IsRead = 1;

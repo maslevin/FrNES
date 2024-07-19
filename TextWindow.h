@@ -13,6 +13,9 @@ Description: A set of functions to draw a text window suitable for a GUI
 #include <string.h>
 #include "font.h"
 
+#define CORNER_TRIANGLES 16
+#define CORNER_RADIUS 16
+
 typedef struct
 {
 	//Visual Style Options

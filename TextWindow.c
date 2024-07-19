@@ -290,9 +290,6 @@ void win_draw_checktext(BMF_Character* font, uint16 textcolor, uint16 bgcolor, u
 }
 */
 
-#define CORNER_TRIANGLES 16
-#define CORNER_RADIUS 16
-
 void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float width, float height, float corner_radius, uint32 color) {
 	pvr_poly_hdr_t hdr;
 	pvr_poly_cxt_t cxt;
@@ -501,9 +498,9 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 			if ((text != NULL) && (text[0] != '\0')) {
 				//printf("win_draw_textwindow: drawing regular line of text\n");						
 				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
-					draw_string(windata -> font, list, windata -> Data_Strings[i], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
 				} else {
-					draw_string(windata -> font, list, windata -> Data_Strings[i], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
 				}
 				yposition += (windata -> font -> fontHeight * winstyle -> Text_Scale);
 			}

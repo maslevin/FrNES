@@ -81,7 +81,7 @@ void setup_file_browser_screen()
 	mystyle.Left_Margin = 15;
 	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
 	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
+	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale) - (2 * CORNER_RADIUS)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
 	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
 	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
 
@@ -116,8 +116,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 		(keyhit == 0) && 
 		(mydata.Highlighted_Index < (mydata.Num_Strings - 1))) {
 		mydata.Highlighted_Index++;
-		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
+		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items) {
 			mydata.Top_Index++;
+		}
 		keyhit = 1;			
 	}
 
@@ -126,8 +127,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 		(keyhit == 0) &&	
 		(mydata.Highlighted_Index > 0)) {
 		mydata.Highlighted_Index--;
-		if (mydata.Top_Index > mydata.Highlighted_Index)
+		if (mydata.Top_Index > mydata.Highlighted_Index) {
 			mydata.Top_Index--;
+		}
 		keyhit = 1;
 	}
 	
@@ -162,7 +164,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 			// Set root device selection
 			if (strlen(current_directory_path) <= 4) {
 				romselstatus = FILEBROWSER_ROOT_MENU;				
-				mydata.Header_Text = "Open File";//Main_Options[0];
+				mydata.Header_Text = "Open File";
 				mydata.Data_Strings = ROOT_PATHS;
 				mydata.Num_Strings = NUM_ROOT_PATHS;
 				mydata.Highlighted_Index = 0;
@@ -186,13 +188,11 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 		char* selected_string = mydata.Data_Strings[mydata.Highlighted_Index];
 		uint32 selected_string_length = strlen(selected_string);
 		// pressed on .. - go up a level
-		if (strcmp(selected_string, ".") == 0) {
-			//DO NOTHING
-		} else if (strcmp(selected_string, "..") == 0) {
+		if (strcmp(selected_string, "..") == 0) {
 			// Set root device selection
 			if (strlen(current_directory_path) <= 4) {
 				romselstatus = FILEBROWSER_ROOT_MENU;				
-				mydata.Header_Text = "Open File";//Main_Options[0];
+				mydata.Header_Text = "Open File";
 				mydata.Data_Strings = ROOT_PATHS;
 				mydata.Num_Strings = NUM_ROOT_PATHS;
 			} else {
@@ -209,6 +209,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 			(selected_string[selected_string_length - 3] == 'n') && 
 			(selected_string[selected_string_length - 2] == 'e') && 
 			(selected_string[selected_string_length - 1] == 's')) {
+
+			//TODO: functionalitze this so that it's not in 2 places
+
 			uint32 romFileSize = myRomInfos[mydata.Highlighted_Index].FileSize;
 			strcpy(szRomPath, myRomInfos[mydata.Highlighted_Index].PhysFileName);
 			printf("main: loading rom [%s]\n", szRomPath);
@@ -268,10 +271,11 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 			}			
 			break;
 		case FILEBROWSER_CONTINUE_LISTING_DIRECTORY:
-			if (LoadNextFileSimple(myRomInfos, current_directory_path) != 1)
+			if (LoadNextFileSimple(myRomInfos, current_directory_path) != 1) {
 				romselstatus = FILEBROWSER_DIRECTORY_LISTING_COMPLETE;
-			else
+			} else {
 				mydata.Num_Strings = ReturnCurrentNumRoms();
+			}
 			break;
 		case FILEBROWSER_DIRECTORY_LISTING_COMPLETE:
 			EndFileSearch();
