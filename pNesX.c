@@ -673,18 +673,26 @@ void pNesX_Cycle() {
 	handle_dmc_synchronization(CYCLES_PER_LINE);
 
 	// Scanline 0-239
-	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++)
-	{
-		do_scroll_setup = ((PPU_R1 & 0x10) || (PPU_R1 & 0x08));
+	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++) {
 
-		//Do Scroll Setup even if we aren't drawing the frame
-		if (do_scroll_setup) {
-			ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
+		pNesX_DrawLine();
+
+		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
+			// Set a sprite hit flag
+			PPU_R2 |= R2_HIT_SP;
+
+			// NMI is required if there is necessity
+			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+				NMI_REQ;
 		}
 
-		// Account for rendering even if we aren't drawing the frame
-		if (do_scroll_setup)
-		{
+		K6502_Step(CYCLES_PER_LINE);
+		handle_dmc_synchronization(CYCLES_PER_LINE);	
+
+		//Do Scroll Setup even if we aren't drawing the frame
+		if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
+			ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
+
 			if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) /* is subtile y offset == 7? */
 			{
 				ppuinfo.PPU_Addr &= 0x8FFF; /* subtile y offset = 0 */
@@ -712,19 +720,6 @@ void pNesX_Cycle() {
 			}
 		}
 
-		pNesX_DrawLine();
-
-		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-			// Set a sprite hit flag
-			PPU_R2 |= R2_HIT_SP;
-
-			// NMI is required if there is necessity
-			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-				NMI_REQ;
-		}
-
-		K6502_Step(CYCLES_PER_LINE);
-		handle_dmc_synchronization(CYCLES_PER_LINE);		
 		MapperHSync();
 	}
 

@@ -70,11 +70,11 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	}
 
 	// Calculate the sprites to draw on the next scanline
-	uint32 NextPPUScanline = ppuinfo.PPU_Scanline + 1;
+//	uint32 NextPPUScanline = ppuinfo.PPU_Scanline + 1;
 	for ( unsigned char spriteIndex = 0; spriteIndex < 64; spriteIndex++) {
 		pSPRRAM = SPRRAM + (spriteIndex << 2);
 		nY = pSPRRAM[ SPR_Y ];
-		if ((nY > NextPPUScanline) || ((nY + ppuinfo.PPU_SP_Height) <= NextPPUScanline))
+		if ((nY > ppuinfo.PPU_Scanline) || ((nY + ppuinfo.PPU_SP_Height) <= ppuinfo.PPU_Scanline))
 			continue;  // This sprite is not active on the next scanline, skip to next one
 
 		if (NumSpritesToDrawNextScanline < 8) {
@@ -101,7 +101,7 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
 
-			nY = pSPRRAM[ SPR_Y ];
+			nY = pSPRRAM[ SPR_Y ] + 1;
 			nAttr = pSPRRAM[ SPR_ATTR ];
 			nYBit = ppuinfo.PPU_Scanline - nY;
 			nYBit = ( nAttr & SPR_ATTR_V_FLIP ) ? ( ppuinfo.PPU_SP_Height - nYBit - 1) : nYBit;
