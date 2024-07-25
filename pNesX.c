@@ -39,6 +39,7 @@ unsigned char SRAM[ SRAM_SIZE ];
 extern unsigned char *ROM;
 
 /* ROM BANK ( 8Kb * 4 ) */
+unsigned char *ROMBANK_LO; // 0x6000
 unsigned char *ROMBANK0;
 unsigned char *ROMBANK1;
 unsigned char *ROMBANK2;

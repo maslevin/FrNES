@@ -28,6 +28,7 @@
 #include "Mapper_7.h"
 #include "Mapper_9.h"
 #include "Mapper_30.h"
+#include "Mapper_69.h"
 
 /*-------------------------------------------------------------------*/
 /*  Table of Mapper initialize function                              */
@@ -129,5 +130,52 @@ MapperTable Mappers[] = {
 			.hsync = Mapper_0_HSync		
 		}
 	},
+	{ 31, NULL },
+	{ 32, NULL },
+	{ 33, NULL },
+	{ 34, NULL },
+	{ 35, NULL },
+	{ 36, NULL },
+	{ 37, NULL }, 
+	{ 38, NULL },
+	{ 39, NULL },
+	{ 40, NULL },
+	{ 41, NULL },
+	{ 42, NULL },
+	{ 43, NULL },
+	{ 44, NULL },
+	{ 45, NULL },
+	{ 46, NULL },
+	{ 47, NULL },
+	{ 48, NULL },
+	{ 49, NULL },
+	{ 50, NULL },
+	{ 51, NULL },
+	{ 52, NULL },
+	{ 53, NULL },
+	{ 54, NULL },
+	{ 55, NULL },
+	{ 56, NULL },
+	{ 57, NULL }, 
+	{ 58, NULL },
+	{ 59, NULL },
+	{ 60, NULL },
+	{ 61, NULL },
+	{ 62, NULL },
+	{ 63, NULL },
+	{ 64, NULL },
+	{ 65, NULL },
+	{ 66, NULL },
+	{ 67, NULL },
+	{ 68, NULL },
+	{
+		69, &(struct Mapper) { 
+			.init = Mapper_69_Init, 
+			.write = Mapper_69_Write,
+			.read = Mapper_0_Read,
+			.vsync = Mapper_0_VSync,
+			.hsync = Mapper_69_HSync		
+		} 
+	},	
 	{ -1, NULL }
 };
