@@ -25,6 +25,7 @@
 #include "Mapper_2.h"
 #include "Mapper_3.h"
 #include "Mapper_4.h"
+#include "Mapper_5.h"
 #include "Mapper_7.h"
 #include "Mapper_9.h"
 #include "Mapper_30.h"

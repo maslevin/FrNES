@@ -134,14 +134,6 @@
 #define BRA(a)  if ( a ) { VIRPC; wA0 = PC; PC += (char)(*pPC); CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); ++PC; REALPC; } else { ++pPC; CLK( 2 ); }
 #define JMP(a)  PC = a; REALPC;
 
-#if 0
-#define REALPC  if ( PC != PredPC ) { PredPC = PC; switch ( PC >> 13 ) { case 0x0: pPC_Offset = RAM - ( PC & 0xf800 ); break; case 0x3: pPC_Offset = SRAM - ( PC & 0xe000 ); break; case 0x4: pPC_Offset = ROMBANK0 - ( PC & 0xe000 ); break; case 0x5: pPC_Offset = ROMBANK1 - ( PC & 0xe000 ); break; case 0x6: pPC_Offset = ROMBANK2 - ( PC & 0xe000 ); break; case 0x7: pPC_Offset = ROMBANK3 - ( PC & 0xe000 ); break; } pPC = pPC_Offset + PC; } else pPC = pPC_Offset + PC;
-#else
-#define REALPC  pPC_Offset = BankTable[ PC >> 13 ] - ( PC & BankMask[ PC >> 13 ] ); pPC = pPC_Offset + PC;
-#endif
-
-#define VIRPC   PC = pPC - pPC_Offset;
-
 /*-------------------------------------------------------------------*/
 /*  Global valiables                                                 */
 /*-------------------------------------------------------------------*/
