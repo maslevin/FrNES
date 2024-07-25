@@ -124,23 +124,21 @@ inline unsigned char K6502_Read( uint16 wAddr )
     } break;
 
     case 0x4000:  /* Sound */
-      if ( wAddr == 0x4016 )
-      {
+      if ( wAddr == 0x4016 ) {
         // Set Joypad1 data
         byRet = (unsigned char)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
         PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
         return byRet;
-      }
-      else
-      if ( wAddr == 0x4017 )
-      {
+      } else if ( wAddr == 0x4017 ) {
         // Set Joypad2 data
         byRet = (unsigned char)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
         PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
         return byRet;
+      } else if ( wAddr <= 0x4017) {
+		      return audio_read(wAddr);
+      } else {
+          return mapper -> read(wAddr);
       }
-      else
-		    return audio_read(wAddr);
 	  break;
       // The other sound registers are not readable.
 
@@ -338,9 +336,21 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           }
           break;
 		    default:
-          APU_Reg[ wAddr & 0x1f ] = byData;
-          if (*opt_SoundEnabled) {
-            audio_write(wAddr, byData);
+          if (wAddr > 0x4017) {
+            mapper -> write (wAddr, byData);
+
+            // Set Bank Table
+            VIRPC;
+            BankTable[ 4 ] = ROMBANK0;
+            BankTable[ 5 ] = ROMBANK1;
+            BankTable[ 6 ] = ROMBANK2;
+            BankTable[ 7 ] = ROMBANK3;
+            REALPC;                
+          } else {
+            APU_Reg[ wAddr & 0x1f ] = byData;
+            if (*opt_SoundEnabled) {
+              audio_write(wAddr, byData);
+            }
           }
           break;
       }

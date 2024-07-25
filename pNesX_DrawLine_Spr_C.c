@@ -5,6 +5,7 @@
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
 #include "Mapper.h"
+#include "Mapper_5.h"
 #include "pNesX_System_DC.h"
 
 extern PPU_Info ppuinfo;
@@ -29,6 +30,10 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	if ( PPU_R1 & R1_SHOW_SP ) {
 		// Reset Scanline Sprite Count
 		PPU_R2 &= ~R2_MAX_SP;
+
+		if (MapperNo == 5) {
+			Mapper_5_PPU_Latch_RenderScreen(0, 0);
+		}
 
 		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
 			nY = pSPRRAM[ SPR_Y ];

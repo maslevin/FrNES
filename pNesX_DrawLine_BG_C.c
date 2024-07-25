@@ -2,6 +2,7 @@
 #include "macros.h"
 
 #include "pNesX.h"
+#include "Mapper_5.h"
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
 
@@ -30,6 +31,10 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
+
+	if (MapperNo == 5) {
+		Mapper_5_PPU_Latch_RenderScreen(1, 0);
+	}
 
 	unsigned char nameTableValue = *pbyNameTable;
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);

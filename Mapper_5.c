@@ -26,6 +26,7 @@ unsigned char Mapper_5_split_bank;
 extern uint32 currentCRC32;
 
 void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
+//	printf("Map5_set_WRAM_bank: %u, %u\n", page, bank);    
 	if (bank != 8) {
 		if(Mapper_5_wram_size == 1) bank = (bank > 3) ? 8 : 0;
 		if(Mapper_5_wram_size == 2) bank = (bank > 3) ? 1 : 0;
@@ -35,90 +36,82 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 	Mapper_5_wb[page] = bank;
 
 	if (bank != 8) {
-		VIRPC;
-		BankTable[page] = Mapper_5_wram + (bank * 0x2000);
-		REALPC;
+//        printf("Setting ROM Page [%u] to WRAM Bank [%u]\n", page, bank);
+        switch (page) {
+            case 4:
+                ROMBANK0 = &Mapper_5_wram[(bank * 0x2000)]; 
+                break;
+            case 5:
+                ROMBANK1 = &Mapper_5_wram[(bank * 0x2000)]; 
+                break;            
+            case 6:
+                ROMBANK2 = &Mapper_5_wram[(bank * 0x2000)]; 
+                break;            
+            case 7:
+                ROMBANK3 = &Mapper_5_wram[(bank * 0x2000)]; 
+                break;
+        }
 	}
 }
 
 void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
-//	printf("MMC5_set_CPU_bank: %i, %i\n", page, bank);
+	printf("Map5_set_CPU_bank: %u, %u\n", page, bank);
 	if (bank & 0x80) {
 		switch (Mapper_5_prg_size) {
 			case 0:
 				if (page == 7) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7C));
-					BankTable[5] = ROMPAGE((bank & 0x7C)+1);
-					BankTable[6] = ROMPAGE((bank & 0x7C)+2);
-					BankTable[7] = ROMPAGE((bank & 0x7C)+3);
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7C));
+					ROMBANK1 = ROMPAGE((bank & 0x7C)+1);
+					ROMBANK2 = ROMPAGE((bank & 0x7C)+2);
+					ROMBANK3 = ROMPAGE((bank & 0x7C)+3);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = Mapper_5_wb[6] = 8;
 				}
 				break;
 			case 1:
 				if (page == 5) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7E));
-					BankTable[5] = ROMPAGE((bank & 0x7E)+1);				
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7E));
+					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 7) {
-					VIRPC;
-					BankTable[6] = ROMPAGE((bank & 0x7E));
-					BankTable[7] = ROMPAGE((bank & 0x7E)+1);
-					REALPC;
+					ROMBANK2 = ROMPAGE((bank & 0x7E));
+					ROMBANK3 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[6] = 8;
 				}			
 				break;
 			case 2:
 				if (page == 5) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7E));
-					BankTable[5] = ROMPAGE((bank & 0x7E)+1);						
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7E));
+					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
-					VIRPC;
-					BankTable[6] = ROMPAGE((bank & 0x7F));
-					REALPC;				
+					ROMBANK2 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
-					VIRPC;
-					BankTable[7] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 			case 3:
 				if (page == 4) {
-					VIRPC;
-					BankTable[4] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK0 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[4] = 8;
 				}
 				if (page == 5) {
-					VIRPC;
-					BankTable[5] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK1 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
-					VIRPC;
-					BankTable[6] = ROMPAGE((bank & 0x7F));
-					REALPC;				
+					ROMBANK2 = ROMPAGE((bank & 0x7F));			
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
-					VIRPC;
-					BankTable[7] = ROMPAGE((bank & 0x7F));
-					REALPC;
+					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 		}
-	} else {
+	} else {     
 		switch (Mapper_5_prg_size) {
 			case 1:
 				if (page == 5) {
@@ -153,6 +146,7 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 }
 
 void Mapper_5_Sync_Chr_Banks(unsigned char mode) {
+//	printf("Map5_Sync_Chr_Bank: %u\n", mode);    
 	switch (Mapper_5_chr_size) {
 		case 0:
 			PPUBANK[0] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8);
@@ -201,26 +195,26 @@ void Mapper_5_Sync_Chr_Banks(unsigned char mode) {
 }
 
 unsigned char Mapper_5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
-  unsigned char ex_pal = 0;
+    unsigned char ex_pal = 0;
 
-  if (Mapper_5_gfx_mode == 1 && mode == 1) {
-    // ex gfx mode
-    unsigned char * nametable2 = PPUBANK[NAME_TABLE2];
-    uint32 bank = (nametable2[addr] & 0x3F) << 2;
-	PPUBANK[0] = VROMPAGE(bank);
-	PPUBANK[1] = VROMPAGE(bank + 1);
-	PPUBANK[2] = VROMPAGE(bank + 2);
-	PPUBANK[3] = VROMPAGE(bank + 3);
-	PPUBANK[4] = VROMPAGE(bank);
-	PPUBANK[5] = VROMPAGE(bank + 1);
-	PPUBANK[6] = VROMPAGE(bank + 2);
-	PPUBANK[7] = VROMPAGE(bank + 3);	
-    ex_pal = ((nametable2[addr] & 0xC0) >> 4) | 0x01;
-  } else {
-    // normal
-    Mapper_5_Sync_Chr_Banks(mode);
-  }
-  return ex_pal;
+    if (Mapper_5_gfx_mode == 1 && mode == 1) {
+        // ex gfx mode
+        unsigned char * nametable2 = PPUBANK[NAME_TABLE2];
+        uint32 bank = (nametable2[addr] & 0x3F) << 2;
+        PPUBANK[0] = VROMPAGE(bank);
+        PPUBANK[1] = VROMPAGE(bank + 1);
+        PPUBANK[2] = VROMPAGE(bank + 2);
+        PPUBANK[3] = VROMPAGE(bank + 3);
+        PPUBANK[4] = VROMPAGE(bank);
+        PPUBANK[5] = VROMPAGE(bank + 1);
+        PPUBANK[6] = VROMPAGE(bank + 2);
+        PPUBANK[7] = VROMPAGE(bank + 3);	
+        ex_pal = ((nametable2[addr] & 0xC0) >> 4) | 0x01;
+    } else {
+        // normal
+        Mapper_5_Sync_Chr_Banks(mode);
+    }
+    return ex_pal;
 }
 
 /*-------------------------------------------------------------------*/
@@ -296,14 +290,17 @@ void Mapper_5_Init() {
 	Mapper_5_irq_line = 0;
 
 	Mapper_5_split_control = 0;
-	Mapper_5_split_bank = 0;	
+	Mapper_5_split_bank = 0;
+
+    /* Set up wiring of the interrupt pin */
+    K6502_Set_Int_Wiring( 1, 1 );    
 }
 
 /*-------------------------------------------------------------------*/
 /*  Mapper 5 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
-//	printf("Map5_Write: $%04X, %02X\n", wAddr, byData);	
+	printf("Map5_Write: $%04X, %02X\n", wAddr, byData);	
 	uint32 i;
 
 	switch(wAddr) {
@@ -328,13 +325,13 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		} break;
 
 		case 0x5105: {
-			PPUBANK[0x8] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			PPUBANK[ NAME_TABLE0 ] = &PPURAM[ (NAME_TABLE0 + (byData & 0x03)) * 0x400 ];
 			byData >>= 2;			
-			PPUBANK[0x9] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			PPUBANK[ NAME_TABLE1 ] = &PPURAM[ (NAME_TABLE0 + (byData & 0x03)) * 0x400 ];
 			byData >>= 2;			
-			PPUBANK[0xA] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			PPUBANK[ NAME_TABLE2 ] = &PPURAM[ (NAME_TABLE0 + (byData & 0x03)) * 0x400 ];
 			byData >>= 2;			
-			PPUBANK[0xB] = PPURAM + (0x400 * (NAME_TABLE0 + (byData & 0x03)));
+			PPUBANK[ NAME_TABLE3 ] = &PPURAM[ (NAME_TABLE0 + (byData & 0x03)) * 0x400 ];
 		} break;
 
 		case 0x5106: {
@@ -414,8 +411,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 			Mapper_5_value1 = byData;
 		} break;
 
-		default:
-		{
+		default: {
 			if (wAddr >= 0x5000 && wAddr <= 0x5015) {
 //	MS - TODO: Add Expansion Audio Support				
 //				parent_NES->apu->ExWrite(addr, data);
@@ -443,6 +439,39 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 			}
 		} break;
 	}
+}
+
+/*-------------------------------------------------------------------*/
+/*  Mapper 5 Read Function                                           */
+/*-------------------------------------------------------------------*/
+unsigned char Mapper_5_Read( uint16 wAddr ) {
+    printf("Map5_Read: $%04X\n", wAddr);
+    uint8 ret = (uint8)(wAddr >> 8);
+    switch (wAddr) {
+        case 0x5204: {
+            ret = Mapper_5_irq_status;
+            Mapper_5_irq_status &= ~0x80;
+        } break;
+
+        case 0x5205: {
+            ret = (uint8)((Mapper_5_value0 * Mapper_5_value1) & 0x00FF);
+        } break;
+
+        case 0x5206: {
+            ret = (uint8)(((Mapper_5_value0 * Mapper_5_value1) & 0xFF00) >> 8);
+        } break;
+
+        default: {
+            if ((wAddr >= 0x5C00) && (wAddr <=0x5FFF)) {
+                if (Mapper_5_gfx_mode == 2 || Mapper_5_gfx_mode == 3) {
+                    uint8* nametable2 = PPUBANK[NAME_TABLE2];
+                    ret = nametable2[wAddr & 0x3FF];
+                }                
+            }
+        } break;
+    }
+
+    return ret;
 }
 
 /*-------------------------------------------------------------------*/

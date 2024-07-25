@@ -28,7 +28,7 @@
 typedef struct Mapper {
 	void (*init)();
 	void (*write)( uint16 wAddr, unsigned char byData );
-	uint16 (*read)( uint16 wAddr );
+	unsigned char (*read)( uint16 wAddr );
 	void (*vsync)();
 	void (*hsync)();
 } Mapper;

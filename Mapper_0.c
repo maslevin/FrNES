@@ -43,7 +43,7 @@ void Mapper_0_Init() {
 /*-------------------------------------------------------------------*/
 /*  Mapper 0 Write Function                                          */
 /*-------------------------------------------------------------------*/
-uint16 Mapper_0_Read( uint16 wAddr ) {
+unsigned char Mapper_0_Read( uint16 wAddr ) {
 	return (wAddr >> 8);
 }
 
