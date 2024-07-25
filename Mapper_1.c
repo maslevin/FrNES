@@ -78,11 +78,11 @@ void Mapper_1_Init() {
     Mapper_1_bank3 = Mapper_1_HI1;
     Mapper_1_bank4 = Mapper_1_HI2;
 
-    Mapper_1_set_CPU_banks();
+    Mapper_1_Set_CPU_Banks();
 
     /* Set PPU VROM Banks */
     if ( NesHeader.byVRomSize > 0 ) {
-        for ( nPage = 0; nPage < 8; ++nPage )
+        for ( int nPage = 0; nPage < 8; ++nPage )
             PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
     }
 
@@ -149,7 +149,7 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                         if (Mapper_1_regs[0] & 0x08) {
                             Mapper_1_256K_base |= ((Mapper_1_regs[2] & 0x10) >> 3);
                         }
-                        Mapper_1_set_CPU_banks();
+                        Mapper_1_Set_CPU_Banks();
                         Mapper_1_swap = 0;
                     } else {
                         Mapper_1_swap = 1;
@@ -269,7 +269,7 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                 }
             }
 
-            Mapper_1_set_CPU_banks();
+            Mapper_1_Set_CPU_Banks();
         } break;
     }
 }
