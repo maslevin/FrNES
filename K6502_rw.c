@@ -8,6 +8,7 @@
 /*===================================================================*/
 
 #include "K6502_rw.h"
+#include "Mapper.h"
 #include "pNesX_Sound_APU.h"
 #include "macros.h"
 
@@ -363,7 +364,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
     case 0xc000:  /* ROM BANK 2 */
     case 0xe000:  /* ROM BANK 3 */
       // Write to Mapper
-      MapperWrite( wAddr, byData );
+      mapper -> write( wAddr, byData );
       
       // Set Bank Table
       VIRPC;

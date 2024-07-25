@@ -208,19 +208,6 @@ extern uint32 PAD2_Bit;
 #define PAD_PUSH(a,b)  ( ( (a) & (b) ) != 0 )
 
 /*-------------------------------------------------------------------*/
-/*  Mapper Function                                                  */
-/*-------------------------------------------------------------------*/
-
-/* Initialize Mapper */
-extern void (*MapperInit)();
-/* Write to Mapper */
-extern void (*MapperWrite)( uint16 wAddr, unsigned char byData );
-/* Callback at VSync */
-extern void (*MapperVSync)();
-/* Callback at HSync */
-extern void (*MapperHSync)();
-
-/*-------------------------------------------------------------------*/
 /*  ROM information                                                  */
 /*-------------------------------------------------------------------*/
 
@@ -239,6 +226,7 @@ struct NesHeader_tag
 extern struct NesHeader_tag NesHeader;
 
 /* Mapper No. */
+extern struct Mapper* mapper;
 extern unsigned char MapperNo;
 
 /* Other */

@@ -17,7 +17,7 @@
 #include "pNesX_DrawLine_BG_C.h"
 #include "pNesX_DrawLine_Spr_C.h"
 #include "pNesX_Utils.h"
-#include "pNesX_Mapper.h"
+#include "Mapper.h"
 
 extern VQ_Texture* WorkFrame;
 extern unsigned char* Scanline_Buffer;

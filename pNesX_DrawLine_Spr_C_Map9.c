@@ -5,7 +5,8 @@
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
 #include "pNesX_System_DC.h"
-#include "pNesX_mapper.h"
+#include "Mapper.h"
+#include "Mapper_9.h"
 
 extern PPU_Info ppuinfo;
 extern int SpriteJustHit;
@@ -60,7 +61,7 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 						case 0x0FD8:
 						case 0x0FE8:
 //							printf("Sprite #%u\n", (pSPRRAM - SPRRAM) / 4);
-							Map9_PPU_Latch_FDFE(nesaddr);
+							Mapper_9_PPU_Latch_FDFE(nesaddr);
 							break;
 						default:
 							nesaddr+=8;
@@ -68,7 +69,7 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 								case 0x0FD8:
 								case 0x0FE8:
 //									printf("Sprite #%u\n", (pSPRRAM - SPRRAM) / 4);							
-									Map9_PPU_Latch_FDFE(nesaddr);
+									Mapper_9_PPU_Latch_FDFE(nesaddr);
 									break;
 							}
 					}
@@ -195,7 +196,7 @@ uint16 pNesX_Map9Simulate_Spr_C()
 			{
 				if((((nesaddr) & 0x0FF0) == 0x0FD0) || (((nesaddr) & 0x0FF0) == 0x0FE0))
 				{
-					Map9_PPU_Latch_FDFE(nesaddr);
+					Mapper_9_PPU_Latch_FDFE(nesaddr);
 				}
 			}
 

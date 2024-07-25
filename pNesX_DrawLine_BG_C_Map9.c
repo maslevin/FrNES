@@ -3,9 +3,9 @@
 
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
-//#include "pNesX_System_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
-#include "pNesX_mapper.h"
+#include "Mapper.h"
+#include "Mapper_9.h"
 
 extern PPU_Info ppuinfo;
 
@@ -69,7 +69,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 		case 0x1FED:
 		case 0x1FEE:
 		case 0x1FEF:		
-			Map9_PPU_Latch_FDFE(nesaddr);
+			Mapper_9_PPU_Latch_FDFE(nesaddr);
 			break;
 		default:
 			nesaddr += 8;
@@ -90,7 +90,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 				case 0x1FED:
 				case 0x1FEE:
 				case 0x1FEF:		
-					Map9_PPU_Latch_FDFE(nesaddr);
+					Mapper_9_PPU_Latch_FDFE(nesaddr);
 					break;
 			}
 			break;
@@ -149,7 +149,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 			case 0x1FED:
 			case 0x1FEE:
 			case 0x1FEF:		
-				Map9_PPU_Latch_FDFE(nesaddr);
+				Mapper_9_PPU_Latch_FDFE(nesaddr);
 				break;
 			default:
 				nesaddr += 8;
@@ -170,7 +170,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 					case 0x1FED:
 					case 0x1FEE:
 					case 0x1FEF:		
-						Map9_PPU_Latch_FDFE(nesaddr);
+						Mapper_9_PPU_Latch_FDFE(nesaddr);
 						break;
 				}
 				break;
@@ -235,7 +235,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 		case 0x1FED:
 		case 0x1FEE:
 		case 0x1FEF:		
-			Map9_PPU_Latch_FDFE(nesaddr);
+			Mapper_9_PPU_Latch_FDFE(nesaddr);
 			break;
 		default:
 			nesaddr += 8;
@@ -256,7 +256,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 				case 0x1FED:
 				case 0x1FEE:
 				case 0x1FEF:		
-					Map9_PPU_Latch_FDFE(nesaddr);
+					Mapper_9_PPU_Latch_FDFE(nesaddr);
 					break;
 			}
 			break;

@@ -4,9 +4,8 @@
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
-#include "pNesX_mapper.h"
+#include "Mapper.h"
 #include "pNesX_System_DC.h"
-#include "pNesX_mapper.h"
 
 extern PPU_Info ppuinfo;
 extern unsigned char pSprBuf[];
@@ -27,13 +26,11 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	unsigned char byData1;
 	unsigned char byData2;
 	
-	if ( PPU_R1 & R1_SHOW_SP )
-	{
+	if ( PPU_R1 & R1_SHOW_SP ) {
 		// Reset Scanline Sprite Count
 		PPU_R2 &= ~R2_MAX_SP;
 
-		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 )
-		{
+		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
 			nY = pSPRRAM[ SPR_Y ];
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
 				continue;  // Next sprite
@@ -81,38 +78,53 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 				if ( pbyChrData[ 7 ] ) {
 					pSprBuf[ nX + 0 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 7 ];
 				}
-				if ( pbyChrData[ 6 ] )
+				if ( pbyChrData[ 6 ] ) {
 					pSprBuf[ nX + 1 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 6 ];
-				if ( pbyChrData[ 5 ] )
+				}
+				if ( pbyChrData[ 5 ] ) {
 					pSprBuf[ nX + 2 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 5 ];
-				if ( pbyChrData[ 4 ] )
+				}
+				if ( pbyChrData[ 4 ] ) {
 					pSprBuf[ nX + 3 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 4 ];
-				if ( pbyChrData[ 3 ] )
+				}
+				if ( pbyChrData[ 3 ] ) {
 					pSprBuf[ nX + 4 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 3 ];
-				if ( pbyChrData[ 2 ] )
+				}
+				if ( pbyChrData[ 2 ] ) {
 					pSprBuf[ nX + 5 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 2 ];
-				if ( pbyChrData[ 1 ] )
+				}
+				if ( pbyChrData[ 1 ] ) {
 					pSprBuf[ nX + 6 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 1 ];
-				if ( pbyChrData[ 0 ] )
+				}
+				if ( pbyChrData[ 0 ] ) {
 					pSprBuf[ nX + 7 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 0 ];
+				}
 			} else {
 				// Non flip
-				if ( pbyChrData[ 0 ] )
+				if ( pbyChrData[ 0 ] ) {
 					pSprBuf[ nX + 0 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 0 ];
-				if ( pbyChrData[ 1 ] )
+				}
+				if ( pbyChrData[ 1 ] ) {
 					pSprBuf[ nX + 1 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 1 ];
-				if ( pbyChrData[ 2 ] )
+				}
+				if ( pbyChrData[ 2 ] ) {
 					pSprBuf[ nX + 2 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 2 ];
-				if ( pbyChrData[ 3 ] )
+				}
+				if ( pbyChrData[ 3 ] ) {
 					pSprBuf[ nX + 3 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 3 ];
-				if ( pbyChrData[ 4 ] )
+				}
+				if ( pbyChrData[ 4 ] ) {
 					pSprBuf[ nX + 4 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 4 ];
-				if ( pbyChrData[ 5 ] )
+				}
+				if ( pbyChrData[ 5 ] ) {
 					pSprBuf[ nX + 5 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 5 ];
-				if ( pbyChrData[ 6 ] )
+				}
+				if ( pbyChrData[ 6 ] ) {
 					pSprBuf[ nX + 6 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 6 ];
-				if ( pbyChrData[ 7 ] )
+				}
+				if ( pbyChrData[ 7 ] ) {
 					pSprBuf[ nX + 7 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 7 ];
+				}
 			}
 		}	
 
