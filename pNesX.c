@@ -17,7 +17,7 @@
 
 #include "pNesX.h"
 #include "pNesX_System.h"
-#include "pNesX_Mapper.h"
+#include "Mapper.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Sound_APU.h"
 #include "pNesX_PPU_DC.h"
@@ -164,29 +164,6 @@ uint32 PollCount;
 uint32 PollSkip;
 
 /*-------------------------------------------------------------------*/
-/*  Profiling Information ->  May 6th, 2001                          */
-/*-------------------------------------------------------------------*/
-//uint32 NES_CPU_Natural_Speed = 1789773;
-//uint32 pNesX_Last_Clocks;
-//uint32 pNesX_CPU_Clocks;
-//uint32 NES_CPU_Natural_Frames = 60;
-//uint32 pNesX_Last_Frames;
-//uint32 pNesX_Frames;
-
-/*-------------------------------------------------------------------*/
-/*  Mapper Function                                                  */
-/*-------------------------------------------------------------------*/
-
-/* Initialize Mapper */
-void (*MapperInit)();
-/* Write to Mapper */
-void (*MapperWrite)( uint16 wAddr, unsigned char byData );
-/* Callback at VSync */
-void (*MapperVSync)();
-/* Callback at HSync */
-void (*MapperHSync)();
-
-/*-------------------------------------------------------------------*/
 /*  ROM information                                                  */
 /*-------------------------------------------------------------------*/
 
@@ -195,6 +172,7 @@ struct NesHeader_tag NesHeader;
 
 /* Mapper Number */
 unsigned char MapperNo;
+Mapper* mapper;
 
 /* Mirroring 0:Horizontal 1:Vertical */
 unsigned char ROM_Mirroring;
@@ -291,17 +269,13 @@ void pNesX_Init()
 /*                pNesX_Fin() : Completion treatment                 */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Fin()
-{
+void pNesX_Fin() {
 /*
  *  Completion treatment
  *
  *  Remarks
  *    Release resources
  */
-
-  // Release a memory for ROM
-//  pNesX_ReleaseRom();
 	audio_shutdown();
 }
 
@@ -311,8 +285,7 @@ void pNesX_Fin()
 /*                  pNesX_Load() : Load a cassette                   */
 /*                                                                   */
 /*===================================================================*/
-int pNesX_Load( const char *filepath, uint32 filesize )
-{
+int pNesX_Load( const char *filepath, uint32 filesize ) {
 /*
  *  Load a cassette
  *
@@ -328,9 +301,6 @@ int pNesX_Load( const char *filepath, uint32 filesize )
  *    Read a ROM image in the memory. 
  *    Reset pNesX.
  */
-
-  // Release a memory for ROM
-//  pNesX_ReleaseRom();
 
   // Read a ROM image in the memory
   if ( pNesX_ReadRom( filepath, filesize ) < 0 )
@@ -349,8 +319,7 @@ int pNesX_Load( const char *filepath, uint32 filesize )
 /*                 pNesX_Reset() : Reset pNesX                       */
 /*                                                                   */
 /*===================================================================*/
-int pNesX_Reset()
-{
+int pNesX_Reset() {
 /*
  *  Reset pNesX
  *
@@ -363,110 +332,99 @@ int pNesX_Reset()
  *    Reset CPU.
  */
 
-  int nIdx;
+	int nIdx;
 
-  /*-------------------------------------------------------------------*/
-  /*  Get information on the cassette                                  */
-  /*-------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------*/
+	/*  Get information on the cassette                                  */
+	/*-------------------------------------------------------------------*/
 
-  // Get Mapper Number
-  MapperNo = NesHeader.byInfo1 >> 4;
+	// Get Mapper Number
+	MapperNo = NesHeader.byInfo1 >> 4;
 
-  // Check bit counts of Mapper No.
-  for ( nIdx = 4; nIdx < 8 && NesHeader.byReserve[ nIdx ] == 0; ++nIdx )
-    ;
+	// Check bit counts of Mapper No.
+	for ( nIdx = 4; nIdx < 8 && NesHeader.byReserve[ nIdx ] == 0; ++nIdx );
 
-  if ( nIdx == 8 )
-  {
-    // Mapper Number is 8bits
-    MapperNo |= ( NesHeader.byInfo2 & 0xf0 );
-  }
+	if ( nIdx == 8 ) {
+		// Mapper Number is 8bits
+		MapperNo |= ( NesHeader.byInfo2 & 0xf0 );
+	}
 
-  // Get information on the ROM
-  if (NesHeader.byInfo1 & 0x08)
-	  ROM_Mirroring = 2; // 4 screen mirroring
-  else
-  if (NesHeader.byInfo1 & 0x01)
-	  ROM_Mirroring = 1; // Vertical mirroring
-  else
-      ROM_Mirroring = 0; // Horizontal mirroring
+	// Get information on the ROM
+	if (NesHeader.byInfo1 & 0x08)
+		ROM_Mirroring = 2; // 4 screen mirroring
+	else if (NesHeader.byInfo1 & 0x01)
+		ROM_Mirroring = 1; // Vertical mirroring
+	else
+		ROM_Mirroring = 0; // Horizontal mirroring
 
-  ROM_SRAM = NesHeader.byInfo1 & 2;
-  ROM_Trainer = NesHeader.byInfo1 & 4;
-  ROM_FourScr = NesHeader.byInfo1 & 8;
+	ROM_SRAM = NesHeader.byInfo1 & 2;
+	ROM_Trainer = NesHeader.byInfo1 & 4;
+	ROM_FourScr = NesHeader.byInfo1 & 8;
 
-  /*-------------------------------------------------------------------*/
-  /*  Initialize resources                                             */
-  /*-------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------*/
+	/*  Initialize resources                                             */
+	/*-------------------------------------------------------------------*/
 
-  // Clear RAM
-  memset( RAM, 0, sizeof RAM );
+	// Clear RAM
+	memset( RAM, 0, sizeof RAM );
 
-  // Clear SRAM
-  memset( SRAM, 0, sizeof SRAM );
+	// Clear SRAM
+	memset( SRAM, 0, sizeof SRAM );
 
-  // Reset frame skip and frame count
-  FrameSkip = *opt_FrameSkip;
-  FrameCnt = 0;
+	// Reset frame skip and frame count
+	FrameSkip = *opt_FrameSkip;
+	FrameCnt = 0;
 
-  PollSkip = 6;
-  PollCount = 0;
+	PollSkip = 6;
+	PollCount = 0;
 
-  // Reset palette table
-  memset( PalTable, 0, sizeof PalTable );
+	// Reset palette table
+	memset( PalTable, 0, sizeof PalTable );
 
-  // Reset APU register
-  memset( APU_Reg, 0, sizeof APU_Reg );
+	// Reset APU register
+	memset( APU_Reg, 0, sizeof APU_Reg );
 
-  
+	// Reset joypad
+	PAD1_Latch = PAD2_Latch = ExitCount = 0;
+	PAD1_Bit = PAD2_Bit = 0;
 
-  // Reset joypad
-  PAD1_Latch = PAD2_Latch = ExitCount = 0;
-  PAD1_Bit = PAD2_Bit = 0;
+	/*-------------------------------------------------------------------*/
+	/*  Initialize PPU                                                   */
+	/*-------------------------------------------------------------------*/
+	pNesX_SetupPPU();
+	WorkFrameIdx = 0;
+	WorkFrame = PVR_NESScreen1_Offset;
 
-  /*-------------------------------------------------------------------*/
-  /*  Initialize PPU                                                   */
-  /*-------------------------------------------------------------------*/
-  pNesX_SetupPPU();
-  WorkFrameIdx = 0;
-  WorkFrame = PVR_NESScreen1_Offset;
+	/*-------------------------------------------------------------------*/
+	/*  Initialize Mapper                                                */
+	/*-------------------------------------------------------------------*/
 
-  /*-------------------------------------------------------------------*/
-  /*  Initialize Mapper                                                */
-  /*-------------------------------------------------------------------*/
+	// Get Mapper Table Index
+	printf("Looking for Support for Mapper [%i]\n", MapperNo);
+	for ( nIdx = 0; Mappers[ nIdx ].nMapperNo != -1; ++nIdx ) {
+		if ( Mappers[ nIdx ].nMapperNo == MapperNo )
+			break;
+	}
 
-  // Get Mapper Table Index
-  printf("Looking for Support for Mapper [%i]\n", MapperNo);
-  for ( nIdx = 0; MapperTable[ nIdx ].nMapperNo != -1; ++nIdx )
-  {
-    if ( MapperTable[ nIdx ].nMapperNo == MapperNo )
-      break;
-  }
+	if (( Mappers[ nIdx ].nMapperNo == -1 ) || (Mappers[nIdx].mapper == NULL)) {
+		// Non support mapper
+		return -1;
+	} else {
+		printf("Mapper [%i] Supported\n", Mappers[ nIdx ].nMapperNo);
+		mapper = Mappers[nIdx].mapper;
+	}
 
-  if (( MapperTable[ nIdx ].nMapperNo == -1 ) || (MapperTable[nIdx].pMapperInit == NULL))
-  {
-    // Non support mapper
-    return -1;
-  } else {
-	printf("Mapper [%i] Supported\n", MapperTable[ nIdx ].nMapperNo);
-  }
+	// Call mapper initialization function
+	mapper -> init();
 
-  // Set up a mapper initialization function
-  MapperTable[ nIdx ].pMapperInit();
+	/*-------------------------------------------------------------------*/
+	/*  Reset CPU                                                        */
+	/*-------------------------------------------------------------------*/
 
-  /*-------------------------------------------------------------------*/
-  /*  Reset CPU                                                        */
-  /*-------------------------------------------------------------------*/
+	K6502_Reset();
 
-  K6502_Reset();
-/*
-  pNesX_CPU_Clocks = 0;
-  pNesX_Last_Clocks = 0;
-  pNesX_Frames = 0;
-  pNesX_Last_Frames = 0;*/
-
-  // Successful
-  return 0;
+	// Successful
+	return 0;
 }
 
 /*===================================================================*/
@@ -474,8 +432,7 @@ int pNesX_Reset()
 /*                pNesX_SetupPPU() : Initialize PPU                  */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_SetupPPU()
-{
+void pNesX_SetupPPU() {
 /*
  *  Initialize PPU
  *
@@ -527,8 +484,7 @@ void pNesX_SetupPPU()
 /*       pNesX_Mirroring() : Set up a Mirroring of Name Table        */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Mirroring( int nType )
-{
+void pNesX_Mirroring( int nType ) {
 /*
  *  Set up a Mirroring of Name Table
  *
@@ -551,50 +507,28 @@ void pNesX_Mirroring( int nType )
 	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 3 ] * 0x400 ];
 }
 
-void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4)
-{
+void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 	PPUBANK[ NAME_TABLE0 ] = &PPURAM[ (NAME_TABLE0 + bank1) * 0x400 ];
 	PPUBANK[ NAME_TABLE1 ] = &PPURAM[ (NAME_TABLE0 + bank2) * 0x400 ];
 	PPUBANK[ NAME_TABLE2 ] = &PPURAM[ (NAME_TABLE0 + bank3) * 0x400 ];
 	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ (NAME_TABLE0 + bank4) * 0x400 ];
 }
 
-/*
-static void
-timer_handler(irq_t source, irq_context_t *context, void* data)
-{
-	Auto_Frames++;
-}
-*/
-
 /*===================================================================*/
 /*                                                                   */
 /*              pNesX_Main() : The main loop of pNesX                */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Main()
-{
+void pNesX_Main() {
 	pNesX_Init();
 
 	// Initialize pNesX
 	if (*opt_SoundEnabled) {
 		// Start Sound Emu
 		DC_SoundInit();
-
 		timer_spin_sleep(40);
-
 		*start = 0xFFFFFFFF;
 	}
-
-/*
-    if ( *opt_AutoFrameSkip ) {
-		//Set TMU2 at 60Hz, using interrupts
-		timer_prime(TMU2, 60, 1);
-		irq_set_handler(EXC_TMU2_TUNI2, timer_handler, NULL);
-		timer_start(TMU2);
-		Auto_Frames = 1;
-	}
-*/
 
 	// Main loop
 	while ( 1 ) {
@@ -632,13 +566,6 @@ void pNesX_Main()
 			}
 		}
 	}
-
-/*
-	if (*opt_AutoFrameSkip) {
-		timer_stop(TMU2);
-		irq_set_handler(EXC_TMU2_TUNI2, NULL, NULL);
-	}
-*/
 
 	if (*opt_SoundEnabled) {
 		spu_shutdown();
@@ -687,7 +614,8 @@ void pNesX_Cycle() {
 		}
 
 		K6502_Step(CYCLES_PER_LINE);
-		handle_dmc_synchronization(CYCLES_PER_LINE);	
+		handle_dmc_synchronization(CYCLES_PER_LINE);
+		mapper -> hsync();
 
 		//Do Scroll Setup even if we aren't drawing the frame
 		if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
@@ -719,8 +647,6 @@ void pNesX_Cycle() {
 				ppuinfo.PPU_Addr += 0x1000; /* next subtile y offset */
 			}
 		}
-
-		MapperHSync();
 	}
 
 	pNesX_LoadFrame();
@@ -746,11 +672,11 @@ void pNesX_Cycle() {
 	}
 	K6502_Step(CYCLES_PER_LINE);
 	handle_dmc_synchronization(CYCLES_PER_LINE);	
-	MapperHSync();
+	mapper -> hsync();
 	if (!(*opt_AutoFrameSkip))
 		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
 	pNesX_VSync();
-	MapperVSync();
+	mapper -> vsync();
 
 	// Scanline 241
 	ppuinfo.PPU_Scanline = 241;
@@ -766,14 +692,14 @@ void pNesX_Cycle() {
 	K6502_DoNMI();
 	K6502_Step(CYCLES_PER_LINE - 1);
 	handle_dmc_synchronization(CYCLES_PER_LINE);	
-	MapperHSync();
+	mapper -> hsync();
 
 	// Scanline 242-260
 	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++)
 	{
 		K6502_Step(CYCLES_PER_LINE);
 		handle_dmc_synchronization(CYCLES_PER_LINE);		
-		MapperHSync();
+		mapper -> hsync();
 	}
 
 	// 87 Cycles is the remainder of the cycles from doing ALL the scanlines on the screen at 133.33 CPU cycles per scanline

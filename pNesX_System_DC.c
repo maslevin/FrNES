@@ -216,8 +216,7 @@ uint16 MakeRGB(int red, int green, int blue) {
 	return ((red << 10 | green << 5 | blue << 0) | 0x8000);
 }
 
-void draw_screen()
-{
+void draw_screen() {
 	//printf("draw_screen: begin\n");
 	pvr_poly_hdr_t my_pheader;
 	pvr_poly_cxt_t my_cxt;
@@ -511,8 +510,7 @@ bool checkForAutoROM() {
 /*                dc_main() : Application main                       */
 /*                                                                   */
 /*===================================================================*/
-int main()
-{
+int main() {
 	printf("Starting Main\n");
 	cont_state_t* my_state;
 	log_enabled = false;

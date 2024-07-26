@@ -4,9 +4,8 @@
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
-#include "pNesX_mapper.h"
+#include "Mapper.h"
 #include "pNesX_System_DC.h"
-#include "pNesX_mapper.h"
 
 extern PPU_Info ppuinfo;
 extern unsigned char pSprBuf[];

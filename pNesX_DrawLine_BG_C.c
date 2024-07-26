@@ -51,26 +51,23 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );	
 
-	for (index = ppuinfo.PPU_Scr_H_Bit; index < 8; index++)
-	{
+	for (index = ppuinfo.PPU_Scr_H_Bit; index < 8; index++) {
 		*(pPoint++) = pPalTbl + pbyCharData[index];
 	}
 
 	nX++;
 
 	// crossing a name table boundary
-	if (!(nX & 0x001f))
-	{
+	if (!(nX & 0x001f)) {
 		nNameTable ^= NAME_TABLE_H_MASK;
 		nX = 0;
 		pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
 		pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-	}
-	else
+	} else {
 		pbyNameTable++;
+	}
 
-	for (nIdx = 1; nIdx < 32; nIdx++)
-	{
+	for (nIdx = 1; nIdx < 32; nIdx++) {
 		nameTableValue = *pbyNameTable;
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
@@ -102,15 +99,14 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		nX++;
 
 		// are we crossing a name table boundary?
-		if(!(nX & 0x001F))
-		{
+		if (!(nX & 0x001F)) {
 			nNameTable ^= NAME_TABLE_H_MASK;
 			nX = 0;
 			pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
 			pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-		}
-		else
+		} else {
 			pbyNameTable++;
+		}
 	}
 
 	nameTableValue = *pbyNameTable;
@@ -130,8 +126,7 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	pbyCharData = patternData;
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
-	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++)
-	{
+	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++) {
 		*(pPoint++) = pPalTbl + pbyCharData[index];
 	}
 
