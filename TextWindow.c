@@ -482,7 +482,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 			windata -> x + winstyle -> Left_Margin,
 			windata -> y + 15.0f,
 			35.0f,
-			windata -> width,
+			windata -> width - (2 * winstyle -> Left_Margin),
 			windata -> height,
 			SINGLE,
 			LEFT,
@@ -498,9 +498,9 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 			if ((text != NULL) && (text[0] != '\0')) {
 				//printf("win_draw_textwindow: drawing regular line of text\n");						
 				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
-					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin), windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
 				} else {
-					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin), windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
 				}
 				yposition += (windata -> font -> fontHeight * winstyle -> Text_Scale);
 			}

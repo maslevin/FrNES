@@ -82,8 +82,9 @@ void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffe
 //Start the Search Process
 int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 	printf("StartFileSearch: beginning search\n");
+
 	//Reset CD drive to look for new rom CD..
-//	fs_iso9660_init();
+	//fs_iso9660_init();
 
 	my_file = fs_open(Path, O_DIR);
 	if (my_file == -1) {
@@ -111,10 +112,10 @@ int ReturnCurrentNumRoms() {
 
 //Loads a fileinfo
 int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path) {
-	printf("LoadNextFileSimple: reading directory\n");	
+//	printf("LoadNextFileSimple: reading directory\n");	
 	my_dir = fs_readdir(my_file);
 	if (my_dir != NULL) {
-		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
+//		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
 		if (my_dir -> attr & 0x1000) {
 			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
 			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);

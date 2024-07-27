@@ -14,15 +14,16 @@
 #include "pNesX_Utils.h"
 #include "pNesX.h"
 
+#include <fat/fs_fat.h>
+
 //Help for the ROM loading screen
 char* Rom_Keys[] = {
-	"Rom Select Screen",
-	"A - Sel",
+	"A - Select",
 	"B - Back",
-//	"X - Identify",
-	"DPAD - Scroll", 
-	"LTrig - PgUp",
-	"RTrig - PgDn"
+	"Up - Scroll Up",
+	"Down - Scroll Down",
+	"LT - Page Up",
+	"RT - Page Down"
 };
 const int Num_Rom_Keys = 6;
 
@@ -44,19 +45,60 @@ char* myRomStrings[2048];
 #define FILEBROWSER_DEVICE_PC 3
 uint32 filebrowser_device = FILEBROWSER_DEVICE_UNKNOWN;
 
+static kos_blockdev_t sd_dev;
+bool sd_mounted;
+
+bool mount_sd_fat() {
+    uint8 partition_type;
+
+    if(sd_init()) {
+        printf("Could not initialize the SD card. Please make sure that you "
+               "have an SD card adapter plugged in and an SD card inserted.\n");
+        return false;
+    }
+
+    if(fs_fat_init()) {
+        printf("Could not initialize fs_fat!\n");
+        return false;
+    }
+        
+    if(sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
+        printf("Could not find the first partition on the SD card!\n");
+        return false;
+    }
+
+    if(fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
+        printf("Could not mount SD card as fatfs. Please make sure the card "
+            "has been properly formatted.\n");
+        return false;
+    }
+
+    return true;
+}
+
+void unmount_sd_fat() {
+    fs_fat_unmount("/sd");
+    fs_fat_shutdown();
+    sd_shutdown();
+}
+
 char current_directory_path[512];
 char* ROOT_PATHS[] = {
 	"/rd",
-	"/sd",		
 	"/cd",
-	"/pc"
+	"/pc",
+	"/sd"
 };
 const uint32 NUM_ROOT_PATHS = 4;
 
 uint32 invalidb = 0;
 
-void setup_file_browser_screen()
-{
+void setup_file_browser_screen() {
+	uint32 num_root_paths = NUM_ROOT_PATHS;
+	if (!(sd_mounted = mount_sd_fat())) {
+		num_root_paths--;
+	}
+
 	current_directory_path[0] = '/';
 	current_directory_path[1] = '\0';
 
@@ -68,7 +110,7 @@ void setup_file_browser_screen()
 	mydata.font = font;
 	mydata.Header_Text = "Open File";//Main_Options[0];
 	mydata.Data_Strings = ROOT_PATHS;
-	mydata.Num_Strings = NUM_ROOT_PATHS;
+	mydata.Num_Strings = num_root_paths;
 	mydata.Highlighted_Index = 0;
 	mydata.Top_Index = 0;
 
@@ -91,13 +133,14 @@ void setup_file_browser_screen()
 	helpdata.width = 160.0f;
 	helpdata.height = 148.0f;
 	helpdata.font = font;
-	helpdata.Header_Text = " ";
+	helpdata.Header_Text = "Browse";
 	helpdata.Data_Strings = Rom_Keys;
 	helpdata.Num_Strings = Num_Rom_Keys;
 	helpdata.Highlighted_Index = Num_Rom_Keys;
 	helpdata.Top_Index = 0;
 
 	//Set Up Window Style Features
+	helpstyle.Header_Text_Scale = 0.75f;
 	helpstyle.Border_Thickness = 5.0f;
 	helpstyle.Border_Color = GUI_OutsideWindowColor;
 	helpstyle.Inside_Color = GUI_InsideWindowColor;
@@ -109,28 +152,50 @@ void setup_file_browser_screen()
 	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
+#define MAX_KEYHIT_INCREMENT 6
+
 void Handle_File_Browser_Interface(cont_state_t* my_state)
 {
 	//Down Key Hit and Key is Ready to be hit
-	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-		(keyhit == 0) && 
-		(mydata.Highlighted_Index < (mydata.Num_Strings - 1))) {
-		mydata.Highlighted_Index++;
-		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items) {
-			mydata.Top_Index++;
+	if (my_state -> buttons & CONT_DPAD_DOWN) {
+		switch (keyhit) {
+			case 0: {
+				if ((mydata.Highlighted_Index < (mydata.Num_Strings - 1))) {
+					mydata.Highlighted_Index++;
+					if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items) {
+						mydata.Top_Index++;
+					}
+				}
+				keyhit = 1;
+			} break;
+			case 1 ... (MAX_KEYHIT_INCREMENT - 1): {
+				keyhit++;
+			} break;
+			case MAX_KEYHIT_INCREMENT: {			
+				keyhit = 0;
+			} break;
 		}
-		keyhit = 1;			
 	}
 
 	//Up Key Hit and Key is Ready to be hit
-	if ((my_state -> buttons & CONT_DPAD_UP) && 
-		(keyhit == 0) &&	
-		(mydata.Highlighted_Index > 0)) {
-		mydata.Highlighted_Index--;
-		if (mydata.Top_Index > mydata.Highlighted_Index) {
-			mydata.Top_Index--;
+	if (my_state -> buttons & CONT_DPAD_UP) {
+		switch (keyhit) {
+			case 0: {
+				if (mydata.Highlighted_Index > 0) {
+					mydata.Highlighted_Index--;
+					if (mydata.Top_Index > mydata.Highlighted_Index) {
+						mydata.Top_Index--;
+					}
+				}
+				keyhit = 1;
+			} break;
+			case 1 ... (MAX_KEYHIT_INCREMENT - 1): {
+				keyhit++;
+			} break;
+			case MAX_KEYHIT_INCREMENT: {			
+				keyhit = 0;
+			} break;
 		}
-		keyhit = 1;
 	}
 	
 	//Page Down
@@ -159,6 +224,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state)
 		EndFileSearch();
 		if (romselstatus == FILEBROWSER_ROOT_MENU) {
 			setup_main_menu_screen();
+			if (sd_mounted) {
+				unmount_sd_fat();
+			}
 			menuscreen = MENUNUM_MAIN;
 		} else {
 			// Set root device selection
