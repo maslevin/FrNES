@@ -482,7 +482,7 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 			pvr_prim(&hdr, sizeof(hdr));
 
 			//Draw scroll bar right side rect
-			yposition = windata -> y + 15.0 + (windata -> font -> fontHeight * winstyle -> Header_Text_Scale);
+			yposition = windata -> y + 10.0 + (windata -> font -> fontHeight * winstyle -> Header_Text_Scale);
 			float barheight = (winstyle -> Max_Items * windata -> font -> fontHeight * winstyle -> Text_Scale);
 			float xposition = windata -> x + windata -> width - (3 * winstyle -> Border_Thickness);
 			my_vertex.flags = PVR_CMD_VERTEX;
