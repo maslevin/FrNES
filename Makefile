@@ -50,7 +50,7 @@ prepcdidir:
 debug: $(DBGEXE)
 
 $(DBGEXE): $(DBGOBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lpng -lz -lm $(KOS_LIBS)
+	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lpng -lz -lm -lbz2 -lkosfat $(KOS_LIBS)
 
 $(DBGDIR)/%.o: %.c | prepdbgdir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
@@ -64,7 +64,7 @@ $(DBGDIR)/romdisk.o: romdisk.o
 release: $(RELEXE)
 
 $(RELEXE): $(RELOBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(RELEXE) $^ -lpng -lz -lm -lbz2 $(KOS_LIBS)
+	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(RELEXE) $^ -lpng -lz -lm -lbz2 -lkosfat $(KOS_LIBS)
 	$(KOS_STRIP) $(RELEXE)
 	$(KOS_OBJCOPY) -R .stack -O binary $(RELEXE) $(RELBIN)
 
