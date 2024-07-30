@@ -371,173 +371,174 @@ void Op_1E() {
 	ASL( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
-void Op_20 () // JSR Abs
-{
+// JSR Abs
+void Op_20() {
+
 	JSR; CLK( 6 );
 }
 
-void Op_21 () // AND (Zpg,X)
-{
+// AND (Zpg,X)
+void Op_21() {
 	AND( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_24 () // BIT Zpg
-{
+// BIT Zpg
+void Op_24() {
 	BIT( A_ZP ); CLK( 3 );
 }
 
-void Op_25 () // AND Zpg
-{
+// AND Zpg
+void Op_25() {
 	AND( A_ZP ); CLK( 3 );
 }
 
-void Op_26 () // ROL Zpg
-{
+// ROL Zpg
+void Op_26() {
 	ROL( AA_ZP ); CLK( 5 );
 }
 
-void Op_28 () // PLP
-{
+// PLP
+void Op_28() {
 	POP( F ); SETF( FLAG_R ); CLK( 4 );
 }
 
-void Op_29 () // AND #Oper
-{
+// AND #Oper
+void Op_29() {
 	AND( A_IMM ); CLK( 2 );
 }
 
-void Op_2A () // ROL A
-{
+// ROL A
+void Op_2A() {
 	ROLA; CLK( 2 );
 }
 
-void Op_2C () // BIT Abs
-{
+// BIT Abs
+void Op_2C()  {
 	BIT( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_2D () // AND Abs 
-{
+// AND Abs 
+void Op_2D() {
 	AND( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_2E () // ROL Abs
-{
+// ROL Abs
+void Op_2E() {
 	ROL( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
-void Op_30 () // BMI Oper 
-{
+// BMI Oper 
+void Op_30() {
 	BRA( F & FLAG_N );
 }
 
-void Op_31 () // AND (Zpg),Y
-{
+// AND (Zpg),Y
+void Op_31() {
 	AND( A_IY ); CLK( 5 );
 }
 
-void Op_35 () // AND Zpg,X
-{
+// AND Zpg,X
+void Op_35() {
 	AND( A_ZPX ); CLK( 4 );
 }
 
-void Op_36 () // ROL Zpg,X
-{
+// ROL Zpg,X
+void Op_36() {
 	ROL( AA_ZPX ); CLK( 6 );
 }
 
-void Op_38 () // SEC
-{
+// SEC
+void Op_38() {
 	SETF( FLAG_C ); CLK( 2 );
 }
 
-void Op_39 () // AND Abs,Y
-{
+// AND Abs,Y
+void Op_39() {
 	AND( A_ABSY ); CLK( 4 );
 }
 
-void Op_3D () // AND Abs,X
-{
+// AND Abs,X
+void Op_3D() {
 	AND( A_ABSX ); CLK( 4 );
 }
 
-void Op_3E () // ROL Abs,X
-{
+// ROL Abs,X
+void Op_3E() {
 	ROL( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
-void Op_40 () // RTI
-{
+// RTI
+void Op_40() {
 	POP( F ); SETF( FLAG_R ); POPW( PC ); REALPC; CLK( 6 );
 }
 
-void Op_41 () // EOR (Zpg,X)
-{
+// EOR (Zpg,X)
+void Op_41() {
 	EOR( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_45 () // EOR Zpg
-{
+// EOR Zpg
+void Op_45() {
 	EOR( A_ZP ); CLK( 3 );
 }
 
-void Op_46 () // LSR Zpg
-{
+// LSR Zpg
+void Op_46() {
 	LSR( AA_ZP ); CLK( 5 );
 }
 
-void Op_48 () // PHA
-{
+// PHA
+void Op_48() {
 	PUSH( A ); CLK( 3 );
 }
 
-void Op_49 () // EOR #Oper
-{
+// EOR #Oper
+void Op_49() {
 	EOR( A_IMM ); CLK( 2 );
 }
 
-void Op_4A () // LSR A
-{
+// LSR A
+void Op_4A() {
 	LSRA; CLK( 2 );
 }
 
-void Op_4C () // JMP Abs
-{
+// JMP Abs
+void Op_4C() {
 	JMP( AA_ABS ); CLK( 3 );
 }
 
-void Op_4D () // EOR Abs
-{
+// EOR Abs
+void Op_4D() {
 	EOR( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_4E () // LSR Abs
-{
+// LSR Abs
+void Op_4E() {
 	LSR( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
-void Op_50 () // BVC
-{
+// BVC
+void Op_50() {
 	BRA( !( F & FLAG_V ) );
 }
 
-void Op_51 () // EOR (Zpg),Y
-{
+// EOR (Zpg),Y
+void Op_51() {
 	EOR( A_IY ); CLK( 5 );
 }
 
-void Op_55 () // EOR Zpg,X
-{
+// EOR Zpg,X
+void Op_55() {
 	EOR( A_ZPX ); CLK( 4 );
 }
 
-void Op_56 () // LSR Zpg,X
-{
+// LSR Zpg,X
+void Op_56() {
 	LSR( AA_ZPX ); CLK( 6 );
 }
 
-void Op_58 () // CLI
-{
+// CLI
+void Op_58() {
 	byD0 = F;
     RSTF( FLAG_I ); CLK( 2 );
     if ( ( byD0 & FLAG_I ) && IRQ_State == 0 )
@@ -561,504 +562,508 @@ void Op_58 () // CLI
     }
 }
 
-void Op_59 () // EOR Abs,Y
-{
+// EOR Abs,Y
+void Op_59() {
 	EOR( A_ABSY ); CLK( 4 );
 }
 
-void Op_5D () // EOR Abs,X
-{
+// EOR Abs,X
+void Op_5D() {
 	EOR( A_ABSX ); CLK( 4 );
 }
 
-void Op_5E () // LSR Abs,X
-{
+// LSR Abs,X
+void Op_5E() {
 	LSR( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
-void Op_60 () // RTS
-{
+// RTS
+void Op_60() {
 	POPW( PC ); ++PC; REALPC; CLK( 6 );
 }
 
-void Op_61 () // ADC (Zpg,X)
-{
+// ADC (Zpg,X)
+void Op_61() {
 	ADC( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_65 () // ADC Zpg
-{
+// ADC Zpg
+void Op_65() {
 	ADC( A_ZP ); CLK( 3 );
 }
 
-void Op_66 () // ROR Zpg
-{
+// ROR Zpg
+void Op_66() {
 	ROR( AA_ZP ); CLK( 5 );
 }
 
-void Op_68 () // PLA
-{
+// PLA
+void Op_68() {
 	POP( A ); TEST( A ); CLK( 4 );
 }
 
-void Op_69 () // ADC #Oper
-{
+// ADC #Oper
+void Op_69() {
 	ADC( A_IMM ); CLK( 2 );
 }
 
-void Op_6A () // ROR A
-{
+// ROR A
+void Op_6A() {
 	RORA; CLK( 2 );
 }
 
-void Op_6C () // JMP (Abs)
-{
+// JMP (Abs)
+void Op_6C() {
 	JMP( K6502_ReadW( AA_ABS ) ); CLK( 5 );
 }
 
-void Op_6D () // ADC Abs
-{
+// ADC Abs
+void Op_6D() {
 	ADC( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_6E () // ROR Abs
-{
+// ROR Abs
+void Op_6E() {
 	ROR( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
-void Op_70 () // BVS
-{
+// BVS
+void Op_70() {
 	BRA( F & FLAG_V );
 }
-void Op_71 () // ADC (Zpg),Y
-{
+
+// ADC (Zpg),Y
+void Op_71() {
 	ADC( A_IY ); CLK( 5 );
 }
 
-void Op_75 () // ADC Zpg,X
-{
+// ADC Zpg,X
+void Op_75() {
 	ADC( A_ZPX ); CLK( 4 );
 }
 
-void Op_76 () // ROR Zpg,X
-{
+// ROR Zpg,X
+void Op_76() {
 	ROR( AA_ZPX ); CLK( 6 );
 }
 
-void Op_78 () // SEI
-{
+// SEI
+void Op_78() {
 	SETF( FLAG_I ); CLK( 2 );
 }
 
-void Op_79 () // ADC Abs,Y
-{
+// ADC Abs,Y
+void Op_79() {
 	ADC( A_ABSY ); CLK( 4 );
 }
 
-void Op_7D () // ADC Abs,X
-{
+// ADC Abs,X
+void Op_7D() {
     ADC( A_ABSX ); CLK( 4 );
 }
 
-void Op_7E () // ROR Abs,X
-{
+// ROR Abs,X
+void Op_7E() {
 	ROR( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
-void Op_81 () // STA (Zpg,X)
-{
+// STA (Zpg,X)
+void Op_81() {
 	STA( AA_IX ); ++pPC; CLK( 6 );
 }
       
-void Op_84 () // STY Zpg
-{
+ // STY Zpg
+void Op_84() {
 	STY( AA_ZP ); CLK( 3 );
 }
 
-void Op_85 () // STA Zpg
-{
+// STA Zpg
+void Op_85() {
 	STA( AA_ZP ); CLK( 3 );
 }
 
-void Op_86 () // STX Zpg
-{
+// STX Zpg
+void Op_86() {
 	STX( AA_ZP ); CLK( 3 );
 }
 
-void Op_88 () // DEY
-{
+// DEY
+void Op_88() {
 	--Y; TEST( Y ); CLK( 2 );
 }
 
-void Op_8A () // TXA
-{
+// TXA
+void Op_8A() {
 	A = X; TEST( A ); CLK( 2 );
 }
 
-void Op_8C () // STY Abs
-{
+// STY Abs
+void Op_8C() {
 	STY( AA_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_8D () // STA Abs
-{
+// STA Abs
+void Op_8D() {
 	STA( AA_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_8E () // STX Abs
-{
+// STX Abs
+void Op_8E() {
 	STX( AA_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_90 () // BCC
-{
+// BCC
+void Op_90() {
 	BRA( !( F & FLAG_C ) );
 }
 
-void Op_91 () // STA (Zpg),Y
-{
+// STA (Zpg),Y
+void Op_91() {
 	STA( AA_IY ); ++pPC; CLK( 6 );
 }
 
-void Op_94 () // STY Zpg,X
-{
+// STY Zpg,X
+void Op_94() {
 	STY( AA_ZPX ); CLK( 4 );
 }
 
-void Op_95 () // STA Zpg,X
-{
+// STA Zpg,X
+void Op_95() {
 	STA( AA_ZPX ); CLK( 4 );
 }
 
-void Op_96 () // STX Zpg,Y
-{
+// STX Zpg,Y
+void Op_96() {
 	STX( AA_ZPY ); CLK( 4 );
 }
 
-void Op_98 () // TYA
-{
+// TYA
+void Op_98() {
 	A = Y; TEST( A ); CLK( 2 );
 }
 
-void Op_99 () // STA Abs,Y
-{
+// STA Abs,Y
+void Op_99() {
 	STA( AA_ABSY ); pPC += 2; CLK( 5 );
 }
 
-void Op_9A () // TXS
-{
+// TXS
+void Op_9A() {
 	SP = X; CLK( 2 );
 }
 
-void Op_9D () // STA Abs,X
-{
+// STA Abs,X
+void Op_9D() {
 	STA( AA_ABSX ); pPC += 2; CLK( 5 );
 }
 
-void Op_A0 () // LDY #Oper
-{
+// LDY #Oper
+void Op_A0() {
 	LDY( A_IMM ); CLK( 2 );
 }
 
-void Op_A1 () // LDA (Zpg,X)
-{
+// LDA (Zpg,X)
+void Op_A1() {
 	LDA( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_A2 () // LDX #Oper
-{
+// LDX #Oper
+void Op_A2() {
 	LDX( A_IMM ); CLK( 2 );
 }
 
-void Op_A4 () // LDY Zpg
-{
+// LDY Zpg
+void Op_A4() {
 	LDY( A_ZP ); CLK( 3 );
 }
 
-void Op_A5 () // LDA Zpg
-{
+// LDA Zpg
+void Op_A5() {
 	LDA( A_ZP ); CLK( 3 );
 }
 
-void Op_A6 () // LDX Zpg
-{
+// LDX Zpg
+void Op_A6() {
 	LDX( A_ZP ); CLK( 3 );
 }
 
-void Op_A8 () // TAY
-{
+// TAY
+void Op_A8() {
 	Y = A; TEST( A ); CLK( 2 );
 }
 
-void Op_A9 () // LDA #Oper
-{
+// LDA #Oper
+void Op_A9() {
 	LDA( A_IMM ); CLK( 2 );
 }
 
-void Op_AA () // TAX
-{
+// TAX
+void Op_AA() {
 	X = A; TEST( A ); CLK( 2 );
 }
 
-void Op_AC () // LDY Abs
-{
+// LDY Abs
+void Op_AC() {
 	LDY( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_AD () // LDA Abs
-{
+// LDA Abs
+void Op_AD() {
 	LDA( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_AE () // LDX Abs
-{
+// LDX Abs
+void Op_AE() {
 	LDX( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_B0 () // BCS
-{
+// BCS
+void Op_B0() {
 	BRA( F & FLAG_C );
 }
 
-void Op_B1 () // LDA (Zpg),Y
-{
+// LDA (Zpg),Y
+void Op_B1() {
 	LDA( A_IY ); CLK( 5 );
 }
 
-void Op_B4 () // LDY Zpg,X
-{
+// LDY Zpg,X
+void Op_B4() {
 	LDY( A_ZPX ); CLK( 4 );
 }
 
-void Op_B5 () // LDA Zpg,X
-{
+// LDA Zpg,X
+void Op_B5() {
 	LDA( A_ZPX ); CLK( 4 );
 }
 
-void Op_B6 () // LDX Zpg,Y
-{
+// LDX Zpg,Y
+void Op_B6() {
 	LDX( A_ZPY ); CLK( 4 );
 }
-void Op_B8 () // CLV
-{
+
+// CLV
+void Op_B8() {
 	RSTF( FLAG_V ); CLK( 2 );
 }
 
-void Op_B9 () // LDA Abs,Y
-{
+// LDA Abs,Y
+void Op_B9() {
 	LDA( A_ABSY ); CLK( 4 );
 }
 
-void Op_BA () // TSX
-{
+// TSX
+void Op_BA() {
 	X = SP; TEST( X ); CLK( 2 );
 }
 
-void Op_BC () // LDY Abs,X
-{
+// LDY Abs,X
+void Op_BC() {
 	LDY( A_ABSX ); CLK( 4 );
 }
 
-void Op_BD () // LDA Abs,X
-{
+// LDA Abs,X
+void Op_BD() {
 	LDA( A_ABSX ); CLK( 4 );
 }
 
-void Op_BE () // LDX Abs,Y
-{
+// LDX Abs,Y
+void Op_BE() {
 	LDX( A_ABSY ); CLK( 4 );
 }
 
-void Op_C0 () // CPY #Oper
-{
+// CPY #Oper
+void Op_C0() {
 	CPY( A_IMM ); CLK( 2 );
 }
 
-void Op_C1 () // CMP (Zpg,X)
-{
+// CMP (Zpg,X)
+void Op_C1() {
 	CMP( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_C4 () // CPY Zpg
-{
+// CPY Zpg
+void Op_C4() {
 	CPY( A_ZP ); CLK( 3 );
 }
 
-void Op_C5 () // CMP Zpg
-{
+// CMP Zpg
+void Op_C5() {
 	CMP( A_ZP ); CLK( 3 );
 }
 
-void Op_C6 () // DEC Zpg
-{
+// DEC Zpg
+void Op_C6() {
 	DEC( AA_ZP ); CLK( 5 );
 }
 
-void Op_C8 () // INY
-{
+// INY
+void Op_C8() {
 	++Y; TEST( Y ); CLK( 2 );
 }
 
-void Op_C9 () // CMP #Oper
-{
+// CMP #Oper
+void Op_C9() {
 	CMP( A_IMM ); CLK( 2 );
 }
 
-void Op_CA () // DEX
-{
+// DEX
+void Op_CA() {
 	--X; TEST( X ); CLK( 2 );
 }
 
-void Op_CC () // CPY Abs
-{
+// CPY Abs
+void Op_CC() {
 	CPY( A_ABS ); pPC += 2; CLK( 4 );
 }
-void Op_CD () // CMP Abs
-{
+
+// CMP Abs
+void Op_CD() {
 	CMP( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_CE () // DEC Abs
-{
+// DEC Abs
+void Op_CE() {
 	DEC( AA_ABS ); pPC += 2;CLK( 6 );
 }
 
-void Op_D0 () // BNE
-{
+// BNE
+void Op_D0() {
 	BRA( !( F & FLAG_Z ) );
 }
 
-void Op_D1 () // CMP (Zpg),Y
-{
+// CMP (Zpg),Y
+void Op_D1() {
 	CMP( A_IY ); CLK( 5 );
 }
 
-void Op_D5 () // CMP Zpg,X
-{
+// CMP Zpg,X
+void Op_D5 () {
 	CMP( A_ZPX ); CLK( 4 );
 }
         
-void Op_D6 () // DEC Zpg,X
-{
+// DEC Zpg,X
+void Op_D6() {
 	DEC( AA_ZPX ); CLK( 6 );
 }
 
-void Op_D8 () // CLD
-{
+// CLD
+void Op_D8() {
 	RSTF( FLAG_D ); CLK( 2 );
 }
 
-void Op_D9 () // CMP Abs,Y
-{
+// CMP Abs,Y
+void Op_D9() {
 	CMP( A_ABSY ); CLK( 4 );
 }
 
-void Op_DD () // CMP Abs,X
-{
+// CMP Abs,X
+void Op_DD() {
 	CMP( A_ABSX ); CLK( 4 );
 }
 
-void Op_DE () // DEC Abs,X
-{
+// DEC Abs,X
+void Op_DE() {
 	DEC( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
-void Op_E0 () // CPX #Oper
-{
+// CPX #Oper
+void Op_E0() {
 	CPX( A_IMM ); CLK( 2 );
 }
 
-void Op_E1 () // SBC (Zpg,X)
-{
+// SBC (Zpg,X)
+void Op_E1() {
 	SBC( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_E4 () // CPX Zpg
-{
+// CPX Zpg
+void Op_E4() {
 	CPX( A_ZP ); CLK( 3 );
 }
 
-void Op_E5 () // SBC Zpg
-{
+// SBC Zpg
+void Op_E5() {
 	SBC( A_ZP ); CLK( 3 );
 }
 
-void Op_E6 () // INC Zpg
-{
+// INC Zpg
+void Op_E6() {
 	INC( AA_ZP ); CLK( 5 );
 }
 
-void Op_E8 () // INX
-{
+// INX 
+void Op_E8() {
 	++X; TEST( X ); CLK( 2 );
 }
-void Op_E9 () // SBC #Oper
-{
+
+// SBC #Oper
+void Op_E9() {
 	SBC( A_IMM ); CLK( 2 );
 }
 
-void Op_EA () // NOP
-{
+// NOP
+void Op_EA() {
 	CLK( 2 );
 }
 
-void Op_EC () // CPX Abs
-{
+// CPX Abs
+void Op_EC() {
 	CPX( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_ED () // SBC Abs
-{
+// SBC Abs
+void Op_ED() {
 	SBC( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_EE () // INC Abs
-{
+// INC Abs
+void Op_EE() {
 	INC( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
-void Op_F0 () // BEQ
-{
+// BEQ
+void Op_F0() {
 	BRA( F & FLAG_Z );
 }
 
-void Op_F1 () // SBC (Zpg),Y
-{
+// SBC (Zpg),Y
+void Op_F1() {
 	SBC( A_IY ); CLK( 5 );
 }
 
-void Op_F5 () // SBC Zpg,X
-{
+// SBC Zpg,X
+void Op_F5() {
 	SBC( A_ZPX ); CLK( 4 );
 }
 
-void Op_F6 () // INC Zpg,X
-{
+// INC Zpg,X
+void Op_F6() {
 	INC( AA_ZPX ); CLK( 6 );
 }
 
-void Op_F8 () // SED
-{
+// SED
+void Op_F8() {
 	SETF( FLAG_D ); CLK( 2 );
 }
 
-void Op_F9 () // SBC Abs,Y
-{
+// SBC Abs,Y
+void Op_F9() {
 	SBC( A_ABSY ); CLK( 4 );
 }
 
-void Op_FD () // SBC Abs,X
-{
+// SBC Abs,X
+void Op_FD() {
 	SBC( A_ABSX ); CLK( 4 );
 }
 
-void Op_FE () // INC Abs,X
-{
+// INC Abs,X
+void Op_FE() {
 	INC( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
-void Op_XX () // Unknown Instruction
-{
+// Unknown Instruction
+void Op_XX() {
 	printf("WARNING: RUNNING UNDOCUMENTED INSTRUCTION - HALTING\n");
 	HALT = 1;
 	CLK( 2 );
@@ -1069,8 +1074,7 @@ void Op_XX () // Unknown Instruction
 /*                K6502_Init() : Initialize K6502                    */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Init()
-{
+void K6502_Init() {
 /*
  *  Initialize K6502
  *
