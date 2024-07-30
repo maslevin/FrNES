@@ -319,13 +319,13 @@ void Op_0D() {
 
 // ASL Abs
 void Op_0E() {
-	DisassembleInstruction("ASL", "$%04x", AA_ABS);		
+	DisassembleInstruction("ASL", "$%04x", AA_ABS);
 	ASL( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
 // BPL Oper
 void Op_10 () {
-	DisassembleInstruction("BPL", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("BPL", "$%02x", K6502_Read( PC + 1 ));
 	BRA( !( F & FLAG_N ) );
 }
 
@@ -367,178 +367,211 @@ void Op_1D() {
 
 // ASL Abs,X
 void Op_1E() {
-	DisassembleInstruction("ASL", "$%04x,x", AA_ABS);		
+	DisassembleInstruction("ASL", "$%04x,x", AA_ABS);
 	ASL( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
 // JSR Abs
 void Op_20() {
-
+	DisassembleInstruction("JSR", "$%04x", AA_ABS);
 	JSR; CLK( 6 );
 }
 
 // AND (Zpg,X)
 void Op_21() {
+	DisassembleInstruction("AND", "($%04x,x)", A_IX);
 	AND( A_IX ); ++pPC; CLK( 6 );
 }
 
 // BIT Zpg
 void Op_24() {
+	DisassembleInstruction("BIT", "$%02x", K6502_Read( PC + 1 ));
 	BIT( A_ZP ); CLK( 3 );
 }
 
 // AND Zpg
 void Op_25() {
+	DisassembleInstruction("AND", "$%02x", RAM[ (*(pPC + 1)) ]);
 	AND( A_ZP ); CLK( 3 );
 }
 
 // ROL Zpg
 void Op_26() {
+	DisassembleInstruction("ROL", "$%02x", K6502_Read( PC + 1 ));	
 	ROL( AA_ZP ); CLK( 5 );
 }
 
 // PLP
 void Op_28() {
+	DisassembleInstruction("PLP", NULL);	
 	POP( F ); SETF( FLAG_R ); CLK( 4 );
 }
 
 // AND #Oper
 void Op_29() {
+	DisassembleInstruction("AND", "#$%02x", (*(pPC + 1)));	
 	AND( A_IMM ); CLK( 2 );
 }
 
 // ROL A
 void Op_2A() {
+	DisassembleInstruction("ROL", "A");	
 	ROLA; CLK( 2 );
 }
 
 // BIT Abs
 void Op_2C()  {
+	DisassembleInstruction("BIT", "$%04x", AA_ABS);	
 	BIT( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // AND Abs 
 void Op_2D() {
+	DisassembleInstruction("AND", "$%04x", AA_ABS);
 	AND( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // ROL Abs
 void Op_2E() {
+	DisassembleInstruction("ROL", "$%04x", AA_ABS);
 	ROL( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
 // BMI Oper 
 void Op_30() {
+	DisassembleInstruction("BMI", "$%02x", K6502_Read( PC + 1 ));		
 	BRA( F & FLAG_N );
 }
 
 // AND (Zpg),Y
 void Op_31() {
+	DisassembleInstruction("AND", "($%04x),y", AA_ABS);	
 	AND( A_IY ); CLK( 5 );
 }
 
 // AND Zpg,X
 void Op_35() {
+	DisassembleInstruction("AND", "$%02x,x", K6502_Read( PC + 1 ));		
 	AND( A_ZPX ); CLK( 4 );
 }
 
 // ROL Zpg,X
 void Op_36() {
+	DisassembleInstruction("ROL", "$%02x,x", K6502_Read( PC + 1 ));		
 	ROL( AA_ZPX ); CLK( 6 );
 }
 
 // SEC
 void Op_38() {
+	DisassembleInstruction("SEC", NULL);	
 	SETF( FLAG_C ); CLK( 2 );
 }
 
 // AND Abs,Y
 void Op_39() {
+	DisassembleInstruction("AND", "$%04x,y", AA_ABS);		
 	AND( A_ABSY ); CLK( 4 );
 }
 
 // AND Abs,X
 void Op_3D() {
+	DisassembleInstruction("AND", "$%04x,x", AA_ABS);	
 	AND( A_ABSX ); CLK( 4 );
 }
 
 // ROL Abs,X
 void Op_3E() {
+	DisassembleInstruction("ROL", "$%04x,x", AA_ABS);	
 	ROL( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
 // RTI
 void Op_40() {
+	DisassembleInstruction("RTI", NULL);	
 	POP( F ); SETF( FLAG_R ); POPW( PC ); REALPC; CLK( 6 );
 }
 
 // EOR (Zpg,X)
 void Op_41() {
+	DisassembleInstruction("EOR", "($%04x,x)", A_IX);	
 	EOR( A_IX ); ++pPC; CLK( 6 );
 }
 
 // EOR Zpg
 void Op_45() {
+	DisassembleInstruction("EOR", "$%02x", RAM[ (*(pPC + 1)) ]);	
 	EOR( A_ZP ); CLK( 3 );
 }
 
 // LSR Zpg
 void Op_46() {
+	DisassembleInstruction("LSR", "$%02x", K6502_Read( PC + 1 ));	
 	LSR( AA_ZP ); CLK( 5 );
 }
 
 // PHA
 void Op_48() {
+	DisassembleInstruction("PHA", NULL);	
 	PUSH( A ); CLK( 3 );
 }
 
 // EOR #Oper
 void Op_49() {
+	DisassembleInstruction("EOR", "#$%02x", (*(pPC + 1)));		
 	EOR( A_IMM ); CLK( 2 );
 }
 
 // LSR A
 void Op_4A() {
+	DisassembleInstruction("LSR", "A");	
 	LSRA; CLK( 2 );
 }
 
 // JMP Abs
 void Op_4C() {
+	DisassembleInstruction("JMP", "$%04x", AA_ABS);	
 	JMP( AA_ABS ); CLK( 3 );
 }
 
 // EOR Abs
 void Op_4D() {
+	DisassembleInstruction("EOR", "$%04x", AA_ABS);	
 	EOR( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // LSR Abs
 void Op_4E() {
+	DisassembleInstruction("LSR", "$%04x", AA_ABS);	
 	LSR( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
 // BVC
 void Op_50() {
+	DisassembleInstruction("BVC", "$%02x", K6502_Read( PC + 1 ));		
 	BRA( !( F & FLAG_V ) );
 }
 
 // EOR (Zpg),Y
 void Op_51() {
+	DisassembleInstruction("EOR", "($%04x),y", AA_ABS);	
 	EOR( A_IY ); CLK( 5 );
 }
 
 // EOR Zpg,X
 void Op_55() {
+	DisassembleInstruction("EOR", "$%02x,x", K6502_Read( PC + 1 ));		
 	EOR( A_ZPX ); CLK( 4 );
 }
 
 // LSR Zpg,X
 void Op_56() {
+	DisassembleInstruction("LSR", "$%02x,x", K6502_Read( PC + 1 ));		
 	LSR( AA_ZPX ); CLK( 6 );
 }
 
 // CLI
 void Op_58() {
+	DisassembleInstruction("CLI", NULL);	
 	byD0 = F;
     RSTF( FLAG_I ); CLK( 2 );
     if ( ( byD0 & FLAG_I ) && IRQ_State == 0 )
@@ -564,51 +597,61 @@ void Op_58() {
 
 // EOR Abs,Y
 void Op_59() {
+	DisassembleInstruction("EOR", "$%04x,y", AA_ABS);		
 	EOR( A_ABSY ); CLK( 4 );
 }
 
 // EOR Abs,X
 void Op_5D() {
+	DisassembleInstruction("EOR", "$%04x,x", AA_ABS);	
 	EOR( A_ABSX ); CLK( 4 );
 }
 
 // LSR Abs,X
 void Op_5E() {
+	DisassembleInstruction("LSR", "$%04x,x", AA_ABS);	
 	LSR( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
 // RTS
 void Op_60() {
+	DisassembleInstruction("RTS", NULL);	
 	POPW( PC ); ++PC; REALPC; CLK( 6 );
 }
 
 // ADC (Zpg,X)
 void Op_61() {
+	DisassembleInstruction("ADC", "($%04x,x)", A_IX);	
 	ADC( A_IX ); ++pPC; CLK( 6 );
 }
 
 // ADC Zpg
 void Op_65() {
+	DisassembleInstruction("ADC", "$%02x", RAM[ (*(pPC + 1)) ]);	
 	ADC( A_ZP ); CLK( 3 );
 }
 
 // ROR Zpg
 void Op_66() {
+	DisassembleInstruction("ROR", "$%02x", K6502_Read( PC + 1 ));	
 	ROR( AA_ZP ); CLK( 5 );
 }
 
 // PLA
 void Op_68() {
+	DisassembleInstruction("PLA", NULL);	
 	POP( A ); TEST( A ); CLK( 4 );
 }
 
 // ADC #Oper
 void Op_69() {
+	DisassembleInstruction("ADC", "#$%02x", (*(pPC + 1)));		
 	ADC( A_IMM ); CLK( 2 );
 }
 
 // ROR A
 void Op_6A() {
+	DisassembleInstruction("ROR", "A");	
 	RORA; CLK( 2 );
 }
 
@@ -619,446 +662,537 @@ void Op_6C() {
 
 // ADC Abs
 void Op_6D() {
+	DisassembleInstruction("ADC", "$%04x", AA_ABS);	
 	ADC( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // ROR Abs
 void Op_6E() {
+	DisassembleInstruction("ROR", "$%04x", AA_ABS);	
 	ROR( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
 // BVS
 void Op_70() {
+	DisassembleInstruction("BVS", "$%02x", K6502_Read( PC + 1 ));
 	BRA( F & FLAG_V );
 }
 
 // ADC (Zpg),Y
 void Op_71() {
+	DisassembleInstruction("ADC", "($%04x),y", AA_ABS);
 	ADC( A_IY ); CLK( 5 );
 }
 
 // ADC Zpg,X
 void Op_75() {
+	DisassembleInstruction("ADC", "$%02x,x", K6502_Read( PC + 1 ));		
 	ADC( A_ZPX ); CLK( 4 );
 }
 
 // ROR Zpg,X
 void Op_76() {
+	DisassembleInstruction("ROR", "$%02x,x", K6502_Read( PC + 1 ));		
 	ROR( AA_ZPX ); CLK( 6 );
 }
 
 // SEI
 void Op_78() {
+	DisassembleInstruction("SEI", NULL);	
 	SETF( FLAG_I ); CLK( 2 );
 }
 
 // ADC Abs,Y
 void Op_79() {
+	DisassembleInstruction("ADC", "$%04x,y", AA_ABS);		
 	ADC( A_ABSY ); CLK( 4 );
 }
 
 // ADC Abs,X
 void Op_7D() {
+	DisassembleInstruction("ADC", "$%04x,x", AA_ABS);	
     ADC( A_ABSX ); CLK( 4 );
 }
 
 // ROR Abs,X
 void Op_7E() {
+	DisassembleInstruction("ROR", "$%04x,x", AA_ABS);	
 	ROR( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
 // STA (Zpg,X)
 void Op_81() {
+	DisassembleInstruction("STA", "($%04x,x)", A_IX);	
 	STA( AA_IX ); ++pPC; CLK( 6 );
 }
       
  // STY Zpg
 void Op_84() {
+	DisassembleInstruction("STY", "$%02x", K6502_Read( PC + 1 ));	
 	STY( AA_ZP ); CLK( 3 );
 }
 
 // STA Zpg
 void Op_85() {
+	DisassembleInstruction("STA", "$%02x", RAM[ (*(pPC + 1)) ]);	
 	STA( AA_ZP ); CLK( 3 );
 }
 
 // STX Zpg
 void Op_86() {
+	DisassembleInstruction("STX", "$%02x", K6502_Read( PC + 1 ));	
 	STX( AA_ZP ); CLK( 3 );
 }
 
 // DEY
 void Op_88() {
+	DisassembleInstruction("DEY", NULL);
 	--Y; TEST( Y ); CLK( 2 );
 }
 
+// 89?
+
 // TXA
 void Op_8A() {
+	DisassembleInstruction("TXA", NULL);
 	A = X; TEST( A ); CLK( 2 );
 }
 
 // STY Abs
 void Op_8C() {
+	DisassembleInstruction("STY", "$%04x", AA_ABS);	
 	STY( AA_ABS ); pPC += 2; CLK( 4 );
 }
 
 // STA Abs
 void Op_8D() {
+	DisassembleInstruction("STA", "$%04x", AA_ABS);	
 	STA( AA_ABS ); pPC += 2; CLK( 4 );
 }
 
 // STX Abs
 void Op_8E() {
+	DisassembleInstruction("STX", "$%04x", AA_ABS);	
 	STX( AA_ABS ); pPC += 2; CLK( 4 );
 }
 
 // BCC
 void Op_90() {
+	DisassembleInstruction("BCC", "$%02x", K6502_Read( PC + 1 ));		
 	BRA( !( F & FLAG_C ) );
 }
 
 // STA (Zpg),Y
 void Op_91() {
+	DisassembleInstruction("STA", "($%04x),y", AA_ABS);		
 	STA( AA_IY ); ++pPC; CLK( 6 );
 }
 
 // STY Zpg,X
 void Op_94() {
+	DisassembleInstruction("STY", "$%02x,x", K6502_Read( PC + 1 ));	
 	STY( AA_ZPX ); CLK( 4 );
 }
 
 // STA Zpg,X
 void Op_95() {
+	DisassembleInstruction("STA", "$%02x,x", K6502_Read( PC + 1 ));		
 	STA( AA_ZPX ); CLK( 4 );
 }
 
 // STX Zpg,Y
 void Op_96() {
+	DisassembleInstruction("STX", "$%02x,x", K6502_Read( PC + 1 ));		
 	STX( AA_ZPY ); CLK( 4 );
 }
 
 // TYA
 void Op_98() {
+	DisassembleInstruction("TYA", NULL);	
 	A = Y; TEST( A ); CLK( 2 );
 }
 
 // STA Abs,Y
 void Op_99() {
+	DisassembleInstruction("STA", "$%04x,y", AA_ABS);		
 	STA( AA_ABSY ); pPC += 2; CLK( 5 );
 }
 
 // TXS
 void Op_9A() {
+	DisassembleInstruction("TXS", NULL);	
 	SP = X; CLK( 2 );
 }
 
 // STA Abs,X
 void Op_9D() {
+	DisassembleInstruction("STA", "$%04x,x", AA_ABS);	
 	STA( AA_ABSX ); pPC += 2; CLK( 5 );
 }
 
 // LDY #Oper
 void Op_A0() {
+	DisassembleInstruction("LDY", "#$%02x", (*(pPC + 1)));	
 	LDY( A_IMM ); CLK( 2 );
 }
 
 // LDA (Zpg,X)
 void Op_A1() {
+	DisassembleInstruction("LDA", "($%04x,x)", A_IX);	
 	LDA( A_IX ); ++pPC; CLK( 6 );
 }
 
 // LDX #Oper
 void Op_A2() {
+	DisassembleInstruction("LDX", "#$%02x", (*(pPC + 1)));	
 	LDX( A_IMM ); CLK( 2 );
 }
 
 // LDY Zpg
 void Op_A4() {
+	DisassembleInstruction("LDY", "$%02x", K6502_Read( PC + 1 ));	
 	LDY( A_ZP ); CLK( 3 );
 }
 
 // LDA Zpg
 void Op_A5() {
+	DisassembleInstruction("LDA", "$%02x", RAM[ (*(pPC + 1)) ]);	
 	LDA( A_ZP ); CLK( 3 );
 }
 
 // LDX Zpg
 void Op_A6() {
+	DisassembleInstruction("LDX", "$%02x", K6502_Read( PC + 1 ));	
 	LDX( A_ZP ); CLK( 3 );
 }
 
 // TAY
 void Op_A8() {
+	DisassembleInstruction("TAY", NULL);	
 	Y = A; TEST( A ); CLK( 2 );
 }
 
 // LDA #Oper
 void Op_A9() {
+	DisassembleInstruction("LDA", "#$%02x", (*(pPC + 1)));		
 	LDA( A_IMM ); CLK( 2 );
 }
 
 // TAX
 void Op_AA() {
+	DisassembleInstruction("TAX", NULL);	
 	X = A; TEST( A ); CLK( 2 );
 }
 
 // LDY Abs
 void Op_AC() {
+	DisassembleInstruction("LDY", "$%04x", AA_ABS);	
 	LDY( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // LDA Abs
 void Op_AD() {
+	DisassembleInstruction("LDA", "$%04x", AA_ABS);	
 	LDA( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // LDX Abs
 void Op_AE() {
+	DisassembleInstruction("LDX", "$%04x", AA_ABS);	
 	LDX( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // BCS
 void Op_B0() {
+	DisassembleInstruction("BCS", "$%02x", K6502_Read( PC + 1 ));		
 	BRA( F & FLAG_C );
 }
 
 // LDA (Zpg),Y
 void Op_B1() {
+	DisassembleInstruction("LDA", "($%04x),y", AA_ABS);		
 	LDA( A_IY ); CLK( 5 );
 }
 
 // LDY Zpg,X
 void Op_B4() {
+	DisassembleInstruction("LDY", "$%02x,x", K6502_Read( PC + 1 ));
 	LDY( A_ZPX ); CLK( 4 );
 }
 
 // LDA Zpg,X
 void Op_B5() {
+	DisassembleInstruction("LDA", "$%02x,x", K6502_Read( PC + 1 ));
 	LDA( A_ZPX ); CLK( 4 );
 }
 
 // LDX Zpg,Y
 void Op_B6() {
+	DisassembleInstruction("LDX", "$%02x,x", K6502_Read( PC + 1 ));		
 	LDX( A_ZPY ); CLK( 4 );
 }
 
 // CLV
 void Op_B8() {
+	DisassembleInstruction("CLV", NULL);	
 	RSTF( FLAG_V ); CLK( 2 );
 }
 
 // LDA Abs,Y
 void Op_B9() {
+	DisassembleInstruction("LDA", "$%04x,y", AA_ABS);		
 	LDA( A_ABSY ); CLK( 4 );
 }
 
 // TSX
 void Op_BA() {
+	DisassembleInstruction("TSX", NULL);	
 	X = SP; TEST( X ); CLK( 2 );
 }
 
 // LDY Abs,X
 void Op_BC() {
+	DisassembleInstruction("LDY", "$%04x,x", AA_ABS);
 	LDY( A_ABSX ); CLK( 4 );
 }
 
 // LDA Abs,X
 void Op_BD() {
+	DisassembleInstruction("LDA", "$%04x,x", AA_ABS);	
 	LDA( A_ABSX ); CLK( 4 );
 }
 
 // LDX Abs,Y
 void Op_BE() {
+	DisassembleInstruction("LDX", "$%04x,x", AA_ABS);	
 	LDX( A_ABSY ); CLK( 4 );
 }
 
 // CPY #Oper
 void Op_C0() {
+	DisassembleInstruction("CPY", "#$%02x", (*(pPC + 1)));	
 	CPY( A_IMM ); CLK( 2 );
 }
 
 // CMP (Zpg,X)
 void Op_C1() {
+	DisassembleInstruction("CMP", "($%04x,x)", A_IX);	
 	CMP( A_IX ); ++pPC; CLK( 6 );
 }
 
 // CPY Zpg
 void Op_C4() {
+	DisassembleInstruction("CPY", "$%02x", K6502_Read( PC + 1 ));	
 	CPY( A_ZP ); CLK( 3 );
 }
 
 // CMP Zpg
 void Op_C5() {
+	DisassembleInstruction("CMP", "$%02x", RAM[ (*(pPC + 1)) ]);	
 	CMP( A_ZP ); CLK( 3 );
 }
 
 // DEC Zpg
 void Op_C6() {
+	DisassembleInstruction("DEC", "$%02x", K6502_Read( PC + 1 ));	
 	DEC( AA_ZP ); CLK( 5 );
 }
 
 // INY
 void Op_C8() {
-	++Y; TEST( Y ); CLK( 2 );
+	DisassembleInstruction("INY", NULL);	
+	++Y; TEST( Y ); CLK( 2 );	
 }
 
 // CMP #Oper
 void Op_C9() {
+	DisassembleInstruction("CMP", "#$%02x", (*(pPC + 1)));
 	CMP( A_IMM ); CLK( 2 );
 }
 
 // DEX
 void Op_CA() {
+	DisassembleInstruction("DEX", NULL);	
 	--X; TEST( X ); CLK( 2 );
 }
 
 // CPY Abs
 void Op_CC() {
+	DisassembleInstruction("CPY", "$%04x", AA_ABS);	
 	CPY( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // CMP Abs
 void Op_CD() {
+	DisassembleInstruction("CMP", "$%04x", AA_ABS);	
 	CMP( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // DEC Abs
 void Op_CE() {
+	DisassembleInstruction("DEC", "$%04x", AA_ABS);	
 	DEC( AA_ABS ); pPC += 2;CLK( 6 );
 }
 
 // BNE
 void Op_D0() {
+	DisassembleInstruction("BNE", "$%02x", K6502_Read( PC + 1 ));		
 	BRA( !( F & FLAG_Z ) );
 }
 
 // CMP (Zpg),Y
 void Op_D1() {
+	DisassembleInstruction("CMP", "($%04x),y", AA_ABS);		
 	CMP( A_IY ); CLK( 5 );
 }
 
 // CMP Zpg,X
 void Op_D5 () {
+	DisassembleInstruction("CMP", "$%02x,x", K6502_Read( PC + 1 ));		
 	CMP( A_ZPX ); CLK( 4 );
 }
         
 // DEC Zpg,X
 void Op_D6() {
+	DisassembleInstruction("DEC", "$%02x,x", K6502_Read( PC + 1 ));		
 	DEC( AA_ZPX ); CLK( 6 );
 }
 
 // CLD
 void Op_D8() {
+	DisassembleInstruction("CLD", NULL);	
 	RSTF( FLAG_D ); CLK( 2 );
 }
 
 // CMP Abs,Y
 void Op_D9() {
+	DisassembleInstruction("CMP", "$%04x,y", AA_ABS);		
 	CMP( A_ABSY ); CLK( 4 );
 }
 
 // CMP Abs,X
 void Op_DD() {
+	DisassembleInstruction("CMP", "$%04x,x", AA_ABS);	
 	CMP( A_ABSX ); CLK( 4 );
 }
 
 // DEC Abs,X
 void Op_DE() {
+	DisassembleInstruction("DEC", "$%04x,x", AA_ABS);	
 	DEC( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
 // CPX #Oper
 void Op_E0() {
+	DisassembleInstruction("CPX", "#$%02x", (*(pPC + 1)));	
 	CPX( A_IMM ); CLK( 2 );
 }
 
 // SBC (Zpg,X)
 void Op_E1() {
+	DisassembleInstruction("SBC", "($%04x,x)", A_IX);	
 	SBC( A_IX ); ++pPC; CLK( 6 );
 }
 
 // CPX Zpg
 void Op_E4() {
+	DisassembleInstruction("CPX", "$%02x", K6502_Read( PC + 1 ));	
 	CPX( A_ZP ); CLK( 3 );
 }
 
 // SBC Zpg
 void Op_E5() {
+	DisassembleInstruction("SBC", "$%02x", RAM[ (*(pPC + 1)) ]);	
 	SBC( A_ZP ); CLK( 3 );
 }
 
 // INC Zpg
 void Op_E6() {
+	DisassembleInstruction("INC", "$%02x", K6502_Read( PC + 1 ));	
 	INC( AA_ZP ); CLK( 5 );
 }
 
 // INX 
 void Op_E8() {
+	DisassembleInstruction("INX", NULL);	
 	++X; TEST( X ); CLK( 2 );
 }
 
 // SBC #Oper
 void Op_E9() {
+	DisassembleInstruction("SBC", "#$%02x", (*(pPC + 1)));
 	SBC( A_IMM ); CLK( 2 );
 }
 
 // NOP
 void Op_EA() {
+	DisassembleInstruction("NOP", NULL);	
 	CLK( 2 );
 }
 
 // CPX Abs
 void Op_EC() {
+	DisassembleInstruction("CPX", "$%04x", AA_ABS);
 	CPX( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // SBC Abs
 void Op_ED() {
+	DisassembleInstruction("SBC", "$%04x", AA_ABS);	
 	SBC( A_ABS ); pPC += 2; CLK( 4 );
 }
 
 // INC Abs
 void Op_EE() {
+	DisassembleInstruction("INC", "$%04x", AA_ABS);	
 	INC( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
 // BEQ
 void Op_F0() {
+	DisassembleInstruction("BEQ", "$%02x", K6502_Read( PC + 1 ));		
 	BRA( F & FLAG_Z );
 }
 
 // SBC (Zpg),Y
 void Op_F1() {
+	DisassembleInstruction("SBC", "($%04x),y", AA_ABS);		
 	SBC( A_IY ); CLK( 5 );
 }
 
 // SBC Zpg,X
 void Op_F5() {
+	DisassembleInstruction("SBC", "$%02x,x", K6502_Read( PC + 1 ));		
 	SBC( A_ZPX ); CLK( 4 );
 }
 
 // INC Zpg,X
 void Op_F6() {
+	DisassembleInstruction("INC", "$%02x,x", K6502_Read( PC + 1 ));		
 	INC( AA_ZPX ); CLK( 6 );
 }
 
 // SED
 void Op_F8() {
+	DisassembleInstruction("SED", NULL);	
 	SETF( FLAG_D ); CLK( 2 );
 }
 
 // SBC Abs,Y
 void Op_F9() {
+	DisassembleInstruction("SBC", "$%04x,y", AA_ABS);		
 	SBC( A_ABSY ); CLK( 4 );
 }
 
 // SBC Abs,X
 void Op_FD() {
+	DisassembleInstruction("SBC", "$%04x,x", AA_ABS);	
 	SBC( A_ABSX ); CLK( 4 );
 }
 
 // INC Abs,X
 void Op_FE() {
+	DisassembleInstruction("INC", "$%04x,x", AA_ABS);	
 	INC( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
