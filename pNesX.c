@@ -278,6 +278,10 @@ void pNesX_Fin() {
  *    Release resources
  */
 	audio_shutdown();
+
+#ifdef DEBUG
+	UploadDisassembly();
+#endif
 }
 
 

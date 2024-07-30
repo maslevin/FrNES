@@ -73,7 +73,7 @@ uint32 UPDC32 (unsigned char octet, uint32 crc) {
 //Initializes a RomInfo array to the unread values
 void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers) {
 	printf("InitializeFileInfos: clearing entries\n");
-	memset(RomInfoArray, 0, sizeof(RomInfoArray) * NumBuffers);
+	memset(RomInfoArray, 0, sizeof(RomInfo) * NumBuffers);
 	for (int i = 0; i < NumBuffers; i++) {
 		RomPtrArray[i] = RomInfoArray[i].FileName;
 	}
@@ -82,9 +82,9 @@ void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffe
 //Start the Search Process
 int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 	printf("StartFileSearch: beginning search\n");
-	//Reset CD drive to look for new rom CD..
-//	fs_iso9660_init();
 
+	//Reset CD drive to look for new rom CD..
+	//fs_iso9660_init();
 	my_file = fs_open(Path, O_DIR);
 	if (my_file == -1) {
 		printf("StartFileSearch: error unable to open directory\n");
@@ -111,10 +111,10 @@ int ReturnCurrentNumRoms() {
 
 //Loads a fileinfo
 int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path) {
-	printf("LoadNextFileSimple: reading directory\n");	
+//	printf("LoadNextFileSimple: reading directory\n");
 	my_dir = fs_readdir(my_file);
 	if (my_dir != NULL) {
-		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
+//		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
 		if (my_dir -> attr & 0x1000) {
 			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
 			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);

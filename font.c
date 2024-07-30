@@ -352,7 +352,7 @@ void draw_string(Font* font, int currentList, char* string,
     pvr_poly_hdr_t hdr;
 
 	char* ptr = string;
-	FontPage* page;
+	FontPage* page = NULL;
 	int currentPage = -1;
 	float drawX = xPos;
 
@@ -386,6 +386,10 @@ void draw_string(Font* font, int currentList, char* string,
 			drawX += ((float)descriptor -> xAdv * scale);
 		} else {
 			drawX += ((float)font -> defChar -> xAdv * scale);
+		}
+
+		if (drawX >= xPos + width) {
+			break;
 		}
 
 		ptr++;

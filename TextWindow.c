@@ -447,8 +447,7 @@ void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float 
 	}
 }
 
-void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 list)
-{
+void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 list) {
 	int i;
 	int yposition;
 	//printf("win_draw_textwindow: starting text window draw\n");
@@ -471,6 +470,61 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 			windata -> height - (2 * winstyle -> Border_Thickness),
 			CORNER_RADIUS - winstyle -> Border_Thickness,
 			winstyle -> Inside_Color);
+
+		// Draw right side scroll bar if there are enough strings on screen
+		if (windata -> Num_Strings > winstyle -> Max_Items) {
+			pvr_poly_hdr_t hdr;
+			pvr_poly_cxt_t cxt;
+			pvr_vertex_t my_vertex;		
+
+			pvr_poly_cxt_col(&cxt, list);
+			pvr_poly_compile(&hdr, &cxt);
+			pvr_prim(&hdr, sizeof(hdr));
+
+			//Draw scroll bar right side rect
+			yposition = windata -> y + 10.0 + (windata -> font -> fontHeight * winstyle -> Header_Text_Scale);
+			float barheight = (winstyle -> Max_Items * windata -> font -> fontHeight * winstyle -> Text_Scale);
+			float xposition = windata -> x + windata -> width - (3 * winstyle -> Border_Thickness);
+			my_vertex.flags = PVR_CMD_VERTEX;
+			my_vertex.x = xposition;
+			my_vertex.y = yposition + barheight;
+			my_vertex.z = 32.0f;
+			my_vertex.argb = 0xFFFFFFFF;
+			my_vertex.oargb = 0;
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			my_vertex.y = yposition;
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			my_vertex.x = xposition + (2 * winstyle -> Border_Thickness);
+			my_vertex.y = yposition + barheight;
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			my_vertex.flags = PVR_CMD_VERTEX_EOL;
+			my_vertex.y = yposition;
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			//Draw scroll bar indicator rect
+			float indicatorheight = (yposition + (winstyle -> Border_Thickness / 2)) + (((barheight - (2 * winstyle -> Border_Thickness)) * windata -> Highlighted_Index) / windata -> Num_Strings);
+			my_vertex.flags = PVR_CMD_VERTEX;
+			my_vertex.x = xposition + (winstyle -> Border_Thickness / 2);
+			my_vertex.y = indicatorheight + (winstyle -> Border_Thickness);
+			my_vertex.z = 33.0f;
+			my_vertex.argb = 0x00000000;
+			my_vertex.oargb = 0;
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			my_vertex.y = indicatorheight;
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			my_vertex.x = xposition + (3 * winstyle -> Border_Thickness / 2);
+			my_vertex.y = indicatorheight + (winstyle -> Border_Thickness);
+			pvr_prim(&my_vertex, sizeof(my_vertex));
+
+			my_vertex.flags = PVR_CMD_VERTEX_EOL;
+			my_vertex.y = indicatorheight;
+			pvr_prim(&my_vertex, sizeof(my_vertex));			
+		}
 	}
 
 	//printf("cornered_layer: [%f, %f, %f, %f]\n", windata -> x, windata -> y, windata -> width, windata -> height);
@@ -480,9 +534,9 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 			list,
 			windata -> Header_Text,
 			windata -> x + winstyle -> Left_Margin,
-			windata -> y + 15.0f,
+			windata -> y + 10.0f,
 			35.0f,
-			windata -> width,
+			windata -> width - (2 * winstyle -> Left_Margin),
 			windata -> height,
 			SINGLE,
 			LEFT,
@@ -492,15 +546,14 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 
 		//Now Draw the Text In the Window
 		yposition = windata -> y + 15.0 + (windata -> font -> fontHeight * winstyle -> Header_Text_Scale);
-		for (i = 0; (i < winstyle -> Max_Items) && (i < windata -> Num_Strings); i++)
-		{
+		for (i = 0; (i < winstyle -> Max_Items) && (i < windata -> Num_Strings); i++) {
 			char* text = windata -> Data_Strings[i + windata -> Top_Index];
 			if ((text != NULL) && (text[0] != '\0')) {
 				//printf("win_draw_textwindow: drawing regular line of text\n");						
 				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
-					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
 				} else {
-					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
 				}
 				yposition += (windata -> font -> fontHeight * winstyle -> Text_Scale);
 			}
