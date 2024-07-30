@@ -202,8 +202,7 @@ struct value_table_tag g_ROLTable[ 2 ][ 256 ];
 // A table for ROR
 struct value_table_tag g_RORTable[ 2 ][ 256 ];
 
-struct OpcodeTable_tag OpcodeTable[256] =
-{
+struct OpcodeTable_tag OpcodeTable[256] = {
 	{Op_00}, {Op_01}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_05}, {Op_06}, {Op_XX}, {Op_08}, {Op_09}, {Op_0A}, {Op_XX}, {Op_XX}, {Op_0D}, {Op_0E}, {Op_XX},
 	{Op_10}, {Op_11}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_15}, {Op_16}, {Op_XX}, {Op_18}, {Op_19}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_1D}, {Op_1E}, {Op_XX},
 	{Op_20}, {Op_21}, {Op_XX}, {Op_XX}, {Op_24}, {Op_25}, {Op_26}, {Op_XX}, {Op_28}, {Op_29}, {Op_2A}, {Op_XX}, {Op_2C}, {Op_2D}, {Op_2E}, {Op_XX},
@@ -227,88 +226,148 @@ unsigned char byD0;
 unsigned char byD1;
 uint16 wD0;
 
-void Op_00()
-{
+#define MAX_DISASM_STEPS 1024
+#define MAX_DISASM_STRING 32
+char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
+
+uint16 DisassemblyBufferIndex = 0;
+
+void DisassembleInstruction(char* Opcode, char* fmt, ...) {
+	va_list args;
+
+	VIRPC;
+	char p[16];
+	if (fmt) {
+		snprintf(p, 16, fmt, args);
+	} else {
+		p[0] = '\0';
+	}
+	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC, Opcode, p); 
+	DisassemblyBufferIndex++;
+	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
+	REALPC;
+}
+
+void UploadDisassembly() {
+	printf("Uploading Disassembly to PC Host\n");
+	char PCPath[256];
+	// TODO: use a log time or something like that in the filename here
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/disasm.txt");	
+	file_t PCFile = fs_open(PCPath, O_WRONLY);
+	if (PCFile != -1) {
+		int bufferIndex = DisassemblyBufferIndex;
+		while (bufferIndex != DisassemblyBufferIndex - 1) {
+			if (strcmp(DisassemblyBuffer[bufferIndex], "") != 0) {
+				fs_write(PCFile, DisassemblyBuffer[bufferIndex], strlen(DisassemblyBuffer[bufferIndex]));
+				fs_write(PCFile, "\n", 1);
+			}
+			bufferIndex++;
+			bufferIndex %= MAX_DISASM_STEPS;
+		}
+		fs_close(PCFile);
+	} else {
+		printf("Error: Unable to Open File on PC Host\n");
+	}
+}
+
+void Op_00() {
+	DisassembleInstruction("BRK", NULL);
 	VIRPC; PC++; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
 }
 
-void Op_01()  // ORA (Zpg,X)
-{
+// ORA (Zpg,X)
+void Op_01() {
+	DisassembleInstruction("ORA", "($%04x,x)", A_IX);
 	ORA( A_IX ); ++pPC; CLK( 6 );
 }
 
-void Op_05()  // ORA Zpg
-{
+// ORA Zpg
+void Op_05() {
+	DisassembleInstruction("ORA", "$%02x", RAM[ (*(pPC + 1)) ]);
 	ORA( A_ZP ); CLK( 3 );
 }
 
-void Op_06()  // ASL Zpg
-{
+// ASL Zpg
+void Op_06() {
+	DisassembleInstruction("ASL", "$%02x", K6502_Read( PC + 1 ));
 	ASL( AA_ZP ); CLK( 5 );
 }
 
-void Op_08()  // PHP
-{
+// PHP
+void Op_08() {
+	DisassembleInstruction("PHP", NULL);
 	PUSH( F | FLAG_B | FLAG_R ); CLK( 3 );
 }
 
-void Op_09()  // ORA #Oper
-{
+// ORA #Oper
+void Op_09() {
+	DisassembleInstruction("ORA", "#$%02x", (*(pPC + 1)));
 	ORA( A_IMM ); CLK( 2 );
 }
 
-void Op_0A()  // ASL A
-{
+// ASL A
+void Op_0A() {
+	DisassembleInstruction("ASL", "A");
 	ASLA; CLK( 2 );
 }
 
-void Op_0D  () // ORA Abs
-{
+// ORA Abs
+void Op_0D() {
+	DisassembleInstruction("ORA", "$%04x", AA_ABS);
 	ORA( A_ABS ); pPC += 2; CLK( 4 );
 }
 
-void Op_0E  () // ASL Abs
-{
+// ASL Abs
+void Op_0E() {
+	DisassembleInstruction("ASL", "$%04x", AA_ABS);		
 	ASL( AA_ABS ); pPC += 2; CLK( 6 );
 }
 
-void Op_10 () // BPL Oper
-{
+// BPL Oper
+void Op_10 () {
+	DisassembleInstruction("BPL", "$%02x", K6502_Read( PC + 1 ));	
 	BRA( !( F & FLAG_N ) );
 }
 
-void Op_11 () // ORA (Zpg),Y
-{
+// ORA (Zpg),Y
+void Op_11 () {
+	DisassembleInstruction("ORA", "($%04x),y", AA_ABS);
 	ORA( A_IY ); CLK( 5 );
 }
 
-void Op_15 () // ORA Zpg,X
-{
+// ORA Zpg,X
+void Op_15 () {
+	DisassembleInstruction("ORA", "$%02x,x", K6502_Read( PC + 1 ));	
 	ORA( A_ZPX ); CLK( 4 );
 }
 
-void Op_16 () // ASL Zpg,X
-{
+// ASL Zpg,X
+void Op_16() {
+	DisassembleInstruction("ASL", "$%02x,x", K6502_Read( PC + 1 ));	
 	ASL( AA_ZPX ); CLK( 6 );
 }
 
-void Op_18 () // CLC
-{
+// CLC
+void Op_18() {
+	DisassembleInstruction("CLC", NULL);
 	RSTF( FLAG_C ); CLK( 2 );
 }
 
-void Op_19 () // ORA Abs,Y
-{
+// ORA Abs,Y
+void Op_19 () {
+	DisassembleInstruction("ORA", "$%04x,y", AA_ABS);	
 	ORA( A_ABSY ); CLK( 4 );
 }
 
-void Op_1D () // ORA Abs,X
-{
+// ORA Abs,X
+void Op_1D() {
+	DisassembleInstruction("ORA", "$%04x,x", AA_ABS);
 	ORA( A_ABSX ); CLK( 4 );
 }
 
-void Op_1E () // ASL Abs,X
-{
+// ASL Abs,X
+void Op_1E() {
+	DisassembleInstruction("ASL", "$%04x,x", AA_ABS);		
 	ASL( AA_ABSX ); pPC += 2; CLK( 7 );
 }
 
