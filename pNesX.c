@@ -303,6 +303,10 @@ void pNesX_Fin()
   // Release a memory for ROM
 //  pNesX_ReleaseRom();
 	audio_shutdown();
+
+#ifdef DEBUG
+	UploadDisassembly();
+#endif
 }
 
 

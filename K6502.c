@@ -226,6 +226,7 @@ unsigned char byD0;
 unsigned char byD1;
 uint16 wD0;
 
+#ifdef DEBUG
 #define MAX_DISASM_STEPS 1024
 #define MAX_DISASM_STRING 32
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
@@ -269,6 +270,10 @@ void UploadDisassembly() {
 		printf("Error: Unable to Open File on PC Host\n");
 	}
 }
+
+#else
+#define DisassembleInstruction(...) (0)
+#endif
 
 void Op_00() {
 	DisassembleInstruction("BRK", NULL);
