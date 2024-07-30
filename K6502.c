@@ -233,17 +233,15 @@ char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
 uint16 DisassemblyBufferIndex = 0;
 
-void DisassembleInstruction(char* Opcode, char* fmt, ...) {
-	va_list args;
-
+void DisassembleInstruction(char* Opcode, char* fmt, uint16 value) {
 	VIRPC;
 	char p[16];
 	if (fmt) {
-		snprintf(p, 16, fmt, args);
+		snprintf(p, 16, fmt, value);
 	} else {
 		p[0] = '\0';
 	}
-	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC, Opcode, p); 
+	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
 	REALPC;
@@ -276,7 +274,7 @@ void UploadDisassembly() {
 #endif
 
 void Op_00() {
-	DisassembleInstruction("BRK", NULL);
+	DisassembleInstruction("BRK", NULL, 0);
 	VIRPC; PC++; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
 }
 
@@ -300,7 +298,7 @@ void Op_06() {
 
 // PHP
 void Op_08() {
-	DisassembleInstruction("PHP", NULL);
+	DisassembleInstruction("PHP", NULL, 0);
 	PUSH( F | FLAG_B | FLAG_R ); CLK( 3 );
 }
 
@@ -312,7 +310,7 @@ void Op_09() {
 
 // ASL A
 void Op_0A() {
-	DisassembleInstruction("ASL", "A");
+	DisassembleInstruction("ASL", NULL, 0);
 	ASLA; CLK( 2 );
 }
 
@@ -354,7 +352,7 @@ void Op_16() {
 
 // CLC
 void Op_18() {
-	DisassembleInstruction("CLC", NULL);
+	DisassembleInstruction("CLC", NULL, 0);
 	RSTF( FLAG_C ); CLK( 2 );
 }
 
@@ -408,7 +406,7 @@ void Op_26() {
 
 // PLP
 void Op_28() {
-	DisassembleInstruction("PLP", NULL);	
+	DisassembleInstruction("PLP", NULL, 0);
 	POP( F ); SETF( FLAG_R ); CLK( 4 );
 }
 
@@ -420,7 +418,7 @@ void Op_29() {
 
 // ROL A
 void Op_2A() {
-	DisassembleInstruction("ROL", "A");	
+	DisassembleInstruction("ROL", "A", 0);	
 	ROLA; CLK( 2 );
 }
 
@@ -468,7 +466,7 @@ void Op_36() {
 
 // SEC
 void Op_38() {
-	DisassembleInstruction("SEC", NULL);	
+	DisassembleInstruction("SEC", NULL, 0);
 	SETF( FLAG_C ); CLK( 2 );
 }
 
@@ -492,7 +490,7 @@ void Op_3E() {
 
 // RTI
 void Op_40() {
-	DisassembleInstruction("RTI", NULL);	
+	DisassembleInstruction("RTI", NULL, 0);
 	POP( F ); SETF( FLAG_R ); POPW( PC ); REALPC; CLK( 6 );
 }
 
@@ -516,7 +514,7 @@ void Op_46() {
 
 // PHA
 void Op_48() {
-	DisassembleInstruction("PHA", NULL);	
+	DisassembleInstruction("PHA", NULL, 0);	
 	PUSH( A ); CLK( 3 );
 }
 
@@ -528,7 +526,7 @@ void Op_49() {
 
 // LSR A
 void Op_4A() {
-	DisassembleInstruction("LSR", "A");	
+	DisassembleInstruction("LSR", "A", 0);	
 	LSRA; CLK( 2 );
 }
 
@@ -576,7 +574,7 @@ void Op_56() {
 
 // CLI
 void Op_58() {
-	DisassembleInstruction("CLI", NULL);	
+	DisassembleInstruction("CLI", NULL, 0);	
 	byD0 = F;
     RSTF( FLAG_I ); CLK( 2 );
     if ( ( byD0 & FLAG_I ) && IRQ_State == 0 )
@@ -620,7 +618,7 @@ void Op_5E() {
 
 // RTS
 void Op_60() {
-	DisassembleInstruction("RTS", NULL);	
+	DisassembleInstruction("RTS", NULL, 0);	
 	POPW( PC ); ++PC; REALPC; CLK( 6 );
 }
 
@@ -644,7 +642,7 @@ void Op_66() {
 
 // PLA
 void Op_68() {
-	DisassembleInstruction("PLA", NULL);	
+	DisassembleInstruction("PLA", NULL, 0);	
 	POP( A ); TEST( A ); CLK( 4 );
 }
 
@@ -656,12 +654,13 @@ void Op_69() {
 
 // ROR A
 void Op_6A() {
-	DisassembleInstruction("ROR", "A");	
+	DisassembleInstruction("ROR", "A", 0);	
 	RORA; CLK( 2 );
 }
 
 // JMP (Abs)
 void Op_6C() {
+	DisassembleInstruction("JMP", "($%04x)", AA_ABS);
 	JMP( K6502_ReadW( AA_ABS ) ); CLK( 5 );
 }
 
@@ -703,7 +702,7 @@ void Op_76() {
 
 // SEI
 void Op_78() {
-	DisassembleInstruction("SEI", NULL);	
+	DisassembleInstruction("SEI", NULL, 0);	
 	SETF( FLAG_I ); CLK( 2 );
 }
 
@@ -739,7 +738,7 @@ void Op_84() {
 
 // STA Zpg
 void Op_85() {
-	DisassembleInstruction("STA", "$%02x", RAM[ (*(pPC + 1)) ]);	
+	DisassembleInstruction("STA", "$%02x", *pPC);
 	STA( AA_ZP ); CLK( 3 );
 }
 
@@ -751,7 +750,7 @@ void Op_86() {
 
 // DEY
 void Op_88() {
-	DisassembleInstruction("DEY", NULL);
+	DisassembleInstruction("DEY", NULL, 0);
 	--Y; TEST( Y ); CLK( 2 );
 }
 
@@ -759,7 +758,7 @@ void Op_88() {
 
 // TXA
 void Op_8A() {
-	DisassembleInstruction("TXA", NULL);
+	DisassembleInstruction("TXA", NULL, 0);
 	A = X; TEST( A ); CLK( 2 );
 }
 
@@ -813,7 +812,7 @@ void Op_96() {
 
 // TYA
 void Op_98() {
-	DisassembleInstruction("TYA", NULL);	
+	DisassembleInstruction("TYA", NULL, 0);	
 	A = Y; TEST( A ); CLK( 2 );
 }
 
@@ -825,7 +824,7 @@ void Op_99() {
 
 // TXS
 void Op_9A() {
-	DisassembleInstruction("TXS", NULL);	
+	DisassembleInstruction("TXS", NULL, 0);	
 	SP = X; CLK( 2 );
 }
 
@@ -873,7 +872,7 @@ void Op_A6() {
 
 // TAY
 void Op_A8() {
-	DisassembleInstruction("TAY", NULL);	
+	DisassembleInstruction("TAY", NULL, 0);	
 	Y = A; TEST( A ); CLK( 2 );
 }
 
@@ -885,7 +884,7 @@ void Op_A9() {
 
 // TAX
 void Op_AA() {
-	DisassembleInstruction("TAX", NULL);	
+	DisassembleInstruction("TAX", NULL, 0);	
 	X = A; TEST( A ); CLK( 2 );
 }
 
@@ -939,7 +938,7 @@ void Op_B6() {
 
 // CLV
 void Op_B8() {
-	DisassembleInstruction("CLV", NULL);	
+	DisassembleInstruction("CLV", NULL, 0);	
 	RSTF( FLAG_V ); CLK( 2 );
 }
 
@@ -951,7 +950,7 @@ void Op_B9() {
 
 // TSX
 void Op_BA() {
-	DisassembleInstruction("TSX", NULL);	
+	DisassembleInstruction("TSX", NULL, 0);	
 	X = SP; TEST( X ); CLK( 2 );
 }
 
@@ -963,7 +962,7 @@ void Op_BC() {
 
 // LDA Abs,X
 void Op_BD() {
-	DisassembleInstruction("LDA", "$%04x,x", AA_ABS);	
+	DisassembleInstruction("LDA", "$%04x,x", AA_ABS);
 	LDA( A_ABSX ); CLK( 4 );
 }
 
@@ -1005,7 +1004,7 @@ void Op_C6() {
 
 // INY
 void Op_C8() {
-	DisassembleInstruction("INY", NULL);	
+	DisassembleInstruction("INY", NULL, 0);	
 	++Y; TEST( Y ); CLK( 2 );	
 }
 
@@ -1017,7 +1016,7 @@ void Op_C9() {
 
 // DEX
 void Op_CA() {
-	DisassembleInstruction("DEX", NULL);	
+	DisassembleInstruction("DEX", NULL, 0);	
 	--X; TEST( X ); CLK( 2 );
 }
 
@@ -1065,7 +1064,7 @@ void Op_D6() {
 
 // CLD
 void Op_D8() {
-	DisassembleInstruction("CLD", NULL);	
+	DisassembleInstruction("CLD", NULL, 0);	
 	RSTF( FLAG_D ); CLK( 2 );
 }
 
@@ -1119,7 +1118,7 @@ void Op_E6() {
 
 // INX 
 void Op_E8() {
-	DisassembleInstruction("INX", NULL);	
+	DisassembleInstruction("INX", NULL, 0);
 	++X; TEST( X ); CLK( 2 );
 }
 
@@ -1131,7 +1130,7 @@ void Op_E9() {
 
 // NOP
 void Op_EA() {
-	DisassembleInstruction("NOP", NULL);	
+	DisassembleInstruction("NOP", NULL, 0);	
 	CLK( 2 );
 }
 
@@ -1179,7 +1178,7 @@ void Op_F6() {
 
 // SED
 void Op_F8() {
-	DisassembleInstruction("SED", NULL);	
+	DisassembleInstruction("SED", NULL, 0);	
 	SETF( FLAG_D ); CLK( 2 );
 }
 
@@ -1203,6 +1202,7 @@ void Op_FE() {
 
 // Unknown Instruction
 void Op_XX() {
+	DisassembleInstruction("HACF", NULL, 0);
 	printf("WARNING: RUNNING UNDOCUMENTED INSTRUCTION - HALTING\n");
 	HALT = 1;
 	CLK( 2 );
@@ -1361,6 +1361,10 @@ void K6502_Reset()
   // Reset Passed Clocks
   g_wPassedClocks = 0;
   totalClocks = 0;
+
+  #ifdef DEBUG
+  memset(DisassemblyBuffer, 0, MAX_DISASM_STEPS * MAX_DISASM_STRING);
+  #endif
 }
 
 /*===================================================================*/

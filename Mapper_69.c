@@ -25,7 +25,7 @@ void Mapper_69_Init() {
 }
 
 void Mapper_69_Write(uint16 addr, uint8 data) {
-    printf("Map69_Write $%04X, %02X\n", addr, data);
+//    printf("Map69_Write $%04X, %02X\n", addr, data);
     switch(addr & 0xE000) {
         case 0x8000: {
             Mapper_69_regs[0] = data;
