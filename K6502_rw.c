@@ -145,7 +145,7 @@ inline unsigned char K6502_Read( uint16 wAddr )
       // The other sound registers are not readable.
 
     case 0x6000:  /* SRAM */
-      return SRAM[ wAddr & 0x1fff ];
+        return SRAM[ wAddr & 0x1fff ];
 
     case 0x8000:  /* ROM BANK 0 */
       return ROMBANK0[ wAddr & 0x1fff ];

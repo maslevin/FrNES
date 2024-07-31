@@ -211,7 +211,7 @@ struct OpcodeTable_tag OpcodeTable[256] = {
 	{Op_50}, {Op_51}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_55}, {Op_56}, {Op_XX}, {Op_58}, {Op_59}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_5D}, {Op_5E}, {Op_XX},
 	{Op_60}, {Op_61}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_65}, {Op_66}, {Op_XX}, {Op_68}, {Op_69}, {Op_6A}, {Op_XX}, {Op_6C}, {Op_6D}, {Op_6E}, {Op_XX},
 	{Op_70}, {Op_71}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_75}, {Op_76}, {Op_XX}, {Op_78}, {Op_79}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_7D}, {Op_7E}, {Op_XX},
-	{Op_XX}, {Op_81}, {Op_XX}, {Op_XX}, {Op_84}, {Op_85}, {Op_86}, {Op_XX}, {Op_88}, {Op_XX}, {Op_8A}, {Op_XX}, {Op_8C}, {Op_8D}, {Op_8E}, {Op_XX},
+	{Op_XX}, {Op_81}, {Op_XX}, {Op_XX}, {Op_84}, {Op_85}, {Op_86}, {Op_XX}, {Op_88}, {Op_89}, {Op_8A}, {Op_XX}, {Op_8C}, {Op_8D}, {Op_8E}, {Op_XX},
 	{Op_90}, {Op_91}, {Op_XX}, {Op_XX}, {Op_94}, {Op_95}, {Op_96}, {Op_XX}, {Op_98}, {Op_99}, {Op_9A}, {Op_XX}, {Op_XX}, {Op_9D}, {Op_XX}, {Op_XX},
 	{Op_A0}, {Op_A1}, {Op_A2}, {Op_XX}, {Op_A4}, {Op_A5}, {Op_A6}, {Op_XX}, {Op_A8}, {Op_A9}, {Op_AA}, {Op_XX}, {Op_AC}, {Op_AD}, {Op_AE}, {Op_XX},
 	{Op_B0}, {Op_B1}, {Op_XX}, {Op_XX}, {Op_B4}, {Op_B5}, {Op_B6}, {Op_XX}, {Op_B8}, {Op_B9}, {Op_BA}, {Op_XX}, {Op_BC}, {Op_BD}, {Op_BE}, {Op_XX},
@@ -227,7 +227,7 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 1024
+#define MAX_DISASM_STEPS 100000
 #define MAX_DISASM_STRING 32
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
@@ -238,6 +238,20 @@ void DisassembleInstruction(char* Opcode, char* fmt, uint16 value) {
 	char p[16];
 	if (fmt) {
 		snprintf(p, 16, fmt, value);
+	} else {
+		p[0] = '\0';
+	}
+	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
+	DisassemblyBufferIndex++;
+	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
+	REALPC;
+}
+
+void DisassembleInstruction2(char* Opcode, char* fmt, uint16 value, uint16 value2) {
+	VIRPC;
+	char p[16];
+	if (fmt) {
+		snprintf(p, 16, fmt, value, value2);
 	} else {
 		p[0] = '\0';
 	}
@@ -269,8 +283,14 @@ void UploadDisassembly() {
 	}
 }
 
+void PrintRegisters() {
+	printf("PC: [$%04x] A: [$%02x] X: [$%02x] Y: [$%02x]\n", PC - 1, A, X, Y);
+}
+
 #else
+#define PrintRegisters() (0)
 #define DisassembleInstruction(...) (0)
+#define DisassembleInstruction2(...) (0)
 #endif
 
 void Op_00() {
@@ -280,19 +300,19 @@ void Op_00() {
 
 // ORA (Zpg,X)
 void Op_01() {
-	DisassembleInstruction("ORA", "($%04x,x)", A_IX);
+	DisassembleInstruction("ORA", "($%04x,x)", AA_ABS);
 	ORA( A_IX ); ++pPC; CLK( 6 );
 }
 
 // ORA Zpg
 void Op_05() {
-	DisassembleInstruction("ORA", "$%02x", RAM[ (*(pPC + 1)) ]);
+	DisassembleInstruction("ORA", "$%02x", *pPC);
 	ORA( A_ZP ); CLK( 3 );
 }
 
 // ASL Zpg
 void Op_06() {
-	DisassembleInstruction("ASL", "$%02x", K6502_Read( PC + 1 ));
+	DisassembleInstruction("ASL", "$%02x", *pPC);
 	ASL( AA_ZP ); CLK( 5 );
 }
 
@@ -304,12 +324,13 @@ void Op_08() {
 
 // ORA #Oper
 void Op_09() {
-	DisassembleInstruction("ORA", "#$%02x", (*(pPC + 1)));
+	DisassembleInstruction("ORA", "#$%02x", *pPC);
 	ORA( A_IMM ); CLK( 2 );
 }
 
 // ASL A
 void Op_0A() {
+	PrintRegisters();
 	DisassembleInstruction("ASL", NULL, 0);
 	ASLA; CLK( 2 );
 }
@@ -328,7 +349,7 @@ void Op_0E() {
 
 // BPL Oper
 void Op_10 () {
-	DisassembleInstruction("BPL", "$%02x", K6502_Read( PC + 1 ));
+	DisassembleInstruction("BPL", "$%02x", *pPC);
 	BRA( !( F & FLAG_N ) );
 }
 
@@ -340,13 +361,13 @@ void Op_11 () {
 
 // ORA Zpg,X
 void Op_15 () {
-	DisassembleInstruction("ORA", "$%02x,x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("ORA", "$%02x,x", *pPC);	
 	ORA( A_ZPX ); CLK( 4 );
 }
 
 // ASL Zpg,X
 void Op_16() {
-	DisassembleInstruction("ASL", "$%02x,x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("ASL", "$%02x,x", *pPC);	
 	ASL( AA_ZPX ); CLK( 6 );
 }
 
@@ -382,25 +403,25 @@ void Op_20() {
 
 // AND (Zpg,X)
 void Op_21() {
-	DisassembleInstruction("AND", "($%04x,x)", A_IX);
+	DisassembleInstruction("AND", "($%02x,x)", *pPC);
 	AND( A_IX ); ++pPC; CLK( 6 );
 }
 
 // BIT Zpg
 void Op_24() {
-	DisassembleInstruction("BIT", "$%02x", K6502_Read( PC + 1 ));
+	DisassembleInstruction("BIT", "$%02x", *pPC);
 	BIT( A_ZP ); CLK( 3 );
 }
 
 // AND Zpg
 void Op_25() {
-	DisassembleInstruction("AND", "$%02x", RAM[ (*(pPC + 1)) ]);
+	DisassembleInstruction("AND", "$%02x", *pPC);
 	AND( A_ZP ); CLK( 3 );
 }
 
 // ROL Zpg
 void Op_26() {
-	DisassembleInstruction("ROL", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("ROL", "$%02x", *pPC);	
 	ROL( AA_ZP ); CLK( 5 );
 }
 
@@ -412,13 +433,13 @@ void Op_28() {
 
 // AND #Oper
 void Op_29() {
-	DisassembleInstruction("AND", "#$%02x", (*(pPC + 1)));	
+	DisassembleInstruction("AND", "#$%02x", *pPC);	
 	AND( A_IMM ); CLK( 2 );
 }
 
 // ROL A
 void Op_2A() {
-	DisassembleInstruction("ROL", "A", 0);	
+	DisassembleInstruction("ROL", NULL, 0);	
 	ROLA; CLK( 2 );
 }
 
@@ -442,25 +463,25 @@ void Op_2E() {
 
 // BMI Oper 
 void Op_30() {
-	DisassembleInstruction("BMI", "$%02x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("BMI", "$%02x", *pPC);		
 	BRA( F & FLAG_N );
 }
 
 // AND (Zpg),Y
 void Op_31() {
-	DisassembleInstruction("AND", "($%04x),y", AA_ABS);	
+	DisassembleInstruction("AND", "($%02x),y", *pPC);	
 	AND( A_IY ); CLK( 5 );
 }
 
 // AND Zpg,X
 void Op_35() {
-	DisassembleInstruction("AND", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("AND", "$%02x,x", *pPC);		
 	AND( A_ZPX ); CLK( 4 );
 }
 
 // ROL Zpg,X
 void Op_36() {
-	DisassembleInstruction("ROL", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("ROL", "$%02x,x", *pPC);		
 	ROL( AA_ZPX ); CLK( 6 );
 }
 
@@ -496,19 +517,19 @@ void Op_40() {
 
 // EOR (Zpg,X)
 void Op_41() {
-	DisassembleInstruction("EOR", "($%04x,x)", A_IX);	
+	DisassembleInstruction("EOR", "($%02x,x)", *pPC);	
 	EOR( A_IX ); ++pPC; CLK( 6 );
 }
 
 // EOR Zpg
 void Op_45() {
-	DisassembleInstruction("EOR", "$%02x", RAM[ (*(pPC + 1)) ]);	
+	DisassembleInstruction("EOR", "$%02x", *pPC);	
 	EOR( A_ZP ); CLK( 3 );
 }
 
 // LSR Zpg
 void Op_46() {
-	DisassembleInstruction("LSR", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("LSR", "$%02x", *pPC);	
 	LSR( AA_ZP ); CLK( 5 );
 }
 
@@ -520,13 +541,13 @@ void Op_48() {
 
 // EOR #Oper
 void Op_49() {
-	DisassembleInstruction("EOR", "#$%02x", (*(pPC + 1)));		
+	DisassembleInstruction("EOR", "#$%02x", *pPC);		
 	EOR( A_IMM ); CLK( 2 );
 }
 
 // LSR A
 void Op_4A() {
-	DisassembleInstruction("LSR", "A", 0);	
+	DisassembleInstruction("LSR", NULL, 0);	
 	LSRA; CLK( 2 );
 }
 
@@ -550,25 +571,25 @@ void Op_4E() {
 
 // BVC
 void Op_50() {
-	DisassembleInstruction("BVC", "$%02x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("BVC", "$%02x", *pPC);		
 	BRA( !( F & FLAG_V ) );
 }
 
 // EOR (Zpg),Y
 void Op_51() {
-	DisassembleInstruction("EOR", "($%04x),y", AA_ABS);	
+	DisassembleInstruction("EOR", "($%02x),y", *pPC);	
 	EOR( A_IY ); CLK( 5 );
 }
 
 // EOR Zpg,X
 void Op_55() {
-	DisassembleInstruction("EOR", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("EOR", "$%02x,x", *pPC);		
 	EOR( A_ZPX ); CLK( 4 );
 }
 
 // LSR Zpg,X
 void Op_56() {
-	DisassembleInstruction("LSR", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("LSR", "$%02x,x", *pPC);		
 	LSR( AA_ZPX ); CLK( 6 );
 }
 
@@ -577,24 +598,22 @@ void Op_58() {
 	DisassembleInstruction("CLI", NULL, 0);	
 	byD0 = F;
     RSTF( FLAG_I ); CLK( 2 );
-    if ( ( byD0 & FLAG_I ) && IRQ_State == 0 )
-    {
-      // IRQ Interrupt
-      // Execute IRQ if an I flag isn't being set
-      if ( !( F & FLAG_I ) )
-      {
-        CLK( 7 );
+    if ( ( byD0 & FLAG_I ) && IRQ_State == 0 ) {
+		// IRQ Interrupt
+		// Execute IRQ if an I flag isn't being set
+		if ( !( F & FLAG_I ) ) {
+			CLK( 7 );
 
-        VIRPC;
-        PUSHW( PC );
-        PUSH( F & ~FLAG_B );
+			VIRPC;
+			PUSHW( PC );
+			PUSH( F & ~FLAG_B );
 
-        RSTF( FLAG_D );
-        SETF( FLAG_I );
+			RSTF( FLAG_D );
+			SETF( FLAG_I );
 
-        PC = K6502_ReadW( VECTOR_IRQ );
-        REALPC;
-      }
+			PC = K6502_ReadW( VECTOR_IRQ );
+			REALPC;
+		}
     }
 }
 
@@ -624,19 +643,19 @@ void Op_60() {
 
 // ADC (Zpg,X)
 void Op_61() {
-	DisassembleInstruction("ADC", "($%04x,x)", A_IX);	
+	DisassembleInstruction("ADC", "($%02x,x)", *pPC);	
 	ADC( A_IX ); ++pPC; CLK( 6 );
 }
 
 // ADC Zpg
 void Op_65() {
-	DisassembleInstruction("ADC", "$%02x", RAM[ (*(pPC + 1)) ]);	
+	DisassembleInstruction("ADC", "$%02x", *pPC);	
 	ADC( A_ZP ); CLK( 3 );
 }
 
 // ROR Zpg
 void Op_66() {
-	DisassembleInstruction("ROR", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("ROR", "$%02x", *pPC);	
 	ROR( AA_ZP ); CLK( 5 );
 }
 
@@ -648,19 +667,19 @@ void Op_68() {
 
 // ADC #Oper
 void Op_69() {
-	DisassembleInstruction("ADC", "#$%02x", (*(pPC + 1)));		
+	DisassembleInstruction("ADC", "#$%02x", *pPC);		
 	ADC( A_IMM ); CLK( 2 );
 }
 
 // ROR A
 void Op_6A() {
-	DisassembleInstruction("ROR", "A", 0);	
+	DisassembleInstruction("ROR", NULL, 0);	
 	RORA; CLK( 2 );
 }
 
 // JMP (Abs)
 void Op_6C() {
-	DisassembleInstruction("JMP", "($%04x)", AA_ABS);
+	DisassembleInstruction2("JMP", "($%04x) = $%04x", AA_ABS, K6502_ReadW(AA_ABS));
 	JMP( K6502_ReadW( AA_ABS ) ); CLK( 5 );
 }
 
@@ -678,7 +697,7 @@ void Op_6E() {
 
 // BVS
 void Op_70() {
-	DisassembleInstruction("BVS", "$%02x", K6502_Read( PC + 1 ));
+	DisassembleInstruction("BVS", "$%02x", *pPC);
 	BRA( F & FLAG_V );
 }
 
@@ -690,13 +709,13 @@ void Op_71() {
 
 // ADC Zpg,X
 void Op_75() {
-	DisassembleInstruction("ADC", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("ADC", "$%02x,x", *pPC);		
 	ADC( A_ZPX ); CLK( 4 );
 }
 
 // ROR Zpg,X
 void Op_76() {
-	DisassembleInstruction("ROR", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("ROR", "$%02x,x", *pPC);		
 	ROR( AA_ZPX ); CLK( 6 );
 }
 
@@ -726,25 +745,26 @@ void Op_7E() {
 
 // STA (Zpg,X)
 void Op_81() {
-	DisassembleInstruction("STA", "($%04x,x)", A_IX);	
+	DisassembleInstruction("STA", "($%02x,x)", *pPC);	
 	STA( AA_IX ); ++pPC; CLK( 6 );
 }
       
  // STY Zpg
 void Op_84() {
-	DisassembleInstruction("STY", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("STY", "$%02x", *pPC);	
 	STY( AA_ZP ); CLK( 3 );
 }
 
 // STA Zpg
 void Op_85() {
+	PrintRegisters();	
 	DisassembleInstruction("STA", "$%02x", *pPC);
 	STA( AA_ZP ); CLK( 3 );
 }
 
 // STX Zpg
 void Op_86() {
-	DisassembleInstruction("STX", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("STX", "$%02x", *pPC);	
 	STX( AA_ZP ); CLK( 3 );
 }
 
@@ -754,7 +774,11 @@ void Op_88() {
 	--Y; TEST( Y ); CLK( 2 );
 }
 
-// 89?
+// BIT #
+void Op_89() {
+	DisassembleInstruction("BIT", "#$%02x", *pPC);
+	BIT( AA_ZP ); CLK( 2 );
+}
 
 // TXA
 void Op_8A() {
@@ -782,7 +806,7 @@ void Op_8E() {
 
 // BCC
 void Op_90() {
-	DisassembleInstruction("BCC", "$%02x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("BCC", "$%02x", *pPC);		
 	BRA( !( F & FLAG_C ) );
 }
 
@@ -794,19 +818,19 @@ void Op_91() {
 
 // STY Zpg,X
 void Op_94() {
-	DisassembleInstruction("STY", "$%02x,x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("STY", "$%02x,x", *pPC);	
 	STY( AA_ZPX ); CLK( 4 );
 }
 
 // STA Zpg,X
 void Op_95() {
-	DisassembleInstruction("STA", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("STA", "$%02x,x", *pPC);		
 	STA( AA_ZPX ); CLK( 4 );
 }
 
 // STX Zpg,Y
 void Op_96() {
-	DisassembleInstruction("STX", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("STX", "$%02x,x", *pPC);		
 	STX( AA_ZPY ); CLK( 4 );
 }
 
@@ -836,37 +860,38 @@ void Op_9D() {
 
 // LDY #Oper
 void Op_A0() {
-	DisassembleInstruction("LDY", "#$%02x", (*(pPC + 1)));	
+	DisassembleInstruction("LDY", "#$%02x", *pPC);	
 	LDY( A_IMM ); CLK( 2 );
 }
 
 // LDA (Zpg,X)
 void Op_A1() {
-	DisassembleInstruction("LDA", "($%04x,x)", A_IX);	
+	DisassembleInstruction("LDA", "($%04x,x)", AA_ABS);	
 	LDA( A_IX ); ++pPC; CLK( 6 );
 }
 
 // LDX #Oper
 void Op_A2() {
-	DisassembleInstruction("LDX", "#$%02x", (*(pPC + 1)));	
+	DisassembleInstruction("LDX", "#$%02x", *pPC);	
 	LDX( A_IMM ); CLK( 2 );
 }
 
 // LDY Zpg
 void Op_A4() {
-	DisassembleInstruction("LDY", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("LDY", "$%02x", *pPC);	
 	LDY( A_ZP ); CLK( 3 );
 }
 
 // LDA Zpg
 void Op_A5() {
-	DisassembleInstruction("LDA", "$%02x", RAM[ (*(pPC + 1)) ]);	
+	PrintRegisters();
+	DisassembleInstruction("LDA", "$%02x", *pPC);
 	LDA( A_ZP ); CLK( 3 );
 }
 
 // LDX Zpg
 void Op_A6() {
-	DisassembleInstruction("LDX", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("LDX", "$%02x", *pPC);	
 	LDX( A_ZP ); CLK( 3 );
 }
 
@@ -878,12 +903,13 @@ void Op_A8() {
 
 // LDA #Oper
 void Op_A9() {
-	DisassembleInstruction("LDA", "#$%02x", (*(pPC + 1)));		
+	DisassembleInstruction("LDA", "#$%02x", *pPC);		
 	LDA( A_IMM ); CLK( 2 );
 }
 
 // TAX
 void Op_AA() {
+	PrintRegisters();
 	DisassembleInstruction("TAX", NULL, 0);	
 	X = A; TEST( A ); CLK( 2 );
 }
@@ -908,7 +934,7 @@ void Op_AE() {
 
 // BCS
 void Op_B0() {
-	DisassembleInstruction("BCS", "$%02x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("BCS", "$%02x", *pPC);		
 	BRA( F & FLAG_C );
 }
 
@@ -920,19 +946,19 @@ void Op_B1() {
 
 // LDY Zpg,X
 void Op_B4() {
-	DisassembleInstruction("LDY", "$%02x,x", K6502_Read( PC + 1 ));
+	DisassembleInstruction("LDY", "$%02x,x", *pPC);
 	LDY( A_ZPX ); CLK( 4 );
 }
 
 // LDA Zpg,X
 void Op_B5() {
-	DisassembleInstruction("LDA", "$%02x,x", K6502_Read( PC + 1 ));
+	DisassembleInstruction("LDA", "$%02x,x", *pPC);
 	LDA( A_ZPX ); CLK( 4 );
 }
 
 // LDX Zpg,Y
 void Op_B6() {
-	DisassembleInstruction("LDX", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("LDX", "$%02x,x", *pPC);		
 	LDX( A_ZPY ); CLK( 4 );
 }
 
@@ -962,6 +988,7 @@ void Op_BC() {
 
 // LDA Abs,X
 void Op_BD() {
+	PrintRegisters();
 	DisassembleInstruction("LDA", "$%04x,x", AA_ABS);
 	LDA( A_ABSX ); CLK( 4 );
 }
@@ -974,7 +1001,7 @@ void Op_BE() {
 
 // CPY #Oper
 void Op_C0() {
-	DisassembleInstruction("CPY", "#$%02x", (*(pPC + 1)));	
+	DisassembleInstruction("CPY", "#$%02x", *pPC);	
 	CPY( A_IMM ); CLK( 2 );
 }
 
@@ -986,19 +1013,19 @@ void Op_C1() {
 
 // CPY Zpg
 void Op_C4() {
-	DisassembleInstruction("CPY", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("CPY", "$%02x", *pPC);	
 	CPY( A_ZP ); CLK( 3 );
 }
 
 // CMP Zpg
 void Op_C5() {
-	DisassembleInstruction("CMP", "$%02x", RAM[ (*(pPC + 1)) ]);	
+	DisassembleInstruction("CMP", "$%02x", *pPC);	
 	CMP( A_ZP ); CLK( 3 );
 }
 
 // DEC Zpg
 void Op_C6() {
-	DisassembleInstruction("DEC", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("DEC", "$%02x", *pPC);	
 	DEC( AA_ZP ); CLK( 5 );
 }
 
@@ -1010,7 +1037,7 @@ void Op_C8() {
 
 // CMP #Oper
 void Op_C9() {
-	DisassembleInstruction("CMP", "#$%02x", (*(pPC + 1)));
+	DisassembleInstruction("CMP", "#$%02x", *pPC);
 	CMP( A_IMM ); CLK( 2 );
 }
 
@@ -1040,7 +1067,7 @@ void Op_CE() {
 
 // BNE
 void Op_D0() {
-	DisassembleInstruction("BNE", "$%02x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("BNE", "$%04x", ((pPC - pPC_Offset) + (char)(*pPC) + 1));		
 	BRA( !( F & FLAG_Z ) );
 }
 
@@ -1052,13 +1079,13 @@ void Op_D1() {
 
 // CMP Zpg,X
 void Op_D5 () {
-	DisassembleInstruction("CMP", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("CMP", "$%02x,x", *pPC);		
 	CMP( A_ZPX ); CLK( 4 );
 }
         
 // DEC Zpg,X
 void Op_D6() {
-	DisassembleInstruction("DEC", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("DEC", "$%02x,x", *pPC);		
 	DEC( AA_ZPX ); CLK( 6 );
 }
 
@@ -1088,31 +1115,31 @@ void Op_DE() {
 
 // CPX #Oper
 void Op_E0() {
-	DisassembleInstruction("CPX", "#$%02x", (*(pPC + 1)));	
+	DisassembleInstruction("CPX", "#$%02x", *pPC);	
 	CPX( A_IMM ); CLK( 2 );
 }
 
 // SBC (Zpg,X)
 void Op_E1() {
-	DisassembleInstruction("SBC", "($%04x,x)", A_IX);	
+	DisassembleInstruction("SBC", "($%04x,x)", AA_ABS);	
 	SBC( A_IX ); ++pPC; CLK( 6 );
 }
 
 // CPX Zpg
 void Op_E4() {
-	DisassembleInstruction("CPX", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("CPX", "$%02x", *pPC);	
 	CPX( A_ZP ); CLK( 3 );
 }
 
 // SBC Zpg
 void Op_E5() {
-	DisassembleInstruction("SBC", "$%02x", RAM[ (*(pPC + 1)) ]);	
+	DisassembleInstruction("SBC", "$%02x", *pPC);	
 	SBC( A_ZP ); CLK( 3 );
 }
 
 // INC Zpg
 void Op_E6() {
-	DisassembleInstruction("INC", "$%02x", K6502_Read( PC + 1 ));	
+	DisassembleInstruction("INC", "$%02x", *pPC);	
 	INC( AA_ZP ); CLK( 5 );
 }
 
@@ -1124,7 +1151,7 @@ void Op_E8() {
 
 // SBC #Oper
 void Op_E9() {
-	DisassembleInstruction("SBC", "#$%02x", (*(pPC + 1)));
+	DisassembleInstruction("SBC", "#$%02x", *pPC);
 	SBC( A_IMM ); CLK( 2 );
 }
 
@@ -1154,7 +1181,7 @@ void Op_EE() {
 
 // BEQ
 void Op_F0() {
-	DisassembleInstruction("BEQ", "$%02x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("BEQ", "$%02x", *pPC);		
 	BRA( F & FLAG_Z );
 }
 
@@ -1166,13 +1193,13 @@ void Op_F1() {
 
 // SBC Zpg,X
 void Op_F5() {
-	DisassembleInstruction("SBC", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("SBC", "$%02x,x", *pPC);		
 	SBC( A_ZPX ); CLK( 4 );
 }
 
 // INC Zpg,X
 void Op_F6() {
-	DisassembleInstruction("INC", "$%02x,x", K6502_Read( PC + 1 ));		
+	DisassembleInstruction("INC", "$%02x,x", *pPC);		
 	INC( AA_ZPX ); CLK( 6 );
 }
 
@@ -1214,113 +1241,96 @@ void Op_XX() {
 /*                                                                   */
 /*===================================================================*/
 void K6502_Init() {
-/*
- *  Initialize K6502
- *
- *  You must call this function only once at first.
- */
-  unsigned char idx;
-  unsigned char idx2;
+	unsigned char idx;
+	unsigned char idx2;
 
-  HALT = 0;
+	HALT = 0;
 
-  // The establishment of the IRQ pin
-  NMI_Wiring = NMI_State = 1;
-  IRQ_Wiring = IRQ_State = 1;
+	// The establishment of the IRQ pin
+	NMI_Wiring = NMI_State = 1;
+	IRQ_Wiring = IRQ_State = 1;
 
-  // Make a table for the test
-  idx = 0;
-  do
-  {
-    if ( idx == 0 )
-      g_byTestTable[ 0 ] = FLAG_Z;
-    else
-    if ( idx > 127 )
-      g_byTestTable[ idx ] = FLAG_N;
-    else
-      g_byTestTable[ idx ] = 0;
+	// Make a table for the test
+	idx = 0;
+	do {
+		if ( idx == 0 )
+			g_byTestTable[ 0 ] = FLAG_Z;
+		else if ( idx > 127 )
+			g_byTestTable[ idx ] = FLAG_N;
+		else
+			g_byTestTable[ idx ] = 0;
+		++idx;
+	} while ( idx != 0 );
 
-    ++idx;
-  } while ( idx != 0 );
+	// Make a table ASL
+	idx = 0;
+	do {
+		g_ASLTable[ idx ].byValue = idx << 1;
+		g_ASLTable[ idx ].byFlag = 0;
 
-  // Make a table ASL
-  idx = 0;
-  do
-  {
-    g_ASLTable[ idx ].byValue = idx << 1;
-    g_ASLTable[ idx ].byFlag = 0;
+		if ( idx > 127 )
+			g_ASLTable[ idx ].byFlag = FLAG_C;
 
-    if ( idx > 127 )
-      g_ASLTable[ idx ].byFlag = FLAG_C;
+		if ( g_ASLTable[ idx ].byValue == 0 )
+			g_ASLTable[ idx ].byFlag |= FLAG_Z;
+		else if ( g_ASLTable[ idx ].byValue & 0x80 )
+			g_ASLTable[ idx ].byFlag |= FLAG_N;
 
-    if ( g_ASLTable[ idx ].byValue == 0 )
-      g_ASLTable[ idx ].byFlag |= FLAG_Z;
-    else
-    if ( g_ASLTable[ idx ].byValue & 0x80 )
-      g_ASLTable[ idx ].byFlag |= FLAG_N;
+		++idx;
+	} while ( idx != 0 );
 
-    ++idx;
-  } while ( idx != 0 );
+	// Make a table LSR
+	idx = 0;
+	do {
+		g_LSRTable[ idx ].byValue = idx >> 1;
+		g_LSRTable[ idx ].byFlag = 0;
 
-  // Make a table LSR
-  idx = 0;
-  do
-  {
-    g_LSRTable[ idx ].byValue = idx >> 1;
-    g_LSRTable[ idx ].byFlag = 0;
+		if ( idx & 1 )
+			g_LSRTable[ idx ].byFlag = FLAG_C;
 
-    if ( idx & 1 )
-      g_LSRTable[ idx ].byFlag = FLAG_C;
+		if ( g_LSRTable[ idx ].byValue == 0 )
+			g_LSRTable[ idx ].byFlag |= FLAG_Z;
 
-    if ( g_LSRTable[ idx ].byValue == 0 )
-      g_LSRTable[ idx ].byFlag |= FLAG_Z;
+		++idx;
+	} while ( idx != 0 );
 
-    ++idx;
-  } while ( idx != 0 );
+	// Make a table ROL
+	for ( idx2 = 0; idx2 < 2; ++idx2 ) {
+		idx = 0;
+		do {
+			g_ROLTable[ idx2 ][ idx ].byValue = ( idx << 1 ) | idx2;
+			g_ROLTable[ idx2 ][ idx ].byFlag = 0;
 
-  // Make a table ROL
-  for ( idx2 = 0; idx2 < 2; ++idx2 )
-  {
-    idx = 0;
-    do
-    {
-      g_ROLTable[ idx2 ][ idx ].byValue = ( idx << 1 ) | idx2;
-      g_ROLTable[ idx2 ][ idx ].byFlag = 0;
+			if ( idx > 127 )
+				g_ROLTable[ idx2 ][ idx ].byFlag = FLAG_C;
 
-      if ( idx > 127 )
-        g_ROLTable[ idx2 ][ idx ].byFlag = FLAG_C;
+			if ( g_ROLTable[ idx2 ][ idx ].byValue == 0 )
+				g_ROLTable[ idx2 ][ idx ].byFlag |= FLAG_Z;
+			else if ( g_ROLTable[ idx2 ][ idx ].byValue & 0x80 )
+				g_ROLTable[ idx2 ][ idx ].byFlag |= FLAG_N;
 
-      if ( g_ROLTable[ idx2 ][ idx ].byValue == 0 )
-        g_ROLTable[ idx2 ][ idx ].byFlag |= FLAG_Z;
-      else
-      if ( g_ROLTable[ idx2 ][ idx ].byValue & 0x80 )
-        g_ROLTable[ idx2 ][ idx ].byFlag |= FLAG_N;
+			++idx;
+		} while ( idx != 0 );
+	}
 
-      ++idx;
-    } while ( idx != 0 );
-  }
+	// Make a table ROR
+	for ( idx2 = 0; idx2 < 2; ++idx2 ) {
+		idx = 0;
+		do {
+			g_RORTable[ idx2 ][ idx ].byValue = ( idx >> 1 ) | ( idx2 << 7 );
+			g_RORTable[ idx2 ][ idx ].byFlag = 0;
 
-  // Make a table ROR
-  for ( idx2 = 0; idx2 < 2; ++idx2 )
-  {
-    idx = 0;
-    do
-    {
-      g_RORTable[ idx2 ][ idx ].byValue = ( idx >> 1 ) | ( idx2 << 7 );
-      g_RORTable[ idx2 ][ idx ].byFlag = 0;
+			if ( idx & 1 )
+				g_RORTable[ idx2 ][ idx ].byFlag = FLAG_C;
 
-      if ( idx & 1 )
-        g_RORTable[ idx2 ][ idx ].byFlag = FLAG_C;
+			if ( g_RORTable[ idx2 ][ idx ].byValue == 0 )
+				g_RORTable[ idx2 ][ idx ].byFlag |= FLAG_Z;
+			else if ( g_RORTable[ idx2 ][ idx ].byValue & 0x80 )
+				g_RORTable[ idx2 ][ idx ].byFlag |= FLAG_N;
 
-      if ( g_RORTable[ idx2 ][ idx ].byValue == 0 )
-        g_RORTable[ idx2 ][ idx ].byFlag |= FLAG_Z;
-      else
-      if ( g_RORTable[ idx2 ][ idx ].byValue & 0x80 )
-        g_RORTable[ idx2 ][ idx ].byFlag |= FLAG_N;
-
-      ++idx;
-    } while ( idx != 0 );
-  }
+			++idx;
+		} while ( idx != 0 );
+	}
 }
 
 /*===================================================================*/
@@ -1328,43 +1338,39 @@ void K6502_Init() {
 /*                K6502_Reset() : Reset a CPU                        */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Reset()
-{
-/*
- *  Reset a CPU
- *
- */
+void K6502_Reset() {
+
 	HALT = 0;
 
-  // Reset Bank Table
-  BankTable[ 0 ] = RAM;
-  BankTable[ 1 ] = RAM;
-  BankTable[ 2 ] = RAM;
-  BankTable[ 3 ] = SRAM;
-  BankTable[ 4 ] = ROMBANK0;
-  BankTable[ 5 ] = ROMBANK1;
-  BankTable[ 6 ] = ROMBANK2;
-  BankTable[ 7 ] = ROMBANK3;
+	// Reset Bank Table
+	BankTable[ 0 ] = RAM;
+	BankTable[ 1 ] = RAM;
+	BankTable[ 2 ] = RAM;
+	BankTable[ 3 ] = SRAM;
+	BankTable[ 4 ] = ROMBANK0;
+	BankTable[ 5 ] = ROMBANK1;
+	BankTable[ 6 ] = ROMBANK2;
+	BankTable[ 7 ] = ROMBANK3;
 
-  // Reset Registers
-  PC = K6502_ReadW( VECTOR_RESET );
-  PredPC = 0;
-  REALPC;
-  SP = 0xFF;
-  A = X = Y = 0;
-  F = FLAG_Z | FLAG_R;
+	// Reset Registers
+	PC = K6502_ReadW( VECTOR_RESET );
+	PredPC = 0;
+	REALPC;
+	SP = 0xFF;
+	A = X = Y = 0;
+	F = FLAG_Z | FLAG_R;
 
-  // Set up the state of the Interrupt pin.
-  NMI_State = NMI_Wiring;
-  IRQ_State = IRQ_Wiring;
+	// Set up the state of the Interrupt pin.
+	NMI_State = NMI_Wiring;
+	IRQ_State = IRQ_Wiring;
 
-  // Reset Passed Clocks
-  g_wPassedClocks = 0;
-  totalClocks = 0;
+	// Reset Passed Clocks
+	g_wPassedClocks = 0;
+	totalClocks = 0;
 
-  #ifdef DEBUG
-  memset(DisassemblyBuffer, 0, MAX_DISASM_STEPS * MAX_DISASM_STRING);
-  #endif
+	#ifdef DEBUG
+	memset(DisassemblyBuffer, 0, MAX_DISASM_STEPS * MAX_DISASM_STRING);
+	#endif
 }
 
 /*===================================================================*/
@@ -1372,21 +1378,13 @@ void K6502_Reset()
 /*    K6502_Set_Int_Wiring() : Set up wiring of the interrupt pin    */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Set_Int_Wiring( unsigned char byNMI_Wiring, unsigned char byIRQ_Wiring )
-{
-/*
- * Set up wiring of the interrupt pin
- *
- */
-
-  NMI_Wiring = byNMI_Wiring;
-  IRQ_Wiring = byIRQ_Wiring;
+void K6502_Set_Int_Wiring( unsigned char byNMI_Wiring, unsigned char byIRQ_Wiring ) {
+	NMI_Wiring = byNMI_Wiring;
+	IRQ_Wiring = byIRQ_Wiring;
 }
 
-void K6502_DoNMI()
-{
-	if (NMI_State != NMI_Wiring)
-	{
+void K6502_DoNMI() {
+	if (NMI_State != NMI_Wiring) {
 		// NMI Interrupt
 		CLK( 7 );
 
@@ -1403,26 +1401,26 @@ void K6502_DoNMI()
 	}
 }
 
-void K6502_DoIRQ () {
-  if ( IRQ_State != IRQ_Wiring ) {
-    // IRQ Interrupt
-    // Execute IRQ if an I flag isn't being set
-    if ( !( F & FLAG_I ) ) {
-      CLK( 7 );
+void K6502_DoIRQ() {
+	if ( IRQ_State != IRQ_Wiring ) {
+		// IRQ Interrupt
+		// Execute IRQ if an I flag isn't being set
+		if ( !( F & FLAG_I ) ) {
+			CLK( 7 );
 
-      VIRPC;
-      PUSHW( PC );
-      PUSH( F & ~FLAG_B );
+			VIRPC;
+			PUSHW( PC );
+			PUSH( F & ~FLAG_B );
 
-      RSTF( FLAG_D );
-      SETF( FLAG_I );
-    
-      PC = K6502_ReadW( VECTOR_IRQ );
-      REALPC;
-    }
+			RSTF( FLAG_D );
+			SETF( FLAG_I );
 
-  	IRQ_State = IRQ_Wiring;	
-  }
+			PC = K6502_ReadW( VECTOR_IRQ );
+			REALPC;
+		}
+
+		IRQ_State = IRQ_Wiring;	
+	}
 }
 
 /*===================================================================*/
@@ -1431,42 +1429,32 @@ void K6502_DoIRQ () {
 /*          Only the specified number of the clocks execute Op.      */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Step( uint16 wClocks )
-{
-/*
- *  Only the specified number of the clocks execute Op.
- *
- *  Parameters
- *    uint16 wClocks              (Read)
- *      The number of the clocks
- */
+void K6502_Step( uint16 wClocks ) {
+	wA0 = 0;
+	byD0 = 0;
+	byD1 = 0;
+	wD0 = 0;
 
-  wA0 = 0;
-  byD0 = 0;
-  byD1 = 0;
-  wD0 = 0;
-  
-  K6502_DoIRQ();
+	K6502_DoIRQ();
 
-  unsigned char opcode;
+	unsigned char opcode;
 
-  // It has a loop until a constant clock passes
-  while ( g_wPassedClocks < wClocks )
-  {
-    // Read an instruction
-    opcode = *(pPC++);
-    
-    // Execute an instruction, run the instruction from the jump table.
-	((OpcodeTable[opcode]).pFPtr)();
+	// It has a loop until a constant clock passes
+	while ( g_wPassedClocks < wClocks ) {
+		// Read an instruction
+		opcode = *(pPC++);
 
-	if (HALT) {
-		printf("Attempted to Run Illegal Opcode [%02X]\n", opcode);
-		break;
-	}
-  }  /* end of while ... */
+		// Execute an instruction, run the instruction from the jump table.
+		((OpcodeTable[opcode]).pFPtr)();
 
-  // Correct the number of the clocks
-  g_wPassedClocks -= wClocks;
+		if (HALT) {
+			printf("Attempted to Run Illegal Opcode [%02X]\n", opcode);
+			break;
+		}
+	}  /* end of while ... */
+
+	// Correct the number of the clocks
+	g_wPassedClocks -= wClocks;
 }
 
 // Addressing Op.
