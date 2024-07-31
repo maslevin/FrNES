@@ -513,7 +513,7 @@ bool checkForAutoROM() {
 int main() {
 	printf("Starting Main\n");
 	cont_state_t* my_state;
-	log_enabled = false;
+	log_enabled = true;
 	log_enabled_latch = false;
 
 	// System initiation

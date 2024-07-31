@@ -145,7 +145,7 @@ inline unsigned char K6502_Read( uint16 wAddr )
       // The other sound registers are not readable.
 
     case 0x6000:  /* SRAM */
-      return SRAM[ wAddr & 0x1fff ];
+        return SRAM[ wAddr & 0x1fff ];
 
     case 0x8000:  /* ROM BANK 0 */
       return ROMBANK0[ wAddr & 0x1fff ];
@@ -163,15 +163,6 @@ inline unsigned char K6502_Read( uint16 wAddr )
   return ( wAddr >> 8 ); /* when a register is not readable the upper half
                             address is returned. */
 }
-
-extern uint16 PC;
-extern unsigned char* pPC;
-extern unsigned char* pPC_Offset;
-extern unsigned char* BankTable[8];
-extern uint16 BankMask[8];
-
-#define REALPC  pPC_Offset = BankTable[ PC >> 13 ] - ( PC & BankMask[ PC >> 13 ] ); pPC = pPC_Offset + PC;
-#define VIRPC   PC = pPC - pPC_Offset;
 
 /*===================================================================*/
 /*                                                                   */

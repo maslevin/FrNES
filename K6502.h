@@ -62,6 +62,10 @@ struct OpcodeTable_tag
 	void (*pFPtr)();	
 };
 
+#ifdef DEBUG
+void UploadDisassembly();
+#endif
+
 extern struct OpcodeTable_tag OpcodeTable[256];
 
 void Op_00();
@@ -141,6 +145,7 @@ void Op_84 ();
 void Op_85 ();
 void Op_86 ();
 void Op_88 ();
+void Op_89 ();
 void Op_8A ();
 void Op_8C ();
 void Op_8D ();
