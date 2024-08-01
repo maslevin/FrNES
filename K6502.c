@@ -219,7 +219,7 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 100000
+#define MAX_DISASM_STEPS 1024
 #define MAX_DISASM_STRING 32
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
@@ -275,15 +275,19 @@ void UploadDisassembly() {
 	}
 }
 
-void PrintRegisters() {
-	printf("PC: [$%04x] A: [$%02x] X: [$%02x] Y: [$%02x]\n", PC - 1, A, X, Y);
-}
-
 #else
-#define PrintRegisters() (0)
+//#define PrintRegisters() (0)
 #define DisassembleInstruction(...) (0)
 #define DisassembleInstruction2(...) (0)
 #endif
+
+void PrintRegisters() {
+	printf("PC: [$%04x] A: [$%02x] X: [$%02x] Y: [$%02x] SP: [$%04x]\n", PC - 1, A, X, Y, BASE_STACK + SP);
+	printf("Stack: \n");
+	for (int SP_Index = SP + 1; SP_Index <= 0xFF; SP_Index++) {
+		printf("$%04x: %02x\n", BASE_STACK + SP_Index, RAM[BASE_STACK + SP_Index]);
+	}
+}
 
 void Op_00() {
 	DisassembleInstruction("BRK", NULL, 0);
@@ -1218,6 +1222,15 @@ void Op_FE() {
 void Op_XX() {
 	DisassembleInstruction("HACF", NULL, 0);
 	printf("WARNING: RUNNING UNDOCUMENTED INSTRUCTION - HALTING\n");
+	PrintRegisters();
+
+	unsigned char* banktest = pPC - 1;
+	printf("$%04x: ", pPC - pPC_Offset - 1);
+	for (int i = 0; i < 16; i++) {
+		printf("$%02x ", banktest[i]);
+	}
+	printf("\n");
+
 	HALT = 1;
 	CLK( 2 );
 }

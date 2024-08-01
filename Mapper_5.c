@@ -61,7 +61,7 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 		switch (Mapper_5_prg_size) {
 			case 0:
 				if (page == 7) {
-//					printf("Setting ROMBANKS 0-3 to [%u-%u]\n",bank&0x7C,(bank&0x7C) + 3);
+					//printf("Setting ROMBANKS 0-3 to [%u-%u]\n",bank&0x7C,(bank&0x7C) + 3);
 					ROMBANK0 = ROMPAGE((bank & 0x7C));
 					ROMBANK1 = ROMPAGE((bank & 0x7C)+1);
 					ROMBANK2 = ROMPAGE((bank & 0x7C)+2);
@@ -71,13 +71,13 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 				break;
 			case 1:
 				if (page == 5) {
-//					printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
+					//printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
 					ROMBANK0 = ROMPAGE((bank & 0x7E));
 					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 7) {
-//					printf("Setting ROMBANKS 2-3 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);					
+					//printf("Setting ROMBANKS 2-3 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);					
 					ROMBANK2 = ROMPAGE((bank & 0x7E));
 					ROMBANK3 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[6] = 8;
@@ -85,39 +85,39 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 				break;
 			case 2:
 				if (page == 5) {
-//					printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
+					//printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
 					ROMBANK0 = ROMPAGE((bank & 0x7E));
 					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
-//					printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);
+					//printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);
 					ROMBANK2 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
-//					printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
+					//printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
 					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 			case 3:
 				if (page == 4) {
-//					printf("Setting ROMBANK 0 to [%u]\n",bank&0x7F);
+					//printf("Setting ROMBANK 0 to [%u]\n",bank&0x7F);
 					ROMBANK0 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[4] = 8;
 				}
 				if (page == 5) {
-//					printf("Setting ROMBANK 1 to [%u]\n",bank&0x7F);					
+					//printf("Setting ROMBANK 1 to [%u]\n",bank&0x7F);					
 					ROMBANK1 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
-//					printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);					
+					//printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);					
 					ROMBANK2 = ROMPAGE((bank & 0x7F));			
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
-//					printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
+					//printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
 					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
@@ -270,19 +270,10 @@ void Mapper_5_Init() {
     // parent_NES->apu->SelectExSound(NES_APU_EXSOUND_MMC5);
 
 	// set CPU bank pointers
-	ROMBANK0 = ROMLASTPAGE(0);
-	ROMBANK1 = ROMLASTPAGE(0);
+	ROMBANK0 = ROMLASTPAGE(3);
+	ROMBANK1 = ROMLASTPAGE(2);
 	ROMBANK2 = ROMLASTPAGE(1);
 	ROMBANK3 = ROMLASTPAGE(0);
-
-/*
-	unsigned char* banktest = ROMBANK2;
-	printf("ROMBANK? $d067\n");
-	for (int i = 0; i < 16; i++) {
-		printf("$%02x ", banktest[i + 0x1067]);
-	}
-	printf("\n");
-*/
 
 	// set PPU bank pointers
 	PPUBANK[ 0 ] = VROMPAGE( 0 );
@@ -501,8 +492,10 @@ unsigned char Mapper_5_Read( uint16 wAddr ) {
 /*-------------------------------------------------------------------*/
 void Mapper_5_HSync() {
 	if (ppuinfo.PPU_Scanline <= 240) {
-		Mapper_5_irq_status |= 0x40;		
-		if (ppuinfo.PPU_Scanline == Mapper_5_irq_line) {
+		Mapper_5_irq_status |= 0x40;
+		// MS - really this should fire on the same scanline as set, but janky frnes timing requires it to fire 1 scanline early
+		// HACK!
+		if (ppuinfo.PPU_Scanline == Mapper_5_irq_line - 1) {
 			if ((PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) == (R1_SHOW_SCR | R1_SHOW_SP)) {
 				Mapper_5_irq_status |= 0x80;
 			}
