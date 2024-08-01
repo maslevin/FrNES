@@ -143,7 +143,7 @@ inline unsigned char K6502_Read( uint16 wAddr )
       // The other sound registers are not readable.
 
     case 0x6000:  /* SRAM */
-      return SRAM[ wAddr & 0x1fff ];
+        return SRAM[ wAddr & 0x1fff ];
 
     case 0x8000:  /* ROM BANK 0 */
       return ROMBANK0[ wAddr & 0x1fff ];
@@ -336,7 +336,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
           }
           break;
 		    default:
-          if (wAddr > 0x4017) {
+          if (wAddr >= 0x4017) {
             mapper -> write (wAddr, byData);
 
             // Set Bank Table
@@ -380,11 +380,11 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData )
 
 // Reading/Writing operation (uint16 version)
 inline uint16 K6502_ReadW( uint16 wAddr ){ 
-  uint16 nextWAddr = wAddr + 1;
-  if ((wAddr & 0xFF) == 0xFF) {
-    nextWAddr = wAddr & 0xFF00;
-  }
-  return K6502_Read( wAddr ) | (uint16)K6502_Read( nextWAddr ) << 8;
+    uint16 nextWAddr = wAddr + 1;
+    if ((wAddr & 0xFF) == 0xFF) {
+        nextWAddr = wAddr & 0xFF00;
+    }
+    return K6502_Read( wAddr ) | (uint16)K6502_Read( nextWAddr ) << 8;
 };
 inline void K6502_WriteW( uint16 wAddr, uint16 wData ){ K6502_Write( wAddr, wData & 0xff ); K6502_Write( wAddr + 1, wData >> 8 ); };
 inline uint16 K6502_ReadZpW( unsigned char byAddr ){ return K6502_ReadZp( byAddr ) | ( K6502_ReadZp( byAddr + 1 ) << 8 ); };

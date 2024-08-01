@@ -26,7 +26,7 @@ unsigned char Mapper_5_split_bank;
 extern uint32 currentCRC32;
 
 void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
-//	printf("Map5_set_WRAM_bank: %u, %u\n", page, bank);    
+	printf("Map5_set_WRAM_bank: %u, %u\n", page, bank);    
 	if (bank != 8) {
 		if(Mapper_5_wram_size == 1) bank = (bank > 3) ? 8 : 0;
 		if(Mapper_5_wram_size == 2) bank = (bank > 3) ? 1 : 0;
@@ -36,7 +36,7 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 	Mapper_5_wb[page] = bank;
 
 	if (bank != 8) {
-//        printf("Setting ROM Page [%u] to WRAM Bank [%u]\n", page, bank);
+		printf("Setting ROM Bank [%u] to WRAM Bank [%u]\n", page, bank);
         switch (page) {
             case 4:
                 ROMBANK0 = &Mapper_5_wram[(bank * 0x2000)]; 
@@ -55,11 +55,13 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 }
 
 void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
-	printf("Map5_set_CPU_bank: %u, %u\n", page, bank);
+	//printf("Map5_set_CPU_bank: %u, %u\n", page, bank);
+	// uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
 	if (bank & 0x80) {
 		switch (Mapper_5_prg_size) {
 			case 0:
 				if (page == 7) {
+//					printf("Setting ROMBANKS 0-3 to [%u-%u]\n",bank&0x7C,(bank&0x7C) + 3);
 					ROMBANK0 = ROMPAGE((bank & 0x7C));
 					ROMBANK1 = ROMPAGE((bank & 0x7C)+1);
 					ROMBANK2 = ROMPAGE((bank & 0x7C)+2);
@@ -69,11 +71,13 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 				break;
 			case 1:
 				if (page == 5) {
+//					printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
 					ROMBANK0 = ROMPAGE((bank & 0x7E));
 					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 7) {
+//					printf("Setting ROMBANKS 2-3 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);					
 					ROMBANK2 = ROMPAGE((bank & 0x7E));
 					ROMBANK3 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[6] = 8;
@@ -81,37 +85,44 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 				break;
 			case 2:
 				if (page == 5) {
+//					printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
 					ROMBANK0 = ROMPAGE((bank & 0x7E));
 					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
+//					printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);
 					ROMBANK2 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
+//					printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
 					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 			case 3:
 				if (page == 4) {
+//					printf("Setting ROMBANK 0 to [%u]\n",bank&0x7F);
 					ROMBANK0 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[4] = 8;
 				}
 				if (page == 5) {
+//					printf("Setting ROMBANK 1 to [%u]\n",bank&0x7F);					
 					ROMBANK1 = ROMPAGE((bank & 0x7F));
 					Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
+//					printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);					
 					ROMBANK2 = ROMPAGE((bank & 0x7F));			
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
+//					printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
 					ROMBANK3 = ROMPAGE((bank & 0x7F));
 				}			
 				break;
 		}
-	} else {     
+	} else {
 		switch (Mapper_5_prg_size) {
 			case 1:
 				if (page == 5) {
@@ -146,7 +157,7 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 }
 
 void Mapper_5_Sync_Chr_Banks(unsigned char mode) {
-//	printf("Map5_Sync_Chr_Bank: %u\n", mode);    
+	pNesX_DebugPrint("Map5_Sync_Chr_Bank: %u\n", mode);    
 	switch (Mapper_5_chr_size) {
 		case 0:
 			PPUBANK[0] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8);
@@ -245,12 +256,14 @@ void Mapper_5_Init() {
 		Mapper_5_wram_size = 3;
 	}
 
-	// set SaveRAM
 	uint32 i;
+	// set SaveRAM	
+	/*
 	for(i = 0; i < 0x10000; i++) {
 		Mapper_5_wram[i] = SRAM[i];
 	}
 	Mapper_5_Set_WRAM_Bank(3,0);
+	*/
 
     // Init ExSound
 	// MS - TODO: Port over MMC5 extension sound
@@ -259,8 +272,17 @@ void Mapper_5_Init() {
 	// set CPU bank pointers
 	ROMBANK0 = ROMLASTPAGE(0);
 	ROMBANK1 = ROMLASTPAGE(0);
-	ROMBANK2 = ROMLASTPAGE(0);
+	ROMBANK2 = ROMLASTPAGE(1);
 	ROMBANK3 = ROMLASTPAGE(0);
+
+/*
+	unsigned char* banktest = ROMBANK2;
+	printf("ROMBANK? $d067\n");
+	for (int i = 0; i < 16; i++) {
+		printf("$%02x ", banktest[i + 0x1067]);
+	}
+	printf("\n");
+*/
 
 	// set PPU bank pointers
 	PPUBANK[ 0 ] = VROMPAGE( 0 );
@@ -300,11 +322,12 @@ void Mapper_5_Init() {
 /*  Mapper 5 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
-	printf("Map5_Write: $%04X, %02X\n", wAddr, byData);	
+	pNesX_DebugPrint("Map5_Write: $%04X, %02X\n", wAddr, byData);	
 	uint32 i;
 
 	switch(wAddr) {
 		case 0x5100: {
+			printf("Set Program Size [%u]\n", byData & 0x03);
 			Mapper_5_prg_size = byData & 0x03;
 		} break;
 
@@ -352,8 +375,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 
 		case 0x5113: {
 			Mapper_5_Set_WRAM_Bank(3, byData & 0x07);
-		}
-		break;
+		} break;
 
 		case 0x5114:
 		case 0x5115:
@@ -445,7 +467,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 /*  Mapper 5 Read Function                                           */
 /*-------------------------------------------------------------------*/
 unsigned char Mapper_5_Read( uint16 wAddr ) {
-    printf("Map5_Read: $%04X\n", wAddr);
+    pNesX_DebugPrint("Map5_Read: $%04X\n", wAddr);
     uint8 ret = (uint8)(wAddr >> 8);
     switch (wAddr) {
         case 0x5204: {
@@ -479,15 +501,16 @@ unsigned char Mapper_5_Read( uint16 wAddr ) {
 /*-------------------------------------------------------------------*/
 void Mapper_5_HSync() {
 	if (ppuinfo.PPU_Scanline <= 240) {
+		Mapper_5_irq_status |= 0x40;		
 		if (ppuinfo.PPU_Scanline == Mapper_5_irq_line) {
 			if ((PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) == (R1_SHOW_SCR | R1_SHOW_SP)) {
 				Mapper_5_irq_status |= 0x80;
 			}
 		}
 		if ((Mapper_5_irq_status & 0x80) && (Mapper_5_irq_enabled & 0x80)) {
-			K6502_DoIRQ();
+			IRQ_REQ;
 		}
 	} else {
-		Mapper_5_irq_status |= 0x40;
+		Mapper_5_irq_status &= ~0x40;
 	}
 }

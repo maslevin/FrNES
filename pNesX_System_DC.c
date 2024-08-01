@@ -40,6 +40,8 @@
 #include "GUI_ControlPage.h"
 #include "GUI_GUIPage.h"
 
+#include "K6502.h"
+
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_VMU);
 
@@ -939,6 +941,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 			my_state = (cont_state_t*)maple_dev_status(my_controller);		
 
 			if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
+				HALT = 1;
 				log_enabled = !log_enabled;
 				log_enabled_latch = true;
 			} else if ((my_state -> buttons & CONT_Y) == 0) {

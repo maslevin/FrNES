@@ -40,6 +40,15 @@ unsigned char K6502_ReadIY();
 void K6502_Write( uint16 wAddr, unsigned char byData );
 void K6502_WriteW( uint16 wAddr, uint16 wData );
 
+extern uint16 PC;
+extern unsigned char* pPC;
+extern unsigned char* pPC_Offset;
+extern unsigned char* BankTable[8];
+extern uint16 BankMask[8];
+
+#define REALPC  pPC_Offset = BankTable[ PC >> 13 ] - ( PC & BankMask[ PC >> 13 ] ); pPC = pPC_Offset + PC;
+#define VIRPC   PC = pPC - pPC_Offset;
+
 #endif /* !K6502_RW_H_INCLUDED */
 
 /* REVISION
