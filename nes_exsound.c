@@ -36,11 +36,11 @@ static const uint32 logtbl[] = {
 #include "sound_tables/tbl/logtable.h"
 };
 
-uint32 LinearToLog(int32 l) {
+static inline uint32 LinearToLog(int32 l) {
 	return (l < 0) ? (lineartbl[-l] + 1) : lineartbl[l];
 }
 
-int32 LogToLinear(uint32 l, uint32 sft) {
+static inline int32 LogToLinear(uint32 l, uint32 sft) {
 	int32 ret;
 	uint32 ofs;
 	sft += (l >> 1) >> LOG_BITS;
@@ -60,7 +60,7 @@ void LogTableInitialize() {
 	}
 }
 
-uint32 DivFix(uint32 p1, uint32 p2, uint32 fix) {
+static inline uint32 DivFix(uint32 p1, uint32 p2, uint32 fix) {
 	uint32 ret;
 	ret = p1 / p2;
 	p1  = p1 % p2;/* p1 = p1 - p2 * ret; */
@@ -81,7 +81,7 @@ uint32 DivFix(uint32 p1, uint32 p2, uint32 fix) {
 **
 ** original: s_vrc6.c in nezp0922
 *****************************************************************************/
-int32 VRC6SoundSquareRender(VRC6_SQUARE *ch) {
+static inline int32 VRC6SoundSquareRender(VRC6_SQUARE *ch) {
     uint32 output;
     if (ch->update) {
         if (ch->update & (2 | 4)) {
@@ -112,7 +112,7 @@ int32 VRC6SoundSquareRender(VRC6_SQUARE *ch) {
     return LogToLinear(output, LOG_LIN_BITS - LIN_BITS - 16 - 1);
 }
 
-int32 VRC6SoundSawRender(VRC6_SAW *ch) {
+static inline int32 VRC6SoundSawRender(VRC6_SAW *ch) {
     uint32 output;
 
     if (ch->update) {
@@ -152,17 +152,17 @@ void VRC6SoundVolume(uint32 volume) {
 	apu->vrc6s.mastervolume = (volume << (LOG_BITS - 8)) << 1;
 }
 
-void VRC6SoundWrite9000(uint32 address, uint8 value) {
+static inline void VRC6SoundWrite9000(uint32 address, uint8 value) {
 	apu->vrc6s.square[0].regs[address & 3] = value;
 	apu->vrc6s.square[0].update |= 1 << (address & 3); 
 }
 
-void VRC6SoundWriteA000(uint32 address, uint8 value) {
+static inline void VRC6SoundWriteA000(uint32 address, uint8 value) {
 	apu->vrc6s.square[1].regs[address & 3] = value;
 	apu->vrc6s.square[1].update |= 1 << (address & 3); 
 }
 
-void VRC6SoundWriteB000(uint32 address, uint8 value) {
+static inline void VRC6SoundWriteB000(uint32 address, uint8 value) {
 	apu->vrc6s.saw.regs[address & 3] = value;
 	apu->vrc6s.saw.update |= 1 << (address & 3); 
 }
@@ -181,11 +181,11 @@ void VRC6SoundWrite(uint32 address, uint8 value) {
 	}
 }
 
-void VRC6SoundSquareReset(VRC6_SQUARE *ch) {
+static inline void VRC6SoundSquareReset(VRC6_SQUARE *ch) {
 	ch->cps = DivFix(NES_BASECYCLES, 12 * SAMPLE_RATE, 18);
 }
 
-void VRC6SoundSawReset(VRC6_SAW *ch) {
+static inline void VRC6SoundSawReset(VRC6_SAW *ch) {
 	ch->cps = DivFix(NES_BASECYCLES, 24 * SAMPLE_RATE, 18);
 }
 
@@ -490,11 +490,11 @@ void OPLLSoundVolume(uint32 volume) {
 	apu->ym2413s.mastervolume = (volume << (LOG_BITS - 8)) << 1;
 }
 
-void OPLLSoundWriteAddr(uint32 address, uint8 value) {
+static inline void OPLLSoundWriteAddr(uint32 address, uint8 value) {
 	apu->ym2413s.adr = value;
 }
 
-void OPLLSoundWriteData(uint32 address, uint8 value) {
+static inline void OPLLSoundWriteData(uint32 address, uint8 value) {
 	int ch = apu->ym2413s.adr & 0xF;
 	switch (apu->ym2413s.adr & 0xF8) {
 		case 0x00:
@@ -615,7 +615,7 @@ void OPLLSoundReset(void) {
 	apu->ym2413s.lfo[1].output = apu->ym2413s.lfo[1].table[0];
 }
 
-void VRC7SetTone(uint8 *p) {
+static inline void VRC7SetTone(uint8 *p) {
 	int i, j;
 	for (i = 1; i < 16; i++) {
 		for (j = 0; j < 8; j++) {

@@ -15,13 +15,8 @@ void Mapper_85_Init() {
     ROMBANK2 = ROMLASTPAGE(1);
     ROMBANK3 = ROMLASTPAGE(0);
 
-    if ( NesHeader.byVRomSize > 0 ) {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-    } else {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VRAM[ nPage * 0x400 ]; 
-    }
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
 
     Mapper_85_irq_enabled = 0;
     Mapper_85_irq_counter = 0;
@@ -50,71 +45,39 @@ void Mapper_85_Write(uint16 addr, uint8 data) {
         } break;
 
         case 0xA000: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 0 ] = &VROM[ 0 * 0x400 ];
-            } else {
-                PPUBANK[ 0 ] = &VRAM[ 0 * 0x400 ];
-            }
+            PPUBANK[ 0 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xA008:
         case 0xA010: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 1 ] = &VROM[ 1 * 0x400 ];
-            } else {
-                PPUBANK[ 1 ] = &VRAM[ 1 * 0x400 ];
-            }
+            PPUBANK[ 1 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xB000: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 2 ] = &VROM[ 2 * 0x400 ];
-            } else {
-                PPUBANK[ 2 ] = &VRAM[ 2 * 0x400 ];
-            }
+            PPUBANK[ 2 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xB008:
         case 0xB010: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 3 ] = &VROM[ 3 * 0x400 ];
-            } else {
-                PPUBANK[ 3 ] = &VRAM[ 3 * 0x400 ];
-            }
+            PPUBANK[ 3 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xC000: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 4 ] = &VROM[ 4 * 0x400 ];
-            } else {
-                PPUBANK[ 4 ] = &VRAM[ 4 * 0x400 ];
-            }
+            PPUBANK[ 4 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xC008:
         case 0xC010: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 5 ] = &VROM[ 5 * 0x400 ];
-            } else {
-                PPUBANK[ 5 ] = &VRAM[ 5 * 0x400 ];
-            }
+            PPUBANK[ 5 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xD000: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 6 ] = &VROM[ 6 * 0x400 ];
-            } else {
-                PPUBANK[ 6 ] = &VRAM[ 6 * 0x400 ];
-            }
+            PPUBANK[ 6 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xD008:
         case 0xD010: {
-            if (NesHeader.byVRomSize > 0) {
-                PPUBANK[ 7 ] = &VROM[ 7 * 0x400 ];
-            } else {
-                PPUBANK[ 7 ] = &VRAM[ 7 * 0x400 ];
-            }
+            PPUBANK[ 7 ] = &VROM[ data * 0x400 ];
         } break;
 
         case 0xE000: {
