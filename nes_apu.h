@@ -75,431 +75,421 @@
 ** to keep the sample processing as lean as possible
 */
  
-typedef struct rectangle_s
-{
-  uint8 regs[4];
-  
-  boolean enabled;
-  
-  int32 phaseacc;
-  int32 freq;
-  int32 output_vol;
-  boolean fixed_envelope;
-  boolean holdnote;
-  uint8 volume;
-  
-  int32 sweep_phase;
-  int32 sweep_delay;
-  boolean sweep_on;
-  uint8 sweep_shifts;
-  uint8 sweep_length;
-  boolean sweep_inc;
-  
-  /* this may not be necessary in the future */
-  int32 freq_limit;
-  
-  /* rectangle 0 uses a complement addition for sweep
-  ** increases, while rectangle 1 uses subtraction
-  */
-  boolean sweep_complement;
-  
-  int32 env_phase;
-  int32 env_delay;
-  uint8 env_vol;
-  
-  int vbl_length;
-  uint8 adder;
-  int duty_flip;
-  
-  /* for sync read $4105 */
-  boolean enabled_cur;
-  boolean holdnote_cur;
-  int vbl_length_cur;
+typedef struct rectangle_s {
+    uint8 regs[4];
+
+    boolean enabled;
+
+    int32 phaseacc;
+    int32 freq;
+    int32 output_vol;
+    boolean fixed_envelope;
+    boolean holdnote;
+    uint8 volume;
+
+    int32 sweep_phase;
+    int32 sweep_delay;
+    boolean sweep_on;
+    uint8 sweep_shifts;
+    uint8 sweep_length;
+    boolean sweep_inc;
+
+    /* this may not be necessary in the future */
+    int32 freq_limit;
+
+    /* rectangle 0 uses a complement addition for sweep
+    ** increases, while rectangle 1 uses subtraction
+    */
+    boolean sweep_complement;
+
+    int32 env_phase;
+    int32 env_delay;
+    uint8 env_vol;
+
+    int vbl_length;
+    uint8 adder;
+    int duty_flip;
+
+    /* for sync read $4105 */
+    boolean enabled_cur;
+    boolean holdnote_cur;
+    int vbl_length_cur;
 } rectangle_t;
 
-typedef struct triangle_s
-{
-  uint8 regs[3];
+typedef struct triangle_s {
+    uint8 regs[3];
 
-  boolean enabled;
+    boolean enabled;
 
-  int32 freq;
-  int32 phaseacc;
-  int32 output_vol;
+    int32 freq;
+    int32 phaseacc;
+    int32 output_vol;
 
-  uint8 adder;
+    uint8 adder;
 
-  boolean holdnote;
-  boolean counter_started;
-  /* quasi-hack */
-  int write_latency;
+    boolean holdnote;
+    boolean counter_started;
+    /* quasi-hack */
+    int write_latency;
 
-  int vbl_length;
-  int linear_length;
+    int vbl_length;
+    int linear_length;
 
-  /* for sync read $4105 */
-  boolean enabled_cur;
-  boolean holdnote_cur;
-  boolean counter_started_cur;
-  int vbl_length_cur;
+    /* for sync read $4105 */
+    boolean enabled_cur;
+    boolean holdnote_cur;
+    boolean counter_started_cur;
+    int vbl_length_cur;
 
 #ifdef APU_YANO
-  /* less compatibility, clearer sound if enabled */
-  boolean ideal_triangle;
+    /* less compatibility, clearer sound if enabled */
+    boolean ideal_triangle;
 #endif
 } triangle_t;
 
-typedef struct noise_s
-{
-  uint8 regs[3];
+typedef struct noise_s {
+    uint8 regs[3];
 
-  boolean enabled;
+    boolean enabled;
 
-  int32 freq;
-  int32 phaseacc;
-  int32 output_vol;
+    int32 freq;
+    int32 phaseacc;
+    int32 output_vol;
 
-  int32 env_phase;
-  int32 env_delay;
-  uint8 env_vol;
-  boolean fixed_envelope;
-  boolean holdnote;
+    int32 env_phase;
+    int32 env_delay;
+    uint8 env_vol;
+    boolean fixed_envelope;
+    boolean holdnote;
 
-  uint8 volume;
+    uint8 volume;
 
-  int vbl_length;
+    int vbl_length;
 
 #ifdef REALTIME_NOISE
-  uint8 xor_tap;
+    uint8 xor_tap;
 #else
-  boolean short_sample;
-  int cur_pos;
+    boolean short_sample;
+    int cur_pos;
 #endif /* REALTIME_NOISE */
 
-  /* for sync read $4105 */
-  boolean enabled_cur;
-  boolean holdnote_cur;
-  int vbl_length_cur;
+    /* for sync read $4105 */
+    boolean enabled_cur;
+    boolean holdnote_cur;
+    int vbl_length_cur;
 } noise_t;
 
-typedef struct dmc_s
-{
-  uint8 regs[4];
+typedef struct dmc_s {
+    uint8 regs[4];
 
-  /* bodge for timestamp queue */
-  boolean enabled;
-   
-  int32 freq;
-  int32 phaseacc;
-  int32 output_vol;
+    /* bodge for timestamp queue */
+    boolean enabled;
+    
+    int32 freq;
+    int32 phaseacc;
+    int32 output_vol;
 
-  uint32 address;
-  uint32 cached_addr;
-  int dma_length;
-  int cached_dmalength;
-  uint8 cur_byte;
+    uint32 address;
+    uint32 cached_addr;
+    int dma_length;
+    int cached_dmalength;
+    uint8 cur_byte;
 
-  boolean looping;
-  boolean irq_gen;
-  boolean irq_occurred;
+    boolean looping;
+    boolean irq_gen;
+    boolean irq_occurred;
 
-  /* for sync read $4105 and DPCM IRQ */
-  int32 freq_cur;
-  int32 phaseacc_cur;
-  int dma_length_cur;
-  int cached_dmalength_cur;
-  boolean enabled_cur;
-  boolean looping_cur;
-  boolean irq_gen_cur;
-  boolean irq_occurred_cur;
+    /* for sync read $4105 and DPCM IRQ */
+    int32 freq_cur;
+    int32 phaseacc_cur;
+    int dma_length_cur;
+    int cached_dmalength_cur;
+    boolean enabled_cur;
+    boolean looping_cur;
+    boolean irq_gen_cur;
+    boolean irq_occurred_cur;
 } dmc_t;
 
-typedef struct apusound_s
-{
-  rectangle_t rectangle[2];
-  triangle_t triangle;
-  noise_t noise;
-  dmc_t dmc;
+typedef struct apusound_s {
+    rectangle_t rectangle[2];
+    triangle_t triangle;
+    noise_t noise;
+    dmc_t dmc;
 } APUSOUND;
-
 
 /* ============================================================ */
 /* ex-sound */
 typedef enum {
-  NES_APU_EXSOUND_NONE,
-  NES_APU_EXSOUND_VRC6,
-  NES_APU_EXSOUND_VRC7,
-  NES_APU_EXSOUND_FDS,
-  NES_APU_EXSOUND_MMC5,
-  NES_APU_EXSOUND_N106,
-  NES_APU_EXSOUND_FME7,
+    NES_APU_EXSOUND_NONE,
+    NES_APU_EXSOUND_VRC6,
+    NES_APU_EXSOUND_VRC7,
+    NES_APU_EXSOUND_FDS,
+    NES_APU_EXSOUND_MMC5,
+    NES_APU_EXSOUND_N106,
+    NES_APU_EXSOUND_FME7,
 } nes_apu_exsound_type_t;
 
 
 typedef struct {
-  int32 (*render_func)();
-  void (*write_func)(uint32 address, uint8 value);
+    int32 (*render_func)();
+    void (*write_func)(uint32 address, uint8 value);
 } nes_apu_exsound_t;
 
 /* VRC6 Sound struct */
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  uint32 spd;
-  uint8 regs[3];
-  uint8 update;
-  uint8 adr;
+    uint32 cps;
+    int32 cycles;
+    uint32 spd;
+    uint8 regs[3];
+    uint8 update;
+    uint8 adr;
 } VRC6_SQUARE;
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  uint32 spd;
-  uint32 output;
-  uint8 regs[3];
-  uint8 update;
-  uint8 adr;
+    uint32 cps;
+    int32 cycles;
+    uint32 spd;
+    uint32 output;
+    uint8 regs[3];
+    uint8 update;
+    uint8 adr;
 } VRC6_SAW;
 
 typedef struct {
-  VRC6_SQUARE square[2];
-  VRC6_SAW saw;
-  uint32 mastervolume;
+    VRC6_SQUARE square[2];
+    VRC6_SAW saw;
+    uint32 mastervolume;
 } VRC6SOUND;
 
 /* ------------------------------------------------------------ */
 /* VRC7 Sound struct */
 
 typedef struct {
-  uint32	pg_phase;
-  uint32	pg_spd;
-  int32	vib_cycles;
-  uint32	input;
-  uint32	eg_phase;
-  uint32	eg_sl;
-  uint32	eg_arr;
-  uint32	eg_drr;
-  uint32	eg_rrr;
-  uint8	pg_vib;
-  uint32	*sintblp;
-  uint8	tl;
-  uint8	eg_mode;
-  uint8	eg_type;
-  uint8	su_type;
-  uint8	eg_ar;
-  uint8	eg_dr;
-  uint8	eg_rr;
-  uint8	eg_ks;
-  uint8	eg_am;
+    uint32	pg_phase;
+    uint32	pg_spd;
+    int32	vib_cycles;
+    uint32	input;
+    uint32	eg_phase;
+    uint32	eg_sl;
+    uint32	eg_arr;
+    uint32	eg_drr;
+    uint32	eg_rrr;
+    uint8	pg_vib;
+    uint32	*sintblp;
+    uint8	tl;
+    uint8	eg_mode;
+    uint8	eg_type;
+    uint8	su_type;
+    uint8	eg_ar;
+    uint8	eg_dr;
+    uint8	eg_rr;
+    uint8	eg_ks;
+    uint8	eg_am;
 } OPLL_OP;
 
 typedef struct {
-  uint32	cps;
-  uint32	spd;
-  int32	cycles;
-  uint32	adr;
-  uint32	adrmask;
-  uint32	*table;
-  uint32	output;
+    uint32	cps;
+    uint32	spd;
+    int32	cycles;
+    uint32	adr;
+    uint32	adrmask;
+    uint32	*table;
+    uint32	output;
 } OPLL_LFO;
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  uint32 fbbuf[2];
-  uint32 output;
-  OPLL_OP op[2];
-  uint32 mastervolume;
-  uint8 tone[8];
-  uint8 key;
-  uint8 toneno;
-  uint8 freql;
-  uint8 freqh;
-  uint8 fb;
-  uint8 update;
+    uint32 cps;
+    int32 cycles;
+    uint32 fbbuf[2];
+    uint32 output;
+    OPLL_OP op[2];
+    uint32 mastervolume;
+    uint8 tone[8];
+    uint8 key;
+    uint8 toneno;
+    uint8 freql;
+    uint8 freqh;
+    uint8 fb;
+    uint8 update;
 } OPLL_CH;
 
 typedef struct {
-  OPLL_CH ch[6];
-  OPLL_LFO lfo[2];
-  uint32 mastervolume;
-  uint8 usertone[8];
-  uint8 adr;
-  uint8 rhythmc;
-  uint8 toneupdate;
+    OPLL_CH ch[6];
+    OPLL_LFO lfo[2];
+    uint32 mastervolume;
+    uint8 usertone[8];
+    uint8 adr;
+    uint8 rhythmc;
+    uint8 toneupdate;
 } OPLLSOUND;
 
 /* ------------------------------------------------------------ */
 /* FDS Sound struct */
 
 typedef struct {
-  uint32 wave[0x40];
-  uint32 envspd;
-  int32 envphase;
-  uint32 envout;
-  uint32 outlvl;
+    uint32 wave[0x40];
+    uint32 envspd;
+    int32 envphase;
+    uint32 envout;
+    uint32 outlvl;
 
-  uint32 phase;
-  uint32 spd;
-  uint32 volume;
-  int32 sweep;
+    uint32 phase;
+    uint32 spd;
+    uint32 volume;
+    int32 sweep;
 
-  uint8 enable;
-  uint8 envmode;
+    uint8 enable;
+    uint8 envmode;
 
-  int32 timer;
-  uint32 last_spd;
+    int32 timer;
+    uint32 last_spd;
 } FDS_FMOP;
 
 typedef struct FDSSOUND {
-  uint32 cps;
-  int32 cycles;
-  uint32 mastervolume;
-  int32 output;
-  int32 fade;
+    uint32 cps;
+    int32 cycles;
+    uint32 mastervolume;
+    int32 output;
+    int32 fade;
 
-  FDS_FMOP op[2];
+    FDS_FMOP op[2];
 
-  uint32 waveaddr;
-  uint8 mute;
-  uint8 reg[0x10];
-  uint8 reg_cur[0x10];
+    uint32 waveaddr;
+    uint8 mute;
+    uint8 reg[0x10];
+    uint8 reg_cur[0x10];
 } FDSSOUND;
 
 /* ------------------------------------------------------------ */
 /* MMC5 Sound struct */
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  int32 sweepphase;
-  int32 envphase;
+    uint32 cps;
+    int32 cycles;
+    int32 sweepphase;
+    int32 envphase;
 
-  uint32 spd;
-  uint32 envspd;
-  uint32 sweepspd;
+    uint32 spd;
+    uint32 envspd;
+    uint32 sweepspd;
 
-  uint32 length;
-  uint32 freq;
-  uint32 mastervolume;
-  uint32 release;
+    uint32 length;
+    uint32 freq;
+    uint32 mastervolume;
+    uint32 release;
 
-  uint8 regs[4];
-  uint8 update;
-  uint8 key;
-  uint8 adr;
-  uint8 envadr;
-  uint8 duty;
+    uint8 regs[4];
+    uint8 update;
+    uint8 key;
+    uint8 adr;
+    uint8 envadr;
+    uint8 duty;
 } MMC5_SQUARE;
 
 typedef struct {
-  int32 output;
-  uint8 key;
+    int32 output;
+    uint8 key;
 } MMC5_DA;
 
 typedef struct {
-  MMC5_SQUARE square[2];
-  MMC5_DA da;
+    MMC5_SQUARE square[2];
+    MMC5_DA da;
 } MMC5SOUND;
 
 /* ------------------------------------------------------------ */
 /* N106 Sound struct */
 
 typedef struct {
-  uint32 logvol;
-  int32 cycles;
-  uint32 spd;
-  uint32 phase;
-  uint32 tlen;
-  uint8 tadr;
+    uint32 logvol;
+    int32 cycles;
+    uint32 spd;
+    uint32 phase;
+    uint32 tlen;
+    uint8 tadr;
 } N106_WM;
 
 typedef struct {
-  uint32 cps;
-  uint32 mastervolume;
+    uint32 cps;
+    uint32 mastervolume;
 
-  N106_WM ch[8];
+    N106_WM ch[8];
 
-  uint8 addressauto;
-  uint8 address;
-  uint8 chinuse;
+    uint8 addressauto;
+    uint8 address;
+    uint8 chinuse;
 
-  uint32 tone[0x100];	/* TONE DATA */
-  uint8 data[0x80];
+    uint32 tone[0x100];	/* TONE DATA */
+    uint8 data[0x80];
 } N106SOUND;
 
 /* ------------------------------------------------------------ */
 /* FME7 Sound struct */
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  uint32 spd;
-  uint8 regs[3];
-  uint8 update;
-  uint8 adr;
-  uint8 key;
+    uint32 cps;
+    int32 cycles;
+    uint32 spd;
+    uint8 regs[3];
+    uint8 update;
+    uint8 adr;
+    uint8 key;
 } PSG_SQUARE;
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  uint32 spd;
-  uint32 noiserng;
-  uint8 regs[1];
-  uint8 update;
-  uint8 noiseout;
+    uint32 cps;
+    int32 cycles;
+    uint32 spd;
+    uint32 noiserng;
+    uint8 regs[1];
+    uint8 update;
+    uint8 noiseout;
 } PSG_NOISE;
 
 typedef struct {
-  uint32 cps;
-  int32 cycles;
-  uint32 spd;
-  uint32 envout;
-  int8 *adr;
-  uint8 regs[3];
-  uint8 update;
+    uint32 cps;
+    int32 cycles;
+    uint32 spd;
+    uint32 envout;
+    int8 *adr;
+    uint8 regs[3];
+    uint8 update;
 } PSG_ENVELOPE;
 
 typedef struct {
-  PSG_SQUARE square[3];
-  PSG_ENVELOPE envelope;
-  PSG_NOISE noise;
-  uint32 mastervolume;
-  uint32 adr;
+    PSG_SQUARE square[3];
+    PSG_ENVELOPE envelope;
+    PSG_NOISE noise;
+    uint32 mastervolume;
+    uint32 adr;
 } PSGSOUND;
 
 /* ------------------------------------------------------------ */
 /* APU Sound struct */
 
-enum
-{
-  APU_FILTER_NONE,
-  APU_FILTER_LOWPASS,
-  APU_FILTER_WEIGHTED
+enum {
+    APU_FILTER_NONE,
+    APU_FILTER_LOWPASS,
+    APU_FILTER_WEIGHTED
 };
 
 #ifdef APU_YANO
-enum
-{
-  APUMODE_IDEAL_TRIANGLE,
-  APUMODE_SMOOTH_ENVELOPE,
-  APUMODE_SMOOTH_SWEEP
+enum {
+    APUMODE_IDEAL_TRIANGLE,
+    APUMODE_SMOOTH_ENVELOPE,
+    APUMODE_SMOOTH_SWEEP
 };
 #endif /* APU_YANO */
 
 #if 0
-typedef struct
-{
-  uint32 min_range, max_range;
-  uint8 (*read_func)(uint32 address);
+typedef struct {
+    uint32 min_range, max_range;
+    uint8 (*read_func)(uint32 address);
 } apu_memread;
 
-typedef struct
-{
-  uint32 min_range, max_range;
-  void (*write_func)(uint32 address, uint8 value);
+typedef struct {
+    uint32 min_range, max_range;
+    void (*write_func)(uint32 address, uint8 value);
 } apu_memwrite;
 #else
 typedef uint8 (*apu_memread)(uint32 address);
@@ -511,41 +501,39 @@ typedef void (*apu_memwrite)(uint32 address, uint8 value);
 #define  APUQUEUE_MASK  (APUQUEUE_SIZE - 1)
 
 /* apu ring buffer member */
-typedef struct apudata_s
-{
-  uint32 timestamp, address;
-  uint8 value;
+typedef struct apudata_s {
+    uint32 timestamp, address;
+    uint8 value;
 } apudata_t;
 
-typedef struct apu_s
-{
-  APUSOUND apus;
-  VRC6SOUND vrc6s;
-  OPLLSOUND ym2413s;
-  FDSSOUND fdssound;
-  MMC5SOUND mmc5;
-  N106SOUND n106s;
-  PSGSOUND psg;
-  
-  uint8 enable_reg;
-  uint8 enable_reg_cur;
-  
-  apudata_t queue[APUQUEUE_SIZE];
-  int q_head, q_tail;
-  
-  /* for ExSound */
-  apudata_t ex_queue[APUQUEUE_SIZE];
-  int ex_q_head, ex_q_tail;
-  int exsound_enable;
-  nes_apu_exsound_type_t exsound_type;
-  nes_apu_exsound_t exsound;
-  
-  uint32 elapsed_cycles;
-  
-  int32 cycle_rate;
-  int sample_rate;
-  int sample_bits;
-  int refresh_rate;
+typedef struct apu_s {
+    APUSOUND apus;
+    VRC6SOUND vrc6s;
+    OPLLSOUND ym2413s;
+    FDSSOUND fdssound;
+    MMC5SOUND mmc5;
+    N106SOUND n106s;
+    PSGSOUND psg;
+    
+    uint8 enable_reg;
+    uint8 enable_reg_cur;
+    
+    apudata_t queue[APUQUEUE_SIZE];
+    int q_head, q_tail;
+    
+    /* for ExSound */
+    apudata_t ex_queue[APUQUEUE_SIZE];
+    int ex_q_head, ex_q_tail;
+    int exsound_enable;
+    nes_apu_exsound_type_t exsound_type;
+    nes_apu_exsound_t exsound;
+    
+    uint32 elapsed_cycles;
+    
+    int32 cycle_rate;
+    int sample_rate;
+    int sample_bits;
+    int refresh_rate;
 } apu_t;
 
 extern apu_t *apu;

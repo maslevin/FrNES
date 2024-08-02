@@ -26,7 +26,7 @@ unsigned char Mapper_5_split_bank;
 extern uint32 currentCRC32;
 
 void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
-	printf("Map5_set_WRAM_bank: %u, %u\n", page, bank);    
+	pNesX_DebugPrint("Map5_set_WRAM_bank: %u, %u\n", page, bank);    
 	if (bank != 8) {
 		if(Mapper_5_wram_size == 1) bank = (bank > 3) ? 8 : 0;
 		if(Mapper_5_wram_size == 2) bank = (bank > 3) ? 1 : 0;
@@ -36,7 +36,7 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 	Mapper_5_wb[page] = bank;
 
 	if (bank != 8) {
-		printf("Setting ROM Bank [%u] to WRAM Bank [%u]\n", page, bank);
+		pNesX_DebugPrint("Setting ROM Bank [%u] to WRAM Bank [%u]\n", page, bank);
         switch (page) {
             case 4:
                 ROMBANK0 = &Mapper_5_wram[(bank * 0x2000)]; 
@@ -318,7 +318,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 
 	switch(wAddr) {
 		case 0x5100: {
-			printf("Set Program Size [%u]\n", byData & 0x03);
+			pNesX_DebugPrint("Set Program Size [%u]\n", byData & 0x03);
 			Mapper_5_prg_size = byData & 0x03;
 		} break;
 
@@ -426,8 +426,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 
 		default: {
 			if (wAddr >= 0x5000 && wAddr <= 0x5015) {
-//	MS - TODO: Add Expansion Audio Support				
-//				parent_NES->apu->ExWrite(addr, data);
+				ex_write(wAddr, byData);
 			}
 			else if (wAddr >= 0x5C00 && wAddr <= 0x5FFF) {
 				if (Mapper_5_gfx_mode != 3) {			

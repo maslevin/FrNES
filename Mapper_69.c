@@ -1,4 +1,5 @@
 #include "Mapper_69.h"
+#include "nes_apu.h"
 
 uint8 Mapper_69_regs[1];
 uint8 Mapper_69_irq_enabled;
@@ -8,7 +9,7 @@ uint32 Mapper_69_irq_counter;
 // Mapper 69
 void Mapper_69_Init() {
     // Init ExSound
-    //parent_NES->apu->SelectExSound(NES_APU_EXSOUND_FME7);
+    apu_set_exsound(NES_APU_EXSOUND_FME7);
 
 	ROMBANK0 = ROMPAGE( 0 );
 	ROMBANK1 = ROMPAGE( 1 );
@@ -25,7 +26,6 @@ void Mapper_69_Init() {
 }
 
 void Mapper_69_Write(uint16 addr, uint8 data) {
-//    printf("Map69_Write $%04X, %02X\n", addr, data);
     switch(addr & 0xE000) {
         case 0x8000: {
             Mapper_69_regs[0] = data & 0x0f;
@@ -138,7 +138,7 @@ void Mapper_69_Write(uint16 addr, uint8 data) {
 
         case 0xC000:
         case 0xE000: {
-            // parent_NES->apu->ExWrite(addr, data);
+            ex_write(addr, data);
         } break;
     }
 }

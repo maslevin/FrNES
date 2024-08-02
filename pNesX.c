@@ -232,37 +232,45 @@ void pNesX_DoSpu() {
 /*                pNesX_Init() : Initialize pNesX                    */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Init()
-{
-/*
- *  Initialize pNesX
- *
- *  Remarks
- *    Initialize K6502 and Scanline Table.
- */
-  int nIdx;
+void pNesX_Init() {
+	int nIdx;
 
-  // Initialize 6502
-  K6502_Init();
+	// Initialize 6502
+	K6502_Init();
 
-  // Initialize Scanline Table
-  // MS - I don't think this is required anymore, refactor it out
-  for ( nIdx = 0; nIdx < 263; ++nIdx )
-  {
-    if ( nIdx < SCAN_ON_SCREEN_START )
-      PPU_ScanTable[ nIdx ] = SCAN_TOP_OFF_SCREEN;
-    else
-    if ( nIdx < SCAN_BOTTOM_OFF_SCREEN_START )
-      PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
-    else
-    if ( nIdx < SCAN_UNKNOWN_START )
-      PPU_ScanTable[ nIdx ] = SCAN_BOTTOM_OFF_SCREEN;
-    else
-    if ( nIdx < SCAN_VBLANK_START )
-      PPU_ScanTable[ nIdx ] = SCAN_UNKNOWN;
-    else
-      PPU_ScanTable[ nIdx ] = SCAN_VBLANK;
-  }
+	// Initialize Sound AICA program and ring buffers, and apu emulator
+	// Initialize pNesX
+	if (*opt_SoundEnabled) {
+		// Start Sound Emu
+		DC_SoundInit();
+		timer_spin_sleep(40);
+		*start = 0xFFFFFFFF;
+	}
+
+	// Call mapper initialization function - important that this comes before mapper
+	// init, for expansion audio
+	mapper -> init();
+
+	// Reset CPU and prepare to run program
+	K6502_Reset();
+
+	// Initialize Scanline Table
+	// MS - I don't think this is required anymore, refactor it out
+	for ( nIdx = 0; nIdx < 263; ++nIdx ) {
+		if ( nIdx < SCAN_ON_SCREEN_START )
+			PPU_ScanTable[ nIdx ] = SCAN_TOP_OFF_SCREEN;
+		else
+		if ( nIdx < SCAN_BOTTOM_OFF_SCREEN_START )
+			PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
+		else
+		if ( nIdx < SCAN_UNKNOWN_START )
+			PPU_ScanTable[ nIdx ] = SCAN_BOTTOM_OFF_SCREEN;
+		else
+		if ( nIdx < SCAN_VBLANK_START )
+			PPU_ScanTable[ nIdx ] = SCAN_UNKNOWN;
+		else
+			PPU_ScanTable[ nIdx ] = SCAN_VBLANK;
+	}
 }
 
 /*===================================================================*/
@@ -419,15 +427,6 @@ int pNesX_Reset() {
 		mapper = Mappers[nIdx].mapper;
 	}
 
-	// Call mapper initialization function
-	mapper -> init();
-
-	/*-------------------------------------------------------------------*/
-	/*  Reset CPU                                                        */
-	/*-------------------------------------------------------------------*/
-
-	K6502_Reset();
-
 	// Successful
 	return 0;
 }
@@ -526,14 +525,6 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 /*===================================================================*/
 void pNesX_Main() {
 	pNesX_Init();
-
-	// Initialize pNesX
-	if (*opt_SoundEnabled) {
-		// Start Sound Emu
-		DC_SoundInit();
-		timer_spin_sleep(40);
-		*start = 0xFFFFFFFF;
-	}
 
 	// Main loop
 	while ( 1 ) {

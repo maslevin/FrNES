@@ -7,7 +7,7 @@
 KOS_ROMDISK_DIR = romdisk
 include $(KOS_BASE)/Makefile.rules
 
-SRCS = nes_apu.c aica_fw.c font.c GUI_MainMenu.c GUI_Credits.c GUI_FileBrowser.c GUI_Help.c GUI_ControlPage.c GUI_GUIPage.c GUI_SystemPage.c GUI_VideoPage.c K6502_rw.c K6502.c pNesX_DrawLine_BG_C_Map9.c pNesX_DrawLine_BG_C.c pNesX_DrawLine_Spr_C_Map9.c pNesX_DrawLine_Spr_C.c Mapper.c Mapper_0.c Mapper_1.c Mapper_2.c Mapper_3.c Mapper_4.c Mapper_5.c Mapper_7.c Mapper_9.c Mapper_30.c Mapper_69.c pNesX_PPU_DC.c pNesX_Sound_APU.c pNesX_System_DC.c pNesX_Utils.c pNesX.c ROMLoad.c TextWindow.c
+SRCS = nes_apu.c nes_exsound.c aica_fw.c font.c GUI_MainMenu.c GUI_Credits.c GUI_FileBrowser.c GUI_Help.c GUI_ControlPage.c GUI_GUIPage.c GUI_SystemPage.c GUI_VideoPage.c K6502_rw.c K6502.c pNesX_DrawLine_BG_C_Map9.c pNesX_DrawLine_BG_C.c pNesX_DrawLine_Spr_C_Map9.c pNesX_DrawLine_Spr_C.c Mapper.c Mapper_0.c Mapper_1.c Mapper_2.c Mapper_3.c Mapper_4.c Mapper_5.c Mapper_7.c Mapper_9.c Mapper_30.c Mapper_69.c pNesX_PPU_DC.c pNesX_Sound_APU.c pNesX_System_DC.c pNesX_Utils.c pNesX.c ROMLoad.c TextWindow.c
 
 ASMS = 
 OBJS = $(SRCS:.c=.o) $(ASMS:.s=.o) romdisk.o 
