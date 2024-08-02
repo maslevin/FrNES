@@ -28,6 +28,8 @@
 #include "Mapper_5.h"
 #include "Mapper_7.h"
 #include "Mapper_9.h"
+#include "Mapper_24.h"
+#include "Mapper_26.h"
 #include "Mapper_30.h"
 #include "Mapper_69.h"
 
@@ -124,9 +126,25 @@ MapperTable Mappers[] = {
 	{ 21, NULL },
 	{ 22, NULL },
 	{ 23, NULL },
-	{ 24, NULL },
+	{
+		24, &(struct Mapper) { 
+			.init = Mapper_24_Init, 
+			.write = Mapper_24_Write,
+			.read = Mapper_0_Read,
+			.vsync = Mapper_0_VSync,
+			.hsync = Mapper_24_HSync		
+		} 
+	},
 	{ 25, NULL },
-	{ 26, NULL },
+	{
+		26, &(struct Mapper) { 
+			.init = Mapper_26_Init, 
+			.write = Mapper_26_Write,
+			.read = Mapper_0_Read,
+			.vsync = Mapper_0_VSync,
+			.hsync = Mapper_26_HSync		
+		} 
+	},
 	{ 27, NULL },
 	{ 28, NULL },
 	{ 29, NULL },

@@ -12,11 +12,10 @@ void Mapper_30_Write( uint16 wAddr, unsigned char byData ) {
     unsigned char prg = byData & 0x1f;
     unsigned char chr = (byData & 0x60) >> 5;
 
-    prg &= (NesHeader.byRomSize - 1);
+	uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2; 
+    prg &= (num_8k_ROM_banks - 1);
     ROMBANK0 = ROMPAGE( prg * 2 );
     ROMBANK1 = ROMPAGE( (prg * 2) + 1 );
-	ROMBANK2 = ROMLASTPAGE(1);
-	ROMBANK3 = ROMLASTPAGE(0);   
 
 	unsigned char c = chr * 8;
 	for ( int nPage = 0; nPage < 8; ++nPage )
