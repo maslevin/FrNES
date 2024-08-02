@@ -63,9 +63,14 @@ void Mapper_4_Write( uint16 wAddr, unsigned char byData ) {
 
     switch ( wMapAddr ) {
         case 0xa000:
-        // Name Table Mirroring - But only if 4 Screen Mirroring is not enabled
-        if (!(NesHeader.byInfo1 & 0x08))
-            pNesX_Mirroring( ~byData & 1 );
+			// Name Table Mirroring - But only if 4 Screen Mirroring is not enabled
+			if (!(NesHeader.byInfo1 & 0x08)) {
+				if (byData & 0x1) {
+					pNesX_Mirroring(MIRRORING_HORIZONTAL);
+				} else {
+					pNesX_Mirroring(MIRRORING_VERTICAL);
+				}
+			}
             break;
 
         case 0xa001:
@@ -164,10 +169,11 @@ void Mapper_4_HSync() {
 	if (Map4_IRQ_Enable) {
 		if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
 			if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
-				if (!(Map4_IRQ_Cnt--)) {
+				if (Map4_IRQ_Cnt == 254) {
 					Map4_IRQ_Cnt = Map4_IRQ_Set;
 					IRQ_REQ;
 				}
+				Map4_IRQ_Cnt--;
 			}
 		}
 	}

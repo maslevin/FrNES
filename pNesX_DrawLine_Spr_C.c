@@ -53,13 +53,11 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 		memset(SpritesToDraw, 0, 8);
 		OverflowSpritesOnNextScanline = false;
 		OverflowedSprites = false;
-
-		memset4(pSprBuf, 0, 272 * 2);		
 	} else {
 	// Otherwise move the SpritesToDrawNextScanline to this scanline
 		NumSpritesToDraw = NumSpritesToDrawNextScanline;
 		memcpy(SpritesToDraw, SpritesToDrawNextScanline, 8);
-		NumSpritesToDrawNextScanline = 0;
+		NumSpritesToDrawNextScanline = 0;	
 
 		// More than 8 sprites were requested to be drawn on this scanline, so set the PPU flag for overflow
 		if (OverflowSpritesOnNextScanline) {
@@ -72,6 +70,9 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 			OverflowedSprites = false;
 		}
 	}
+
+	// Clear the sprite render buffer
+	memset4(pSprBuf, 0, 272 * 2);		
 
 	// Calculate the sprites to draw on the next scanline
 //	uint32 NextPPUScanline = ppuinfo.PPU_Scanline + 1;
@@ -94,9 +95,6 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-
-		// Clear the sprite render buffer
-		memset4(pSprBuf, 0, 272 * 2);
 
 //		printf("Drawing %u Sprites\n", NumSpritesToDraw);
 		// Draw from lowest priority sprite to highest priority sprite

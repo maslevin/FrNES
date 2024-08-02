@@ -940,13 +940,15 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 		if (my_controller != NULL) {
 			my_state = (cont_state_t*)maple_dev_status(my_controller);		
 
+#ifdef DEBUG
+			// Toggle pNesX_DebugPrint messages while in operation
 			if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
-				HALT = 1;
 				log_enabled = !log_enabled;
 				log_enabled_latch = true;
 			} else if ((my_state -> buttons & CONT_Y) == 0) {
 				log_enabled_latch = false;
 			}
+#endif
 
 			//Start first
 			*pdwPad1 = (((my_state -> buttons & CONT_START) != 0 ) << 3);
