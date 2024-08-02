@@ -116,13 +116,7 @@ uint16 WorkFrameIdx;
 uint16 PalTable[ 32 ];
 
 /* Table for Mirroring */
-unsigned char PPU_MirrorTable[][ 4 ] =
-{
-//Original Mirroring Layout
-/*  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
-  { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 }*/
+unsigned char PPU_MirrorTable[][ 4 ] = {
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
   { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
   { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
@@ -279,12 +273,10 @@ void pNesX_Init() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Fin() {
-/*
- *  Completion treatment
- *
- *  Remarks
- *    Release resources
- */
+	if (*opt_SoundEnabled) {
+		spu_shutdown();
+	}
+
 	audio_shutdown();
 
 #ifdef DEBUG
@@ -296,60 +288,47 @@ void pNesX_Fin() {
 /*===================================================================*/
 /*                                                                   */
 /*                  pNesX_Load() : Load a cassette                   */
+/*  Parameters                                                       */
+/*    const char *pszFileName                                        */
+/*      File name of ROM image                                       */
+/*                                                                   */
+/*  Return values                                                    */
+/*     0 : It was finished normally.                                 */
+/*    -1 : An error occurred.                                        */
+/*                                                                   */
+/*  Remarks                                                          */
+/*    Read a ROM image in the memory.                                */
+/*    Reset pNesX.                                                   */
 /*                                                                   */
 /*===================================================================*/
 int pNesX_Load( const char *filepath, uint32 filesize ) {
-/*
- *  Load a cassette
- *
- *  Parameters
- *    const char *pszFileName            (Read)
- *      File name of ROM image
- *
- *  Return values
- *     0 : It was finished normally.
- *    -1 : An error occurred.
- *
- *  Remarks
- *    Read a ROM image in the memory. 
- *    Reset pNesX.
- */
+	if ( pNesX_ReadRom( filepath, filesize ) < 0 )
+		return -1;
 
-  // Read a ROM image in the memory
-  if ( pNesX_ReadRom( filepath, filesize ) < 0 )
-    return -1;
+	if ( pNesX_Reset() < 0 )
+		return -1;
 
-  // Reset pNesX
-  if ( pNesX_Reset() < 0 )
-    return -1;
-
-  // Successful
-  return 0;
+	return 0;
 }
 
 /*===================================================================*/
 /*                                                                   */
 /*                 pNesX_Reset() : Reset pNesX                       */
 /*                                                                   */
+/*  Reset pNesX                                                      */
+/*                                                                   */
+/*  Return values                                                    */
+/*     0 : Normally                                                  */
+/*    -1 : Non support mapper                                        */
+/*                                                                   */
+/*  Remarks                                                          */
+/*    Initialize Resources, PPU and Mapper.                          */
+/*    Reset CPU.                                                     */
+/*                                                                   */
 /*===================================================================*/
 int pNesX_Reset() {
-/*
- *  Reset pNesX
- *
- *  Return values
- *     0 : Normally
- *    -1 : Non support mapper
- *
- *  Remarks
- *    Initialize Resources, PPU and Mapper.
- *    Reset CPU.
- */
-
+	// TODO : make ROM loading and resetting separated
 	int nIdx;
-
-	/*-------------------------------------------------------------------*/
-	/*  Get information on the cassette                                  */
-	/*-------------------------------------------------------------------*/
 
 	// Get Mapper Number
 	MapperNo = NesHeader.byInfo1 >> 4;
@@ -363,12 +342,13 @@ int pNesX_Reset() {
 	}
 
 	// Get information on the ROM
-	if (NesHeader.byInfo1 & 0x08)
-		ROM_Mirroring = 2; // 4 screen mirroring
-	else if (NesHeader.byInfo1 & 0x01)
-		ROM_Mirroring = 1; // Vertical mirroring
-	else
-		ROM_Mirroring = 0; // Horizontal mirroring
+	if (NesHeader.byInfo1 & 0x08) {
+		ROM_Mirroring = MIRRORING_FOUR_SCREEN;
+	} else if (NesHeader.byInfo1 & 0x01) {
+		ROM_Mirroring = MIRRORING_VERTICAL;
+	} else {
+		ROM_Mirroring = MIRRORING_HORIZONTAL;
+	}
 
 	ROM_SRAM = NesHeader.byInfo1 & 2;
 	ROM_Trainer = NesHeader.byInfo1 & 4;
@@ -437,74 +417,64 @@ int pNesX_Reset() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_SetupPPU() {
-/*
- *  Initialize PPU
- *
- */
-  int nPage;
+	int nPage;
 
-  // Clear PPU and Sprite Memory
-  memset( PPURAM, 0, sizeof PPURAM );
-  memset( SPRRAM, 0, sizeof SPRRAM );
+	// Clear PPU and Sprite Memory
+	memset( PPURAM, 0, sizeof PPURAM );
+	memset( SPRRAM, 0, sizeof SPRRAM );
 
-  // Reset PPU Register
-  ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
+	// Reset PPU Register
+	ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
 
-  // Reset latch flag
-  PPU_Latch_Flag = 0;
+	// Reset latch flag
+	PPU_Latch_Flag = 0;
 
-  // Reset PPU address
-  ppuinfo.PPU_Addr = 0;
-  PPU_Temp = 0;
+	// Reset PPU address
+	ppuinfo.PPU_Addr = 0;
+	PPU_Temp = 0;
 
-  // Reset scanline
-  ppuinfo.PPU_Scanline = 0;
+	// Reset scanline
+	ppuinfo.PPU_Scanline = 0;
 
-  // Reset hit position of sprite #0 
-  SpriteHitPos = -1;
+	// Reset hit position of sprite #0 
+	SpriteHitPos = -1;
 
-  // Reset information on PPU_R0
-  PPU_Increment = 1;
-  ppuinfo.PPU_SP_Height = 8;
+	// Reset information on PPU_R0
+	PPU_Increment = 1;
+	ppuinfo.PPU_SP_Height = 8;
 
-  // Reset PPU banks
-  for ( nPage = 0; nPage < 8; ++nPage )
-    PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
-  PPUBANK[ 8 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 9 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 10 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 11 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 12 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 13 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 14 ] = &PPURAM[ 8 * 0x400 ];
-  PPUBANK[ 15 ] = &PPURAM[ 8 * 0x400 ];
+	// Reset PPU banks
+	for ( nPage = 0; nPage < 8; ++nPage )
+		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
+	PPUBANK[ 8 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 9 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 10 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 11 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 12 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 13 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 14 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 15 ] = &PPURAM[ 8 * 0x400 ];
 
-  /* Mirroring of Name Table */
-  pNesX_Mirroring( ROM_Mirroring );
+	/* Mirroring of Name Table */
+	pNesX_Mirroring( ROM_Mirroring );
 }
 
 /*===================================================================*/
 /*                                                                   */
 /*       pNesX_Mirroring() : Set up a Mirroring of Name Table        */
 /*                                                                   */
+/*                                                                   */
+/*  Parameters                                                       */
+/*    int nType          (Read)                                      */
+/*      Mirroring Type                                               */
+/*        0 : Horizontal                                             */
+/*        1 : Vertical                                               */
+/*        2 : Four Screen                                            */
+/*        3 : One Screen 0x2000                                      */
+/*        4 : One Screen 0x2400                                      */
+/*                                                                   */
 /*===================================================================*/
 void pNesX_Mirroring( int nType ) {
-/*
- *  Set up a Mirroring of Name Table
- *
- *  Parameters
- *    int nType          (Read)
- *      Mirroring Type
- *        0 : Horizontal
- *        1 : Vertical
- *        2 : One Screen 0x2000
- *        3 : One Screen 0x2400
- */
-/* Now it's entirely different
-0 : Horizontal
-1 : Vertical
-2 : 4 Screen
-*/
 	PPUBANK[ NAME_TABLE0 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 0 ] * 0x400 ];
 	PPUBANK[ NAME_TABLE1 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 1 ] * 0x400 ];
 	PPUBANK[ NAME_TABLE2 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 2 ] * 0x400 ];
@@ -528,22 +498,15 @@ void pNesX_Main() {
 
 	// Main loop
 	while ( 1 ) {
-		/*-------------------------------------------------------------------*/
-		/*  To the menu screen                                               */
-		/*-------------------------------------------------------------------*/
-		if ( ExitCount > 100 )
+		if ( ExitCount > MAX_EXIT_COUNT )
 			break;  // Quit
 
-		/*-------------------------------------------------------------------*/
-		/*  Manage AutoFrameSkip                                             */
-		/*-------------------------------------------------------------------*/
+/*
 		if ( *opt_AutoFrameSkip ) {
 			Auto_Frames--;
 		}
+*/		
 
-		/*-------------------------------------------------------------------*/
-		/*  Manage NES emulation                                             */
-		/*-------------------------------------------------------------------*/
 		pNesX_Cycle();
 
 		if (HALT) {
@@ -551,9 +514,7 @@ void pNesX_Main() {
 			break;
 		}
 
-		/*-------------------------------------------------------------------*/
-		/*  Manage AutoFrameSkip                                             */
-		/*-------------------------------------------------------------------*/
+/*
 		if ( *opt_AutoFrameSkip ) {
 			if ( Auto_Frames > 0) {
 				FrameCnt = 1;
@@ -561,13 +522,9 @@ void pNesX_Main() {
 				FrameCnt = 0;
 			}
 		}
+*/		
 	}
 
-	if (*opt_SoundEnabled) {
-		spu_shutdown();
-	}
-
-	// Completion treatment
 	pNesX_Fin();
 }
 
