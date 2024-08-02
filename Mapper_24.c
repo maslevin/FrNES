@@ -14,7 +14,7 @@ void Mapper_24_Init() {
     ROMBANK0 = ROMPAGE(0);
     ROMBANK1 = ROMPAGE(1);
     ROMBANK2 = ROMLASTPAGE(1);
-    ROMBANK2 = ROMLASTPAGE(0);
+    ROMBANK3 = ROMLASTPAGE(0);
 
     if ( NesHeader.byVRomSize > 0 ) {
         for ( int nPage = 0; nPage < 8; ++nPage )

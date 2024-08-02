@@ -825,17 +825,18 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 			ROM[i - ROM_offset] = ROM_Buffer[i];
 
 		if (NesHeader.byVRomSize > 0) {
+//			VRAM = NULL;
 			VROM_offset = i;
 			VROM = malloc (NesHeader.byVRomSize * 0x2000);
 			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
 				VROM[i - VROM_offset] = ROM_Buffer[i];
 		} else {
-			VROM = NULL;
+//			VROM = NULL;
 			if (MapperNo == 30) {
 				printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-				VRAM = malloc(4 * 0x2000);
+				VROM = malloc(4 * 0x2000);
 			} else {
-				VRAM = malloc(0x2000);
+				VROM = malloc(0x2000);
 			}
 		}
 
