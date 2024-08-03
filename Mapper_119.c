@@ -14,11 +14,13 @@ uint8 Mapper_119_irq_latch;   // IRQ scanline counter latch
 
 void Mapper_119_MMC3_set_CPU_banks() {
     if (prg_swap()) {
+        //printf("Setting Prg Bank1 to page [%u] and Bank2 to page [%u]\n",Mapper_119_prg1,Mapper_119_prg0);
         ROMBANK0 = ROMLASTPAGE(1);
         ROMBANK1 = ROMPAGE(Mapper_119_prg1);
         ROMBANK2 = ROMPAGE(Mapper_119_prg0);
         ROMBANK3 = ROMLASTPAGE(0);
     } else {
+        //printf("Setting Prg Bank0 to page [%u] and Bank1 to page [%u]\n",Mapper_119_prg0,Mapper_119_prg1);
         ROMBANK0 = ROMPAGE(Mapper_119_prg0);
         ROMBANK1 = ROMPAGE(Mapper_119_prg1);
         ROMBANK2 = ROMLASTPAGE(1);
@@ -50,35 +52,51 @@ void Mapper_119_MMC3_set_PPU_banks() {
     }
 
     if (chr_bank[0] & 0x40) {
-        PPUBANK[0] = &VROM[(chr_bank[0] & 0x07) * 0x400];
+        PPUBANK[0] = &VRAM[(chr_bank[0] & 0x07) * 0x400];
+    } else {
+        PPUBANK[0] = &VROM[chr_bank[0] * 0x400];
     }
 
     if (chr_bank[1] & 0x40) {
-        PPUBANK[1] = &VROM[(chr_bank[1] & 0x07) * 0x400];
+        PPUBANK[1] = &VRAM[(chr_bank[1] & 0x07) * 0x400];
+    } else {
+        PPUBANK[1] = &VROM[chr_bank[1] * 0x400];
     }
 
     if (chr_bank[2] & 0x40) {
-        PPUBANK[2] = &VROM[(chr_bank[2] & 0x07) * 0x400];
+        PPUBANK[2] = &VRAM[(chr_bank[2] & 0x07) * 0x400];
+    } else {
+        PPUBANK[2] = &VROM[chr_bank[2] * 0x400];
     }
 
     if (chr_bank[3] & 0x40) {
-        PPUBANK[3] = &VROM[(chr_bank[3] & 0x07) * 0x400];
+        PPUBANK[3] = &VRAM[(chr_bank[3] & 0x07) * 0x400];
+    } else {
+        PPUBANK[3] = &VROM[chr_bank[3] * 0x400];
     }
 
     if (chr_bank[4] & 0x40) {
-        PPUBANK[4] = &VROM[(chr_bank[4] & 0x07) * 0x400];
+        PPUBANK[4] = &VRAM[(chr_bank[4] & 0x07) * 0x400];
+    } else {
+        PPUBANK[4] = &VROM[chr_bank[4] * 0x400];
     }
 
     if (chr_bank[5] & 0x40) {
-        PPUBANK[5] = &VROM[(chr_bank[5] & 0x07) * 0x400];
+        PPUBANK[5] = &VRAM[(chr_bank[5] & 0x07) * 0x400];
+    } else {
+        PPUBANK[5] = &VROM[chr_bank[5] * 0x400];
     }
 
     if (chr_bank[6] & 0x40) {
-        PPUBANK[6] = &VROM[(chr_bank[6] & 0x07) * 0x400];
+        PPUBANK[6] = &VRAM[(chr_bank[6] & 0x07) * 0x400];
+    } else {
+        PPUBANK[6] = &VROM[chr_bank[6]  * 0x400];
     }
 
     if (chr_bank[7] & 0x40) {
-        PPUBANK[7] = &VROM[(chr_bank[7] & 0x07) * 0x400];
+        PPUBANK[7] = &VRAM[(chr_bank[7] & 0x07) * 0x400];
+    } else {
+        PPUBANK[7] = &VROM[chr_bank[7] * 0x400];
     }
 }
 

@@ -303,11 +303,17 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 
 				//Clean Up Afterwards
 				free (ROM);
+				ROM = NULL;
+				
 				//There are some games that don't have VROM
-				if (VROM != NULL)
+				if (VROM != NULL) {
 					free (VROM);
-				if (VRAM != NULL)
+					VROM = NULL;
+				} 
+				if (VRAM != NULL) {
 					free (VRAM);
+					VRAM = NULL;
+				}
 
 				//Save Its SaveRAM
 				if (SRAM_Enabled) {

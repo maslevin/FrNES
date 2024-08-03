@@ -734,11 +734,17 @@ int main() {
 
 				//Clean Up Afterwards
 				free (ROM);
+				ROM = NULL;
+				
 				//There are some games that don't have VROM
-				if (VROM != NULL)
+				if (VROM != NULL) {
 					free (VROM);
-				if (VRAM != NULL)
+					VROM = NULL;
+				} 
+				if (VRAM != NULL) {
 					free (VRAM);
+					VRAM = NULL;
+				}
 
 				//Save Its SaveRAM
 				if (SRAM_Enabled) {
@@ -788,11 +794,27 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 		MapperNo = ((NesHeader.byInfo1 & 0xF0) >> 4) | (NesHeader.byInfo2 & 0xF0);
 		printf("ReadRom: Mapper Number [%i]\n", MapperNo);
 		printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
+
+		// Handle VRAM - sometimes we will just use the VROM variable for it
+		// but other times we'll need somewhere else to store aux. bank switched VRAM
 		if (NesHeader.byVRomSize == 0) {
-			printf("ReadRom: CHR RAM\n");
+			printf("ReadRom: Implied 8kB CHR RAM\n");
+			// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
+			VROM = malloc(0x2000);
 		} else {
-			printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);
+			switch (MapperNo) {
+				case 30: {
+					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
+					VROM = malloc(4 * 0x2000);					
+				} break;
+
+				case 119: {
+					printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
+					VRAM = malloc(0x2000);
+				} break;
+			}
 		}
+
 		printf("ReadRom: Nametable Arrangement [%s]\n", (NesHeader.byInfo1 & 1) ? "horizontal mirrored" : "vertically mirrored");			
 		printf("ReadRom: Battery Backed RAM [%s]\n", (NesHeader.byInfo1 & 2) ? "present" : "not present");
 		printf("ReadRom: Trainer Present [%s]\n", (NesHeader.byInfo1 & 4) ? "true" : "false");
@@ -825,19 +847,10 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 			ROM[i - ROM_offset] = ROM_Buffer[i];
 
 		if (NesHeader.byVRomSize > 0) {
-//			VRAM = NULL;
 			VROM_offset = i;
 			VROM = malloc (NesHeader.byVRomSize * 0x2000);
 			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
 				VROM[i - VROM_offset] = ROM_Buffer[i];
-		} else {
-//			VROM = NULL;
-			if (MapperNo == 30) {
-				printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-				VROM = malloc(4 * 0x2000);
-			} else {
-				VROM = malloc(0x2000);
-			}
 		}
 
 		//Load success

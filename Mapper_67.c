@@ -12,15 +12,15 @@ void Mapper_67_Init() {
     ROMBANK3 = ROMLASTPAGE(0);
 
     // set PPU bank pointers
-    //uint32 num_1k_ROM_banks = NesHeader.byRomSize * 8;
+    uint32 num_1k_VROM_banks = NesHeader.byVRomSize * 8;
     PPUBANK[0] = &VROM[ 0 * 0x400 ];
     PPUBANK[1] = &VROM[ 1 * 0x400 ];
     PPUBANK[2] = &VROM[ 2 * 0x400 ];
     PPUBANK[3] = &VROM[ 3 * 0x400 ];
-    PPUBANK[4] = &VROM[ (NesHeader.byRomSize - 4) * 0x400 ];
-    PPUBANK[5] = &VROM[ (NesHeader.byRomSize - 3) * 0x400 ];
-    PPUBANK[6] = &VROM[ (NesHeader.byRomSize - 2) * 0x400 ];
-    PPUBANK[7] = &VROM[ (NesHeader.byRomSize - 1) * 0x400 ];
+    PPUBANK[4] = &VROM[ (num_1k_VROM_banks - 4) * 0x400 ];
+    PPUBANK[5] = &VROM[ (num_1k_VROM_banks - 3) * 0x400 ];
+    PPUBANK[6] = &VROM[ (num_1k_VROM_banks - 2) * 0x400 ];
+    PPUBANK[7] = &VROM[ (num_1k_VROM_banks - 1) * 0x400 ];
 
     Mapper_67_irq_enabled = 0;
     Mapper_67_irq_counter = 0;
