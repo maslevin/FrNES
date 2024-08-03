@@ -72,8 +72,8 @@ void Mapper_67_Write(uint16 addr, uint8 data) {
         } break;
 
         case 0xF800: {
-            printf("Setting configurable ROM banks to [%u] and [%u]\n", ((data & 0xF) * 2), ((data & 0xF) * 2) + 1);
-            uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
+            uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;            
+            //printf("Setting configurable ROM banks to [%lu] and [%lu]\n", ((data & 0xF) * 2) % num_8k_ROM_banks, (((data & 0xF) * 2) + 1) % num_8k_ROM_banks);
             ROMBANK0 = ROMPAGE(((data & 0xF) * 2) % num_8k_ROM_banks);
             ROMBANK1 = ROMPAGE((((data & 0xF) * 2) + 1) % num_8k_ROM_banks);
         } break;
