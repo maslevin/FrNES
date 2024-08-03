@@ -238,7 +238,7 @@ void Mapper_119_HSync() {
     if (Mapper_119_irq_enabled) {
         if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
             if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
-                if (Mapper_119_irq_counter == 2) {
+                if (Mapper_119_irq_counter == 0) {
                     Mapper_119_irq_counter = Mapper_119_irq_latch;
                     IRQ_REQ;
                 }
