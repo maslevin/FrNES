@@ -5,26 +5,27 @@ uint8 Mapper_119_regs[8];
 uint32 Mapper_119_prg0,Mapper_119_prg1;
 uint32 Mapper_119_chr01,Mapper_119_chr23,Mapper_119_chr4,Mapper_119_chr5,Mapper_119_chr6,Mapper_119_chr7;
 
-uint32 chr_swap() { return Mapper_119_regs[0] & 0x80; }
-uint32 prg_swap() { return Mapper_119_regs[0] & 0x40; }
+bool chr_swap() { return Mapper_119_regs[0] & 0x80; }
+bool prg_swap() { return Mapper_119_regs[0] & 0x40; }
 
 uint8 Mapper_119_irq_enabled; // IRQs enabled
 uint8 Mapper_119_irq_counter; // IRQ scanline counter, decreasing
 uint8 Mapper_119_irq_latch;   // IRQ scanline counter latch
 
 void Mapper_119_MMC3_set_CPU_banks() {
+    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
     if (prg_swap()) {
         //printf("Setting Prg Bank1 to page [%u] and Bank2 to page [%u]\n",Mapper_119_prg1,Mapper_119_prg0);
         ROMBANK0 = ROMLASTPAGE(1);
-        ROMBANK1 = ROMPAGE(Mapper_119_prg1);
-        ROMBANK2 = ROMPAGE(Mapper_119_prg0);
+        ROMBANK1 = ROMPAGE(Mapper_119_prg1 % num_8k_ROM_banks);
+        ROMBANK2 = ROMPAGE(Mapper_119_prg0 % num_8k_ROM_banks);
         ROMBANK3 = ROMLASTPAGE(0);
     } else {
         //printf("Setting Prg Bank0 to page [%u] and Bank1 to page [%u]\n",Mapper_119_prg0,Mapper_119_prg1);
-        ROMBANK0 = ROMPAGE(Mapper_119_prg0);
-        ROMBANK1 = ROMPAGE(Mapper_119_prg1);
+        ROMBANK0 = ROMPAGE(Mapper_119_prg0 % num_8k_ROM_banks);
+        ROMBANK1 = ROMPAGE(Mapper_119_prg1 % num_8k_ROM_banks);
         ROMBANK2 = ROMLASTPAGE(1);
-        ROMBANK3 = ROMLASTPAGE(0);
+        ROMBANK3 = ROMLASTPAGE(0);      
     }
 }
 
@@ -237,7 +238,7 @@ void Mapper_119_HSync() {
     if (Mapper_119_irq_enabled) {
         if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
             if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
-                if (Mapper_119_irq_counter == 0) {
+                if (Mapper_119_irq_counter == 2) {
                     Mapper_119_irq_counter = Mapper_119_irq_latch;
                     IRQ_REQ;
                 }

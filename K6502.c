@@ -282,7 +282,7 @@ void UploadDisassembly() {
 #endif
 
 void PrintRegisters() {
-	printf("PC: [$%04x] A: [$%02x] X: [$%02x] Y: [$%02x] SP: [$%04x]\n", PC - 1, A, X, Y, BASE_STACK + SP);
+	printf("PC: [$%04x] A: [$%02x] X: [$%02x] Y: [$%02x] SP: [$%04x]\n", (pPC - pPC_Offset) - 1, A, X, Y, BASE_STACK + SP);
 	printf("Stack: \n");
 	for (int SP_Index = SP + 1; SP_Index <= 0xFF; SP_Index++) {
 		printf("$%04x: %02x\n", BASE_STACK + SP_Index, RAM[BASE_STACK + SP_Index]);
@@ -1446,6 +1446,12 @@ void K6502_Step( uint16 wClocks ) {
 
 		// Execute an instruction, run the instruction from the jump table.
 		((OpcodeTable[opcode]).pFPtr)();
+
+		// We crossed a bank boundary, make sure we end up in the right PRG bank
+		if (pPC - pPC_Offset > 0x1FFF) {
+			VIRPC;
+			REALPC;
+		}
 
 		if (HALT) {
 			printf("Attempted to Run Illegal Opcode [%02X]\n", opcode);

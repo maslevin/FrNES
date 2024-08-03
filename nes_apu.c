@@ -668,7 +668,7 @@ static int32 apu_noise(noise_t *chan) {
     return APU_NOISE_OUTPUT;
 }
 
-inline void apu_dmcreload(dmc_t *chan) {
+static inline void apu_dmcreload(dmc_t *chan) {
     chan->address = chan->cached_addr;
     chan->dma_length = chan->cached_dmalength;
     chan->irq_occurred = false;
@@ -783,7 +783,7 @@ static int32 apu_dmc(dmc_t *chan) {
     return APU_DMC_OUTPUT;
 }
 
-static void apu_regwrite(uint32 address, uint8 value) {  
+static inline void apu_regwrite(uint32 address, uint8 value) {  
     int chan;
     
     switch (address) {
