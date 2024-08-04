@@ -537,14 +537,6 @@ void pNesX_Cycle() {
 
 	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++) {
-		if (ppuinfo.PPU_Scanline % 3 == 0) {
-			K6502_Step(CYCLES_PER_LINE + 2);
-			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
-		} else {
-			K6502_Step(CYCLES_PER_LINE);
-			handle_dmc_synchronization(CYCLES_PER_LINE);
-		}
-		mapper -> hsync();
 
 		pNesX_DrawLine();
 
@@ -556,6 +548,15 @@ void pNesX_Cycle() {
 			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
 				NMI_REQ;
 		}
+
+		if (ppuinfo.PPU_Scanline % 3 == 0) {
+			K6502_Step(CYCLES_PER_LINE + 2);
+			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
+		} else {
+			K6502_Step(CYCLES_PER_LINE);
+			handle_dmc_synchronization(CYCLES_PER_LINE);
+		}
+		mapper -> hsync();		
 
 		//Do Scroll Setup even if we aren't drawing the frame
 		if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {

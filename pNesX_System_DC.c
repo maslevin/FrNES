@@ -866,6 +866,11 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 }
 
 void pNesX_LoadFrame() {
+	pvr_ptr_t texture = PVR_NESScreen2_Offset;
+	if (WorkFrameIdx) {
+		texture = PVR_NESScreen1_Offset;
+	}
+
 	pvr_wait_ready();
 	pvr_scene_begin();
 
@@ -875,10 +880,6 @@ void pNesX_LoadFrame() {
 	uint32 filter = PVR_FILTER_BILINEAR;
 	if (!*opt_Filter) {
 		filter = PVR_FILTER_NONE;
-	}
-	pvr_ptr_t texture = PVR_NESScreen2_Offset;
-	if (WorkFrameIdx) {
-		texture = PVR_NESScreen1_Offset;
 	}
 
 	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
@@ -1139,8 +1140,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
 	}
 }
 
-uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset)
-{
+uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
 	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
 	if (offset == 0) {
 		return memcpy(dest, src, count);		
