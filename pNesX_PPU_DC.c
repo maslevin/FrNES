@@ -49,6 +49,7 @@ void pNesX_DrawLine() {
 
 	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
 		memset(Scanline_Buffer, 0, 256);
+		pvr_txr_load(Scanline_Buffer, texture_address, 256);
 		return;
 	}
 

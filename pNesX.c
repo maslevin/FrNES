@@ -337,6 +337,12 @@ int pNesX_Reset() {
 	// Clear RAM
 	memset( RAM, 0, sizeof RAM );
 
+	// Clear PPU RAM
+	memset( PPURAM, 0, PPURAM_SIZE );
+
+	// Clear SPR RAM
+	memset( SPRRAM, 0, SPRRAM_SIZE );
+
 	// Clear SRAM
 	memset( SRAM, 0, sizeof SRAM );
 
