@@ -533,7 +533,6 @@ void pNesX_Cycle() {
 		pNesX_DrawLine();
 
 		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-			printf("Sprite Hit on Scanline [%lu]\n", ppuinfo.PPU_Scanline);
 			// Set the sprite hit flag
 			PPU_R2 |= R2_HIT_SP;
 
