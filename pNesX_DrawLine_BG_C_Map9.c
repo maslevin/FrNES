@@ -7,8 +7,6 @@
 #include "Mapper.h"
 #include "Mapper_9.h"
 
-extern PPU_Info ppuinfo;
-
 void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	/* C Background Renderer Vars */
 	uint16 nX;

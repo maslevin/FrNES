@@ -129,6 +129,9 @@ extern uint16 PPU_Increment;
 extern uint16 PPU_Temp;
 extern unsigned char PPU_2007_Buffer;
 
+extern int SpriteJustHit;
+#define SPRITE_HIT_SENTINEL 255
+
 #define MIRRORING_HORIZONTAL 0
 #define MIRRORING_VERTICAL 1
 #define MIRRORING_FOUR_SCREEN 2
@@ -154,22 +157,6 @@ extern unsigned char PPU_2007_Buffer;
 #define R2_HIT_SP      0x40
 #define R2_MAX_SP      0x20
 #define R2_WRITE_FLAG  0x10
-
-#define SCAN_TOP_OFF_SCREEN     0
-#define SCAN_ON_SCREEN          1
-#define SCAN_BOTTOM_OFF_SCREEN  2
-#define SCAN_UNKNOWN            3
-#define SCAN_VBLANK             4
-
-#define SCAN_TOP_OFF_SCREEN_START       0 
-#define SCAN_ON_SCREEN_START            8
-#define SCAN_BOTTOM_OFF_SCREEN_START  232
-#define SCAN_UNKNOWN_START            240
-#define SCAN_VBLANK_START             243
-#define SCAN_VBLANK_END               262
-
-/* Scanline Table */
-extern unsigned char PPU_ScanTable[];
 
 /* NES display size */
 #define NES_DISP_WIDTH      256
@@ -214,8 +201,7 @@ extern uint32 PAD2_Bit;
 /*-------------------------------------------------------------------*/
 
 /* .nes File Header */
-struct NesHeader_tag
-{
+struct NesHeader_tag {
   unsigned char byID[ 4 ];
   unsigned char byRomSize;
   unsigned char byVRomSize;
@@ -237,8 +223,7 @@ extern unsigned char ROM_SRAM;
 extern unsigned char ROM_Trainer;
 extern unsigned char ROM_FourScr;
 
-struct Timestamp_tag
-{
+struct Timestamp_tag {
 	unsigned char byData;
 	uint16 reg;
 	uint16 sample_write;

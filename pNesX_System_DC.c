@@ -735,7 +735,7 @@ int main() {
 				//Clean Up Afterwards
 				free (ROM);
 				ROM = NULL;
-				
+
 				//There are some games that don't have VROM
 				if (VROM != NULL) {
 					free (VROM);
@@ -802,6 +802,7 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 			// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
 			VROM = malloc(0x2000);
 		} else {
+			printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);
 			switch (MapperNo) {
 				case 30: {
 					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");

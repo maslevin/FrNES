@@ -236,6 +236,9 @@ void DisassembleInstruction(char* Opcode, char* fmt, uint16 value) {
 	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
+	if (DisassemblyBufferIndex == 0) {
+		HALT = 1;
+	}
 	REALPC;
 }
 
@@ -250,6 +253,9 @@ void DisassembleInstruction2(char* Opcode, char* fmt, uint16 value, uint16 value
 	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
+	if (DisassemblyBufferIndex == 0) {
+		HALT = 1;
+	}	
 	REALPC;
 }
 
@@ -344,7 +350,7 @@ void Op_0E() {
 
 // BPL Oper
 void Op_10 () {
-	DisassembleInstruction("BPL", "$%02x", *pPC);
+	DisassembleInstruction("BPL", "$%04x", AA_ABS);
 	BRA( !( F & FLAG_N ) );
 }
 
@@ -1354,6 +1360,7 @@ void K6502_Reset() {
 
 	// Reset Registers
 	PC = K6502_ReadW( VECTOR_RESET );
+	printf("Setting PC to Reset Vector [$%04x]\n", PC);
 	PredPC = 0;
 	REALPC;
 	SP = 0xFF;

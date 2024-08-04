@@ -1,5 +1,7 @@
 #include "Mapper_5.h"
 
+#include "nes_apu.h"
+
 /*===================================================================*/
 /*                                                                   */
 /*                        Mapper 5 (MMC5)                            */
@@ -56,69 +58,69 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 
 void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 	//printf("Map5_set_CPU_bank: %u, %u\n", page, bank);
-	// uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
+	uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
 	if (bank & 0x80) {
 		switch (Mapper_5_prg_size) {
 			case 0:
 				if (page == 7) {
-					//printf("Setting ROMBANKS 0-3 to [%u-%u]\n",bank&0x7C,(bank&0x7C) + 3);
-					ROMBANK0 = ROMPAGE((bank & 0x7C));
-					ROMBANK1 = ROMPAGE((bank & 0x7C)+1);
-					ROMBANK2 = ROMPAGE((bank & 0x7C)+2);
-					ROMBANK3 = ROMPAGE((bank & 0x7C)+3);
+					printf("Setting ROMBANKS 0-3 to [%u-%u]\n",(bank & 0x7C) % num_8k_ROM_banks,((bank & 0x7C)+3) % num_8k_ROM_banks);
+					ROMBANK0 = ROMPAGE((bank & 0x7C) % num_8k_ROM_banks);
+					ROMBANK1 = ROMPAGE(((bank & 0x7C)+1) % num_8k_ROM_banks);
+					ROMBANK2 = ROMPAGE(((bank & 0x7C)+2) % num_8k_ROM_banks);
+					ROMBANK3 = ROMPAGE(((bank & 0x7C)+3) % num_8k_ROM_banks);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = Mapper_5_wb[6] = 8;
 				}
 				break;
 			case 1:
 				if (page == 5) {
-					//printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
-					ROMBANK0 = ROMPAGE((bank & 0x7E));
-					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
+					printf("Setting ROMBANKS 0-1 to [%u-%u]\n",(bank & 0x7E) % num_8k_ROM_banks,((bank & 0x7E)+1) % num_8k_ROM_banks);
+					ROMBANK0 = ROMPAGE((bank & 0x7E) % num_8k_ROM_banks);
+					ROMBANK1 = ROMPAGE(((bank & 0x7E)+1) % num_8k_ROM_banks);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 7) {
-					//printf("Setting ROMBANKS 2-3 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);					
-					ROMBANK2 = ROMPAGE((bank & 0x7E));
-					ROMBANK3 = ROMPAGE((bank & 0x7E)+1);
+					printf("Setting ROMBANKS 2-3 to [%u-%u]\n",(bank & 0x7E) % num_8k_ROM_banks,((bank & 0x7E)+1) % num_8k_ROM_banks);					
+					ROMBANK2 = ROMPAGE((bank & 0x7E) % num_8k_ROM_banks);
+					ROMBANK3 = ROMPAGE(((bank & 0x7E)+1) % num_8k_ROM_banks);
 					Mapper_5_wb[6] = 8;
 				}			
 				break;
 			case 2:
 				if (page == 5) {
-					//printf("Setting ROMBANKS 0-1 to [%u-%u]\n",bank&0x7E,(bank&0x7E) + 1);
-					ROMBANK0 = ROMPAGE((bank & 0x7E));
-					ROMBANK1 = ROMPAGE((bank & 0x7E)+1);
+					printf("Setting ROMBANKS 0-1 to [%u-%u]\n",(bank & 0x7F) % num_8k_ROM_banks,((bank & 0x7F) + 1)% num_8k_ROM_banks);
+					ROMBANK0 = ROMPAGE((bank & 0x7E) % num_8k_ROM_banks);
+					ROMBANK1 = ROMPAGE(((bank & 0x7E)+1) % num_8k_ROM_banks);
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
-					//printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);
-					ROMBANK2 = ROMPAGE((bank & 0x7F));
+					printf("Setting ROMBANK 2 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK2 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
-					//printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
-					ROMBANK3 = ROMPAGE((bank & 0x7F));
+					printf("Setting ROMBANK 3 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
+					ROMBANK3 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
 				}			
 				break;
 			case 3:
 				if (page == 4) {
-					//printf("Setting ROMBANK 0 to [%u]\n",bank&0x7F);
-					ROMBANK0 = ROMPAGE((bank & 0x7F));
+					printf("Setting ROMBANK 0 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK0 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
 					Mapper_5_wb[4] = 8;
 				}
 				if (page == 5) {
-					//printf("Setting ROMBANK 1 to [%u]\n",bank&0x7F);					
-					ROMBANK1 = ROMPAGE((bank & 0x7F));
+					printf("Setting ROMBANK 1 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
+					ROMBANK1 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
 					Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
-					//printf("Setting ROMBANK 2 to [%u]\n",bank&0x7F);					
-					ROMBANK2 = ROMPAGE((bank & 0x7F));			
+					printf("Setting ROMBANK 2 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
+					ROMBANK2 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
-					//printf("Setting ROMBANK 3 to [%u]\n",bank&0x7F);					
-					ROMBANK3 = ROMPAGE((bank & 0x7F));
+					printf("Setting ROMBANK 3 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
+					ROMBANK3 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
 				}			
 				break;
 		}
@@ -258,21 +260,17 @@ void Mapper_5_Init() {
 
 	uint32 i;
 	// set SaveRAM	
-	/*
 	for(i = 0; i < 0x10000; i++) {
 		Mapper_5_wram[i] = SRAM[i];
 	}
 	Mapper_5_Set_WRAM_Bank(3,0);
-	*/
 
-    // Init ExSound
-	// MS - TODO: Port over MMC5 extension sound
-    // parent_NES->apu->SelectExSound(NES_APU_EXSOUND_MMC5);
+	apu_set_exsound(NES_APU_EXSOUND_MMC5);
 
 	// set CPU bank pointers
-	ROMBANK0 = ROMLASTPAGE(3);
-	ROMBANK1 = ROMLASTPAGE(2);
-	ROMBANK2 = ROMLASTPAGE(1);
+	ROMBANK0 = ROMLASTPAGE(0);
+	ROMBANK1 = ROMLASTPAGE(0);
+	ROMBANK2 = ROMLASTPAGE(0);
 	ROMBANK3 = ROMLASTPAGE(0);
 
 	// set PPU bank pointers
@@ -318,27 +316,32 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 
 	switch(wAddr) {
 		case 0x5100: {
-			pNesX_DebugPrint("Set Program Size [%u]\n", byData & 0x03);
+			printf("Set Prg Size [%u]\n", byData & 0x03);
 			Mapper_5_prg_size = byData & 0x03;
 		} break;
 
 		case 0x5101: {
+			printf("Set Chr Size [%u]\n", byData & 0x03);
 			Mapper_5_chr_size = byData & 0x03;
 		} break;
 
 		case 0x5102: {
+			printf("Set Wram Protection 0 [%u]\n", byData & 0x03);
 			Mapper_5_wram_protect0 = byData & 0x03;
 		} break;
 
 		case 0x5103: {
+			printf("Set Wram Protection 1 [%u]\n", byData & 0x03);			
 			Mapper_5_wram_protect1 = byData & 0x03;
 		} break;
 
 		case 0x5104: {
+			printf("Set Gfx Mode [%u]\n", byData & 0x03);
 			Mapper_5_gfx_mode = byData & 0x03;
 		} break;
 
 		case 0x5105: {
+			printf("Set Mirroring [%02x]\n", byData);
 			PPUBANK[ NAME_TABLE0 ] = &PPURAM[ (NAME_TABLE0 + (byData & 0x03)) * 0x400 ];
 			byData >>= 2;			
 			PPUBANK[ NAME_TABLE1 ] = &PPURAM[ (NAME_TABLE0 + (byData & 0x03)) * 0x400 ];
@@ -349,6 +352,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		} break;
 
 		case 0x5106: {
+			printf("Write to Nametable3 Low [%u]\n", byData & 0x03);			
 			unsigned char* nametable3 = PPUBANK[NAME_TABLE3];
 			for (i = 0; i < 0x3C0; i++) {
 				nametable3[i] = byData;
@@ -356,6 +360,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		} break;
 
 		case 0x5107: {
+			printf("Write to Nametable3 High [%u]\n", byData & 0x03);			
 			unsigned char* nametable3 = PPUBANK[NAME_TABLE3];
 			byData &= 0x03;
 			byData = byData | (byData<<2) | (byData<<4) | (byData<<6);
@@ -365,6 +370,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		} break;
 
 		case 0x5113: {
+			printf("Write to WRAM Bank [%u]\n", byData & 0x07);
 			Mapper_5_Set_WRAM_Bank(3, byData & 0x07);
 		} break;
 
@@ -372,6 +378,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		case 0x5115:
 		case 0x5116:
 		case 0x5117: {
+			printf("Write to CPU Bank [%u]\n", byData & 0x07);			
 			Mapper_5_Set_CPU_Bank(wAddr & 0x07, byData);
 		} break;
 
@@ -383,6 +390,7 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		case 0x5125:
 		case 0x5126:
 		case 0x5127: {
+			printf("Write to Chr Registers [%u]\n", byData & 0x07);
 			Mapper_5_chr_reg[wAddr & 0x07][0] = byData;
 			Mapper_5_Sync_Chr_Banks(0);
 		} break;
@@ -391,11 +399,13 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 		case 0x5129:
 		case 0x512A:
 		case 0x512B: {
+			printf("Write to Chr Registers 2 [%u]\n", byData & 0x07);
 			Mapper_5_chr_reg[(wAddr & 0x03) + 0][1] = byData;
 			Mapper_5_chr_reg[(wAddr & 0x03) + 4][1] = byData;
 		} break;
 
 		case 0x5200: {
+			printf("Write to Split Control [%u]\n", byData & 0x07);			
 			Mapper_5_split_control = byData;
 		} break;
 

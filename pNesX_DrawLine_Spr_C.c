@@ -8,9 +8,7 @@
 #include "Mapper_5.h"
 #include "pNesX_System_DC.h"
 
-extern PPU_Info ppuinfo;
 extern unsigned char pSprBuf[];
-extern int SpriteJustHit;
 extern int SprBufClean;
 
 // How many entries in SpritesToDrawNextScanline are valid
@@ -75,10 +73,10 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	memset4(pSprBuf, 0, 272 * 2);		
 
 	// Calculate the sprites to draw on the next scanline
-//	uint32 NextPPUScanline = ppuinfo.PPU_Scanline + 1;
 	for ( unsigned char spriteIndex = 0; spriteIndex < 64; spriteIndex++) {
 		pSPRRAM = SPRRAM + (spriteIndex << 2);
 		nY = pSPRRAM[ SPR_Y ];
+
 		if ((nY > ppuinfo.PPU_Scanline) || ((nY + ppuinfo.PPU_SP_Height) <= ppuinfo.PPU_Scanline))
 			continue;  // This sprite is not active on the next scanline, skip to next one
 
@@ -95,11 +93,7 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-
-//		printf("Drawing %u Sprites\n", NumSpritesToDraw);
-		// Draw from lowest priority sprite to highest priority sprite
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
-//			printf("Drawing Sprite at Buffer index [%i]\n", spriteIndex);
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
 

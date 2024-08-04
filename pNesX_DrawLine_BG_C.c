@@ -6,8 +6,6 @@
 #include "pNesX_PPU_DC.h"
 #include "pNesX_DrawLine_BG_C.h"
 
-extern PPU_Info ppuinfo;
-
 void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	/* C Background Renderer Vars */
 	uint16 nX;

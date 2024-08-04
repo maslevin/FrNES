@@ -91,11 +91,7 @@ uint16 PPU_Scanline;
 //32 - byte aligned sound output buffer
 __ALIGN32__ uint16 sample_buffer[2940];
 
-/* Scanline Table */
-unsigned char PPU_ScanTable[ 263 ];
-
 /* Sprite #0 Scanline Hit Position */
-int SpriteHitPos;
 int SpriteJustHit;
 
 /*-------------------------------------------------------------------*/
@@ -227,8 +223,6 @@ void pNesX_DoSpu() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Init() {
-	int nIdx;
-
 	// Initialize 6502
 	K6502_Init();
 
@@ -247,24 +241,6 @@ void pNesX_Init() {
 
 	// Reset CPU and prepare to run program
 	K6502_Reset();
-
-	// Initialize Scanline Table
-	// MS - I don't think this is required anymore, refactor it out
-	for ( nIdx = 0; nIdx < 263; ++nIdx ) {
-		if ( nIdx < SCAN_ON_SCREEN_START )
-			PPU_ScanTable[ nIdx ] = SCAN_TOP_OFF_SCREEN;
-		else
-		if ( nIdx < SCAN_BOTTOM_OFF_SCREEN_START )
-			PPU_ScanTable[ nIdx ] = SCAN_ON_SCREEN;
-		else
-		if ( nIdx < SCAN_UNKNOWN_START )
-			PPU_ScanTable[ nIdx ] = SCAN_BOTTOM_OFF_SCREEN;
-		else
-		if ( nIdx < SCAN_VBLANK_START )
-			PPU_ScanTable[ nIdx ] = SCAN_UNKNOWN;
-		else
-			PPU_ScanTable[ nIdx ] = SCAN_VBLANK;
-	}
 }
 
 /*===================================================================*/
@@ -437,7 +413,7 @@ void pNesX_SetupPPU() {
 	ppuinfo.PPU_Scanline = 0;
 
 	// Reset hit position of sprite #0 
-	SpriteHitPos = -1;
+	// SpriteHitPos = -1;
 
 	// Reset information on PPU_R0
 	PPU_Increment = 1;
@@ -542,8 +518,7 @@ void handle_dmc_synchronization(uint32 cycles) {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Cycle() {
-	int do_scroll_setup;
-	SpriteJustHit = 241;
+	SpriteJustHit = SPRITE_HIT_SENTINEL;
 
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
@@ -558,7 +533,8 @@ void pNesX_Cycle() {
 		pNesX_DrawLine();
 
 		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-			// Set a sprite hit flag
+			printf("Sprite Hit on Scanline [%lu]\n", ppuinfo.PPU_Scanline);
+			// Set the sprite hit flag
 			PPU_R2 |= R2_HIT_SP;
 
 			// NMI is required if there is necessity
@@ -566,8 +542,13 @@ void pNesX_Cycle() {
 				NMI_REQ;
 		}
 
-		K6502_Step(CYCLES_PER_LINE);
-		handle_dmc_synchronization(CYCLES_PER_LINE);
+		if (ppuinfo.PPU_Scanline % 3 == 0) {
+			K6502_Step(CYCLES_PER_LINE + 2);
+			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
+		} else {
+			K6502_Step(CYCLES_PER_LINE);
+			handle_dmc_synchronization(CYCLES_PER_LINE);
+		}
 		mapper -> hsync();
 
 		//Do Scroll Setup even if we aren't drawing the frame
@@ -613,16 +594,7 @@ void pNesX_Cycle() {
 		}
 	}
 
-	// Scanline 240
-	ppuinfo.PPU_Scanline = 240;	
-	if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-		// Set a sprite hit flag
-		PPU_R2 |= R2_HIT_SP;
-
-		// NMI is required if there is necessity
-		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-			NMI_REQ;
-	}
+	ppuinfo.PPU_Scanline = 240;
 	K6502_Step(CYCLES_PER_LINE);
 	handle_dmc_synchronization(CYCLES_PER_LINE);	
 	mapper -> hsync();
@@ -633,14 +605,6 @@ void pNesX_Cycle() {
 
 	// Scanline 241
 	ppuinfo.PPU_Scanline = 241;
-	if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-		// Set a sprite hit flag
-		PPU_R2 |= R2_HIT_SP;
-
-		// NMI is required if there is necessity
-		if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-			NMI_REQ;
-	}	
 	K6502_Step(1);
 	K6502_DoNMI();
 	K6502_Step(CYCLES_PER_LINE - 1);
@@ -648,18 +612,22 @@ void pNesX_Cycle() {
 	mapper -> hsync();
 
 	// Scanline 242-260
-	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++)
-	{
-		K6502_Step(CYCLES_PER_LINE);
-		handle_dmc_synchronization(CYCLES_PER_LINE);		
+	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++) {
+		if (ppuinfo.PPU_Scanline % 3 == 0) {
+			K6502_Step(CYCLES_PER_LINE + 2);
+			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
+		} else {
+			K6502_Step(CYCLES_PER_LINE);
+			handle_dmc_synchronization(CYCLES_PER_LINE);
+		}
 		mapper -> hsync();
 	}
 
 	// 87 Cycles is the remainder of the cycles from doing ALL the scanlines on the screen at 133.33 CPU cycles per scanline
 	K6502_Step(10);
-	PPU_R2 ^= (R2_IN_VBLANK | R2_HIT_SP);
-	K6502_Step(77);
-	handle_dmc_synchronization(87);	
+	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
+	K6502_Step(CYCLES_PER_LINE - 10);
+	handle_dmc_synchronization(CYCLES_PER_LINE);
 
 	if (*opt_SoundEnabled) {
 		pNesX_DoSpu();

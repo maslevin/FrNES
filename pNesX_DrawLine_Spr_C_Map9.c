@@ -8,9 +8,6 @@
 #include "Mapper.h"
 #include "Mapper_9.h"
 
-extern PPU_Info ppuinfo;
-extern int SpriteJustHit;
-
 uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 	int nX;
 	int nY;

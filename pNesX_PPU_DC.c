@@ -20,14 +20,11 @@
 #include "Mapper.h"
 
 extern VQ_Texture* WorkFrame;
-extern unsigned char* Scanline_Buffer;
-extern PPU_Info ppuinfo;
 
-uint16 pSprBuf[264];
+#define __ALIGN32__		__attribute__ ((aligned (32)))
+__ALIGN32__ uint16 pSprBuf[264];
+__ALIGN32__ unsigned char Scanline_Buffer[256];
 
-unsigned char* Scanline_Buffer = NULL;
-extern int SpriteJustHit;
-//extern uint16 PPU_Addr;
 extern uint16 PPU_Temp;
 
 void pNesX_StartFrame() {
@@ -40,8 +37,7 @@ void pNesX_StartFrame() {
 /*              pNesX_NewDrawLine() : Render a scanline              */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_DrawLine()
-{
+void pNesX_DrawLine() {
 	void* texture_address;
 	unsigned char* pPoint;
 	int nSprCnt = 0;
@@ -49,16 +45,10 @@ void pNesX_DrawLine()
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
-	
-	if (Scanline_Buffer == NULL) {
-		Scanline_Buffer = memalign(32, 256);
-	}
 	pPoint = Scanline_Buffer;
 
-	if ( !( PPU_R1 & R1_SHOW_SCR ) )
-	{
+	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
 		memset(Scanline_Buffer, 0, 256);
-		pvr_txr_load(Scanline_Buffer, texture_address, 256);
 		return;
 	}
 
@@ -73,7 +63,7 @@ void pNesX_DrawLine()
 	if (nSprCnt) {
 		//Merge the sprite buffer with the scanline buffer
 		pPoint = Scanline_Buffer;
-		if (SpriteJustHit == 241) {
+		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
 			for (index = 0; index < 256; index++) {
 				unsigned char spritePixel = pSprBuf[index] & 0xff;
 				bool spriteZeroPixel = ((pSprBuf[index] & 0x100) != 0);
