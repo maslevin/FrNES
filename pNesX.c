@@ -529,12 +529,22 @@ void pNesX_Cycle() {
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
 
-	// Dummy scanline -1;
-	K6502_Step(CYCLES_PER_LINE);
+	// Dummy scanline -1 or 261;
+	K6502_Step(1);
+	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
+	K6502_Step(CYCLES_PER_LINE - 1);
 	handle_dmc_synchronization(CYCLES_PER_LINE);
 
 	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++) {
+		if (ppuinfo.PPU_Scanline % 3 == 0) {
+			K6502_Step(CYCLES_PER_LINE + 2);
+			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
+		} else {
+			K6502_Step(CYCLES_PER_LINE);
+			handle_dmc_synchronization(CYCLES_PER_LINE);
+		}
+		mapper -> hsync();
 
 		pNesX_DrawLine();
 
@@ -546,15 +556,6 @@ void pNesX_Cycle() {
 			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
 				NMI_REQ;
 		}
-
-		if (ppuinfo.PPU_Scanline % 3 == 0) {
-			K6502_Step(CYCLES_PER_LINE + 2);
-			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
-		} else {
-			K6502_Step(CYCLES_PER_LINE);
-			handle_dmc_synchronization(CYCLES_PER_LINE);
-		}
-		mapper -> hsync();
 
 		//Do Scroll Setup even if we aren't drawing the frame
 		if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
@@ -603,14 +604,12 @@ void pNesX_Cycle() {
 	K6502_Step(CYCLES_PER_LINE);
 	handle_dmc_synchronization(CYCLES_PER_LINE);	
 	mapper -> hsync();
-	if (!(*opt_AutoFrameSkip))
-		FrameCnt = ( FrameCnt >= FrameSkip ) ? 0 : FrameCnt + 1;
-	pNesX_VSync();
-	mapper -> vsync();
 
 	// Scanline 241
 	ppuinfo.PPU_Scanline = 241;
 	K6502_Step(1);
+	pNesX_VSync();
+	mapper -> vsync();
 	K6502_DoNMI();
 	K6502_Step(CYCLES_PER_LINE - 1);
 	handle_dmc_synchronization(CYCLES_PER_LINE);	
@@ -627,12 +626,6 @@ void pNesX_Cycle() {
 		}
 		mapper -> hsync();
 	}
-
-	// 87 Cycles is the remainder of the cycles from doing ALL the scanlines on the screen at 133.33 CPU cycles per scanline
-	K6502_Step(10);
-	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
-	K6502_Step(CYCLES_PER_LINE - 10);
-	handle_dmc_synchronization(CYCLES_PER_LINE);
 
 	if (*opt_SoundEnabled) {
 		pNesX_DoSpu();

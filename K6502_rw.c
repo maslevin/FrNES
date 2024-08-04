@@ -64,9 +64,10 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
           return RAM[ wAddr & 0x7ff ];
 
         case 0x2000: {
-            switch (wAddr) {
+            switch (wAddr & 0x0F) {
                 /* PPU Status $2002*/              
-                case 0x2002: {
+                case 0x02: 
+                case 0x0A: {
                     // Set return value
                     byRet = PPU_R2;
 
@@ -94,12 +95,12 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     return byRet;
                 }
 
-                case 0x2004: {
+                case 0x04: {
                     /* PPU Sprite RAM $2004 */
                     return SPRRAM[PPU_R3];
                 }
 
-                case 0x2007: {
+                case 0x07: {
                     uint16 addr;
                     addr = ppuinfo.PPU_Addr;
                     // Increment PPU Address
