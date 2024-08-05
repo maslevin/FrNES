@@ -25,7 +25,8 @@ void Mapper_7_Write(uint16 wAddr, unsigned char byData) {
 //	printf("Map7_Write: $%04X, %02X\n", wAddr, byData);
 	unsigned char bank;
 
-	bank = (byData & 0x07) << 2;
+	uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
+	bank = ((byData & 0x07) << 2) % num_8k_ROM_banks;
 //	printf("Setting ROM Bank to [%i]\n", bank);
 
 	ROMBANK0 = ROMPAGE( bank );
