@@ -35,7 +35,7 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 
 		pSPRRAM = SPRRAM;
 		for (int index = 0; index < 64; index++) {
-			nY = pSPRRAM[ SPR_Y ];
+			nY = pSPRRAM[ SPR_Y ] + 1;
 
 			if (!( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )) {
 				nAttr = pSPRRAM[ SPR_ATTR ];
@@ -78,7 +78,7 @@ uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf) {
 
 		for ( pSPRRAM = SPRRAM + ( 63 << 2 ); (pSPRRAM >= SPRRAM); pSPRRAM -= 4 ) {
 //		for ( pSPRRAM = SPRRAM; (pSPRRAM <= (SPRRAM + ( 63 << 2 ))); pSPRRAM += 4 ) {
-			nY = pSPRRAM[ SPR_Y ];
+			nY = pSPRRAM[ SPR_Y ] + 1;
 
 			if ( nY > ppuinfo.PPU_Scanline || nY + ppuinfo.PPU_SP_Height <= ppuinfo.PPU_Scanline )
 				continue;  // Next sprite

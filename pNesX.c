@@ -94,6 +94,9 @@ __ALIGN32__ uint16 sample_buffer[2940];
 /* Sprite #0 Scanline Hit Position */
 int SpriteJustHit;
 
+/* Flag every odd cycle */
+bool odd_cycle;
+
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
 /*-------------------------------------------------------------------*/
@@ -478,6 +481,8 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 void pNesX_Main() {
 	pNesX_Init();
 
+	odd_cycle = false;
+
 	// Main loop
 	while ( 1 ) {
 		if ( ExitCount > MAX_EXIT_COUNT )
@@ -490,6 +495,7 @@ void pNesX_Main() {
 */		
 
 		pNesX_Cycle();
+		odd_cycle = !odd_cycle;
 
 		if (HALT) {
 			printf ("ERROR: System Halt - exiting emulation\n");
@@ -529,104 +535,105 @@ void pNesX_Cycle() {
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
 
+//	uint32 frame_cpu_cycle_count = 0;
+
 	// Dummy scanline -1 or 261;
 	K6502_Step(1);
 	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
-	K6502_Step(CYCLES_PER_LINE - 1);
-	handle_dmc_synchronization(CYCLES_PER_LINE);
+	if (odd_cycle) {	
+		K6502_Step(CYCLES_PER_LINE);	
+		handle_dmc_synchronization(CYCLES_PER_LINE + 1);
+//		frame_cpu_cycle_count += CYCLES_PER_LINE + 1;
+	} else {
+		K6502_Step(CYCLES_PER_LINE - 1);	
+		handle_dmc_synchronization(CYCLES_PER_LINE);
+//		frame_cpu_cycle_count += CYCLES_PER_LINE;		
+	}
 
 	// Scanline 0-239
-	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline < 240; ppuinfo.PPU_Scanline++) {
-
-		pNesX_DrawLine();
-
-		if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-			// Set the sprite hit flag
-			PPU_R2 |= R2_HIT_SP;
-
-			// NMI is required if there is necessity
-			if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-				NMI_REQ;
+	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++) {
+		uint16 cpu_cycles_to_emulate = CYCLES_PER_LINE;
+		if ((ppuinfo.PPU_Scanline + 1) % 3 == 0) {
+			cpu_cycles_to_emulate += 2;
 		}
+//		frame_cpu_cycle_count += cpu_cycles_to_emulate;
 
-		if (ppuinfo.PPU_Scanline % 3 == 0) {
-			K6502_Step(CYCLES_PER_LINE + 2);
-			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
-		} else {
-			K6502_Step(CYCLES_PER_LINE);
-			handle_dmc_synchronization(CYCLES_PER_LINE);
-		}
-		mapper -> hsync();		
+		switch (ppuinfo.PPU_Scanline) {
+			case 0 ... 239: {
+				pNesX_DrawLine();
 
-		//Do Scroll Setup even if we aren't drawing the frame
-		if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
-			ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
+				if (SpriteJustHit == ppuinfo.PPU_Scanline) {
+					// Set the sprite hit flag
+					PPU_R2 |= R2_HIT_SP;
 
-			if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) /* is subtile y offset == 7? */
-			{
-				ppuinfo.PPU_Addr &= 0x8FFF; /* subtile y offset = 0 */
-
-				if ((ppuinfo.PPU_Addr & 0x03E0) == 0x03A0) /* name_tab line == 29? */
-				{ 
-					ppuinfo.PPU_Addr ^= 0x0800;  /* switch v nametables (bit 11) */
-					ppuinfo.PPU_Addr &= 0xFC1F;  /* name_tab line = 0 */
+					// NMI is required if there is necessity
+					if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+						NMI_REQ;
 				}
-				else	
-				{
-					if((ppuinfo.PPU_Addr & 0x03E0) == 0x03E0) /* line == 31? */
-					{
-						ppuinfo.PPU_Addr &= 0xFC1F;  /* name_tab line = 0 */
-					}
-					else
-					{
-						ppuinfo.PPU_Addr += 0x0020;
+
+				K6502_Step(cpu_cycles_to_emulate);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				mapper -> hsync();		
+
+				if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
+					ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
+
+					if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) {  /* is subtile y offset == 7? */
+						ppuinfo.PPU_Addr &= 0x8FFF; /* subtile y offset = 0 */
+
+						if ((ppuinfo.PPU_Addr & 0x03E0) == 0x03A0) { /* name_tab line == 29? */
+							ppuinfo.PPU_Addr ^= 0x0800;  /* switch v nametables (bit 11) */
+							ppuinfo.PPU_Addr &= 0xFC1F;  /* name_tab line = 0 */
+						} else {
+							if ((ppuinfo.PPU_Addr & 0x03E0) == 0x03E0) { /* line == 31? */
+								ppuinfo.PPU_Addr &= 0xFC1F;  /* name_tab line = 0 */
+							} else {
+								ppuinfo.PPU_Addr += 0x0020;
+							}
+						}
+					} else {
+						ppuinfo.PPU_Addr += 0x1000; /* next subtile y offset */
 					}
 				}
-			}
-			else
-			{
-				ppuinfo.PPU_Addr += 0x1000; /* next subtile y offset */
-			}
+			} break;
+
+			case 240: {
+				pNesX_LoadFrame();
+
+				if (FrameCnt == 0) {
+					// Switching of the double buffer
+					WorkFrameIdx = 1 - WorkFrameIdx;
+					if (WorkFrameIdx == 0) {
+						WorkFrame = PVR_NESScreen1_Offset;
+					} else {
+						WorkFrame = PVR_NESScreen2_Offset;
+					}
+				}
+
+				K6502_Step(cpu_cycles_to_emulate);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				mapper -> hsync();
+			} break;
+
+			case 241: {
+				K6502_Step(1);
+				pNesX_VSync();
+				mapper -> vsync();
+				K6502_DoNMI();
+				K6502_Step(cpu_cycles_to_emulate - 1);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				mapper -> hsync();
+			} break;
+
+			case 242 ... 260 : {
+				K6502_Step(cpu_cycles_to_emulate);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				mapper -> hsync();
+			} break;
 		}
 	}
 
-	pNesX_LoadFrame();
-	if (FrameCnt == 0) {
-        // Switching of the double buffer
-        WorkFrameIdx = 1 - WorkFrameIdx;
-		if (WorkFrameIdx == 0) {
-			WorkFrame = PVR_NESScreen1_Offset;
-		} else {
-			WorkFrame = PVR_NESScreen2_Offset;
-		}
-	}
-
-	ppuinfo.PPU_Scanline = 240;
-	K6502_Step(CYCLES_PER_LINE);
-	handle_dmc_synchronization(CYCLES_PER_LINE);	
-	mapper -> hsync();
-
-	// Scanline 241
-	ppuinfo.PPU_Scanline = 241;
-	K6502_Step(1);
-	pNesX_VSync();
-	mapper -> vsync();
-	K6502_DoNMI();
-	K6502_Step(CYCLES_PER_LINE - 1);
-	handle_dmc_synchronization(CYCLES_PER_LINE);	
-	mapper -> hsync();
-
-	// Scanline 242-260
-	for (ppuinfo.PPU_Scanline = 242; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++) {
-		if (ppuinfo.PPU_Scanline % 3 == 0) {
-			K6502_Step(CYCLES_PER_LINE + 2);
-			handle_dmc_synchronization(CYCLES_PER_LINE + 2);
-		} else {
-			K6502_Step(CYCLES_PER_LINE);
-			handle_dmc_synchronization(CYCLES_PER_LINE);
-		}
-		mapper -> hsync();
-	}
+//	printf("Frame Complete: [%lu] CPU Cycles Elapsed\n", frame_cpu_cycle_count);
 
 	if (*opt_SoundEnabled) {
 		pNesX_DoSpu();
