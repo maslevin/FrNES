@@ -4,9 +4,8 @@
 #include "Mapper.h"
 
 void Mapper_4_Init();
+unsigned char Mapper_4_Read( uint16 wAddr );
 void Mapper_4_Write( uint16 wAddr, unsigned char byData );
 void Mapper_4_HSync();
-void Mapper_4_VSync();
-
 
 #endif

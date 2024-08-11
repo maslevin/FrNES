@@ -85,8 +85,8 @@ MapperTable Mappers[] = {
 		4, &(struct Mapper) { 
 			.init = Mapper_4_Init, 
 			.write = Mapper_4_Write,
-			.read = Mapper_0_Read,
-			.vsync = Mapper_4_VSync,
+			.read = Mapper_4_Read,
+			.vsync = Mapper_0_VSync,
 			.hsync = Mapper_4_HSync
 		}
 	},
