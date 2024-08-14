@@ -19,8 +19,6 @@
 #include "pNesX_Utils.h"
 #include "Mapper.h"
 
-extern VQ_Texture* WorkFrame;
-
 #define __ALIGN32__		__attribute__ ((aligned (32)))
 __ALIGN32__ uint16 pSprBuf[264];
 __ALIGN32__ unsigned char Scanline_Buffer[256];

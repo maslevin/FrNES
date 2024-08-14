@@ -139,10 +139,6 @@ int interface_offset;
 
 Font* font;
 
-VQ_Texture* PVR_NESScreen1_Offset;
-VQ_Texture* PVR_NESScreen2_Offset;
-unsigned char* codebook;
-
 pvr_poly_hdr_t my_pheader;
 pvr_vertex_t my_vertex;
 pvr_poly_cxt_t my_cxt;
@@ -466,9 +462,11 @@ void pvr_setup() {
 }
 
 void initVQTextures() {
-	PVR_NESScreen1_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
-	PVR_NESScreen2_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
- 	codebook = memalign(32, 2048);	
+	for (uint32 i = 0; i < NUM_PVR_FRAMES; i++) {
+		WorkFrames[i] = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
+		printf("Allocated frame [%i] at address [0x%8X]\n", i, WorkFrames[i]);
+	}
+ 	codebook = memalign(64, 2048);	
 }
 
 bool checkForAutoROM() {
@@ -866,11 +864,6 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 }
 
 void pNesX_LoadFrame() {
-	pvr_ptr_t texture = PVR_NESScreen2_Offset;
-	if (WorkFrameIdx) {
-		texture = PVR_NESScreen1_Offset;
-	}
-
 	pvr_wait_ready();
 	pvr_scene_begin();
 
@@ -892,9 +885,9 @@ void pNesX_LoadFrame() {
 		*codebookEntry++ = codebookValue;
 		*codebookEntry++ = codebookValue;
 	}
-	pvr_txr_load(codebook, texture, 2048);
+	pvr_txr_load(codebook, WorkFrame -> codebook, 2048);
 
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, texture, filter);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
 

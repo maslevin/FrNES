@@ -110,6 +110,8 @@ int32 Auto_Frames;
 /* Display Buffer */
 VQ_Texture* WorkFrame;
 uint16 WorkFrameIdx;
+VQ_Texture* WorkFrames[];
+unsigned char* codebook;
 
 /* Palette Table */
 uint16 PalTable[ 32 ];
@@ -371,7 +373,7 @@ int pNesX_Reset() {
 	/*-------------------------------------------------------------------*/
 	pNesX_SetupPPU();
 	WorkFrameIdx = 0;
-	WorkFrame = PVR_NESScreen1_Offset;
+	WorkFrame = WorkFrames[0];
 
 	/*-------------------------------------------------------------------*/
 	/*  Initialize Mapper                                                */
@@ -600,15 +602,12 @@ void pNesX_Cycle() {
 			case 240: {
 				pNesX_LoadFrame();
 
-				if (FrameCnt == 0) {
-					// Switching of the double buffer
-					WorkFrameIdx = 1 - WorkFrameIdx;
-					if (WorkFrameIdx == 0) {
-						WorkFrame = PVR_NESScreen1_Offset;
-					} else {
-						WorkFrame = PVR_NESScreen2_Offset;
-					}
-				}
+				// Switching of the buffer
+				WorkFrameIdx++;
+				WorkFrameIdx%=NUM_PVR_FRAMES;
+				WorkFrame = WorkFrames[WorkFrameIdx];
+
+				// printf("Changing WorkFrame to Frame [%u]\n", WorkFrameIdx);
 
 				K6502_Step(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
