@@ -11,7 +11,6 @@
 #include "macros.h"
 
 #include "pNesX_System_Dc.h"
-#include "pNesX_Utils.h"
 
 uint16* opt_Stretch;
 uint16* opt_Filter;
@@ -103,10 +102,7 @@ void setup_video_options_screen()
 }
 
 //Generates the Options GUI info from the variables in memory
-void Generate_Video_Options_List()
-{
-	char tempbuffer[256];
-
+void Generate_Video_Options_List() {
 	switch(*opt_Stretch)
 	{
 		case 0:
@@ -126,32 +122,16 @@ void Generate_Video_Options_List()
 			break;
 	}
 
-	pNesX_itoa(opt_ClipVars[0], tempbuffer);
-	strcpy(ClipLX_Buffer, Options_Clip_Left);
-	strcat(ClipLX_Buffer, ",");
-	strcat(ClipLX_Buffer, tempbuffer);
-	strcat(ClipLX_Buffer, "<RLAlign>");
+	snprintf(ClipLX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Left, opt_ClipVars[0]);
 	Video_Options[2] = ClipLX_Buffer;
 
-	pNesX_itoa(opt_ClipVars[1], tempbuffer);
-	strcpy(ClipRX_Buffer, Options_Clip_Right);
-	strcat(ClipRX_Buffer, ",");
-	strcat(ClipRX_Buffer, tempbuffer);
-	strcat(ClipRX_Buffer, "<RLAlign>");
+	snprintf(ClipRX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Right, opt_ClipVars[1]);
 	Video_Options[3] = ClipRX_Buffer;
 
-	pNesX_itoa(opt_ClipVars[2], tempbuffer);
-	strcpy(ClipTX_Buffer, Options_Clip_Top);
-	strcat(ClipTX_Buffer, ",");
-	strcat(ClipTX_Buffer, tempbuffer);
-	strcat(ClipTX_Buffer, "<RLAlign>");
+	snprintf(ClipTX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Top, opt_ClipVars[2]);
 	Video_Options[4] = ClipTX_Buffer;
 
-	pNesX_itoa(opt_ClipVars[3], tempbuffer);
-	strcpy(ClipBX_Buffer, Options_Clip_Bottom);
-	strcat(ClipBX_Buffer, ",");
-	strcat(ClipBX_Buffer, tempbuffer);
-	strcat(ClipBX_Buffer, "<RLAlign>");
+	snprintf(ClipBX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Bottom, opt_ClipVars[3]);
 	Video_Options[5] = ClipBX_Buffer;
 }
 

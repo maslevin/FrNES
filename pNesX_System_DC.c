@@ -339,12 +339,13 @@ int SaveSRAM() {
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
 
 			printf("VMU: Compressing SRAM buffer\n");
-			const unsigned char compressedBuffer[0x2200 + 600];
-			unsigned int compressedLength = 0x2200 + 600;
+			unsigned int compressedLength = 0x2200 + 0x1000;
+			const unsigned char compressedBuffer[compressedLength];
 			int result = BZ2_bzBuffToBuffCompress((char*)compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 9, 0, 0);
 
 			if (result != BZ_OK) {
 				printf("VMU: bz2 Compression Failed [%i]\n", result);
+				draw_VMU_icon(vmu, vmu_screen_error);
 				break;
 			} else {
 				printf("VMU: bz2 Compression Succeeded [%i bytes]\n", compressedLength);
@@ -464,7 +465,7 @@ void pvr_setup() {
 void initVQTextures() {
 	for (uint32 i = 0; i < NUM_PVR_FRAMES; i++) {
 		WorkFrames[i] = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
-		printf("Allocated frame [%i] at address [0x%8X]\n", i, WorkFrames[i]);
+		printf("Allocated frame [%lu] at address [0x%8lX]\n", i, (uint32)WorkFrames[i]);
 	}
  	codebook = memalign(64, 2048);	
 }
@@ -933,7 +934,29 @@ void pNesX_LoadFrame() {
 	my_vertex.v = texture_v1;
 	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	pvr_list_finish();	
+	pvr_list_finish();
+
+	pvr_list_begin(PVR_LIST_TR_POLY);
+
+	char fps[10];
+	snprintf(fps, 10, "%u", (uint16)frames_per_second);
+
+	draw_string(font,
+		PVR_LIST_TR_POLY,
+		fps,
+		640.0 - 45.0f,
+		10.0f,
+		35.0f,
+		45.0f,
+		35.0f,
+		SINGLE,
+		RIGHT,
+		0xFFFFFFFF,
+		0.80f
+	);
+
+	pvr_list_finish();
+
 	pvr_scene_finish();
 }
 

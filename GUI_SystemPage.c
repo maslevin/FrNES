@@ -11,7 +11,6 @@
 #include "macros.h"
 
 #include "pNesX_System_DC.h"
-#include "pNesX_Utils.h"
 
 char Frameskip_Buffer[50];
 
@@ -50,8 +49,7 @@ uint16* opt_DiscFormat;
 int16* opt_VMUPort;
 uint16* opt_SRAM;
 
-void Allocate_System_Options()
-{
+void Allocate_System_Options() {
 	opt_SoundEnabled = malloc(sizeof(uint16));
 	opt_FrameSkip = malloc(sizeof(uint16));
 	opt_AutoFrameSkip = malloc(sizeof(uint16));
@@ -60,8 +58,7 @@ void Allocate_System_Options()
 	opt_SRAM = malloc(sizeof(uint16));
 }
 
-void Free_System_Options()
-{
+void Free_System_Options() {
 	free(opt_SoundEnabled);
 	free(opt_FrameSkip);
 	free(opt_AutoFrameSkip);
@@ -70,8 +67,7 @@ void Free_System_Options()
 	free(opt_SRAM);
 }
 
-void setup_system_options_screen()
-{
+void setup_system_options_screen() {
 	//Set Up Window Data Features
 	mydata.x = 208.0f;
 	mydata.y = 32.0f;
@@ -121,12 +117,8 @@ void setup_system_options_screen()
 	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
-void Generate_System_Options_List()
-{
-	char tempbuffer[255];
-
-	switch(*opt_SoundEnabled)
-	{
+void Generate_System_Options_List() {
+	switch(*opt_SoundEnabled) {
 		case 0:
 			System_Options[0] = Options_Sound_Unchecked;
 			break;
@@ -135,14 +127,9 @@ void Generate_System_Options_List()
 			break;
 	}
 
-	switch(*opt_AutoFrameSkip)
-	{
+	switch(*opt_AutoFrameSkip) {
 		case 0:
-			pNesX_itoa(*opt_FrameSkip, tempbuffer);
-			strcpy(Frameskip_Buffer, Options_Frameskip);
-			strcat(Frameskip_Buffer, ",");
-			strcat(Frameskip_Buffer, tempbuffer);
-			strcat(Frameskip_Buffer, "<RLAlign>");
+			snprintf(Frameskip_Buffer, 50, "%s,%u<RLAlign>", Options_Frameskip, *opt_FrameSkip);
 			System_Options[1] = Frameskip_Buffer;
 			break;
 		case 1:
@@ -154,8 +141,7 @@ void Generate_System_Options_List()
 			break;
 	}
 
-	switch(*opt_DiscFormat)
-	{
+	switch(*opt_DiscFormat) {
 		case 0:
 			System_Options[2] = Options_CDFormat_FrNES;
 			break;
@@ -167,8 +153,7 @@ void Generate_System_Options_List()
 	System_Options[3] = Options_VMU;
 	System_Options[4] = Options_Port;
 	
-	switch(*opt_VMUPort)
-	{
+	switch(*opt_VMUPort) {
 		case -1:
 			System_Options[5] = Options_CXXX;
 			break;
@@ -199,8 +184,7 @@ void Generate_System_Options_List()
 	}
 
 
-	switch(*opt_SRAM)
-	{
+	switch(*opt_SRAM) {
 		case 0:
 			System_Options[6] = Options_SRAM_Unchecked;
 			break;
@@ -214,8 +198,7 @@ void Generate_System_Options_List()
 	System_Options[9] = Options_Rescan;
 }
 
-void Handle_System_Interface(cont_state_t* my_state)
-{
+void Handle_System_Interface(cont_state_t* my_state) {
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
 		(mydata.Highlighted_Index < Num_System_Options) && 

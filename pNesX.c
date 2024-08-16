@@ -100,6 +100,8 @@ bool odd_cycle;
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
 /*-------------------------------------------------------------------*/
+double frames_per_second;
+
 /* Frame Skip */
 uint16 FrameSkip;
 uint16 FrameCnt;
@@ -475,6 +477,8 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ (NAME_TABLE0 + bank4) * 0x400 ];
 }
 
+#define NUM_FPS_SAMPLES 60
+
 /*===================================================================*/
 /*                                                                   */
 /*              pNesX_Main() : The main loop of pNesX                */
@@ -482,7 +486,14 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 /*===================================================================*/
 void pNesX_Main() {
 	pNesX_Init();
+	frames_per_second = 0;
 
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	uint64 last_frame_timestamp = 0;
+	uint64 frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+	double last_frames_per_second[NUM_FPS_SAMPLES];
+	uint32 last_frames_per_second_index = 0;
 	odd_cycle = false;
 
 	// Main loop
@@ -490,14 +501,24 @@ void pNesX_Main() {
 		if ( ExitCount > MAX_EXIT_COUNT )
 			break;  // Quit
 
-/*
-		if ( *opt_AutoFrameSkip ) {
-			Auto_Frames--;
-		}
-*/		
+		last_frame_timestamp = frame_timestamp;
 
 		pNesX_Cycle();
 		odd_cycle = !odd_cycle;
+
+		clock_gettime(CLOCK_MONOTONIC, &ts);
+		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+		last_frames_per_second[last_frames_per_second_index] = 1e9 / (double)(frame_timestamp - last_frame_timestamp);
+		last_frames_per_second_index++;
+
+		if (last_frames_per_second_index % NUM_FPS_SAMPLES == 0) {
+			double averageFramesPerSecond = 0.0f;
+			for (uint32 fpsIndex = 0; fpsIndex < NUM_FPS_SAMPLES; fpsIndex++) {
+				averageFramesPerSecond += last_frames_per_second[fpsIndex];
+			}
+			frames_per_second = averageFramesPerSecond / (float)NUM_FPS_SAMPLES;
+			last_frames_per_second_index = 0;
+		}
 
 		if (HALT) {
 			printf ("ERROR: System Halt - exiting emulation\n");
@@ -537,19 +558,15 @@ void pNesX_Cycle() {
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
 
-//	uint32 frame_cpu_cycle_count = 0;
-
 	// Dummy scanline -1 or 261;
 	K6502_Step(1);
 	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
 	if (odd_cycle) {	
 		K6502_Step(CYCLES_PER_LINE);	
 		handle_dmc_synchronization(CYCLES_PER_LINE + 1);
-//		frame_cpu_cycle_count += CYCLES_PER_LINE + 1;
 	} else {
 		K6502_Step(CYCLES_PER_LINE - 1);	
 		handle_dmc_synchronization(CYCLES_PER_LINE);
-//		frame_cpu_cycle_count += CYCLES_PER_LINE;		
 	}
 
 	// Scanline 0-239
@@ -558,7 +575,6 @@ void pNesX_Cycle() {
 		if ((ppuinfo.PPU_Scanline + 1) % 3 == 0) {
 			cpu_cycles_to_emulate += 2;
 		}
-//		frame_cpu_cycle_count += cpu_cycles_to_emulate;
 
 		switch (ppuinfo.PPU_Scanline) {
 			case 0 ... 239: {
@@ -607,8 +623,6 @@ void pNesX_Cycle() {
 				WorkFrameIdx%=NUM_PVR_FRAMES;
 				WorkFrame = WorkFrames[WorkFrameIdx];
 
-				// printf("Changing WorkFrame to Frame [%u]\n", WorkFrameIdx);
-
 				K6502_Step(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
@@ -631,8 +645,6 @@ void pNesX_Cycle() {
 			} break;
 		}
 	}
-
-//	printf("Frame Complete: [%lu] CPU Cycles Elapsed\n", frame_cpu_cycle_count);
 
 	if (*opt_SoundEnabled) {
 		pNesX_DoSpu();
