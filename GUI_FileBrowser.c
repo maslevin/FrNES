@@ -11,7 +11,6 @@
 #include "macros.h"
 
 #include "pNesX_System_DC.h"
-#include "pNesX_Utils.h"
 #include "pNesX.h"
 
 #include <fat/fs_fat.h>
@@ -125,6 +124,7 @@ void setup_file_browser_screen() {
 	mystyle.Border_Color = GUI_OutsideWindowColor; 
 	mystyle.Inside_Color = GUI_InsideWindowColor;
 	mystyle.Left_Margin = 15;
+	mystyle.Line_Spacing = 0.0f;	
 	mystyle.Header_Text_Color = GUI_TextColor;
 	mystyle.Text_Color = GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale) - (2 * CORNER_RADIUS)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
@@ -149,6 +149,7 @@ void setup_file_browser_screen() {
 	helpstyle.Border_Color = GUI_OutsideWindowColor;
 	helpstyle.Inside_Color = GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
+	helpstyle.Line_Spacing = 0.0f;	
 	helpstyle.Header_Text_Color = GUI_TextColor;
 	helpstyle.Text_Color = GUI_TextColor;
 	helpstyle.Max_Items = 10;

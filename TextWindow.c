@@ -12,8 +12,6 @@ Updated:     December 7th, 2001 - Added Scoll Bar Control to code
 #include <math.h>
 #include "macros.h"
 
-#include "pNesX_Utils.h"
-
 //Corner of the window - Gets automatically flipped and whatever
 const unsigned char WindowCorner[49] = 
 {
@@ -447,7 +445,192 @@ void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float 
 	}
 }
 
-void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 list) {
+void draw_checktext(uint32 list, float xPos, float yPos, float zPos, float width, float height, float thickness, uint32 frameColor, uint32 innerColor, bool checked) {
+	draw_cornered_layer(list, xPos, yPos, zPos, width, height, 4.0f, frameColor);
+	if (checked) {
+		pvr_poly_hdr_t hdr;
+		pvr_poly_cxt_t cxt;
+		pvr_vertex_t my_vertex;		
+
+		pvr_poly_cxt_col(&cxt, list);
+		pvr_poly_compile(&hdr, &cxt);
+		pvr_prim(&hdr, sizeof(hdr));
+
+		//Draw top triangle
+		my_vertex.flags = PVR_CMD_VERTEX;
+		my_vertex.x = xPos + (width / 2);
+		my_vertex.y = yPos + (height / 2) - thickness;
+		my_vertex.z = zPos + 0.1f;
+		my_vertex.argb = innerColor;
+		my_vertex.oargb = 0;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.x = xPos + (2.0f * thickness);
+		my_vertex.y = yPos + thickness;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_vertex.x = xPos + width - (2.0f * thickness);
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		//Draw right triangle
+		my_vertex.flags = PVR_CMD_VERTEX;
+		my_vertex.x = xPos + (width / 2) + thickness;
+		my_vertex.y = yPos + (height / 2);
+		my_vertex.oargb = 0;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.x = xPos + width - thickness;
+		my_vertex.y = yPos + (2.0f * thickness);
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_vertex.y = yPos + height - (2.0f * thickness);		
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		//Draw bottom triangle
+		my_vertex.flags = PVR_CMD_VERTEX;
+		my_vertex.x = xPos + (width / 2);
+		my_vertex.y = yPos + (height / 2) + thickness;
+		my_vertex.argb = innerColor;
+		my_vertex.oargb = 0;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.x = xPos + width - (2.0f * thickness);
+		my_vertex.y = yPos + height - thickness;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_vertex.x = xPos + (2.0f * thickness);
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		//Draw left triangle
+		my_vertex.flags = PVR_CMD_VERTEX;
+		my_vertex.x = xPos + (width / 2) - thickness;
+		my_vertex.y = yPos + (height / 2);
+		my_vertex.oargb = 0;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.x = xPos + thickness;
+		my_vertex.y = yPos + height - (2.0f * thickness);
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_vertex.y = yPos + (2.0f * thickness);
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+	} else {
+		draw_cornered_layer(list, xPos + thickness, yPos + thickness, zPos + 0.1f, width - (2 * thickness), height - (2 * thickness), 4.0f, innerColor);
+	}
+}
+
+void handle_checkbox(char* text, uint32 i, Window_Data* windata, Window_Style* winstyle, uint32 list, float yposition) {
+	//printf("win_draw_textwindow: drawing checkbox\n");
+	int index;
+	int startindex;
+	char* tempptr;
+	char tempbuffer[255];
+
+	tempptr = text;
+	//Parse the text field
+	index = 0;
+	while (tempptr[index] != '>')
+		index++;
+	index++;
+	startindex = index;
+	//Tempbuffer will contain the message text
+	while (tempptr[index] != ',') {
+		tempbuffer[index - startindex] = tempptr[index];
+		index++;
+	}
+	tempbuffer[index - startindex] = '\0';
+
+	//If checked was found
+	if (strstr(tempptr, CHECKBOX_CHECKED) != NULL)
+		index = 1;
+	else if (strstr(tempptr, CHECKBOX_UNCHECKED) != NULL)
+		index = 0;
+	else
+		index = 0;
+
+	float checkHeight = (windata -> font -> fontHeight * winstyle -> Text_Scale);
+	if (i + windata -> Top_Index != windata -> Highlighted_Index) {
+		draw_string(windata -> font, list, tempbuffer, windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+		draw_checktext(list, windata -> x + windata -> width - winstyle -> Left_Margin - 30.0f, yposition, 35.0f, checkHeight, checkHeight, 2.0f, winstyle -> Text_Color, winstyle -> Inside_Color, index);
+	} else {
+		draw_string(windata -> font, list, tempbuffer, windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+		draw_checktext(list, windata -> x + windata -> width - winstyle -> Left_Margin - 30.0f, yposition, 35.0f, checkHeight, checkHeight, 2.0f, winstyle -> Selected_Text_Color, winstyle -> Inside_Color, index);
+	}
+}
+
+void handle_slider(char* text, uint32 i, Window_Data* windata, Window_Style* winstyle, uint32 list, float yposition) {
+	//printf("win_draw_textwindow: drawing slider\n");			
+	int max;
+	int min;
+	int value;
+	int index;
+
+	char* tempptr;
+	char* substrval;
+	char numbuffer[255];
+
+	tempptr = text;
+
+	//Parse to find the Max value for the sliderbox
+	max = 0;
+	substrval = strstr(tempptr, SLIDERBOX_MAX);
+	if (substrval != NULL)
+	{
+		index = 0;
+		substrval += strlen(SLIDERBOX_MAX);
+		while (substrval[index] != '>')
+		{
+			numbuffer[index] = substrval[index];
+			index++;
+		}
+		numbuffer[index] = '\0';
+		max = atoi(numbuffer);
+	}
+
+	//Parse to find the Min value for the sliderbox
+	min = 0;
+	substrval = strstr(tempptr, SLIDERBOX_MIN);
+	if (substrval != NULL)
+	{
+		index = 0;
+		substrval += strlen(SLIDERBOX_MIN);
+		while (substrval[index] != '>')
+		{
+			numbuffer[index] = substrval[index];
+			index++;
+		}
+		numbuffer[index] = '\0';
+		min = atoi(numbuffer);
+	}
+
+	//Parse to find the Min value for the sliderbox
+	value = 0;
+	substrval = strstr(tempptr, SLIDERBOX_VALUE);
+	if (substrval != NULL)
+	{
+		index = 0;
+		substrval += strlen(SLIDERBOX_VALUE);
+		while (substrval[index] != '>')
+		{
+			numbuffer[index] = substrval[index];
+			index++;
+		}
+		numbuffer[index] = '\0';
+		value = atoi(numbuffer);
+	}
+
+	if (i + windata -> Top_Index != windata -> Highlighted_Index) {
+//		win_draw_scrollbar(winstyle -> Text_Color, winstyle -> Inside_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, windata -> width - 50, max, min, value, 0);
+	} else {
+//		win_draw_scrollbar(winstyle -> Text_Color, winstyle -> Inside_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, windata -> width - 50, max, min, value, 1);
+	}
+}
+
+void win_draw_textwindow(Window_Data* windata, Window_Style* winstyle, uint32 list) {
 	int i;
 	int yposition;
 	//printf("win_draw_textwindow: starting text window draw\n");
@@ -527,8 +710,6 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 		}
 	}
 
-	//printf("cornered_layer: [%f, %f, %f, %f]\n", windata -> x, windata -> y, windata -> width, windata -> height);
-
 	if (list == PVR_LIST_TR_POLY) {
 		draw_string(windata -> font,
 			list,
@@ -549,156 +730,20 @@ void win_draw_textwindow (Window_Data* windata, Window_Style* winstyle, uint32 l
 		for (i = 0; (i < winstyle -> Max_Items) && (i < windata -> Num_Strings); i++) {
 			char* text = windata -> Data_Strings[i + windata -> Top_Index];
 			if ((text != NULL) && (text[0] != '\0')) {
-				//printf("win_draw_textwindow: drawing regular line of text\n");						
-				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
-					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+				if (strstr(text, Tag_CheckBox) != NULL) {
+					handle_checkbox(text, i, windata, winstyle, list, yposition);
+				} else if (strstr(text, Tag_Slider) != NULL) {
+					handle_slider(text, i, windata, winstyle, list, yposition);
 				} else {
-					draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+					//printf("win_draw_textwindow: drawing regular line of text\n");						
+					if (i + windata -> Top_Index != windata -> Highlighted_Index) {
+						draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+					} else {
+						draw_string(windata -> font, list, windata -> Data_Strings[i + windata -> Top_Index], windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+					}
 				}
-				yposition += (windata -> font -> fontHeight * winstyle -> Text_Scale);
+				yposition += (windata -> font -> fontHeight * winstyle -> Text_Scale) + winstyle -> Line_Spacing;
 			}
 		}
-
-			//printf("win_draw_textwindow: drawing line [%i]\n", i);
-			//But if the tag was found, pass it to the Checkbox Control Module
-/*			
-			if (strstr(text, Tag_CheckBox) != NULL)
-			{
-				printf("win_draw_textwindow: drawing checkbox\n");
-				tempptr = text;
-				//Parse the text field
-				index = 0;
-				while (tempptr[index] != '>')
-					index++;
-				index++;
-				startindex = index;
-				//Tempbuffer will contain the message text
-				while (tempptr[index] != ',')
-				{
-					tempbuffer[index - startindex] = tempptr[index];
-					index++;
-				}
-				tempbuffer[index - startindex] = ((char)NULL);
-
-				//If checked was found
-				if (strstr(tempptr, CHECKBOX_CHECKED) != NULL)
-					index = 1;
-				else if (strstr(tempptr, CHECKBOX_UNCHECKED) != NULL)
-					index = 0;
-				else
-					index = 0;
-
-				if (i + windata -> Top_Index != windata -> Highlighted_Index)
-				{
-					win_draw_checktext(windata -> Item_Font, winstyle -> Text_Color, winstyle -> Inside_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, tempbuffer, windata -> width - 50, index, 0);
-				}
-				else
-				{
-					win_draw_checktext(windata -> Item_Font, winstyle -> Selected_Text_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, tempbuffer, windata -> width - 50, index, 1);
-				}
-
-				yposition += windata -> font -> fontHeight;
-			}
-			//Check for the Slider Tag
-			else
-			if (strstr(text, Tag_Slider) != NULL)
-			{
-				printf("win_draw_textwindow: drawing slider\n");			
-				int max;
-				int min;
-				int value;
-				char* substrval;
-				char numbuffer[255];
-
-				tempptr = text;
-
-				//Parse to find the Max value for the sliderbox
-				max = 0;
-				substrval = strstr(tempptr, SLIDERBOX_MAX);
-				if (substrval != NULL)
-				{
-					index = 0;
-					substrval += strlen(SLIDERBOX_MAX);
-					while (substrval[index] != '>')
-					{
-						numbuffer[index] = substrval[index];
-						index++;
-					}
-					numbuffer[index] = (char)NULL;
-					max = pNesX_atoi(numbuffer);
-				}
-
-				//Parse to find the Min value for the sliderbox
-				min = 0;
-				substrval = strstr(tempptr, SLIDERBOX_MIN);
-				if (substrval != NULL)
-				{
-					index = 0;
-					substrval += strlen(SLIDERBOX_MIN);
-					while (substrval[index] != '>')
-					{
-						numbuffer[index] = substrval[index];
-						index++;
-					}
-					numbuffer[index] = (char)NULL;
-					min = pNesX_atoi(numbuffer);
-				}
-
-				//Parse to find the Min value for the sliderbox
-				value = 0;
-				substrval = strstr(tempptr, SLIDERBOX_VALUE);
-				if (substrval != NULL)
-				{
-					index = 0;
-					substrval += strlen(SLIDERBOX_VALUE);
-					while (substrval[index] != '>')
-					{
-						numbuffer[index] = substrval[index];
-						index++;
-					}
-					numbuffer[index] = (char)NULL;
-					value = pNesX_atoi(numbuffer);
-				}
-
-				if (i + windata -> Top_Index != windata -> Highlighted_Index)
-				{
-					win_draw_scrollbar(winstyle -> Text_Color, winstyle -> Inside_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, windata -> width - 50, max, min, value, 0);
-				}
-				else
-				{
-					win_draw_scrollbar(winstyle -> Text_Color, winstyle -> Inside_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, windata -> width - 50, max, min, value, 1);
-				}
-
-				yposition += bf_str_height(windata -> Item_Font, "A");
-
-			}
-			//If the Checkbox Tag wasn't found in the string -> Bitmap it like normal
-			else
-			if (strstr(text, Tag_RLAlign) != NULL)
-			{				
-				printf("win_draw_textwindow: drawing regular line of text right aligned\n");
-				if (i + windata -> Top_Index != windata -> Highlighted_Index)
-				{
-					bf_draw_str_rlalign(windata -> Item_Font, winstyle -> Text_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, text, windata -> width - 50);
-				}
-				else
-				{
-					bf_bgdraw_str_rlalign(windata -> Item_Font, winstyle -> Selected_Text_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, text, windata -> width - 50);
-				}
-				yposition += bf_str_height(windata -> Item_Font, "A");
-			}
-			else
-			{
-*/			
-/*
-				printf("win_draw_textwindow: drawing regular line of text\n");						
-				if (i + windata -> Top_Index != windata -> Highlighted_Index) {
-					draw_string(windata -> font, list, windata -> Data_Strings[windata -> Highlighted_Index], windata -> x + winstyle -> Left_Margin, windata -> y + yposition, 16.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Text_Color);
-				} else {
-					draw_string(windata -> font, list, windata -> Data_Strings[windata -> Highlighted_Index], windata -> x + winstyle -> Left_Margin, windata -> y + yposition, 16.0f, windata -> width, windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color);
-				}
-				yposition += windata -> font -> fontHeight;
-*/				
-//			}
 	}
 }

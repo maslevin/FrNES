@@ -66,11 +66,12 @@ void setup_video_options_screen()
 
 	//Set Up Window Style Features
 	mystyle.Header_Text_Scale = 1.0f;
-	mystyle.Text_Scale = 0.40f;		
+	mystyle.Text_Scale = 0.60f;
 	mystyle.Border_Thickness = 5.0f;
 	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
 	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
 	mystyle.Left_Margin = 15;
+	mystyle.Line_Spacing = 2.0f;
 	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
 	mystyle.Text_Color = GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
@@ -94,6 +95,7 @@ void setup_video_options_screen()
 	helpstyle.Border_Color = GUI_OutsideWindowColor;
 	helpstyle.Inside_Color = GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
+	helpstyle.Line_Spacing = 0.0f;	
 	helpstyle.Header_Text_Color = GUI_TextColor;
 	helpstyle.Text_Color = GUI_TextColor;
 	helpstyle.Max_Items = 10;

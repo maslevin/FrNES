@@ -35,6 +35,7 @@ typedef struct
 
 	//Margin Info
 	float Left_Margin;
+	float Line_Spacing;
 	
 	//Not Implemented Yet -- Probably Never Will Be Either :D
 	int IsTransparent;
