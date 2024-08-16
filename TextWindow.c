@@ -562,6 +562,44 @@ void handle_checkbox(char* text, uint32 i, Window_Data* windata, Window_Style* w
 	}
 }
 
+void handle_ralign(char* text, uint32 i, Window_Data* windata, Window_Style* winstyle, uint32 list, float yposition) {
+	//printf("win_draw_textwindow: drawing checkbox\n");
+	int index;
+	int startindex;
+	char* tempptr;
+	char s1buffer[255];
+	char s2buffer[255];
+
+	tempptr = text;
+	//Parse the text field
+	index = 0;
+	startindex = index;
+	//Tempbuffer will contain the message text
+	while (tempptr[index] != ',') {
+		s1buffer[index - startindex] = tempptr[index];
+		index++;
+	}
+	s1buffer[index - startindex] = '\0';
+	index++;
+	startindex = index;
+
+	while (tempptr[index] != '<') {
+		s2buffer[index - startindex] = tempptr[index];
+		index++;
+	}
+	s2buffer[index - startindex] = '\0';
+
+	float leftWidth = (windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness)) * 0.80f;
+	float rightWidth = (windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness)) * 0.20f;
+	if (i + windata -> Top_Index != windata -> Highlighted_Index) {
+		draw_string(windata -> font, list, s1buffer, windata -> x + winstyle -> Left_Margin, yposition, 35.0f, leftWidth, windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
+		draw_string(windata -> font, list, s2buffer, windata -> x + winstyle -> Left_Margin + leftWidth, yposition, 35.0f, rightWidth, windata -> height, SINGLE, RIGHT, winstyle -> Text_Color, winstyle -> Text_Scale);
+	} else {
+		draw_string(windata -> font, list, s1buffer, windata -> x + winstyle -> Left_Margin, yposition, 35.0f, leftWidth, windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+		draw_string(windata -> font, list, s2buffer, windata -> x + winstyle -> Left_Margin + leftWidth, yposition, 35.0f, rightWidth, windata -> height, SINGLE, RIGHT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
+	}	
+}
+
 void handle_slider(char* text, uint32 i, Window_Data* windata, Window_Style* winstyle, uint32 list, float yposition) {
 	//printf("win_draw_textwindow: drawing slider\n");			
 	int max;
@@ -734,6 +772,8 @@ void win_draw_textwindow(Window_Data* windata, Window_Style* winstyle, uint32 li
 					handle_checkbox(text, i, windata, winstyle, list, yposition);
 				} else if (strstr(text, Tag_Slider) != NULL) {
 					handle_slider(text, i, windata, winstyle, list, yposition);
+				} else if (strstr(text, Tag_RLAlign) != NULL) {
+					handle_ralign(text, i, windata, winstyle, list, yposition);
 				} else {
 					//printf("win_draw_textwindow: drawing regular line of text\n");						
 					if (i + windata -> Top_Index != windata -> Highlighted_Index) {

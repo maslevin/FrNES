@@ -36,22 +36,19 @@ char Options_Clip_Bottom[] = "Clip Bottom Pixels";
 char* Video_Options[6];
 const int Num_Video_Options = 6;
 
-void Allocate_Video_Options()
-{
+void Allocate_Video_Options() {
 	opt_Stretch = malloc(sizeof(uint16));
 	opt_Filter = malloc(sizeof(uint16));
 	opt_ClipVars = malloc(4 * sizeof(uint32));
 }
 
-void Free_Video_Options()
-{
+void Free_Video_Options() {
 	free(opt_Stretch);
 	free(opt_Filter);
 	free(opt_ClipVars);
 }
 
-void setup_video_options_screen()
-{
+void setup_video_options_screen() {
 	//Set Up Window Data Features
 	mydata.x = 208.0f;
 	mydata.y = 32.0f;
@@ -105,8 +102,7 @@ void setup_video_options_screen()
 
 //Generates the Options GUI info from the variables in memory
 void Generate_Video_Options_List() {
-	switch(*opt_Stretch)
-	{
+	switch(*opt_Stretch) {
 		case 0:
 			Video_Options[0] = Options_Stretch_Unchecked;
 			break;
@@ -114,8 +110,7 @@ void Generate_Video_Options_List() {
 			Video_Options[0] = Options_Stretch_Checked;
 			break;
 	}
-	switch(*opt_Filter)
-	{
+	switch(*opt_Filter) {
 		case 0:
 			Video_Options[1] = Options_Filter_Unchecked;
 			break;
@@ -124,26 +119,24 @@ void Generate_Video_Options_List() {
 			break;
 	}
 
-	snprintf(ClipLX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Left, opt_ClipVars[0]);
+	snprintf(ClipLX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Left, opt_ClipVars[0]);
 	Video_Options[2] = ClipLX_Buffer;
 
-	snprintf(ClipRX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Right, opt_ClipVars[1]);
+	snprintf(ClipRX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Right, opt_ClipVars[1]);
 	Video_Options[3] = ClipRX_Buffer;
 
-	snprintf(ClipTX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Top, opt_ClipVars[2]);
+	snprintf(ClipTX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Top, opt_ClipVars[2]);
 	Video_Options[4] = ClipTX_Buffer;
 
-	snprintf(ClipBX_Buffer, 50, "%s,%lu<RLalign>", Options_Clip_Bottom, opt_ClipVars[3]);
+	snprintf(ClipBX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Bottom, opt_ClipVars[3]);
 	Video_Options[5] = ClipBX_Buffer;
 }
 
-void Handle_Video_Interface(cont_state_t* my_state)
-{
+void Handle_Video_Interface(cont_state_t* my_state) {
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
 		(mydata.Highlighted_Index < Num_Video_Options) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index++;
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
 			mydata.Top_Index++;
@@ -153,8 +146,7 @@ void Handle_Video_Interface(cont_state_t* my_state)
 	//Up Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_UP) && 
 		(mydata.Highlighted_Index > 0) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index--;
 		if (mydata.Top_Index > mydata.Highlighted_Index)
 			mydata.Top_Index--;
@@ -163,10 +155,8 @@ void Handle_Video_Interface(cont_state_t* my_state)
 
 	//Handle the toggle boxes
 	if ((my_state -> buttons & CONT_A) && 
-		(invalida == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(invalida == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 0:
 				*opt_Stretch = 1 - *opt_Stretch;
 				Generate_Video_Options_List();
@@ -182,37 +172,31 @@ void Handle_Video_Interface(cont_state_t* my_state)
 
 	//Handle the modify boxes
 	if ((my_state -> buttons & CONT_DPAD_LEFT) && 
-		(xkeyhit == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(xkeyhit == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 2:
-				if (opt_ClipVars[0] > 0)
-				{
+				if (opt_ClipVars[0] > 0) {
 					(opt_ClipVars[0]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 3:
-				if (opt_ClipVars[1] > 0)
-				{
+				if (opt_ClipVars[1] > 0) {
 					(opt_ClipVars[1]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 4:
-				if (opt_ClipVars[2] > 0)
-				{
+				if (opt_ClipVars[2] > 0) {
 					(opt_ClipVars[2]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 5:
-				if (opt_ClipVars[3] > 0)
-				{
+				if (opt_ClipVars[3] > 0) {
 					(opt_ClipVars[3]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
@@ -222,37 +206,31 @@ void Handle_Video_Interface(cont_state_t* my_state)
 	}					
 
 	if ((my_state -> buttons & CONT_DPAD_RIGHT) && 
-		(xkeyhit == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(xkeyhit == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 2:
-				if (opt_ClipVars[0] < MAX_CLIP_PIXELS)
-				{
+				if (opt_ClipVars[0] < MAX_CLIP_PIXELS) {
 					(opt_ClipVars[0]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 3:
-				if (opt_ClipVars[1] < MAX_CLIP_PIXELS)
-				{
+				if (opt_ClipVars[1] < MAX_CLIP_PIXELS) {
 					(opt_ClipVars[1]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 4:
-				if (opt_ClipVars[2] < MAX_CLIP_PIXELS)
-				{
+				if (opt_ClipVars[2] < MAX_CLIP_PIXELS) {
 					(opt_ClipVars[2]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 5:
-				if (opt_ClipVars[3] < MAX_CLIP_PIXELS)
-				{
+				if (opt_ClipVars[3] < MAX_CLIP_PIXELS) {
 					(opt_ClipVars[3]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
@@ -263,8 +241,7 @@ void Handle_Video_Interface(cont_state_t* my_state)
 	
 	// Handle Return to Main Menu
 	if ((my_state -> buttons & CONT_B) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		setup_main_menu_screen();
 		menuscreen = MENUNUM_MAIN;
 	}
