@@ -254,38 +254,6 @@ void win_draw_scrollbar(uint16 bordercolor, uint16 insidecolor, uint16 bgcolor, 
 			}
 		}
 }
-
-void win_draw_checktext(BMF_Character* font, uint16 textcolor, uint16 bgcolor, uint16* render_area, uint16 render_width, char* str, int maxwidth, int check, int highlighted)
-{
-	int i;
-	int j;
-
-	if (!(highlighted))
-		bf_draw_str_widthclip(font, textcolor, render_area, render_width, str, maxwidth - 20);
-	else
-		bf_bgdraw_str_widthclip(font, textcolor, bgcolor, render_area, render_width, str, maxwidth - 20);
-
-	for (i = 0; i < 16; i++)
-		for (j = 0; j < 16; j++)
-			if (check)
-			{
-				if (CheckBoxClosed[i + j * 16])
-					render_area[maxwidth - 20 + i + j * render_width] = textcolor;
-				else
-					render_area[maxwidth - 20 + i + j * render_width] = bgcolor;
-			}
-			else
-			{
-				if (CheckBoxOpen[i + j * 16])
-					render_area[maxwidth - 20 + i + j * render_width] = textcolor;
-				else
-					render_area[maxwidth - 20 + i + j * render_width] = bgcolor;					
-			}
-
-	for (j = 0; j < 16; j++)
-		for (i = 0; i < 4; i++)
-			render_area[(j * render_width) + maxwidth - 4 + i] = bgcolor;
-}
 */
 
 void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float width, float height, float corner_radius, uint32 color) {
