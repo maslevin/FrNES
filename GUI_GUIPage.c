@@ -69,7 +69,7 @@ void setup_gui_options_screen() {
 	mystyle.Line_Spacing = 0.0f;	
 	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
 	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / (((float)mydata.font -> fontHeight + mystyle.Line_Spacing) * mystyle.Text_Scale);
+	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / (((float)mydata.font -> fontHeight + mystyle.Line_Spacing) * mystyle.Text_Scale) - 2;
 	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
 	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
 
