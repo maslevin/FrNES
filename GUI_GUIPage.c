@@ -61,7 +61,7 @@ void setup_gui_options_screen() {
 
 	//Set Up Window Style Features
 	mystyle.Header_Text_Scale = 1.0f;
-	mystyle.Text_Scale = 0.40f;	
+	mystyle.Text_Scale = 0.60f;	
 	mystyle.Border_Thickness = 5.0f;
 	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
 	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
@@ -69,7 +69,7 @@ void setup_gui_options_screen() {
 	mystyle.Line_Spacing = 0.0f;	
 	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
 	mystyle.Text_Color = GUI_TextColor;
-	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
+	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / (((float)mydata.font -> fontHeight + mystyle.Line_Spacing) * mystyle.Text_Scale);
 	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
 	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
 
@@ -102,49 +102,49 @@ void Generate_GUI_Options_List() {
 	GUI_Options[0] = Options_OutsideWindowColor;
 
 	GUI_Options[1] = Options_RedComp;
-	snprintf(Red_OWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_OutsideWindowColor >> 10) & 0x1F));
+	snprintf(Red_OWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_OutsideWindowColor >> 16) & 0xFF));
 	GUI_Options[2] = Red_OWC_Buffer;
 	GUI_Options[3] = Options_GreenComp;
-	snprintf(Green_OWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_OutsideWindowColor >> 5) & 0x1F));
+	snprintf(Green_OWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_OutsideWindowColor >> 8) & 0xFF));
 	GUI_Options[4] = Green_OWC_Buffer;
 	GUI_Options[5] = Options_BlueComp;
-	snprintf(Blue_OWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, (GUI_OutsideWindowColor & 0x1F));
+	snprintf(Blue_OWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, (GUI_OutsideWindowColor & 0xFF));
 	GUI_Options[6] = Blue_OWC_Buffer;
 
 	GUI_Options[7] = " ";
 	GUI_Options[8] = Options_InsideWindowColor;
 	GUI_Options[9] = Options_RedComp;
-	snprintf(Red_IWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_InsideWindowColor >> 10) & 0x1F));
+	snprintf(Red_IWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_InsideWindowColor >> 16) & 0xFF));
 	GUI_Options[10] = Red_IWC_Buffer;
 	GUI_Options[11] = Options_GreenComp;
-	snprintf(Green_IWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_InsideWindowColor >> 5) & 0x1F));
+	snprintf(Green_IWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_InsideWindowColor >> 8) & 0xFF));
 	GUI_Options[12] = Green_IWC_Buffer;
 	GUI_Options[13] = Options_BlueComp;
-	snprintf(Blue_IWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, (GUI_InsideWindowColor & 0x1F));	
+	snprintf(Blue_IWC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, (GUI_InsideWindowColor & 0xFF));	
 	GUI_Options[14] = Blue_IWC_Buffer;
 
 	GUI_Options[15] = " ";
 	GUI_Options[16] = Options_TextColor;
 	GUI_Options[17] = Options_RedComp;
-	snprintf(Red_TC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_TextColor >> 10) & 0x1F));
+	snprintf(Red_TC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_TextColor >> 16) & 0xFF));
 	GUI_Options[18] = Red_TC_Buffer;
 	GUI_Options[19] = Options_GreenComp;
-	snprintf(Green_TC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_TextColor >> 5) & 0x1F));
+	snprintf(Green_TC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_TextColor >> 8) & 0xFF));
 	GUI_Options[20] = Green_TC_Buffer;
 	GUI_Options[21] = Options_BlueComp;
-	snprintf(Blue_TC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, (GUI_TextColor & 0x1F));
+	snprintf(Blue_TC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, (GUI_TextColor & 0xFF));
 	GUI_Options[22] = Blue_TC_Buffer;
 
 	GUI_Options[23] = " ";
 	GUI_Options[24] = Options_SelectedTextColor;
 	GUI_Options[25] = Options_RedComp;
-	snprintf(Red_STC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_SelectedTextColor >> 10) & 0x1F));
+	snprintf(Red_STC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_SelectedTextColor >> 16) & 0xFF));
 	GUI_Options[26] = Red_STC_Buffer;
 	GUI_Options[27] = Options_GreenComp;
-	snprintf(Green_STC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, ((GUI_SelectedTextColor >> 5) & 0x1F));
+	snprintf(Green_STC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, ((GUI_SelectedTextColor >> 8) & 0xFF));
 	GUI_Options[28] = Green_STC_Buffer;
 	GUI_Options[29] = Options_BlueComp;
-	snprintf(Blue_STC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 31, 0, (GUI_SelectedTextColor & 0x1F));
+	snprintf(Blue_STC_Buffer, SLIDER_STRING_BUFFER_LENGTH, "<Slider> <SBC_MAX = %u> <SBC_MIN = %u> <SBC_VALUE = %lu>", 255, 0, (GUI_SelectedTextColor & 0xFF));
 	GUI_Options[30] = Blue_STC_Buffer;
 
 	GUI_Options[31] = " ";
@@ -188,66 +188,60 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 		(xkeyhit == 0)) {
 		switch(mydata.Highlighted_Index) {
 			case 2:
-				temp = ((GUI_OutsideWindowColor >> 10) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_OutsideWindowColor >> 16) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x83FF) | (temp << 10);
+					GUI_OutsideWindowColor = (GUI_InsideWindowColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
 				}
 				break;
 			case 4:
-				temp = ((GUI_OutsideWindowColor >> 5) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_OutsideWindowColor >> 8) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0xFC1F) | (temp << 5);
+					GUI_OutsideWindowColor = (GUI_InsideWindowColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
 				}
 				break;
 			case 6:
-				temp = (GUI_OutsideWindowColor & 0x1F);
-				if (temp > 0)
-				{
+				temp = (GUI_OutsideWindowColor & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0xFFE0) | (temp);
+					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x00FFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
 				}
 				break;
 			case 10:
-				temp = ((GUI_InsideWindowColor >> 10) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_InsideWindowColor >> 16) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x83FF) | (temp << 10);
+					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Inside_Color = GUI_InsideWindowColor;
 					helpstyle.Inside_Color = GUI_InsideWindowColor;
 				}
 				break;
 			case 12:
-				temp = ((GUI_InsideWindowColor >> 5) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_InsideWindowColor >> 8) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0xFC1F) | (temp << 5);
+					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Inside_Color = GUI_InsideWindowColor;
 					helpstyle.Inside_Color = GUI_InsideWindowColor;
 				}
 				break;
 			case 14:
-				temp = (GUI_InsideWindowColor & 0x1F);
-				if (temp > 0)
-				{
+				temp = (GUI_InsideWindowColor & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0xFFE0) | (temp);
+					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x00FFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Inside_Color = GUI_InsideWindowColor;
 					helpstyle.Inside_Color = GUI_InsideWindowColor;
@@ -255,11 +249,10 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 
 			case 18:
-				temp = ((GUI_TextColor >> 10) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_TextColor >> 16) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_TextColor = (GUI_TextColor & 0x83FF) | (temp << 10);
+					GUI_TextColor = (GUI_TextColor & 0xFF00FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Text_Color = GUI_TextColor;
 					helpstyle.Text_Color = GUI_TextColor;
@@ -268,11 +261,10 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				}
 				break;
 			case 20:
-				temp = ((GUI_TextColor >> 5) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_TextColor >> 8) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_TextColor = (GUI_TextColor & 0xFC1F) | (temp << 5);
+					GUI_TextColor = (GUI_TextColor & 0xFFFF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Text_Color = GUI_TextColor;
 					helpstyle.Text_Color = GUI_TextColor;
@@ -281,11 +273,10 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				}
 				break;
 			case 22:
-				temp = (GUI_TextColor & 0x1F);
-				if (temp > 0)
-				{
+				temp = (GUI_TextColor & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_TextColor = (GUI_TextColor & 0xFFE0) | (temp);
+					GUI_TextColor = (GUI_TextColor & 0xFFFFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Text_Color = GUI_TextColor;
 					helpstyle.Text_Color = GUI_TextColor;
@@ -295,33 +286,30 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 
 			case 26:
-				temp = ((GUI_SelectedTextColor >> 10) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_SelectedTextColor >> 16) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0x83FF) | (temp << 10);
+					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFF00FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
 					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 28:
-				temp = ((GUI_SelectedTextColor >> 5) & 0x1F);
-				if (temp > 0)
-				{
+				temp = ((GUI_SelectedTextColor >> 8) & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFC1F) | (temp << 5);
+					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
 					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 30:
-				temp = (GUI_SelectedTextColor & 0x1F);
-				if (temp > 0)
-				{
+				temp = (GUI_SelectedTextColor & 0xFF);
+				if (temp > 0) {
 					temp--;
-					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFE0) | (temp);
+					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
 					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
@@ -330,8 +318,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 
 			case 34:
 				temp = ((GUI_BGColor >> 16) & 0xFF);
-				if (temp > 0)
-				{
+				if (temp > 0) {
 					temp--;
 					GUI_BGColor = (GUI_BGColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
@@ -339,8 +326,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 			case 36:
 				temp = ((GUI_BGColor >> 8) & 0xFF);
-				if (temp > 0)
-				{
+				if (temp > 0) {
 					temp--;
 					GUI_BGColor = (GUI_BGColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
@@ -348,8 +334,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 			case 38:
 				temp = (GUI_BGColor & 0xFF);
-				if (temp > 0)
-				{
+				if (temp > 0) {
 					temp--;
 					GUI_BGColor = (GUI_BGColor & 0x00FFFF00) | (temp);
 					Generate_GUI_Options_List();
@@ -363,33 +348,30 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 		switch(mydata.Highlighted_Index)
 		{
 			case 2:
-				temp = ((GUI_OutsideWindowColor >> 10) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_OutsideWindowColor >> 16) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x83FF) | (temp << 10);
+					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
 				}
 				break;
 			case 4:
-				temp = ((GUI_OutsideWindowColor >> 5) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_OutsideWindowColor >> 8) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0xFC1F) | (temp << 5);
+					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
 				}
 				break;
 			case 6:
-				temp = (GUI_OutsideWindowColor & 0x1F);
-				if (temp < 31)
-				{
+				temp = (GUI_OutsideWindowColor & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0xFFE0) | (temp);
+					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x00FFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
@@ -397,33 +379,30 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 
 			case 10:
-				temp = ((GUI_InsideWindowColor >> 10) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_InsideWindowColor >> 16) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x83FF) | (temp << 10);
+					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Inside_Color = GUI_InsideWindowColor;
 					helpstyle.Inside_Color = GUI_InsideWindowColor;
 				}
 				break;
 			case 12:
-				temp = ((GUI_InsideWindowColor >> 5) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_InsideWindowColor >> 8) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0xFC1F) | (temp << 5);
+					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Inside_Color = GUI_InsideWindowColor;
 					helpstyle.Inside_Color = GUI_InsideWindowColor;
 				}
 				break;
 			case 14:
-				temp = (GUI_InsideWindowColor & 0x1F);
-				if (temp < 31)
-				{
+				temp = (GUI_InsideWindowColor & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0xFFE0) | (temp);
+					GUI_InsideWindowColor = (GUI_InsideWindowColor & 0x00FFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Inside_Color = GUI_InsideWindowColor;
 					helpstyle.Inside_Color = GUI_InsideWindowColor;
@@ -431,11 +410,10 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 
 			case 18:
-				temp = ((GUI_TextColor >> 10) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_TextColor >> 16) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_TextColor = (GUI_TextColor & 0x83FF) | (temp << 10);
+					GUI_TextColor = (GUI_TextColor & 0xFF00FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Text_Color = GUI_TextColor;
 					helpstyle.Text_Color = GUI_TextColor;
@@ -444,11 +422,10 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				}
 				break;
 			case 20:
-				temp = ((GUI_TextColor >> 5) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_TextColor >> 8) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_TextColor = (GUI_TextColor & 0xFC1F) | (temp << 5);
+					GUI_TextColor = (GUI_TextColor & 0xFFFF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Text_Color = GUI_TextColor;
 					helpstyle.Text_Color = GUI_TextColor;
@@ -457,11 +434,10 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				}
 				break;
 			case 22:
-				temp = (GUI_TextColor & 0x1F);
-				if (temp < 31)
-				{
+				temp = (GUI_TextColor & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_TextColor = (GUI_TextColor & 0xFFE0) | (temp);
+					GUI_TextColor = (GUI_TextColor & 0xFFFFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Text_Color = GUI_TextColor;
 					helpstyle.Text_Color = GUI_TextColor;
@@ -471,33 +447,30 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 
 			case 26:
-				temp = ((GUI_SelectedTextColor >> 10) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_SelectedTextColor >> 16) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0x83FF) | (temp << 10);
+					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFF00FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
 					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 28:
-				temp = ((GUI_SelectedTextColor >> 5) & 0x1F);
-				if (temp < 31)
-				{
+				temp = ((GUI_SelectedTextColor >> 8) & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFC1F) | (temp << 5);
+					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
 					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 30:
-				temp = (GUI_SelectedTextColor & 0x1F);
-				if (temp < 31)
-				{
+				temp = (GUI_SelectedTextColor & 0xFF);
+				if (temp < 255) {
 					temp++;
-					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFE0) | (temp);
+					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFFFF00) | (temp);
 					Generate_GUI_Options_List();
 					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
 					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
@@ -506,8 +479,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 
 			case 34:
 				temp = ((GUI_BGColor >> 16) & 0xFF);
-				if (temp < 255)
-				{
+				if (temp < 255) {
 					temp++;
 					GUI_BGColor = (GUI_BGColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
@@ -515,8 +487,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 			case 36:
 				temp = ((GUI_BGColor >> 8) & 0xFF);
-				if (temp < 255)
-				{
+				if (temp < 255) {
 					temp++;
 					GUI_BGColor = (GUI_BGColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
@@ -524,8 +495,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				break;
 			case 38:
 				temp = (GUI_BGColor & 0xFF);
-				if (temp < 255)
-				{
+				if (temp < 255) {
 					temp++;
 					GUI_BGColor = (GUI_BGColor & 0x00FFFF00) | (temp);
 					Generate_GUI_Options_List();

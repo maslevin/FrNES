@@ -130,132 +130,6 @@ const char SLIDERBOX_MAX[] = "<SBC_MAX = ";
 const char SLIDERBOX_MIN[] = "<SBC_MIN = ";
 const char SLIDERBOX_VALUE[] = "<SBC_VALUE = ";
 
-/*
-void win_draw_scrollbar(uint16 bordercolor, uint16 insidecolor, uint16 bgcolor, uint16* render_area, uint16 render_width, int maxwidth, int max, int min, int value, int highlighted)
-{
-	int i;
-	int j;
-	int startsliderx;
-	int endsliderx;
-	int midsliderx;
-	uint16 color;
-
-	startsliderx = 16;
-	endsliderx = maxwidth - 16;
-	midsliderx = (int)((float)(startsliderx + endsliderx) * ((float)value / (max - min)));
-
-	//Draw left block
-	for (i = 0; i < 6; i++)
-	{
-		if (highlighted)
-			for (j = 0; j < 5; j++)
-				render_area[((j * render_width) + i)] = bgcolor;
-
-		for (j = 0; j < 7; j++)
-		{
-			switch (SliderSide[(j * 6) + i])
-			{
-				case 2:
-					render_area[(((j + 5) * render_width) + i)] = insidecolor;
-					break;
-				case 1:
-					render_area[(((j + 5) * render_width) + i)] = bordercolor;
-					break;
-				case 0:
-				default:
-					if (highlighted)
-						render_area[(((j + 5) * render_width) + i)] = bgcolor;
-			}
-		}
-		if (highlighted)
-			for (j = 0; j < 4; j++)
-				render_area[(((j + 12) * render_width) + i)] = bgcolor;
-	}
-
-	//Draw right block
-	for (i = 0; i < 6; i++)
-	{
-		if (highlighted)
-			for (j = 0; j < 5; j++)
-				render_area[maxwidth - 6 + ((j * render_width) + i)] = bgcolor;
-		for (j = 0; j < 7; j++)
-		{
-			switch (SliderSide[(j * 6) + (6 - i)])
-			{
-				case 2:
-					render_area[maxwidth - 6 + (((j + 5) * render_width) + i)] = insidecolor;
-					break;
-				case 1:
-					render_area[maxwidth - 6 + (((j + 5) * render_width) + i)] = bordercolor;
-					break;
-				case 0:
-				default:
-					if (highlighted)
-						render_area[maxwidth - 6 + (((j + 5) * render_width) + i)] = bgcolor;
-					break;					
-			}
-		}
-		if (highlighted)
-			for (j = 0; j < 4; j++)
-				render_area[maxwidth - 6 + (((j + 12) * render_width) + i)] = bgcolor;
-	}
-
-	if (highlighted)
-		for (j = 0; j < 5; j++)
-			for (i = 6; i < maxwidth - 6; i++)
-				render_area[((j * render_width) + i)] = bgcolor;			
-
-	//Draw the bar
-	for (j = 0; j < 7; j++)
-	{
-		switch (SliderSide[(6 * j) + 5])
-		{
-			case 2:
-				color = insidecolor;
-				break;
-			case 1:
-				color = bordercolor;
-				break;
-			case 0:
-			default:
-				if (highlighted)
-					color = bgcolor;
-				else 
-					color = insidecolor;
-				break;
-		}
-
-		for (i = 6; i < maxwidth - 6; i++)
-			render_area[(((j + 5) * render_width) + i)] = color;
-	}
-
-	if (highlighted)
-		for (j = 0; j < 4; j++)
-			for (i = 6; i < maxwidth - 6; i++)
-				render_area[(((j + 12) * render_width) + i)] = bgcolor;			
-
-	//Draw the slider
-	for (j = 0; j < 16; j++)
-		for (i = 0; i < 16; i++)
-		{
-			switch (Slider[(j*16) + i])
-			{
-				case 2:
-					render_area[(j * render_width) + (midsliderx - 8) + i] = insidecolor;
-					break;
-				case 1:
-					render_area[(j * render_width) + (midsliderx - 8) + i] = bordercolor;
-					break;
-				case 0:
-				default:
-					if (highlighted)
-						render_area[(j * render_width) + (midsliderx - 8) + i] = bgcolor;
-					break;
-			}
-		}
-}
-*/
-
 void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float width, float height, float corner_radius, uint32 color) {
 	pvr_poly_hdr_t hdr;
 	pvr_poly_cxt_t cxt;
@@ -409,6 +283,47 @@ void draw_cornered_layer(uint32 list, float xPos, float yPos, float zPos, float 
 		my_vertex.flags = PVR_CMD_VERTEX_EOL;
 		my_vertex.x = startX + corner_radius * cosf(theta);
 		my_vertex.y = startY + corner_radius * sinf(theta);
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+	}
+}
+
+void draw_scrollbar(uint32 list, float xPos, float yPos, float zPos, float width, float height, uint32 bordercolor, uint32 insidecolor, int min, int max, int value) {
+
+	draw_cornered_layer(list, xPos, yPos + (height / 2) - 3.0f, zPos, width, 6.0f, 5.0f, bordercolor);
+
+	float sliderRadius = height / 2;
+	float sliderX = xPos + (sliderRadius) + ((width - (2 * sliderRadius)) * (float)value / (float)(max - min));
+	float sliderY = yPos + sliderRadius;
+
+	float theta = 0.0f;
+	float increment = -2.0f * F_PI / ((float)CIRCLE_TRIANGLES);
+
+	pvr_poly_hdr_t hdr;
+	pvr_poly_cxt_t cxt;
+	pvr_vertex_t my_vertex;		
+
+	pvr_poly_cxt_col(&cxt, list);
+	pvr_poly_compile(&hdr, &cxt);
+	pvr_prim(&hdr, sizeof(hdr));
+
+	for (int i = 0; i < CIRCLE_TRIANGLES; i++) {
+		my_vertex.flags = PVR_CMD_VERTEX;
+		my_vertex.x = sliderX + sliderRadius * cosf(theta);
+		my_vertex.y = sliderY + sliderRadius * sinf(theta);
+		my_vertex.z = zPos + 0.1f;
+		my_vertex.argb = insidecolor;
+		my_vertex.oargb = 0;		
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		my_vertex.x = sliderX;
+		my_vertex.y = sliderY;
+		pvr_prim(&my_vertex, sizeof(my_vertex));
+
+		theta += increment;
+
+		my_vertex.flags = PVR_CMD_VERTEX_EOL;
+		my_vertex.x = sliderX + sliderRadius * cosf(theta);
+		my_vertex.y = sliderY + sliderRadius * sinf(theta);
 		pvr_prim(&my_vertex, sizeof(my_vertex));
 	}
 }
@@ -630,9 +545,9 @@ void handle_slider(char* text, uint32 i, Window_Data* windata, Window_Style* win
 	}
 
 	if (i + windata -> Top_Index != windata -> Highlighted_Index) {
-//		win_draw_scrollbar(winstyle -> Text_Color, winstyle -> Inside_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, windata -> width - 50, max, min, value, 0);
+        draw_scrollbar(list, windata -> x + winstyle -> Border_Thickness + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - 30.0f - (winstyle -> Left_Margin * 2), windata -> font -> fontHeight * winstyle -> Text_Scale, 0xFF000000, winstyle -> Text_Color, min, max, value);
 	} else {
-//		win_draw_scrollbar(winstyle -> Text_Color, winstyle -> Inside_Color, winstyle -> Selected_Background_Color, windata -> Target_Buffer + windata -> x + (xposition) + ((windata -> y + yposition) * windata -> Target_Width), windata -> Target_Width, windata -> width - 50, max, min, value, 1);
+        draw_scrollbar(list, windata -> x + winstyle -> Border_Thickness + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - 30.0f - (winstyle -> Left_Margin * 2), windata -> font -> fontHeight * winstyle -> Text_Scale, 0xFF000000, winstyle -> Selected_Text_Color, min, max, value);
 	}
 }
 
@@ -672,7 +587,7 @@ void win_draw_textwindow(Window_Data* windata, Window_Style* winstyle, uint32 li
 
 			//Draw scroll bar right side rect
 			yposition = windata -> y + 10.0 + (windata -> font -> fontHeight * winstyle -> Header_Text_Scale);
-			float barheight = (winstyle -> Max_Items * windata -> font -> fontHeight * winstyle -> Text_Scale);
+			float barheight = (winstyle -> Max_Items * ((windata -> font -> fontHeight * winstyle -> Text_Scale) + winstyle -> Line_Spacing));
 			float xposition = windata -> x + windata -> width - (3 * winstyle -> Border_Thickness);
 			my_vertex.flags = PVR_CMD_VERTEX;
 			my_vertex.x = xposition;
