@@ -125,10 +125,10 @@ uint16 default_BKey = 2;
 uint16 default_Stretch = 1;
 uint16 default_Filter = 1;
 uint16 default_Profile = 1;
-uint16 default_Format = 0;
 uint16 default_VMUPort = 0;
 uint16 default_SRAM = 1;
 uint16 default_AutoFrameSkip = 0;
+uint16 default_ShowFrameRate = 0;
 uint16 default_Clip = 0;
 
 uint16 color;
@@ -569,7 +569,7 @@ int main() {
 	*opt_SoundEnabled = default_Sound;
 	*opt_FrameSkip = default_FrameSkip;
 	*opt_AutoFrameSkip = default_AutoFrameSkip;
-	*opt_DiscFormat = default_Format;
+	*opt_ShowFrameRate = default_ShowFrameRate;
 	*opt_SRAM = default_SRAM;
 
 	printf("Initializing VMUs\n");
@@ -937,26 +937,28 @@ void pNesX_LoadFrame() {
 
 	pvr_list_finish();
 
-	pvr_list_begin(PVR_LIST_TR_POLY);
+	if (*opt_ShowFrameRate) {
+		pvr_list_begin(PVR_LIST_TR_POLY);
 
-	char fps[10];
-	snprintf(fps, 10, "%u", (uint16)frames_per_second);
+		char fps[10];
+		snprintf(fps, 10, "%u", (uint16)frames_per_second);
 
-	draw_string(font,
-		PVR_LIST_TR_POLY,
-		fps,
-		640.0 - 45.0f,
-		10.0f,
-		35.0f,
-		45.0f,
-		35.0f,
-		SINGLE,
-		RIGHT,
-		0xFFFFFFFF,
-		0.80f
-	);
+		draw_string(font,
+			PVR_LIST_TR_POLY,
+			fps,
+			640.0 - 60.0f,
+			10.0f,
+			35.0f,
+			45.0f,
+			35.0f,
+			SINGLE,
+			RIGHT,
+			0xFFFFFFFF,
+			0.80f
+		);
 
-	pvr_list_finish();
+		pvr_list_finish();
+	}		
 
 	pvr_scene_finish();
 	endProfiling(3);

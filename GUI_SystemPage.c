@@ -19,8 +19,8 @@ char Options_System[] = "System Options";
 char Options_Frameskip[] = "Frameskip";
 char Options_Sound_Checked[] = "<Check>Enable Sound,CBC_CHECKED";
 char Options_Sound_Unchecked[] = "<Check>Enable Sound,CBC_UNCHECKED";
-char Options_CDFormat_FrNES[] = "Use CD Format:,FrNES<RLAlign>";
-char Options_CDFormat_NesterDC[] = "Use CD Format:,NesterDC<RLAlign>";
+char Options_Show_Framerate_Checked[] = "<Check>Show Framerate,CBC_CHECKED";
+char Options_Show_Framerate_Unchecked[] = "<Check>Show Framerate,CBC_UNCHECKED";
 char Options_VMU[] = "VMU Options";
 char Options_Port[] = "Use VMU Port";
 char Options_CXXX[] = "No VMU Detected";
@@ -45,7 +45,7 @@ const int Num_System_Options = 10;
 uint16* opt_SoundEnabled;
 uint16* opt_FrameSkip;
 uint16* opt_AutoFrameSkip;
-uint16* opt_DiscFormat;
+uint16* opt_ShowFrameRate;
 int16* opt_VMUPort;
 uint16* opt_SRAM;
 
@@ -53,7 +53,7 @@ void Allocate_System_Options() {
 	opt_SoundEnabled = malloc(sizeof(uint16));
 	opt_FrameSkip = malloc(sizeof(uint16));
 	opt_AutoFrameSkip = malloc(sizeof(uint16));
-	opt_DiscFormat = malloc(sizeof(uint16));
+	opt_ShowFrameRate = malloc(sizeof(uint16));
 	opt_VMUPort = malloc(sizeof(int16));
 	opt_SRAM = malloc(sizeof(uint16));
 }
@@ -62,7 +62,7 @@ void Free_System_Options() {
 	free(opt_SoundEnabled);
 	free(opt_FrameSkip);
 	free(opt_AutoFrameSkip);
-	free(opt_DiscFormat);
+	free(opt_ShowFrameRate);
 	free(opt_VMUPort);
 	free(opt_SRAM);
 }
@@ -143,12 +143,12 @@ void Generate_System_Options_List() {
 			break;
 	}
 
-	switch(*opt_DiscFormat) {
+	switch(*opt_ShowFrameRate) {
 		case 0:
-			System_Options[2] = Options_CDFormat_FrNES;
+			System_Options[2] = Options_Show_Framerate_Unchecked;
 			break;
 		case 1:
-			System_Options[2] = Options_CDFormat_NesterDC;
+			System_Options[2] = Options_Show_Framerate_Checked;
 			break;
 	}
 
@@ -204,8 +204,7 @@ void Handle_System_Interface(cont_state_t* my_state) {
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
 		(mydata.Highlighted_Index < Num_System_Options) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index++;
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
 			mydata.Top_Index++;
@@ -215,8 +214,7 @@ void Handle_System_Interface(cont_state_t* my_state) {
 	//Up Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_UP) && 
 		(mydata.Highlighted_Index > 0) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index--;
 		if (mydata.Top_Index > mydata.Highlighted_Index)
 			mydata.Top_Index--;
@@ -225,15 +223,18 @@ void Handle_System_Interface(cont_state_t* my_state) {
 
 	//Handle the toggle boxes
 	if ((my_state -> buttons & CONT_A) && 
-		(invalida == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(invalida == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 0:
 				*opt_SoundEnabled = 1 - (*opt_SoundEnabled);
 				Generate_System_Options_List();
 				invalida = 1;
 				break;
+			case 2:
+				*opt_ShowFrameRate = 1 - (*opt_ShowFrameRate);
+				Generate_System_Options_List();
+				invalida = 1;
+				break;				
 			case 6:
 				*opt_SRAM  = 1 - (*opt_SRAM);
 				Generate_System_Options_List();
@@ -299,14 +300,6 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				}
 				break;
 
-			case 2:
-				if ((*opt_DiscFormat) > 0)
-				{
-					(*opt_DiscFormat)--;
-					Generate_System_Options_List();
-					xkeyhit = 1;
-				}
-				break;
 			case 5:
 /*			
 				if ((*opt_VMUPort) > 0)
@@ -347,14 +340,6 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				}
 				break;
 
-			case 2:
-				if ((*opt_DiscFormat) < 1)
-				{
-					(*opt_DiscFormat)++;
-					Generate_System_Options_List();
-					xkeyhit = 1;
-				}
-				break;
 			case 5:
 /*			
 				if ((*opt_VMUPort < 7) && (*opt_VMUPort != -1))

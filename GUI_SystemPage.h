@@ -46,7 +46,7 @@ extern maple_device_t* VMUs[];
 extern uint16* opt_SoundEnabled;
 extern uint16* opt_FrameSkip;
 extern uint16* opt_AutoFrameSkip;
-extern uint16* opt_DiscFormat;
+extern uint16* opt_ShowFrameRate;
 extern int16* opt_VMUPort;
 extern uint16* opt_SRAM;
 

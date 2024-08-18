@@ -504,11 +504,15 @@ void pNesX_Main() {
 	frames_per_second = 0;
 
 	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	uint64 last_frame_timestamp = 0;
-	uint64 frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+	uint64 last_frame_timestamp = 0;	
+	uint64 frame_timestamp = 0;
 	double last_frames_per_second[NUM_FPS_SAMPLES];
-	uint32 last_frames_per_second_index = 0;
+	uint32 last_frames_per_second_index = 0;	
+	if (*opt_ShowFrameRate) {
+		clock_gettime(CLOCK_MONOTONIC, &ts);		
+		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+	}
+
 	odd_cycle = false;
 
 	// Main loop
@@ -522,18 +526,20 @@ void pNesX_Main() {
 		odd_cycle = !odd_cycle;
 		numEmulationFrames++;
 
-		clock_gettime(CLOCK_MONOTONIC, &ts);
-		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
-		last_frames_per_second[last_frames_per_second_index] = 1e9 / (double)(frame_timestamp - last_frame_timestamp);
-		last_frames_per_second_index++;
+		if (*opt_ShowFrameRate) {
+			clock_gettime(CLOCK_MONOTONIC, &ts);
+			frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+			last_frames_per_second[last_frames_per_second_index] = 1e9 / (double)(frame_timestamp - last_frame_timestamp);
+			last_frames_per_second_index++;
 
-		if (last_frames_per_second_index % NUM_FPS_SAMPLES == 0) {
-			double averageFramesPerSecond = 0.0f;
-			for (uint32 fpsIndex = 0; fpsIndex < NUM_FPS_SAMPLES; fpsIndex++) {
-				averageFramesPerSecond += last_frames_per_second[fpsIndex];
+			if (last_frames_per_second_index % NUM_FPS_SAMPLES == 0) {
+				double averageFramesPerSecond = 0.0f;
+				for (uint32 fpsIndex = 0; fpsIndex < NUM_FPS_SAMPLES; fpsIndex++) {
+					averageFramesPerSecond += last_frames_per_second[fpsIndex];
+				}
+				frames_per_second = averageFramesPerSecond / (float)NUM_FPS_SAMPLES;
+				last_frames_per_second_index = 0;
 			}
-			frames_per_second = averageFramesPerSecond / (float)NUM_FPS_SAMPLES;
-			last_frames_per_second_index = 0;
 		}
 
 		if (HALT) {
