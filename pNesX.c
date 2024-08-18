@@ -17,6 +17,7 @@
 
 #include "pNesX.h"
 #include "pNesX_System.h"
+#include "profile.h"
 #include "Mapper.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Sound_APU.h"
@@ -203,6 +204,7 @@ void DC_SoundInit() {
 }
 
 void pNesX_DoSpu() {
+	startProfiling(4);
 	uint32 this_buffer;
 
 	this_pos = *position;
@@ -222,6 +224,7 @@ void pNesX_DoSpu() {
 
 		last_buffer = this_buffer;
 	}
+	endProfiling(4);
 }
 
 /*===================================================================*/
@@ -479,6 +482,8 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 
 #define NUM_FPS_SAMPLES 60
 
+#define MAX_PROFILING_FUNCTIONS 6
+
 /*===================================================================*/
 /*                                                                   */
 /*              pNesX_Main() : The main loop of pNesX                */
@@ -486,6 +491,16 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 /*===================================================================*/
 void pNesX_Main() {
 	pNesX_Init();
+
+	setMaximumProfilingFunctions(MAX_PROFILING_FUNCTIONS);
+	resetProfiling();
+	setProfilingFunctionName(0, "K6502_Step");
+	setProfilingFunctionName(1, "handle_dmc_synchronization");
+	setProfilingFunctionName(2, "pNesX_DrawLine");
+	setProfilingFunctionName(3, "pNesX_LoadFrame");
+	setProfilingFunctionName(4, "pNesX_DoSpu");
+	setProfilingFunctionName(5, "audio_sync_apu_registers");
+
 	frames_per_second = 0;
 
 	struct timespec ts;
@@ -505,6 +520,7 @@ void pNesX_Main() {
 
 		pNesX_Cycle();
 		odd_cycle = !odd_cycle;
+		numEmulationFrames++;
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
@@ -537,14 +553,17 @@ void pNesX_Main() {
 	}
 
 	pNesX_Fin();
+	printProfilingReport();
 }
 
 #define CYCLES_PER_LINE 113
 
 void handle_dmc_synchronization(uint32 cycles) {
+	startProfiling(1);
 	if (audio_sync_dmc_registers(cycles)) {
 		K6502_DoIRQ();
 	}
+	endProfiling(1);
 }
 
 /*===================================================================*/

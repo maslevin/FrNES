@@ -16,6 +16,7 @@
 #include "pNesX_DrawLine_BG_C_Map9.h"
 #include "pNesX_DrawLine_BG_C.h"
 #include "pNesX_DrawLine_Spr_C.h"
+#include "profile.h"
 #include "Mapper.h"
 
 #define __ALIGN32__		__attribute__ ((aligned (32)))
@@ -35,6 +36,7 @@ void pNesX_StartFrame() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_DrawLine() {
+	startProfiling(2);
 	void* texture_address;
 	unsigned char* pPoint;
 	int nSprCnt = 0;
@@ -91,4 +93,5 @@ void pNesX_DrawLine() {
 
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(Scanline_Buffer, texture_address, 256);
+	endProfiling(2);
 }

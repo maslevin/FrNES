@@ -8,6 +8,7 @@
 /*===================================================================*/
 
 #include "pNesX_Sound_APU.h"
+#include "profile.h"
 #include "macros.h"
 
 int audio_initialize() {
@@ -43,7 +44,10 @@ void audio_do_frame(uint16* sample_buffer, uint32 num_samples) {
 }
 
 int audio_sync_dmc_registers(uint32 cycles) {
-   return sync_dmc_register(cycles);
+   startProfiling(5);
+   int result = sync_dmc_register(cycles);
+   endProfiling(5);
+   return result;
 }
 
 void audio_sync_apu_registers() {

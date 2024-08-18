@@ -16,6 +16,7 @@
 #include "macros.h"
 
 #include "pNesX.h"
+#include "profile.h"
 
 /*-------------------------------------------------------------------*/
 /*  Operation Macros                                                 */
@@ -1437,6 +1438,7 @@ void K6502_DoIRQ() {
 /*                                                                   */
 /*===================================================================*/
 void K6502_Step( uint16 wClocks ) {
+	startProfiling(0);
 	wA0 = 0;
 	byD0 = 0;
 	byD1 = 0;
@@ -1468,6 +1470,7 @@ void K6502_Step( uint16 wClocks ) {
 
 	// Correct the number of the clocks
 	g_wPassedClocks -= wClocks;
+	endProfiling(0);
 }
 
 // Addressing Op.

@@ -29,6 +29,7 @@
 
 #include "pNesX_System.h"
 #include "pNesX_System_DC.h"
+#include "profile.h"
 #include "vmu_icons.h"
 #include "GUI_MainMenu.h"
 #include "GUI_FileBrowser.h"
@@ -864,6 +865,7 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 }
 
 void pNesX_LoadFrame() {
+	startProfiling(3);
 	pvr_wait_ready();
 	pvr_scene_begin();
 
@@ -957,6 +959,7 @@ void pNesX_LoadFrame() {
 	pvr_list_finish();
 
 	pvr_scene_finish();
+	endProfiling(3);
 }
 
 void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
