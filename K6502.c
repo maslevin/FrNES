@@ -1453,8 +1453,639 @@ void K6502_Step( uint16 wClocks ) {
 		// Read an instruction
 		opcode = *(pPC++);
 
+		switch (opcode) {
+			case 0x00:
+				VIRPC; PC++; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
+				break;
+
+			case 0x01:
+				ORA( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0x05:
+				ORA( A_ZP ); CLK( 3 );
+				break;
+
+			case 0x06:
+				ASL( AA_ZP ); CLK( 5 );
+				break;
+
+			case 0x08:
+				PUSH( F | FLAG_B | FLAG_R ); CLK( 3 );
+				break;
+
+			case 0x09:
+				ORA( A_IMM ); CLK( 2 );
+				break;
+
+			case 0x0A:
+				ASLA; CLK( 2 );
+				break;
+
+			case 0x0D:
+				ORA( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x0E:
+				ASL( AA_ABS ); pPC += 2; CLK( 6 );
+				break;
+
+			case 0x10:
+				BRA( !( F & FLAG_N ) );
+				break;
+
+			case 0x11:
+				ORA( A_IY ); CLK( 5 );
+				break;
+			
+			case 0x15:
+				ORA( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0x16:
+				ASL( AA_ZPX ); CLK( 6 );
+				break;
+
+			case 0x18:
+				RSTF( FLAG_C ); CLK( 2 );
+				break;
+
+			case 0x19:
+				ORA( A_ABSY ); CLK( 4 );
+				break;
+
+			case 0x1D:
+				ORA( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0x1E:
+				ASL( AA_ABSX ); pPC += 2; CLK( 7 );
+				break;
+
+			case 0x20:
+				JSR; CLK( 6 );
+				break;
+
+			case 0x21:
+				AND( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0x24:
+				BIT( A_ZP ); CLK( 3 );
+				break;
+
+			case 0x25:
+				AND( A_ZP ); CLK( 3 );
+				break;
+
+			case 0x26:
+				ROL( AA_ZP ); CLK( 5 );
+				break;
+
+			case 0x28:
+				POP( F ); SETF( FLAG_R ); CLK( 4 );
+				break;
+
+			case 0x29:
+				AND( A_IMM ); CLK( 2 );
+				break;
+
+			case 0x2A:
+				ROLA; CLK( 2 );
+				break;
+
+			case 0x2C:
+				BIT( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x2D:
+				AND( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x2E:
+				ROL( AA_ABS ); pPC += 2; CLK( 6 );
+				break;
+
+			case 0x30:
+				BRA( F & FLAG_N );
+				break;
+
+			case 0x31:
+				AND( A_IY ); CLK( 5 );
+				break;
+
+			case 0x35:
+				AND( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0x36:
+				ROL( AA_ZPX ); CLK( 6 );
+				break;				
+
+			case 0x38:
+				SETF( FLAG_C ); CLK( 2 );
+				break;
+
+			case 0x39:
+				AND( A_ABSY ); CLK( 4 );
+				break;
+
+			case 0x3D:
+				AND( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0x3E:
+				ROL( AA_ABSX ); pPC += 2; CLK( 7 );
+				break;
+
+			case 0x40:
+				POP( F ); SETF( FLAG_R ); POPW( PC ); REALPC; CLK( 6 );
+				break;
+
+			case 0x41:
+				EOR( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0x45:
+				EOR( A_ZP ); CLK( 3 );
+				break;
+
+			case 0x46:
+				LSR( AA_ZP ); CLK( 5 );
+				break;
+
+			case 0x48:
+				PUSH( A ); CLK( 3 );
+				break;
+
+			case 0x49:
+				EOR( A_IMM ); CLK( 2 );
+				break;				
+
+			case 0x4A:
+				LSRA; CLK( 2 );
+				break;
+
+			case 0x4C:
+				JMP( AA_ABS ); CLK( 3 );
+				break;
+
+			case 0x4D:
+				EOR( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x4E:
+				LSR( AA_ABS ); pPC += 2; CLK( 6 );
+				break;
+
+			case 0x50:
+				BRA( !( F & FLAG_V ) );
+				break;
+
+			case 0x51:
+				EOR( A_IY ); CLK( 5 );
+				break;				
+
+			case 0x55:
+				EOR( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0x56:
+				LSR( AA_ZPX ); CLK( 6 );
+				break;						
+
+			case 0x58:
+				byD0 = F;
+				RSTF( FLAG_I ); CLK( 2 );
+				if ( ( byD0 & FLAG_I ) && IRQ_State == 0 ) {
+					// IRQ Interrupt
+					// Execute IRQ if an I flag isn't being set
+					if ( !( F & FLAG_I ) ) {
+						CLK( 7 );
+
+						VIRPC;
+						PUSHW( PC );
+						PUSH( F & ~FLAG_B );
+
+						RSTF( FLAG_D );
+						SETF( FLAG_I );
+
+						PC = K6502_ReadW( VECTOR_IRQ );
+						REALPC;
+					}
+				}
+				break;
+
+			case 0x59:
+				EOR( A_ABSY ); CLK( 4 );
+				break;
+
+			case 0x5D:
+				EOR( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0x5E:
+				LSR( AA_ABSX ); pPC += 2; CLK( 7 );
+				break;
+
+			case 0x60:
+				POPW( PC ); ++PC; REALPC; CLK( 6 );
+				break;
+
+			case 0x61:
+				ADC( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0x65:
+				ADC( A_ZP ); CLK( 3 );
+				break;
+
+			case 0x66:
+				ROR( AA_ZP ); CLK( 5 );
+				break;
+
+			case 0x68:
+				POP( A ); TEST( A ); CLK( 4 );
+				break;
+
+			case 0x69:
+				ADC( A_IMM ); CLK( 2 );
+				break;
+
+			case 0x6A:
+				RORA; CLK( 2 );
+				break;
+
+			case 0x6C:
+				JMP( K6502_ReadW( AA_ABS ) ); CLK( 5 );
+				break;
+		
+			case 0x6D:
+				ADC( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+	
+			case 0x6E:
+				ROR( AA_ABS ); pPC += 2; CLK( 6 );
+				break;
+
+			case 0x70:
+				BRA( F & FLAG_V );
+				break;
+
+			case 0x71:
+				ADC( A_IY ); CLK( 5 );
+				break;				
+
+			case 0x75:
+				ADC( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0x76:
+				ROR( AA_ZPX ); CLK( 6 );
+				break;
+
+			case 0x78:
+				SETF( FLAG_I ); CLK( 2 );
+				break;
+
+			case 0x79:
+				ADC( A_ABSY ); CLK( 4 );
+				break;				
+
+			case 0x7D:
+				ADC( A_ABSX ); CLK( 4 );
+				break;				
+
+			case 0x7E:
+				ROR( AA_ABSX ); pPC += 2; CLK( 7 );
+				break;
+
+			case 0x81:
+				STA( AA_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0x84:
+				STY( AA_ZP ); CLK( 3 );
+				break;
+
+			case 0x85:
+				STA( AA_ZP ); CLK( 3 );
+				break;
+
+			case 0x86:
+				STX( AA_ZP ); CLK( 3 );
+				break;
+
+			case 0x88:
+				--Y; TEST( Y ); CLK( 2 );
+				break;
+
+			case 0x89:
+				BIT( AA_ZP ); CLK( 2 );
+				break;
+
+			case 0x8A:
+				A = X; TEST( A ); CLK( 2 );
+				break;
+
+			case 0x8C:
+				STY( AA_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x8D:
+				STA( AA_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x8E:
+				STX( AA_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0x90:
+				BRA( !( F & FLAG_C ) );
+				break;
+
+			case 0x91:
+				STA( AA_IY ); ++pPC; CLK( 6 );
+				break;			
+
+			case 0x94:
+				STY( AA_ZPX ); CLK( 4 );
+				break;
+
+			case 0x95:
+				STA( AA_ZPX ); CLK( 4 );
+				break;
+
+			case 0x96:
+				STX( AA_ZPY ); CLK( 4 );
+				break;
+
+			case 0x98:
+				A = Y; TEST( A ); CLK( 2 );
+				break;
+
+			case 0x99:
+				STA( AA_ABSY ); pPC += 2; CLK( 5 );
+				break;
+
+			case 0x9A:
+				SP = X; CLK( 2 );
+				break;
+
+			case 0x9D:
+				STA( AA_ABSX ); pPC += 2; CLK( 5 );
+				break;
+
+			case 0xA0:
+				LDY( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xA1:
+				LDA( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0xA2:
+				LDX( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xA4:
+				LDY( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xA5:
+				LDA( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xA6:
+				LDX( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xA8:
+				Y = A; TEST( A ); CLK( 2 );
+				break;
+
+			case 0xA9:
+				LDA( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xAA:
+				X = A; TEST( A ); CLK( 2 );
+				break;
+
+			case 0xAC:
+				LDY( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0xAD:
+				LDA( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0xAE:
+				LDX( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0xB0:
+				BRA( F & FLAG_C );
+				break;
+
+			case 0xB1:
+				LDA( A_IY ); CLK( 5 );
+				break;
+
+			case 0xB4:
+				LDY( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0xB5:
+				LDA( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0xB6:
+				LDX( A_ZPY ); CLK( 4 );
+				break;
+
+			case 0xB8:
+				RSTF( FLAG_V ); CLK( 2 );
+				break;
+
+			case 0xB9:
+				LDA( A_ABSY ); CLK( 4 );
+				break;																
+
+			case 0xBA:
+				X = SP; TEST( X ); CLK( 2 );
+				break;
+
+			case 0xBC:
+				LDY( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0xBD:
+				LDA( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0xBE:
+				LDX( A_ABSY ); CLK( 4 );
+				break;				
+
+			case 0xC0:
+				CPY( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xC1:
+				CMP( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0xC4:
+				CPY( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xC5:
+				CMP( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xC6:
+				DEC( AA_ZP ); CLK( 5 );
+				break;
+
+			case 0xC8:
+				++Y; TEST( Y ); CLK( 2 );	
+				break;
+
+			case 0xC9:
+				CMP( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xCA:
+				--X; TEST( X ); CLK( 2 );
+				break;
+
+			case 0xCC:
+				CPY( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0xCD:
+				CMP( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0xCE:
+				DEC( AA_ABS ); pPC += 2;CLK( 6 );
+				break;
+
+			case 0xD0:
+				BRA( !( F & FLAG_Z ) );
+				break;																																					
+
+			case 0xD1:
+				CMP( A_IY ); CLK( 5 );
+				break;
+
+			case 0xD5:
+				CMP( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0xD6:
+				DEC( AA_ZPX ); CLK( 6 );
+				break;
+
+			case 0xD8:
+				RSTF( FLAG_D ); CLK( 2 );
+				break;
+
+			case 0xD9:
+				CMP( A_ABSY ); CLK( 4 );
+				break;
+
+			case 0xDD:
+				CMP( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0xDE:
+				DEC( AA_ABSX ); pPC += 2; CLK( 7 );
+				break;
+
+			case 0xE0:
+				CPX( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xE1:
+				SBC( A_IX ); ++pPC; CLK( 6 );
+				break;
+
+			case 0xE4:
+				CPX( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xE5:
+				SBC( A_ZP ); CLK( 3 );
+				break;
+
+			case 0xE6:
+				INC( AA_ZP ); CLK( 5 );
+				break;
+
+			case 0xE8:
+				++X; TEST( X ); CLK( 2 );
+				break;
+
+			case 0xE9:
+				SBC( A_IMM ); CLK( 2 );
+				break;
+
+			case 0xEA:
+				CLK( 2 );
+				break;
+
+			case 0xEC:
+				CPX( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+
+			case 0xED:
+				SBC( A_ABS ); pPC += 2; CLK( 4 );
+				break;
+				
+			case 0xEE:
+				INC( AA_ABS ); pPC += 2; CLK( 6 );
+				break;
+
+			case 0xF0:
+				BRA( F & FLAG_Z );
+				break;
+
+			case 0xF1:
+				SBC( A_IY ); CLK( 5 );
+				break;
+
+			case 0xF5:
+				SBC( A_ZPX ); CLK( 4 );
+				break;
+
+			case 0xF6:
+				INC( AA_ZPX ); CLK( 6 );
+				break;
+
+			case 0xF8:
+				SETF( FLAG_D ); CLK( 2 );
+				break;
+
+			case 0xF9:
+				SBC( A_ABSY ); CLK( 4 );
+				break;
+
+			case 0xFD:
+				SBC( A_ABSX ); CLK( 4 );
+				break;
+
+			case 0xFE:
+				INC( AA_ABSX ); pPC += 2; CLK( 7 );
+				break;
+
+			default:
+				break;
+		}
+
 		// Execute an instruction, run the instruction from the jump table.
-		((OpcodeTable[opcode]).pFPtr)();
+		// ((OpcodeTable[opcode]).pFPtr)();
 
 		// We crossed a bank boundary, make sure we end up in the right PRG bank
 		if (pPC - pPC_Offset > 0x1FFF) {

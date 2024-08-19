@@ -5,6 +5,8 @@
 
 extern uint32 numEmulationFrames;
 
+#define PROFILE
+
 #ifdef PROFILE
 void resetProfiling();
 void setMaximumProfilingFunctions(uint32 maximumFunctions);
