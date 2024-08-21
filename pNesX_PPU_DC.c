@@ -38,13 +38,10 @@ void pNesX_StartFrame() {
 void pNesX_DrawLine() {
 	startProfiling(2);
 	void* texture_address;
-	unsigned char* pPoint;
 	int nSprCnt = 0;
-//	int index;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
-	pPoint = Scanline_Buffer;
 
 	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
 		memset4(Scanline_Buffer, 0, 256);
@@ -53,10 +50,10 @@ void pNesX_DrawLine() {
 	}
 
 	if (MapperNo == 9) {
-		pNesX_Map9DrawLine_BG_C(pPoint);
-		nSprCnt = pNesX_Map9DrawLine_Spr_C(pSprBuf);
+		pNesX_Map9DrawLine_BG_C(Scanline_Buffer);
+		nSprCnt = pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
 	} else {
-		pNesX_DrawLine_BG_C(pPoint);
+		pNesX_DrawLine_BG_C(Scanline_Buffer);
 		nSprCnt = pNesX_DrawLine_Spr_C(Scanline_Buffer);
 	}
 

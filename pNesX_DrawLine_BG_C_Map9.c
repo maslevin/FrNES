@@ -8,7 +8,6 @@
 #include "Mapper_9.h"
 
 void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
-	/* C Background Renderer Vars */
 	uint16 nX;
 	uint16 nY;
 	uint16 nY4;
@@ -16,9 +15,7 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char pPalTbl;
 	uint16 nesaddr;
 	int nIdx;
-	int index;
 	uint16 nNameTable;
-	unsigned char* pbyCharData;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
 
@@ -35,67 +32,45 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char nameTableValue = *pbyNameTable;
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	unsigned char characterIndex = (nameTableValue & 0x3F);
-	unsigned char patternData[8];
-	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
-	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-    unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-	patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-	patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-	patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-	patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-	patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-	patternData[ 6 ] = byData1 & 3;
-	patternData[ 7 ] = byData2 & 3;
-	pbyCharData = patternData;
 
 	nesaddr = (characterBank * 0x400) + (characterIndex << 4) + nYBit;
 	switch (nesaddr) {
-		case 0x1FD8:
-		case 0x1FD9:
-		case 0x1FDA:
-		case 0x1FDB:
-		case 0x1FDC:
-		case 0x1FDD:
-		case 0x1FDE:
-		case 0x1FDF:
-		case 0x1FE8:
-		case 0x1FE9:
-		case 0x1FEA:
-		case 0x1FEB:
-		case 0x1FEC:
-		case 0x1FED:
-		case 0x1FEE:
-		case 0x1FEF:		
+		case 0x1FD8 ... 0x1FDF:
+		case 0x1FE8 ... 0x1FEF:
 			Mapper_9_PPU_Latch_FDFE(nesaddr);
 			break;
 		default:
 			nesaddr += 8;
 			switch (nesaddr) {
-				case 0x1FD8:
-				case 0x1FD9:
-				case 0x1FDA:
-				case 0x1FDB:
-				case 0x1FDC:
-				case 0x1FDD:
-				case 0x1FDE:
-				case 0x1FDF:
-				case 0x1FE8:
-				case 0x1FE9:
-				case 0x1FEA:
-				case 0x1FEB:
-				case 0x1FEC:
-				case 0x1FED:
-				case 0x1FEE:
-				case 0x1FEF:		
+				case 0x1FD8 ... 0x1FDF:
+				case 0x1FE8 ... 0x1FEF:		
 					Mapper_9_PPU_Latch_FDFE(nesaddr);
 					break;
 			}
 			break;
 	}
 
-	for (index = ppuinfo.PPU_Scr_H_Bit; index < 8; index++) {
-		*(pPoint++) = pPalTbl + pbyCharData[index];
+	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+    unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+
+	switch (ppuinfo.PPU_Scr_H_Bit) {
+		case 0:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+		case 1:
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+		case 2:
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+		case 3:
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+		case 4:
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+		case 5:
+			*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);
+		case 6:
+			*(pPoint++) = pPalTbl + (byData1 & 3);
+		case 7:
+			*(pPoint++) = pPalTbl + (byData2 & 3);
 	}
 
 	nX++;
@@ -114,81 +89,42 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 		nameTableValue = *pbyNameTable;
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
-		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
-		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-		patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-		patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-		patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-		patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-		patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-		patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-		patternData[ 6 ] = byData1 & 3;
-		patternData[ 7 ] = byData2 & 3;
-		pbyCharData = patternData;
-
-		pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 		nesaddr = (characterBank * 0x400) + (characterIndex << 4) + nYBit;
 		switch (nesaddr) {
-			case 0x1FD8:
-			case 0x1FD9:
-			case 0x1FDA:
-			case 0x1FDB:
-			case 0x1FDC:
-			case 0x1FDD:
-			case 0x1FDE:
-			case 0x1FDF:
-			case 0x1FE8:
-			case 0x1FE9:
-			case 0x1FEA:
-			case 0x1FEB:
-			case 0x1FEC:
-			case 0x1FED:
-			case 0x1FEE:
-			case 0x1FEF:		
+			case 0x1FD8 ... 0x1FDF:
+			case 0x1FE8 ... 0x1FEF:
 				Mapper_9_PPU_Latch_FDFE(nesaddr);
 				break;
 			default:
 				nesaddr += 8;
 				switch (nesaddr) {
-					case 0x1FD8:
-					case 0x1FD9:
-					case 0x1FDA:
-					case 0x1FDB:
-					case 0x1FDC:
-					case 0x1FDD:
-					case 0x1FDE:
-					case 0x1FDF:
-					case 0x1FE8:
-					case 0x1FE9:
-					case 0x1FEA:
-					case 0x1FEB:
-					case 0x1FEC:
-					case 0x1FED:
-					case 0x1FEE:
-					case 0x1FEF:		
+					case 0x1FD8 ... 0x1FDF:
+					case 0x1FE8 ... 0x1FEF:		
 						Mapper_9_PPU_Latch_FDFE(nesaddr);
 						break;
 				}
 				break;
 		}
 
-		pPoint[0] = pPalTbl + pbyCharData[0];
-		pPoint[1] = pPalTbl + pbyCharData[1];
-		pPoint[2] = pPalTbl + pbyCharData[2];
-		pPoint[3] = pPalTbl + pbyCharData[3];
-		pPoint[4] = pPalTbl + pbyCharData[4];
-		pPoint[5] = pPalTbl + pbyCharData[5];
-		pPoint[6] = pPalTbl + pbyCharData[6];
-		pPoint[7] = pPalTbl + pbyCharData[7];
+		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+		pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
-		pPoint += 8;
+		*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);
+		*(pPoint++) = pPalTbl + (byData1 & 3);
+		*(pPoint++) = pPalTbl + (byData2 & 3);
+
 		nX++;
 
 		// are we crossing a name table boundary?
-		if(!(nX & 0x001F))
-		{
+		if (!(nX & 0x001F)) {
 			nNameTable ^= NAME_TABLE_H_MASK;
 			nX = 0;
 			pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
@@ -201,69 +137,78 @@ void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	nameTableValue = *pbyNameTable;
 	characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	characterIndex = (nameTableValue & 0x3F);
-	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
-	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
-	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-	patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-	patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-	patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-	patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-	patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-	patternData[ 6 ] = byData1 & 3;
-	patternData[ 7 ] = byData2 & 3;
-	pbyCharData = patternData;
-	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
 	nesaddr = (characterBank * 0x400) + (characterIndex << 4) + nYBit;
 	switch (nesaddr) {
-		case 0x1FD8:
-		case 0x1FD9:
-		case 0x1FDA:
-		case 0x1FDB:
-		case 0x1FDC:
-		case 0x1FDD:
-		case 0x1FDE:
-		case 0x1FDF:
-		case 0x1FE8:
-		case 0x1FE9:
-		case 0x1FEA:
-		case 0x1FEB:
-		case 0x1FEC:
-		case 0x1FED:
-		case 0x1FEE:
-		case 0x1FEF:		
+		case 0x1FD8 ... 0x1FDF:
+		case 0x1FE8 ... 0x1FEF:
 			Mapper_9_PPU_Latch_FDFE(nesaddr);
 			break;
 		default:
 			nesaddr += 8;
 			switch (nesaddr) {
-				case 0x1FD8:
-				case 0x1FD9:
-				case 0x1FDA:
-				case 0x1FDB:
-				case 0x1FDC:
-				case 0x1FDD:
-				case 0x1FDE:
-				case 0x1FDF:
-				case 0x1FE8:
-				case 0x1FE9:
-				case 0x1FEA:
-				case 0x1FEB:
-				case 0x1FEC:
-				case 0x1FED:
-				case 0x1FEE:
-				case 0x1FEF:		
+				case 0x1FD8 ... 0x1FDF:
+				case 0x1FE8 ... 0x1FEF:		
 					Mapper_9_PPU_Latch_FDFE(nesaddr);
 					break;
 			}
 			break;
 	}
 
-	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++) {
-		*(pPoint++) = pPalTbl + pbyCharData[index];
+	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
+	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );	
+
+	switch (ppuinfo.PPU_Scr_H_Bit) {
+		case 1:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			break;
+		case 2:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			break;
+		case 3:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);		
+			break;
+		case 4:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);		
+			break;
+		case 5:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);		
+			break;
+		case 6:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);		
+			break;
+		case 7:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);
+			*(pPoint++) = pPalTbl + (byData1 & 3);
+			break;
 	}
 
+	if (!(PPU_R1 & 0x02)) {
+		pPoint -= 256;
+		memset(pPoint, 0, 8);
+	}
 }
 
 void pNesX_Map9Simulate_BG_C(uint16* pPoint) {

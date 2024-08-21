@@ -12,6 +12,6 @@
 void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint);
 uint16 pNesX_Map9Simulate_Spr_C();
 void pNesX_Map9Simulate_BG_C();
-uint16 pNesX_Map9DrawLine_Spr_C(uint16* pSprBuf);
+uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* pSprBuf);
 
 #endif

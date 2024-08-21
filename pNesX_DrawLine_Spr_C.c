@@ -24,8 +24,6 @@ unsigned char NumSpritesToDraw;
 unsigned char SpritesToDraw[8];
 // Whether we overflowed sprites this scanline
 bool OverflowedSprites;
-// Whether the Sprite Render Buffer is clear
-// bool IsSpriteBufferClear;
 
 uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	int nX;
@@ -96,9 +94,10 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 		}
 	}
 	if (SpritesToDraw[indexOfLowest] == 0) {
-		unsigned char temp = SpritesToDraw[NumSpritesToDraw - 1];
-		SpritesToDraw[NumSpritesToDraw - 1] = SpritesToDraw[indexOfLowest];
-		SpritesToDraw[indexOfLowest] = temp;
+		for (unsigned char copyIndex = indexOfLowest; copyIndex < (NumSpritesToDraw - 1); copyIndex++) {
+			SpritesToDraw[copyIndex] = SpritesToDraw[copyIndex + 1];
+		}
+		SpritesToDraw[NumSpritesToDraw - 1] = 0;
 	}
 
 	// If sprite Rendering is Enabled and we're not on scanline 0 and we have sprites to draw
@@ -158,8 +157,8 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 								if (((nX + offset) < 255) && (*pPoint != 0)) {
 									SpriteJustHit = ppuinfo.PPU_Scanline;
 								}
-								if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) + 0x10;
+								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+									*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) | 0x50;
 								}
 							}
 						}
@@ -174,8 +173,8 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 								if (((nX + offset) < 255) && (*pPoint != 0)) {
 									SpriteJustHit = ppuinfo.PPU_Scanline;
 								}
-								if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) + 0x10;
+								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+									*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) | 0x50;
 								}
 							}
 						}
@@ -191,8 +190,8 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 						if ( pbyChrData[ 7 - offset ] ) {
 							// Clip leftmost 8 sprite pixels if that flag is not set
 							if (!(((nX + offset) < 8) && clipLeftmostEightPixels)) {
-								if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) + 0x10;
+								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+									*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) | 0x50;
 								}
 							}
 						}
@@ -204,8 +203,8 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 						if ( pbyChrData[ offset ] ) {
 							// Clip leftmost 8 sprite pixels if that flag is not set
 							if (!(((nX + offset) < 8) && clipLeftmostEightPixels)) {						
-								if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) + 0x10;
+								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+									*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) | 0x50;
 								}
 							}
 						}
@@ -215,6 +214,11 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			}
 		}
 	}
+
+	for (uint16 i = 0; i < 256; i++) {
+		scanline_buffer[i] &= 0x1f;
+	}
+
 	// This is probably not necessary, we don't need to report whether we overflowed sprites anymore since this routine is handling the flagging	
 	return NumSpritesToDraw + (OverflowedSprites ? 1 : 0); 
 }

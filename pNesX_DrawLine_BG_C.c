@@ -25,6 +25,8 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	nY4 = ( ( nY & 2 ) << 1 );
 
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
+	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
+	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );		
 
 	if (MapperNo == 5) {
 		Mapper_5_PPU_Latch_RenderScreen(1, 0);
@@ -36,8 +38,6 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
     unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );	
 
 	switch (ppuinfo.PPU_Scr_H_Bit) {
 		case 0:
