@@ -37,6 +37,9 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	unsigned char patternData[8];
 	unsigned char byData1;
 	unsigned char byData2;
+	unsigned char spriteBuffer[264];
+
+	memset4(spriteBuffer, 0, 264);
 
 	if (MapperNo == 5) {
 		Mapper_5_PPU_Latch_RenderScreen(0, 0);
@@ -87,6 +90,7 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	}
 
 	// If sprite 0 is in the list, we want to draw it first so that hits won't interfere with other sprites
+	/*
 	unsigned char indexOfLowest = 0;
 	for ( unsigned char nextIndex = 1; nextIndex < NumSpritesToDraw; nextIndex++) {
 		if (SpritesToDraw[nextIndex] < SpritesToDraw[indexOfLowest]) {
@@ -99,6 +103,7 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 		}
 		SpritesToDraw[NumSpritesToDraw - 1] = 0;
 	}
+	*/
 
 	// If sprite Rendering is Enabled and we're not on scanline 0 and we have sprites to draw
 	if ((ppuinfo.PPU_Scanline > 0) && 
@@ -143,23 +148,19 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
 			nX = pSPRRAM[ SPR_X ];
 
-			bool clipLeftmostEightPixels = !(PPU_R1 & 0x04);
-
+			unsigned char* pPoint = &spriteBuffer[nX];
 			// if we haven't hit sprite 0 yet, take that into account
 			if ((SpriteJustHit == SPRITE_HIT_SENTINEL) && (isSpriteZero)) {
-				unsigned char* pPoint = &scanline_buffer[nX];
 				if ( nAttr & SPR_ATTR_H_FLIP ) {
 					for (unsigned char offset = 0; offset < 8; offset++) {
 						// Horizontal flip
 						if ( pbyChrData[ 7 - offset ] ) {
 							// Clip leftmost 8 sprite pixels if that flag is not set
-							if (!(((nX + offset) < 8) && clipLeftmostEightPixels)) {
-								if (((nX + offset) < 255) && (*pPoint != 0)) {
-									SpriteJustHit = ppuinfo.PPU_Scanline;
-								}
-								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) | 0x50;
-								}
+							if (((nX + offset) < 255) && (scanline_buffer[nX + offset] != 0)) {
+								SpriteJustHit = ppuinfo.PPU_Scanline;
+							}
+							if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+								*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) | 0x10;
 							}
 						}
 						pPoint++;
@@ -169,13 +170,11 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 						// Horizontal flip
 						if ( pbyChrData[ offset ] ) {
 							// Clip leftmost 8 sprite pixels if that flag is not set
-							if (!(((nX + offset) < 8) && clipLeftmostEightPixels)) {					
-								if (((nX + offset) < 255) && (*pPoint != 0)) {
-									SpriteJustHit = ppuinfo.PPU_Scanline;
-								}
-								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) | 0x50;
-								}
+							if (((nX + offset) < 255) && (scanline_buffer[nX + offset] != 0)) {
+								SpriteJustHit = ppuinfo.PPU_Scanline;
+							}
+							if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+								*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) | 0x10;
 							}
 						}
 						pPoint++;
@@ -183,16 +182,13 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 				}
 			} else {
 			// if we have already hit sprite 0, don't worry about it
-				unsigned char* pPoint = &scanline_buffer[nX];
 				if ( nAttr & SPR_ATTR_H_FLIP ) {
 					for (unsigned char offset = 0; offset < 8; offset++) {
 						// Horizontal flip
 						if ( pbyChrData[ 7 - offset ] ) {
 							// Clip leftmost 8 sprite pixels if that flag is not set
-							if (!(((nX + offset) < 8) && clipLeftmostEightPixels)) {
-								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) | 0x50;
-								}
+							if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+								*pPoint = ((bySprCol | pbyChrData[ 7 - offset ]) & 0xf) | 0x10;
 							}
 						}
 						pPoint++;
@@ -202,10 +198,8 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 						// Horizontal flip
 						if ( pbyChrData[ offset ] ) {
 							// Clip leftmost 8 sprite pixels if that flag is not set
-							if (!(((nX + offset) < 8) && clipLeftmostEightPixels)) {						
-								if ((bySprCol & 0x80) || (*pPoint & 0x40) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
-									*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) | 0x50;
-								}
+							if ((bySprCol & 0x80) || ((scanline_buffer[nX + offset] % 4 == 0) && (scanline_buffer[nX + offset] <= 0x1c))) {
+								*pPoint = ((bySprCol | pbyChrData[ offset ]) & 0xf) | 0x10;
 							}
 						}
 						pPoint++;
@@ -215,8 +209,9 @@ uint16 pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 		}
 	}
 
-	for (uint16 i = 0; i < 256; i++) {
-		scanline_buffer[i] &= 0x1f;
+	for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
+		if (spriteBuffer[i] != 0)
+			scanline_buffer[i] = spriteBuffer[i];
 	}
 
 	// This is probably not necessary, we don't need to report whether we overflowed sprites anymore since this routine is handling the flagging	
