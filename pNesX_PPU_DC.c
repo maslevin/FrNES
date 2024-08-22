@@ -57,10 +57,6 @@ void pNesX_DrawLine() {
 		nSprCnt = pNesX_DrawLine_Spr_C(Scanline_Buffer);
 	}
 
-	//Make Sure there's only 8 Sprites on a line
-	if ( nSprCnt == 8 )
-		PPU_R2 |= R2_MAX_SP;  // Set a flag of maximum sprites on scanline
-
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(Scanline_Buffer, texture_address, 256);
 	endProfiling(2);
