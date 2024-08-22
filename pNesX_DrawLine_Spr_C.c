@@ -25,18 +25,18 @@ unsigned char SpritesToDraw[8];
 // Whether we overflowed sprites this scanline
 bool OverflowedSprites;
 
-uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
+void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	int nX;
 	int nY;
 	int nYBit;
 	unsigned char *pSPRRAM;
 	int nAttr;
 	uint16 bySprCol;
-	unsigned char* pbyChrData;
 	unsigned char* pbyBGData;
 	unsigned char patternData[8];
 	unsigned char byData1;
 	unsigned char byData2;
+	unsigned char spriteBuffer[264];
 
 	if (MapperNo == 5) {
 		Mapper_5_PPU_Latch_RenderScreen(0, 0);
@@ -55,7 +55,7 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	// Otherwise move the SpritesToDrawNextScanline to this scanline
 		NumSpritesToDraw = NumSpritesToDrawNextScanline;
 		memcpy(SpritesToDraw, SpritesToDrawNextScanline, 8);
-		NumSpritesToDrawNextScanline = 0;	
+		NumSpritesToDrawNextScanline = 0;
 
 		// More than 8 sprites were requested to be drawn on this scanline, so set the PPU flag for overflow
 		if (OverflowSpritesOnNextScanline) {
@@ -68,9 +68,6 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 			OverflowedSprites = false;
 		}
 	}
-
-	// Clear the sprite render buffer
-	memset4(pSprBuf, 0, 272 * 2);		
 
 	// Calculate the sprites to draw on the next scanline
 	for ( unsigned char spriteIndex = 0; spriteIndex < 64; spriteIndex++) {
@@ -93,6 +90,7 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
+		memset4(spriteBuffer, 0, 264);
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
@@ -123,74 +121,48 @@ uint16 pNesX_DrawLine_Spr_C(uint16* pSprBuf) {
 			patternData[ 5 ] = ( byData2 >> 2 ) & 3;
 			patternData[ 6 ] = byData1 & 3;
 			patternData[ 7 ] = byData2 & 3;
-			pbyChrData = patternData;
 
 			// we invert the priority attribute here for some reason?
 			nAttr ^= SPR_ATTR_PRI;
-			bySprCol = ( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2;
+			bySprCol = (( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2 ) | ((pSPRRAM == SPRRAM) ? 0x40 : 0x00);
 			nX = pSPRRAM[ SPR_X ];
-			uint16 isSpriteZeroPixel = ((pSPRRAM == SPRRAM) ? 0x0100 : 0x0000);
 
+			unsigned char* pPoint = &spriteBuffer[nX];
+			// if we haven't hit sprite 0 yet, take that into account
 			if ( nAttr & SPR_ATTR_H_FLIP ) {
-				// Horizontal flip
-				if ( pbyChrData[ 7 ] ) {
-					pSprBuf[ nX + 0 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 7 ];
-				}
-				if ( pbyChrData[ 6 ] ) {
-					pSprBuf[ nX + 1 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 6 ];
-				}
-				if ( pbyChrData[ 5 ] ) {
-					pSprBuf[ nX + 2 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 5 ];
-				}
-				if ( pbyChrData[ 4 ] ) {
-					pSprBuf[ nX + 3 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 4 ];
-				}
-				if ( pbyChrData[ 3 ] ) {
-					pSprBuf[ nX + 4 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 3 ];
-				}
-				if ( pbyChrData[ 2 ] ) {
-					pSprBuf[ nX + 5 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 2 ];
-				}
-				if ( pbyChrData[ 1 ] ) {
-					pSprBuf[ nX + 6 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 1 ];
-				}
-				if ( pbyChrData[ 0 ] ) {
-					pSprBuf[ nX + 7 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 0 ];
+				for (unsigned char offset = 0; offset < 8; offset++) {
+					// Horizontal flip
+					if ( patternData[ 7 - offset ] ) {
+						*pPoint = (bySprCol | patternData[ 7 - offset ]);
+					}
+					pPoint++;
 				}
 			} else {
-				// Non flip
-				if ( pbyChrData[ 0 ] ) {
-					pSprBuf[ nX + 0 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 0 ];
-				}
-				if ( pbyChrData[ 1 ] ) {
-					pSprBuf[ nX + 1 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 1 ];
-				}
-				if ( pbyChrData[ 2 ] ) {
-					pSprBuf[ nX + 2 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 2 ];
-				}
-				if ( pbyChrData[ 3 ] ) {
-					pSprBuf[ nX + 3 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 3 ];
-				}
-				if ( pbyChrData[ 4 ] ) {
-					pSprBuf[ nX + 4 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 4 ];
-				}
-				if ( pbyChrData[ 5 ] ) {
-					pSprBuf[ nX + 5 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 5 ];
-				}
-				if ( pbyChrData[ 6 ] ) {
-					pSprBuf[ nX + 6 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 6 ];
-				}
-				if ( pbyChrData[ 7 ] ) {
-					pSprBuf[ nX + 7 ] = isSpriteZeroPixel | bySprCol | pbyChrData[ 7 ];
+				for (unsigned char offset = 0; offset < 8; offset++) {
+					if ( patternData[ offset ] ) {
+						*pPoint = (bySprCol | patternData[ offset ]);
+					}
+					pPoint++;
 				}
 			}
 		}
 
-		// If the left clip flag for sprites is set, clear out the leftmost 8 pixels of the sprite buffer
-		if (!(PPU_R1 & 0x04)) {
-			memset(pSprBuf, 0, 16);
-		}
+		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
+			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
+				if ((i < 255) && (spriteBuffer[i] & 0x40) && (scanline_buffer[i] != 0)) {
+					SpriteJustHit = ppuinfo.PPU_Scanline;
+				}
+
+				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
+					scanline_buffer[i] = (spriteBuffer[i] & 0xf) | 0x10;
+				}
+			}
+		}  else {
+			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
+				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
+					scanline_buffer[i] = (spriteBuffer[i] & 0xf) | 0x10;
+				}
+			}
+		}		
 	}
-	// This is probably not necessary, we don't need to report whether we overflowed sprites anymore since this routine is handling the flagging	
-	return NumSpritesToDraw + (OverflowedSprites ? 1 : 0); 
 }

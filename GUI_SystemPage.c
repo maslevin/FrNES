@@ -11,7 +11,6 @@
 #include "macros.h"
 
 #include "pNesX_System_DC.h"
-#include "pNesX_Utils.h"
 
 char Frameskip_Buffer[50];
 
@@ -20,8 +19,8 @@ char Options_System[] = "System Options";
 char Options_Frameskip[] = "Frameskip";
 char Options_Sound_Checked[] = "<Check>Enable Sound,CBC_CHECKED";
 char Options_Sound_Unchecked[] = "<Check>Enable Sound,CBC_UNCHECKED";
-char Options_CDFormat_FrNES[] = "Use CD Format:,FrNES<RLAlign>";
-char Options_CDFormat_NesterDC[] = "Use CD Format:,NesterDC<RLAlign>";
+char Options_Show_Framerate_Checked[] = "<Check>Show Framerate,CBC_CHECKED";
+char Options_Show_Framerate_Unchecked[] = "<Check>Show Framerate,CBC_UNCHECKED";
 char Options_VMU[] = "VMU Options";
 char Options_Port[] = "Use VMU Port";
 char Options_CXXX[] = "No VMU Detected";
@@ -46,32 +45,29 @@ const int Num_System_Options = 10;
 uint16* opt_SoundEnabled;
 uint16* opt_FrameSkip;
 uint16* opt_AutoFrameSkip;
-uint16* opt_DiscFormat;
+uint16* opt_ShowFrameRate;
 int16* opt_VMUPort;
 uint16* opt_SRAM;
 
-void Allocate_System_Options()
-{
+void Allocate_System_Options() {
 	opt_SoundEnabled = malloc(sizeof(uint16));
 	opt_FrameSkip = malloc(sizeof(uint16));
 	opt_AutoFrameSkip = malloc(sizeof(uint16));
-	opt_DiscFormat = malloc(sizeof(uint16));
+	opt_ShowFrameRate = malloc(sizeof(uint16));
 	opt_VMUPort = malloc(sizeof(int16));
 	opt_SRAM = malloc(sizeof(uint16));
 }
 
-void Free_System_Options()
-{
+void Free_System_Options() {
 	free(opt_SoundEnabled);
 	free(opt_FrameSkip);
 	free(opt_AutoFrameSkip);
-	free(opt_DiscFormat);
+	free(opt_ShowFrameRate);
 	free(opt_VMUPort);
 	free(opt_SRAM);
 }
 
-void setup_system_options_screen()
-{
+void setup_system_options_screen() {
 	//Set Up Window Data Features
 	mydata.x = 208.0f;
 	mydata.y = 32.0f;
@@ -86,11 +82,12 @@ void setup_system_options_screen()
 
 	//Set Up Window Style Features
 	mystyle.Header_Text_Scale = 1.0f;
-	mystyle.Text_Scale = 0.40f;			
+	mystyle.Text_Scale = 0.60f;			
 	mystyle.Border_Thickness = 5.0f;
 	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
 	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
 	mystyle.Left_Margin = 15;
+	mystyle.Line_Spacing = 2.0f;
 	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
 	mystyle.Text_Color = GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
@@ -114,6 +111,7 @@ void setup_system_options_screen()
 	helpstyle.Border_Color = GUI_OutsideWindowColor;
 	helpstyle.Inside_Color = GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
+	helpstyle.Line_Spacing = 0.0f;	
 	helpstyle.Header_Text_Color = GUI_TextColor;
 	helpstyle.Text_Color = GUI_TextColor;
 	helpstyle.Max_Items = 10;
@@ -121,12 +119,8 @@ void setup_system_options_screen()
 	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
-void Generate_System_Options_List()
-{
-	char tempbuffer[255];
-
-	switch(*opt_SoundEnabled)
-	{
+void Generate_System_Options_List() {
+	switch(*opt_SoundEnabled) {
 		case 0:
 			System_Options[0] = Options_Sound_Unchecked;
 			break;
@@ -135,14 +129,9 @@ void Generate_System_Options_List()
 			break;
 	}
 
-	switch(*opt_AutoFrameSkip)
-	{
+	switch(*opt_AutoFrameSkip) {
 		case 0:
-			pNesX_itoa(*opt_FrameSkip, tempbuffer);
-			strcpy(Frameskip_Buffer, Options_Frameskip);
-			strcat(Frameskip_Buffer, ",");
-			strcat(Frameskip_Buffer, tempbuffer);
-			strcat(Frameskip_Buffer, "<RLAlign>");
+			snprintf(Frameskip_Buffer, 50, "%s,%u<RLAlign>", Options_Frameskip, *opt_FrameSkip);
 			System_Options[1] = Frameskip_Buffer;
 			break;
 		case 1:
@@ -154,21 +143,19 @@ void Generate_System_Options_List()
 			break;
 	}
 
-	switch(*opt_DiscFormat)
-	{
+	switch(*opt_ShowFrameRate) {
 		case 0:
-			System_Options[2] = Options_CDFormat_FrNES;
+			System_Options[2] = Options_Show_Framerate_Unchecked;
 			break;
 		case 1:
-			System_Options[2] = Options_CDFormat_NesterDC;
+			System_Options[2] = Options_Show_Framerate_Checked;
 			break;
 	}
 
 	System_Options[3] = Options_VMU;
 	System_Options[4] = Options_Port;
 	
-	switch(*opt_VMUPort)
-	{
+	switch(*opt_VMUPort) {
 		case -1:
 			System_Options[5] = Options_CXXX;
 			break;
@@ -199,8 +186,7 @@ void Generate_System_Options_List()
 	}
 
 
-	switch(*opt_SRAM)
-	{
+	switch(*opt_SRAM) {
 		case 0:
 			System_Options[6] = Options_SRAM_Unchecked;
 			break;
@@ -214,13 +200,11 @@ void Generate_System_Options_List()
 	System_Options[9] = Options_Rescan;
 }
 
-void Handle_System_Interface(cont_state_t* my_state)
-{
+void Handle_System_Interface(cont_state_t* my_state) {
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
 		(mydata.Highlighted_Index < Num_System_Options) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index++;
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
 			mydata.Top_Index++;
@@ -230,8 +214,7 @@ void Handle_System_Interface(cont_state_t* my_state)
 	//Up Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_UP) && 
 		(mydata.Highlighted_Index > 0) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index--;
 		if (mydata.Top_Index > mydata.Highlighted_Index)
 			mydata.Top_Index--;
@@ -240,15 +223,18 @@ void Handle_System_Interface(cont_state_t* my_state)
 
 	//Handle the toggle boxes
 	if ((my_state -> buttons & CONT_A) && 
-		(invalida == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(invalida == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 0:
 				*opt_SoundEnabled = 1 - (*opt_SoundEnabled);
 				Generate_System_Options_List();
 				invalida = 1;
 				break;
+			case 2:
+				*opt_ShowFrameRate = 1 - (*opt_ShowFrameRate);
+				Generate_System_Options_List();
+				invalida = 1;
+				break;				
 			case 6:
 				*opt_SRAM  = 1 - (*opt_SRAM);
 				Generate_System_Options_List();
@@ -314,14 +300,6 @@ void Handle_System_Interface(cont_state_t* my_state)
 				}
 				break;
 
-			case 2:
-				if ((*opt_DiscFormat) > 0)
-				{
-					(*opt_DiscFormat)--;
-					Generate_System_Options_List();
-					xkeyhit = 1;
-				}
-				break;
 			case 5:
 /*			
 				if ((*opt_VMUPort) > 0)
@@ -362,14 +340,6 @@ void Handle_System_Interface(cont_state_t* my_state)
 				}
 				break;
 
-			case 2:
-				if ((*opt_DiscFormat) < 1)
-				{
-					(*opt_DiscFormat)++;
-					Generate_System_Options_List();
-					xkeyhit = 1;
-				}
-				break;
 			case 5:
 /*			
 				if ((*opt_VMUPort < 7) && (*opt_VMUPort != -1))

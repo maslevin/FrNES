@@ -307,6 +307,28 @@ void destroy_font(Font* font) {
 	deleteAllPages(font);
 }
 
+void measureLine(Font* font, char* string, float scale, float* measuredWidth) {
+	char* ptr = string;
+	float accX = 0.0f;
+
+	CharDescriptor** descriptors = &(font -> characters);
+	CharDescriptor* descriptor;
+	while (((*ptr) != 0) && ((*ptr) != '\n')) {
+		uint32 id = (uint32)*ptr;
+
+		HASH_FIND_INT(*descriptors, &id, descriptor);
+		if (descriptor != NULL) {
+			accX += (descriptor -> xAdv * scale);
+		} else {
+			accX += (font -> defChar -> xAdv * scale);
+		}
+
+		ptr++;
+	}		
+
+	*measuredWidth = accX;
+}
+
 void drawChar(CharDescriptor* descriptor, float xPos, float yPos, float zPos, int texWidth, int texHeight, uint32 color, float scale) {
     pvr_vertex_t    vert;
     float           u1, v1, u2, v2, yDatum;
@@ -356,10 +378,16 @@ void draw_string(Font* font, int currentList, char* string,
 	int currentPage = -1;
 	float drawX = xPos;
 
+	if (textAlignmentMode == RIGHT) {
+		float measuredWidth;
+		measureLine(font, string, scale, &measuredWidth);
+		drawX = xPos + width - measuredWidth;
+	}
+
+	CharDescriptor** descriptors = &(font -> characters);
+	CharDescriptor* descriptor;
 	while ((*ptr) != 0) {
 		uint32 id = (uint32)*ptr;
-		CharDescriptor** descriptors = &(font -> characters);
-		CharDescriptor* descriptor;
 
 		HASH_FIND_INT(*descriptors, &id, descriptor);
 		if (descriptor != NULL) {

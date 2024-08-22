@@ -14,9 +14,7 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	uint16 nYBit;
 	unsigned char pPalTbl;
 	int nIdx;
-	int index;
 	uint16 nNameTable;
-	unsigned char* pbyCharData;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
 
@@ -28,7 +26,7 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 
 	pbyNameTable = PPUBANK[nNameTable] + nY * 32 + nX;
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
+	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );		
 
 	if (MapperNo == 5) {
 		Mapper_5_PPU_Latch_RenderScreen(1, 0);
@@ -37,25 +35,27 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char nameTableValue = *pbyNameTable;
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	unsigned char characterIndex = (nameTableValue & 0x3F);
-	unsigned char patternData[8];
 	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
     unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-	patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-	patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-	patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-	patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-	patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-	patternData[ 6 ] = byData1 & 3;
-	patternData[ 7 ] = byData2 & 3;
-	pbyCharData = patternData;
 
-	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY / 4) * 8);
-	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );	
-
-	for (index = ppuinfo.PPU_Scr_H_Bit; index < 8; index++) {
-		*(pPoint++) = pPalTbl + pbyCharData[index];
+	switch (ppuinfo.PPU_Scr_H_Bit) {
+		case 0:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+		case 1:
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+		case 2:
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+		case 3:
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+		case 4:
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+		case 5:
+			*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);
+		case 6:
+			*(pPoint++) = pPalTbl + (byData1 & 3);
+		case 7:
+			*(pPoint++) = pPalTbl + (byData2 & 3);
 	}
 
 	nX++;
@@ -77,28 +77,17 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-		patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-		patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-		patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-		patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-		patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-		patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-		patternData[ 6 ] = byData1 & 3;
-		patternData[ 7 ] = byData2 & 3;
-		pbyCharData = patternData;
-
 		pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
 
-		pPoint[0] = pPalTbl + pbyCharData[0];
-		pPoint[1] = pPalTbl + pbyCharData[1];
-		pPoint[2] = pPalTbl + pbyCharData[2];
-		pPoint[3] = pPalTbl + pbyCharData[3];
-		pPoint[4] = pPalTbl + pbyCharData[4];
-		pPoint[5] = pPalTbl + pbyCharData[5];
-		pPoint[6] = pPalTbl + pbyCharData[6];
-		pPoint[7] = pPalTbl + pbyCharData[7];
+		*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+		*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);
+		*(pPoint++) = pPalTbl + (byData1 & 3);
+		*(pPoint++) = pPalTbl + (byData2 & 3);
 
-		pPoint += 8;
 		nX++;
 
 		// are we crossing a name table boundary?
@@ -118,19 +107,51 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	patternData[ 0 ]     = ( byData1 >> 6 ) & 3;
-	patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-	patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-	patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-	patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-	patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-	patternData[ 6 ] = byData1 & 3;
-	patternData[ 7 ] = byData2 & 3;
-	pbyCharData = patternData;
 	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 3 ) << 2 );
-
-	for (index = 0; index < ppuinfo.PPU_Scr_H_Bit; index++) {
-		*(pPoint++) = pPalTbl + pbyCharData[index];
+	
+	switch (ppuinfo.PPU_Scr_H_Bit) {
+		case 1:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			break;
+		case 2:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			break;
+		case 3:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);		
+			break;
+		case 4:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);		
+			break;
+		case 5:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);		
+			break;
+		case 6:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);		
+			break;
+		case 7:
+			*(pPoint++) = pPalTbl + (( byData1 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 6 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 4 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData1 >> 2 ) & 3);
+			*(pPoint++) = pPalTbl + (( byData2 >> 2 ) & 3);
+			*(pPoint++) = pPalTbl + (byData1 & 3);
+			break;
 	}
 
 	if (!(PPU_R1 & 0x02)) {

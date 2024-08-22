@@ -82,10 +82,13 @@ typedef struct {
 	unsigned char texture[FRAMEBUFFER_PIXELS];
 } VQ_Texture;
 
-extern VQ_Texture* PVR_NESScreen1_Offset;
-extern VQ_Texture* PVR_NESScreen2_Offset;
+/* Display Buffer */
+#define NUM_PVR_FRAMES 3
 
-//extern void pNesX_Texture_Write( void* dest, void* src);
+extern VQ_Texture* WorkFrame;
+extern uint16 WorkFrameIdx;
+extern VQ_Texture* WorkFrames[NUM_PVR_FRAMES];
+extern unsigned char* codebook;
 
 #define NAME_TABLE0  8
 #define NAME_TABLE1  9
@@ -167,6 +170,7 @@ extern int SpriteJustHit;
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
 /*-------------------------------------------------------------------*/
+extern double frames_per_second;
 
 /* Frame Skip */
 extern uint16 FrameSkip;

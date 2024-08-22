@@ -10,6 +10,7 @@
 #define __PNESX_SYS_DC_H
 
 #include <kos.h>
+
 #include "font.h"
 #include "TextWindow.h"
 #include "ROMLoad.h"
@@ -65,7 +66,5 @@ void pNesX_DebugPrint(char* fmt, ...);
 #else
 #define pNesX_DebugPrint(...) (0)
 #endif
-
-extern uint16 WorkFrameIdx;
 
 #endif

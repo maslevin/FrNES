@@ -13,6 +13,7 @@ Description: A set of functions to draw a text window suitable for a GUI
 #include <string.h>
 #include "font.h"
 
+#define CIRCLE_TRIANGLES 64
 #define CORNER_TRIANGLES 16
 #define CORNER_RADIUS 16
 
@@ -35,6 +36,7 @@ typedef struct
 
 	//Margin Info
 	float Left_Margin;
+	float Line_Spacing;
 	
 	//Not Implemented Yet -- Probably Never Will Be Either :D
 	int IsTransparent;

@@ -29,7 +29,7 @@
 
 #include "pNesX_System.h"
 #include "pNesX_System_DC.h"
-#include "pNesX_Utils.h"
+#include "profile.h"
 #include "vmu_icons.h"
 #include "GUI_MainMenu.h"
 #include "GUI_FileBrowser.h"
@@ -125,10 +125,10 @@ uint16 default_BKey = 2;
 uint16 default_Stretch = 1;
 uint16 default_Filter = 1;
 uint16 default_Profile = 1;
-uint16 default_Format = 0;
 uint16 default_VMUPort = 0;
 uint16 default_SRAM = 1;
 uint16 default_AutoFrameSkip = 0;
+uint16 default_ShowFrameRate = 0;
 uint16 default_Clip = 0;
 
 uint16 color;
@@ -138,10 +138,6 @@ int textheight;
 int interface_offset;
 
 Font* font;
-
-VQ_Texture* PVR_NESScreen1_Offset;
-VQ_Texture* PVR_NESScreen2_Offset;
-unsigned char* codebook;
 
 pvr_poly_hdr_t my_pheader;
 pvr_vertex_t my_vertex;
@@ -343,12 +339,13 @@ int SaveSRAM() {
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
 
 			printf("VMU: Compressing SRAM buffer\n");
-			const unsigned char compressedBuffer[0x2200 + 600];
-			unsigned int compressedLength = 0x2200 + 600;
+			unsigned int compressedLength = 0x2200 + 0x1000;
+			const unsigned char compressedBuffer[compressedLength];
 			int result = BZ2_bzBuffToBuffCompress((char*)compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 9, 0, 0);
 
 			if (result != BZ_OK) {
 				printf("VMU: bz2 Compression Failed [%i]\n", result);
+				draw_VMU_icon(vmu, vmu_screen_error);
 				break;
 			} else {
 				printf("VMU: bz2 Compression Succeeded [%i bytes]\n", compressedLength);
@@ -466,9 +463,11 @@ void pvr_setup() {
 }
 
 void initVQTextures() {
-	PVR_NESScreen1_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
-	PVR_NESScreen2_Offset = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
- 	codebook = memalign(32, 2048);	
+	for (uint32 i = 0; i < NUM_PVR_FRAMES; i++) {
+		WorkFrames[i] = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
+		printf("Allocated frame [%lu] at address [0x%8lX]\n", i, (uint32)WorkFrames[i]);
+	}
+ 	codebook = memalign(64, 2048);	
 }
 
 bool checkForAutoROM() {
@@ -570,7 +569,7 @@ int main() {
 	*opt_SoundEnabled = default_Sound;
 	*opt_FrameSkip = default_FrameSkip;
 	*opt_AutoFrameSkip = default_AutoFrameSkip;
-	*opt_DiscFormat = default_Format;
+	*opt_ShowFrameRate = default_ShowFrameRate;
 	*opt_SRAM = default_SRAM;
 
 	printf("Initializing VMUs\n");
@@ -866,11 +865,7 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 }
 
 void pNesX_LoadFrame() {
-	pvr_ptr_t texture = PVR_NESScreen2_Offset;
-	if (WorkFrameIdx) {
-		texture = PVR_NESScreen1_Offset;
-	}
-
+	startProfiling(3);
 	pvr_wait_ready();
 	pvr_scene_begin();
 
@@ -892,9 +887,9 @@ void pNesX_LoadFrame() {
 		*codebookEntry++ = codebookValue;
 		*codebookEntry++ = codebookValue;
 	}
-	pvr_txr_load(codebook, texture, 2048);
+	pvr_txr_load(codebook, WorkFrame -> codebook, 2048);
 
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, texture, filter);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
 
@@ -940,8 +935,33 @@ void pNesX_LoadFrame() {
 	my_vertex.v = texture_v1;
 	pvr_prim(&my_vertex, sizeof(my_vertex));
 
-	pvr_list_finish();	
+	pvr_list_finish();
+
+	if (*opt_ShowFrameRate) {
+		pvr_list_begin(PVR_LIST_TR_POLY);
+
+		char fps[10];
+		snprintf(fps, 10, "%u", (uint16)frames_per_second);
+
+		draw_string(font,
+			PVR_LIST_TR_POLY,
+			fps,
+			640.0 - 60.0f,
+			10.0f,
+			35.0f,
+			45.0f,
+			35.0f,
+			SINGLE,
+			RIGHT,
+			0xFFFFFFFF,
+			0.80f
+		);
+
+		pvr_list_finish();
+	}		
+
 	pvr_scene_finish();
+	endProfiling(3);
 }
 
 void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount)
