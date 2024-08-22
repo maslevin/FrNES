@@ -21,14 +21,13 @@ extern unsigned char SpritesToDraw[8];
 // Whether we overflowed sprites this scanline
 extern bool OverflowedSprites;
 
-uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
+void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	int nX;
 	int nY;
 	int nYBit;
 	unsigned char *pSPRRAM;
 	int nAttr;
 	unsigned char bySprCol;
-	unsigned char* pbyChrData;
 	unsigned char* pbyBGData;
 	unsigned char patternData[8];	
 	unsigned char byData1;
@@ -145,7 +144,6 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			patternData[ 5 ] = ( byData2 >> 2 ) & 3;
 			patternData[ 6 ] = byData1 & 3;
 			patternData[ 7 ] = byData2 & 3;
-			pbyChrData = patternData;
 
 			// we invert the priority attribute here for some reason?
 			nAttr ^= SPR_ATTR_PRI;
@@ -157,15 +155,15 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			if ( nAttr & SPR_ATTR_H_FLIP ) {
 				for (unsigned char offset = 0; offset < 8; offset++) {
 					// Horizontal flip
-					if ( pbyChrData[ 7 - offset ] ) {
-						*pPoint = (bySprCol | pbyChrData[ 7 - offset ]);
+					if ( patternData[ 7 - offset ] ) {
+						*pPoint = (bySprCol | patternData[ 7 - offset ]);
 					}
 					pPoint++;
 				}
 			} else {
 				for (unsigned char offset = 0; offset < 8; offset++) {
-					if ( pbyChrData[ offset ] ) {
-						*pPoint = (bySprCol | pbyChrData[ offset ]);
+					if ( patternData[ offset ] ) {
+						*pPoint = (bySprCol | patternData[ offset ]);
 					}
 					pPoint++;
 				}
@@ -190,12 +188,9 @@ uint16 pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			}
 		}		
 	}
-
-	// This is probably not necessary, we don't need to report whether we overflowed sprites anymore since this routine is handling the flagging	
-	return NumSpritesToDraw + (OverflowedSprites ? 1 : 0); 	
 }
 
-uint16 pNesX_Map9Simulate_Spr_C()
+void pNesX_Map9Simulate_Spr_C()
 {
 	int nY;
 	unsigned char *pSPRRAM;
@@ -229,6 +224,4 @@ uint16 pNesX_Map9Simulate_Spr_C()
 
 		}
 	}
-
-	return nSprCnt;
 }

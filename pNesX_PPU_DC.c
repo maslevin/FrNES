@@ -20,7 +20,6 @@
 #include "Mapper.h"
 
 #define __ALIGN32__		__attribute__ ((aligned (32)))
-__ALIGN32__ uint16 pSprBuf[264];
 __ALIGN32__ unsigned char Scanline_Buffer[256];
 
 extern uint16 PPU_Temp;
@@ -38,7 +37,6 @@ void pNesX_StartFrame() {
 void pNesX_DrawLine() {
 	startProfiling(2);
 	void* texture_address;
-	int nSprCnt = 0;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
@@ -51,10 +49,10 @@ void pNesX_DrawLine() {
 
 	if (MapperNo == 9) {
 		pNesX_Map9DrawLine_BG_C(Scanline_Buffer);
-		nSprCnt = pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
+		pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
 	} else {
 		pNesX_DrawLine_BG_C(Scanline_Buffer);
-		nSprCnt = pNesX_DrawLine_Spr_C(Scanline_Buffer);
+		pNesX_DrawLine_Spr_C(Scanline_Buffer);
 	}
 
 	//Move the scanline buffer to the PVR texture
