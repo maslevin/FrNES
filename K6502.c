@@ -217,9 +217,6 @@ void DisassembleInstruction(char* Opcode, char* fmt, uint16 value) {
 	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
-	if (DisassemblyBufferIndex == 0) {
-		HALT = 1;
-	}
 	REALPC;
 }
 
@@ -234,9 +231,6 @@ void DisassembleInstruction2(char* Opcode, char* fmt, uint16 value, uint16 value
 	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
-	if (DisassemblyBufferIndex == 0) {
-		HALT = 1;
-	}	
 	REALPC;
 }
 
@@ -249,6 +243,7 @@ void UploadDisassembly() {
 	if (PCFile != -1) {
 		int bufferIndex = DisassemblyBufferIndex;
 		while (bufferIndex != DisassemblyBufferIndex - 1) {
+			printf("Writing record [%i]\n", bufferIndex);
 			if (strcmp(DisassemblyBuffer[bufferIndex], "") != 0) {
 				fs_write(PCFile, DisassemblyBuffer[bufferIndex], strlen(DisassemblyBuffer[bufferIndex]));
 				fs_write(PCFile, "\n", 1);
@@ -257,6 +252,7 @@ void UploadDisassembly() {
 			bufferIndex %= MAX_DISASM_STEPS;
 		}
 		fs_close(PCFile);
+		printf("Closed file on PC\n");
 	} else {
 		printf("Error: Unable to Open File on PC Host\n");
 	}
@@ -1284,6 +1280,7 @@ void K6502_Step( uint16 wClocks ) {
 				break;
 
 			default:
+				Op_XX();
 				break;
 		}
 

@@ -37,6 +37,7 @@
 #include "Mapper_30.h"
 #include "Mapper_67.h"
 #include "Mapper_69.h"
+#include "Mapper_73.h"
 #include "Mapper_85.h"
 #include "Mapper_119.h"
 
@@ -254,7 +255,15 @@ MapperTable Mappers[] = {
 	{ 70, NULL },
 	{ 71, NULL },
 	{ 72, NULL },
-	{ 73, NULL },
+	{ 
+		73, &(struct Mapper) {
+			.init = Mapper_73_Init,
+			.write = Mapper_73_Write,
+			.read = Mapper_0_Read,
+			.vsync = Mapper_0_VSync,
+			.hsync = Mapper_73_HSync
+		}
+	},
 	{ 74, NULL },
 	{ 75, NULL },
 	{ 76, NULL },
