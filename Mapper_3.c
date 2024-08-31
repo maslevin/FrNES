@@ -38,17 +38,17 @@ void Mapper_3_Init() {
 /*  Mapper 3 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Mapper_3_Write( uint16 wAddr, unsigned char byData ) {
-	uint16 base;
+	if (wAddr & 0x8000) {
+		//printf("Map3: Setting PPU banks to page [%u]\n", byData);
+		uint16 base = (byData % NesHeader.byVRomSize) * 8;
 
-	byData &= ((NesHeader.byVRomSize * 8) >> 1) - 1;
-
-	base = ((uint16)byData) << 3;
-	PPUBANK[0] = &VROM[ (base * 0x400) ];
-	PPUBANK[1] = &VROM[ ((base + 1) * 0x400) ];
-	PPUBANK[2] = &VROM[ ((base + 2) * 0x400) ];
-	PPUBANK[3] = &VROM[ ((base + 3) * 0x400) ];
-	PPUBANK[4] = &VROM[ ((base + 4) * 0x400) ];
-	PPUBANK[5] = &VROM[ ((base + 5) * 0x400) ];
-	PPUBANK[6] = &VROM[ ((base + 6) * 0x400) ];
-	PPUBANK[7] = &VROM[ ((base + 7) * 0x400) ];
+		PPUBANK[0] = &VROM[ (base * 0x400) ];
+		PPUBANK[1] = &VROM[ ((base + 1) * 0x400) ];
+		PPUBANK[2] = &VROM[ ((base + 2) * 0x400) ];
+		PPUBANK[3] = &VROM[ ((base + 3) * 0x400) ];
+		PPUBANK[4] = &VROM[ ((base + 4) * 0x400) ];
+		PPUBANK[5] = &VROM[ ((base + 5) * 0x400) ];
+		PPUBANK[6] = &VROM[ ((base + 6) * 0x400) ];
+		PPUBANK[7] = &VROM[ ((base + 7) * 0x400) ];
+	}
 }

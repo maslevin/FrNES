@@ -57,6 +57,9 @@ void Mapper_4_Set_CPU_banks() {
 /*  Mapper 4 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Mapper_4_Write( uint16 wAddr, unsigned char byData ) {
+	if (!(wAddr & 0x8000))
+		return;
+
     uint16 wMapAddr;
 
     wMapAddr = wAddr & 0xe001;

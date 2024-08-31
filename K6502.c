@@ -243,7 +243,6 @@ void UploadDisassembly() {
 	if (PCFile != -1) {
 		int bufferIndex = DisassemblyBufferIndex;
 		while (bufferIndex != DisassemblyBufferIndex - 1) {
-			printf("Writing record [%i]\n", bufferIndex);
 			if (strcmp(DisassemblyBuffer[bufferIndex], "") != 0) {
 				fs_write(PCFile, DisassemblyBuffer[bufferIndex], strlen(DisassemblyBuffer[bufferIndex]));
 				fs_write(PCFile, "\n", 1);
