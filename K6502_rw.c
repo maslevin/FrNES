@@ -318,7 +318,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     break;
 
                 default: {               
-                    if (wAddr > 0x4017) {
+                    if (wAddr >= 0x4017) {
                         mapper -> write (wAddr, byData);
 
                         // Set Bank Table
@@ -328,11 +328,11 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         BankTable[ 6 ] = ROMBANK2;
                         BankTable[ 7 ] = ROMBANK3;
                         REALPC;
-                    }
-                
-                    APU_Reg[ wAddr & 0x1f ] = byData;
-                    if (*opt_SoundEnabled) {
-                        audio_write(wAddr, byData);
+                    } else {
+                        APU_Reg[ wAddr & 0x1f ] = byData;
+                        if (*opt_SoundEnabled) {
+                            audio_write(wAddr, byData);
+                        }
                     }
                 } break;
             } break;
