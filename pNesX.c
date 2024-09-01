@@ -557,6 +557,7 @@ void pNesX_Main() {
 		}
 */		
 	}
+	printf("Exiting Emulator Main Loop\n");
 
 	pNesX_Fin();
 	printProfilingReport();
@@ -597,8 +598,10 @@ void pNesX_Cycle() {
 	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++) {
 		uint16 cpu_cycles_to_emulate = CYCLES_PER_LINE;
+		uint16 hsync_cycles = 28;
 		if ((ppuinfo.PPU_Scanline + 1) % 3 == 0) {
 			cpu_cycles_to_emulate += 2;
+			hsync_cycles += 1;
 		}
 
 		switch (ppuinfo.PPU_Scanline) {
@@ -614,9 +617,12 @@ void pNesX_Cycle() {
 						NMI_REQ;
 				}
 
-				K6502_Step(cpu_cycles_to_emulate);
+				K6502_Step(hsync_cycles);
+				mapper -> hsync();				
+				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();		
+
 
 				if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
 					ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);

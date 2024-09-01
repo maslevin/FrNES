@@ -200,8 +200,8 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 1024
-#define MAX_DISASM_STRING 32
+#define MAX_DISASM_STEPS 1024 * 16
+#define MAX_DISASM_STRING 20
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
 uint16 DisassemblyBufferIndex = 0;
@@ -217,9 +217,6 @@ void DisassembleInstruction(char* Opcode, char* fmt, uint16 value) {
 	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
-	if (DisassemblyBufferIndex == 0) {
-		HALT = 1;
-	}
 	REALPC;
 }
 
@@ -234,9 +231,6 @@ void DisassembleInstruction2(char* Opcode, char* fmt, uint16 value, uint16 value
 	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
 	DisassemblyBufferIndex++;
 	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
-	if (DisassemblyBufferIndex == 0) {
-		HALT = 1;
-	}	
 	REALPC;
 }
 
@@ -257,6 +251,7 @@ void UploadDisassembly() {
 			bufferIndex %= MAX_DISASM_STEPS;
 		}
 		fs_close(PCFile);
+		printf("Closed file on PC\n");
 	} else {
 		printf("Error: Unable to Open File on PC Host\n");
 	}
@@ -495,12 +490,12 @@ void K6502_Step( uint16 wClocks ) {
 	byD1 = 0;
 	wD0 = 0;
 
-	K6502_DoIRQ();
-
 	unsigned char opcode;
 
 	// It has a loop until a constant clock passes
 	while ( g_wPassedClocks < wClocks ) {
+		K6502_DoIRQ();
+
 		// Read an instruction
 		opcode = *(pPC++);
 
@@ -1244,7 +1239,7 @@ void K6502_Step( uint16 wClocks ) {
 				break;
 
 			case 0xF0:
-				DisassembleInstruction("BEQ", "$%02x", *pPC);	
+				DisassembleInstruction("BEQ", "$%04x", AA_ABS);	
 				BRA( F & FLAG_Z );
 				break;
 
@@ -1284,6 +1279,7 @@ void K6502_Step( uint16 wClocks ) {
 				break;
 
 			default:
+				Op_XX();
 				break;
 		}
 

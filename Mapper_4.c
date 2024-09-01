@@ -18,17 +18,13 @@ uint8 Mapper_4_vs_index; // VS Atari RBI Baseball and VS TKO Boxing
 extern uint32 currentCRC32;
 extern unsigned char ROM_Mirroring;
 
-void MMC3_set_CPU_banks()
-{
-  if(Mapper_4_prg_swap())
-  {
+void MMC3_set_CPU_banks() {
+  if (Mapper_4_prg_swap()) {
 	ROMBANK0 = ROMLASTPAGE(1);
 	ROMBANK1 = ROMPAGE(Mapper_4_prg1);
 	ROMBANK2 = ROMPAGE(Mapper_4_prg0);
 	ROMBANK3 = ROMLASTPAGE(0);
-  }
-  else
-  {
+  } else {
 	ROMBANK0 = ROMPAGE(Mapper_4_prg0);
 	ROMBANK1 = ROMPAGE(Mapper_4_prg1);
 	ROMBANK2 = ROMLASTPAGE(1);
@@ -36,12 +32,11 @@ void MMC3_set_CPU_banks()
   }
 }
 
-void MMC3_set_PPU_banks()
-{
+void MMC3_set_PPU_banks() {
 //  if(NesHeader.byVRomSize > 0)
-  {
-    if(Mapper_4_chr_swap())
-    {
+//  {
+    if(Mapper_4_chr_swap()) {
+		printf("Setting PPU Banks to %u, %u, %u, %u, %u, %u, %u, %u\n", Mapper_4_chr4, Mapper_4_chr5, Mapper_4_chr6, Mapper_4_chr7, Mapper_4_chr01, Mapper_4_chr01 + 1, Mapper_4_chr23, Mapper_4_chr23 + 1);
 		PPUBANK[0] = &VROM[Mapper_4_chr4 * 0x400];
 		PPUBANK[1] = &VROM[Mapper_4_chr5 * 0x400];
 		PPUBANK[2] = &VROM[Mapper_4_chr6 * 0x400];
@@ -50,9 +45,8 @@ void MMC3_set_PPU_banks()
 		PPUBANK[5] = &VROM[(Mapper_4_chr01 + 1) * 0x400];
 		PPUBANK[6] = &VROM[Mapper_4_chr23 * 0x400];
 		PPUBANK[7] = &VROM[(Mapper_4_chr23 + 1) * 0x400];
-    }
-    else
-    {
+    } else {
+		printf("Setting PPU Banks to %u, %u, %u, %u, %u, %u, %u, %u\n", Mapper_4_chr01, Mapper_4_chr01 + 1, Mapper_4_chr23, Mapper_4_chr23 + 1, Mapper_4_chr4, Mapper_4_chr5, Mapper_4_chr6, Mapper_4_chr7);
 		PPUBANK[0] = &VROM[Mapper_4_chr01 * 0x400];
 		PPUBANK[1] = &VROM[(Mapper_4_chr01 + 1) * 0x400];
 		PPUBANK[2] = &VROM[Mapper_4_chr23 * 0x400];
@@ -62,7 +56,7 @@ void MMC3_set_PPU_banks()
 		PPUBANK[6] = &VROM[Mapper_4_chr6 * 0x400];
 		PPUBANK[7] = &VROM[Mapper_4_chr7 * 0x400];
     }
-  }
+//  }
 /*  else
   {
     if(chr_swap())
@@ -89,7 +83,6 @@ void MMC3_set_PPU_banks()
     }
   } */
 }
-
 
 void Mapper_4_Init() {
   Mapper_4_patch = 0;
@@ -127,8 +120,7 @@ void Mapper_4_Init() {
   MMC3_set_CPU_banks();
 
   // set VROM banks
-  if(NesHeader.byVRomSize > 0)
-  {
+  if(NesHeader.byVRomSize > 0) {
     Mapper_4_chr01 = 0;
     Mapper_4_chr23 = 2;
     Mapper_4_chr4  = 4;
@@ -136,9 +128,7 @@ void Mapper_4_Init() {
     Mapper_4_chr6  = 6;
     Mapper_4_chr7  = 7;
     MMC3_set_PPU_banks();
-  }
-  else
-  {
+  } else {
     Mapper_4_chr01 = Mapper_4_chr23 = Mapper_4_chr4 = Mapper_4_chr5 = Mapper_4_chr6 = Mapper_4_chr7 = 0;
   }
 

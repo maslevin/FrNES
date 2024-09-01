@@ -25,10 +25,13 @@ void Mapper_2_Init() {
 /*  Mapper 2 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Mapper_2_Write( uint16 wAddr, unsigned char byData ) {
-    /* Set ROM Banks */
-    byData %= NesHeader.byRomSize;
-    byData <<= 1;
+	if (wAddr & 0x8000) {
+		/* Set ROM Banks */
+		byData %= NesHeader.byRomSize;
+		byData <<= 1;
+		// printf("Write [$%04X]: Setting ROMBANK0 to [%u] and ROMBANK1 to [%u]\n", wAddr, byData, byData + 1);
 
-    ROMBANK0 = ROMPAGE( byData );
-    ROMBANK1 = ROMPAGE( byData + 1 );
+		ROMBANK0 = ROMPAGE( byData );
+		ROMBANK1 = ROMPAGE( byData + 1 );
+	}
 }
