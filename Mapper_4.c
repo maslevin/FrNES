@@ -57,9 +57,6 @@ void Mapper_4_Set_CPU_banks() {
 /*  Mapper 4 Write Function                                          */
 /*-------------------------------------------------------------------*/
 void Mapper_4_Write( uint16 wAddr, unsigned char byData ) {
-	if (!(wAddr & 0x8000))
-		return;
-
     uint16 wMapAddr;
 
     wMapAddr = wAddr & 0xe001;
@@ -81,7 +78,7 @@ void Mapper_4_Write( uint16 wAddr, unsigned char byData ) {
             break;
 
         case 0xc000:
-            Map4_IRQ_Cnt = byData - 2;
+            Map4_IRQ_Cnt = byData;
             break;
 
         case 0xc001:
@@ -97,9 +94,9 @@ void Mapper_4_Write( uint16 wAddr, unsigned char byData ) {
             break;
 
         case 0x8000:
-            Map4_VROM_Base = byData >> 7;
-            Map4_ROM_Base = ( byData >> 6 ) & 1;
-            Map4_Cmd = byData & 7;
+            Map4_VROM_Base = ( byData >> 7 ) & 0x1;
+            Map4_ROM_Base = ( byData >> 6 ) & 0x1;
+            Map4_Cmd = byData & 0x7;
             Mapper_4_Set_CPU_banks();
             Mapper_4_Set_PPU_banks();
             break;
@@ -172,11 +169,11 @@ void Mapper_4_HSync() {
 	if (Map4_IRQ_Enable) {
 		if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
 			if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
-				if (Map4_IRQ_Cnt == 254) {
+				Map4_IRQ_Cnt--;				
+				if (Map4_IRQ_Cnt == 0) {
 					Map4_IRQ_Cnt = Map4_IRQ_Set;
 					IRQ_REQ;
 				}
-				Map4_IRQ_Cnt--;
 			}
 		}
 	}
