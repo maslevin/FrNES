@@ -28,10 +28,6 @@ void Mapper_3_Init() {
 	/* Set PPU Banks */
 	for ( nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-
-	/* Set up wiring of the interrupt pin */
-	/* "DragonQuest" doesn't run if IRQ isn't made to occur in CLI */
-	K6502_Set_Int_Wiring( 1, 0 ); 
 }
 
 /*-------------------------------------------------------------------*/

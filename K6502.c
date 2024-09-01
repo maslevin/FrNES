@@ -200,8 +200,8 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 1024
-#define MAX_DISASM_STRING 32
+#define MAX_DISASM_STEPS 1024 * 16
+#define MAX_DISASM_STRING 20
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
 uint16 DisassemblyBufferIndex = 0;
@@ -490,12 +490,12 @@ void K6502_Step( uint16 wClocks ) {
 	byD1 = 0;
 	wD0 = 0;
 
-	K6502_DoIRQ();
-
 	unsigned char opcode;
 
 	// It has a loop until a constant clock passes
 	while ( g_wPassedClocks < wClocks ) {
+		K6502_DoIRQ();
+
 		// Read an instruction
 		opcode = *(pPC++);
 
@@ -1239,7 +1239,7 @@ void K6502_Step( uint16 wClocks ) {
 				break;
 
 			case 0xF0:
-				DisassembleInstruction("BEQ", "$%02x", *pPC);	
+				DisassembleInstruction("BEQ", "$%04x", AA_ABS);	
 				BRA( F & FLAG_Z );
 				break;
 
