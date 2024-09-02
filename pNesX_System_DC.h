@@ -54,10 +54,10 @@ void Save_VMU_Options();
 void initialize_controllers();
 void rescan_controllers();
 
+void calculateOutputScreenGeometry();
+
 int LoadSRAM();
 int SaveSRAM();
-
-void i32toa(uint32 i, char* buffer);
 
 int draw_VMU_icon(maple_device_t* vmu, char* icon);
 

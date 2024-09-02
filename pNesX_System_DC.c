@@ -189,6 +189,34 @@ maple_device_t* Controllers[4];
 uint32 numVMUs;
 maple_device_t* VMUs[8];
 
+float polygon_x1;
+float polygon_y1;
+float polygon_x2;
+float polygon_y2;
+float texture_u1;
+float texture_v1;
+float texture_u2;
+float texture_v2;
+
+void calculateOutputScreenGeometry() {
+	polygon_x1 = 0.0f;
+	polygon_y1 = 0.0f;
+	polygon_x2 = 640.0f;
+	polygon_y2 = 480.0f;
+	texture_u1 = ((float)opt_ClipVars[0] * 4) / 1024.0f;
+	texture_v1 = (float)opt_ClipVars[2] / 256.0f;
+	texture_u2 = (float)(1024 - (opt_ClipVars[1] * 4)) / 1024.0f;
+	texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
+
+	if (!*opt_Stretch) {
+		// Multiply clipped pixels by two because the texture is 256x256 and we are displaying as 512x512 (roughly)
+		polygon_x1 = 64.0f + (float)(opt_ClipVars[0] * 2);
+		polygon_x2 = 576.0f - (float)(opt_ClipVars[1] * 2);
+		polygon_y1 = 0.0f + (float)(opt_ClipVars[2] * 2);
+		polygon_y2 = 480.0f - (float)(opt_ClipVars[3] * 2);
+	}	
+}
+
 void initialize_controllers() {
 	printf("initialize_controllers: start scan\n");
 	numControllers = 0;
@@ -928,27 +956,9 @@ void pNesX_LoadFrame() {
 		filter = PVR_FILTER_NONE;
 	}
 
-//	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
 	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
-
-	float polygon_x1 = 0.0f;
-	float polygon_y1 = 0.0f;
-	float polygon_x2 = 640.0f;
-	float polygon_y2 = 480.0f;
-	float texture_u1 = ((float)opt_ClipVars[0] * 4) / 1024.0f;
-	float texture_v1 = (float)opt_ClipVars[2] / 256.0f;
-	float texture_u2 = (float)(1024 - (opt_ClipVars[1] * 4)) / 1024.0f;
-	float texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
-
-	if (!*opt_Stretch) {
-		// Multiply clipped pixels by two because the texture is 256x256 and we are displaying as 512x512 (roughly)
-		polygon_x1 = 64.0f + (float)(opt_ClipVars[0] * 2);
-		polygon_x2 = 576.0f - (float)(opt_ClipVars[1] * 2);
-		polygon_y1 = 0.0f + (float)(opt_ClipVars[2] * 2);
-		polygon_y2 = 480.0f - (float)(opt_ClipVars[3] * 2);
-	}
 
 	my_vertex.flags = PVR_CMD_VERTEX;
 	my_vertex.x = polygon_x1;

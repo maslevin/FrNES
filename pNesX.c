@@ -251,6 +251,9 @@ void pNesX_Init() {
 
 	// Reset CPU and prepare to run program
 	K6502_Reset();
+
+	// Calculate how the output screen should appear based on clipping and stretching parameters
+	calculateOutputScreenGeometry();
 }
 
 /*===================================================================*/
