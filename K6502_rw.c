@@ -64,10 +64,10 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
           return RAM[ wAddr & 0x7ff ];
 
         case 0x2000: {
-            switch (wAddr & 0x0F) {
+            switch (wAddr & 0x10F) {
                 /* PPU Status $2002*/              
-                case 0x02: 
-                case 0x0A: {
+                case 0x002: 
+                case 0x00A: {
                     // Set return value
                     byRet = PPU_R2;
 
@@ -95,12 +95,12 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     return byRet;
                 }
 
-                case 0x04: {
+                case 0x004: {
                     /* PPU Sprite RAM $2004 */
                     return SPRRAM[PPU_R3];
                 }
 
-                case 0x07: {
+                case 0x007: {
                     uint16 addr;
                     addr = ppuinfo.PPU_Addr;
                     // Increment PPU Address
@@ -110,7 +110,8 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     if (addr >= 0x3000) {
                         if (addr >= 0x3f00) {
                             PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
-                            return PPURAM[addr];
+//                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
+                            return PPURAM[0x3F00 | (addr & 0x1F)];
                         }
 
                         // handle mirroring
@@ -121,6 +122,12 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
                     return byRet;
                 }
+
+                // Read Palette RAM
+                case 0x100 ... 0x1FF: {
+//                    printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", wAddr, 0x3F00 | (wAddr & 0x1F));
+                    return PPURAM[0x3F00 | (wAddr & 0x1F)];
+                } break;
             }
         } break;
 
@@ -254,18 +261,36 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                 if (addr >= 0x3000) {
                     if (addr >= 0x3F00) {
                         byData &= 0x3F;
-                        // If it's the Zero Entry
-                        if ( !( addr & 0xf ) ) { /* 0x3f00 or 0x3f10 */
-                            // Palette mirror
-                            PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
-                            // Flag the High bit so it can be used for transparency purposes
-                            PalTable[ 0x00 ] = PalTable[ 0x04 ] = PalTable[ 0x08 ] = PalTable[ 0x0c ] =
-                            PalTable[ 0x10 ] = PalTable[ 0x14 ] = PalTable[ 0x18 ] = PalTable[ 0x1c ] = NesPalette[ byData ] | 0x8000;
-                        } else if ( addr & 3 ) {
-                            // Palette
-                            PPURAM[ addr ] = byData;
-                            PalTable[ addr & 0x1f ] = NesPalette[ byData ];
+//                        printf("Writing Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1f));
+                        switch (addr & 0x1F) {
+                            case 0x00:
+                            case 0x10:
+                                PPURAM[ 0x3F00 ] = PPURAM[ 0x3F10 ] = byData;
+                                PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ];
+                                break;
+
+                            case 0x04:
+                            case 0x14:
+                                PPURAM[ 0x3F04 ] = PPURAM[ 0x3F14 ] = byData;
+                                PalTable[ 0x04 ] = PalTable[ 0x14 ] = NesPalette[ byData ];
+                                break;
+
+                            case 0x08:
+                            case 0x18:
+                                PPURAM[ 0x3F08 ] = PPURAM[ 0x3F18 ] = byData;
+                                PalTable[ 0x08 ] = PalTable[ 0x18 ] = NesPalette[ byData ];
+                                break;
+
+                            case 0x0C:
+                            case 0x1C:
+                                PPURAM[ 0x3F0C ] = PPURAM[ 0x3F1C ] = byData;
+                                PalTable[ 0x0C ] = PalTable[ 0x1c ] = NesPalette[ byData ];
+                                break;  
+
+                            default:
+                                PPURAM[ 0x3F00 | (addr & 0x1F) ] = byData;
+                                PalTable[ addr & 0x1F ] = NesPalette[ byData ];                            
+                                break;
                         }
                         return;
                     }
