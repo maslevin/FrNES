@@ -42,22 +42,15 @@ void pNesX_DrawLine() {
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 
 	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
-		memset4(Scanline_Buffer, 0, 256);
-		pvr_txr_load(Scanline_Buffer, texture_address, 256);
-		return;
-	}
-
-	if (MapperNo == 9) {
-		pNesX_Map9DrawLine_BG_C(Scanline_Buffer);
-		pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
+		memset4(Scanline_Buffer, (PPURAM[0x3F00] << 24) | (PPURAM[0x3F00] << 16) | (PPURAM[0x3F00] << 8) | PPURAM[0x3F00], 256);
 	} else {
-		pNesX_DrawLine_BG_C(Scanline_Buffer);
-		pNesX_DrawLine_Spr_C(Scanline_Buffer);
-	}
-
-	// Convert the scanline buffer from indexes into the PPU palette to indexes into the global NES palette
-	for (uint16 scanlineIndex = 0; scanlineIndex < 256; scanlineIndex++) {
-		Scanline_Buffer[scanlineIndex] = PPURAM[0x3F00 | Scanline_Buffer[scanlineIndex]];
+		if (MapperNo == 9) {
+			pNesX_Map9DrawLine_BG_C(Scanline_Buffer);
+			pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
+		} else {
+			pNesX_DrawLine_BG_C(Scanline_Buffer);
+			pNesX_DrawLine_Spr_C(Scanline_Buffer);
+		}
 	}
 
 	//Move the scanline buffer to the PVR texture

@@ -86,6 +86,8 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 		}
 	}
 
+	uint8* ppuPalette = &PPURAM[0x3F00];
+
 	// If sprite Rendering is Enabled and we're not on scanline 0 and we have sprites to draw
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
@@ -146,22 +148,38 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			}
 		}
 
+		// If we aren't rendering the left 8 pixels of sprites, those pixels will need to be converted
+		// to the global NES palette as well
+		if (!(PPU_R1 & R1_CLIP_SP)) {
+			for (uint16 i = 0; i < 8; i++) {
+				scanline_buffer[i] = ppuPalette[scanline_buffer[i]];
+			}				
+		}
 		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
-			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
+			for (uint16 i = (!(PPU_R1 & R1_CLIP_SP)) ? 8 : 0; i < 256; i++) {
 				if ((i < 255) && (spriteBuffer[i] & 0x40) && (scanline_buffer[i] != 0)) {
 					SpriteJustHit = ppuinfo.PPU_Scanline;
 				}
 
 				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
-					scanline_buffer[i] = (spriteBuffer[i] & 0x0f) | 0x10;
+					scanline_buffer[i] = ppuPalette[(spriteBuffer[i] & 0x0f) | 0x10];
+				} else {
+					scanline_buffer[i] = ppuPalette[scanline_buffer[i]];
 				}
 			}
 		}  else {
-			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
+			for (uint16 i = (!(PPU_R1 & R1_CLIP_SP)) ? 8 : 0; i < 256; i++) {
 				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
-					scanline_buffer[i] = (spriteBuffer[i] & 0x0f) | 0x10;
+					scanline_buffer[i] = ppuPalette[(spriteBuffer[i] & 0x0f) | 0x10];
+				} else {
+					scanline_buffer[i] = ppuPalette[scanline_buffer[i]];
 				}
 			}
 		}		
+	} else {
+		// we're not rendering sprites, we'll have to convert the scanline_buffer here
+		for (uint16 i = 0; i < 256; i++) {
+			scanline_buffer[i] = ppuPalette[scanline_buffer[i]];
+		}
 	}
 }
