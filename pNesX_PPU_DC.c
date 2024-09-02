@@ -55,6 +55,11 @@ void pNesX_DrawLine() {
 		pNesX_DrawLine_Spr_C(Scanline_Buffer);
 	}
 
+	// Convert the scanline buffer from indexes into the PPU palette to indexes into the global NES palette
+	for (uint16 scanlineIndex = 0; scanlineIndex < 256; scanlineIndex++) {
+		Scanline_Buffer[scanlineIndex] = PPURAM[0x3F00 | Scanline_Buffer[scanlineIndex]];
+	}
+
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(Scanline_Buffer, texture_address, 256);
 	endProfiling(2);

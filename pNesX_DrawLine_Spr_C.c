@@ -122,13 +122,12 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			patternData[ 6 ] = byData1 & 3;
 			patternData[ 7 ] = byData2 & 3;
 
-			// we invert the priority attribute here for some reason?
-			nAttr ^= SPR_ATTR_PRI;
+			// we invert the priority attribute
+			nAttr = pSPRRAM[ SPR_ATTR ] ^ SPR_ATTR_PRI;
 			bySprCol = (( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2 ) | ((pSPRRAM == SPRRAM) ? 0x40 : 0x00);
 			nX = pSPRRAM[ SPR_X ];
 
 			unsigned char* pPoint = &spriteBuffer[nX];
-			// if we haven't hit sprite 0 yet, take that into account
 			if ( nAttr & SPR_ATTR_H_FLIP ) {
 				for (unsigned char offset = 0; offset < 8; offset++) {
 					// Horizontal flip
@@ -154,13 +153,13 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 				}
 
 				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
-					scanline_buffer[i] = (spriteBuffer[i] & 0xf) | 0x10;
+					scanline_buffer[i] = (spriteBuffer[i] & 0x0f) | 0x10;
 				}
 			}
 		}  else {
 			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
 				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
-					scanline_buffer[i] = (spriteBuffer[i] & 0xf) | 0x10;
+					scanline_buffer[i] = (spriteBuffer[i] & 0x0f) | 0x10;
 				}
 			}
 		}		

@@ -284,7 +284,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             case 0x0C:
                             case 0x1C:
                                 PPURAM[ 0x3F0C ] = PPURAM[ 0x3F1C ] = byData;
-                                PalTable[ 0x0C ] = PalTable[ 0x1c ] = NesPalette[ byData ];
+                                PalTable[ 0x0C ] = PalTable[ 0x1C ] = NesPalette[ byData ];
                                 break;  
 
                             default:

@@ -322,7 +322,7 @@ int LoadSRAM() {
 }
 
 #define APP_STRING "FrNES"
-#define APP_VERSION "0.7.0"
+#define APP_VERSION "0.7.1"
 
 int SaveSRAM() {
 	int saveSRAM_success = -1;
@@ -466,6 +466,19 @@ void initVQTextures() {
 	for (uint32 i = 0; i < NUM_PVR_FRAMES; i++) {
 		WorkFrames[i] = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
 		printf("Allocated frame [%lu] at address [0x%8lX]\n", i, (uint32)WorkFrames[i]);
+
+		//This creates an NES palette for each VQ textures, 4 pixels of each color in a row
+		uint16* codebookEntry = (uint16*)codebook;
+		uint32 codebookIdx;
+		for (codebookIdx = 0; codebookIdx < 64; codebookIdx++) {
+			uint16 codebookValue = NesPalette[codebookIdx];
+			*codebookEntry++ = codebookValue;
+			*codebookEntry++ = codebookValue;
+			*codebookEntry++ = codebookValue;
+			*codebookEntry++ = codebookValue;
+		}
+		pvr_txr_load(codebook, WorkFrames[i] -> codebook, 2048);
+		printf("Updated texture with NES Palette\n");
 	}
  	codebook = memalign(64, 2048);	
 }
@@ -876,18 +889,6 @@ void pNesX_LoadFrame() {
 	if (!*opt_Filter) {
 		filter = PVR_FILTER_NONE;
 	}
-
-	//This creates an NES palette for the VQ textures, 4 pixels of each color in a row
-	uint16* codebookEntry = (uint16*)codebook;
-	uint32 codebookIdx;
-	for (codebookIdx = 0; codebookIdx < 32; codebookIdx++) {
-		uint16 codebookValue = PalTable[codebookIdx];
-		*codebookEntry++ = codebookValue;
-		*codebookEntry++ = codebookValue;
-		*codebookEntry++ = codebookValue;
-		*codebookEntry++ = codebookValue;
-	}
-	pvr_txr_load(codebook, WorkFrame -> codebook, 2048);
 
 	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);

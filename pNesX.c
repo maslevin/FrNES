@@ -90,7 +90,10 @@ uint16 PPU_Increment;
 uint16 PPU_Scanline;
 
 //32 - byte aligned sound output buffer
-__ALIGN32__ uint16 sample_buffer[2940];
+#define SAMPLE_BUFFER_LENGTH 2940
+__ALIGN32__ uint16 sample_buffer[SAMPLE_BUFFER_LENGTH];
+
+#define SAMPLES_PER_FRAME 736
 
 /* Sprite #0 Scanline Hit Position */
 int SpriteJustHit;
@@ -546,7 +549,6 @@ void pNesX_Main() {
 			printf ("ERROR: System Halt - exiting emulation\n");
 			break;
 		}
-
 /*
 		if ( *opt_AutoFrameSkip ) {
 			if ( Auto_Frames > 0) {
