@@ -168,8 +168,9 @@ bool AutoROM;
 unsigned char *pScreenMem;
 
 // Palette data
-uint16 NesPalette[ 64 ] =
-{
+uint16* NesPalette;
+
+uint16 DEFAULT_NES_PALETTE[64] = {
   0x39ce, 0x1071, 0x0015, 0x2013, 0x440e, 0x5402, 0x5000, 0x3c20,
   0x20a0, 0x0100, 0x0140, 0x00e2, 0x0ceb, 0x0000, 0x0000, 0x0000,
   0x5ef7, 0x01dd, 0x10fd, 0x401e, 0x5c17, 0x700b, 0x6ca0, 0x6521,
@@ -462,6 +463,35 @@ void pvr_setup() {
     pvr_set_bg_color(0, 0, 0);
 }
 
+void loadPalette(char* path) {
+	uint32 my_fd = fs_open(path, O_RDONLY);
+	bool errored_out = false;
+	if (my_fd == -1) {
+		printf("ERROR: Unable to load palette from file, using default\n");
+		errored_out = true;
+	} else {
+		uint8 palFileData[192];
+		if (fs_read(my_fd, palFileData, 192) != 192) {
+			errored_out = true;
+		} else {
+			printf("LoadPalette: Loaded Palette - Converting to RGB565\n");
+			NesPalette = malloc(64 * 2);
+			for (int i = 0; i < 64; i++) {
+				NesPalette[i] = 
+				  (((palFileData[(i * 3)] >> 3) & 0x1F) << 11) |
+				  (((palFileData[(i * 3) + 1] >> 2) & 0x3F) << 5) |
+				  (((palFileData[(i * 3) + 2] >> 3) & 0x1F));
+			}
+		}
+
+		fs_close(my_fd);
+	}
+
+	if (errored_out) {
+		NesPalette = DEFAULT_NES_PALETTE;
+	}
+}
+
 void initVQTextures() {
 	for (uint32 i = 0; i < NUM_PVR_FRAMES; i++) {
 		WorkFrames[i] = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
@@ -542,6 +572,10 @@ int main() {
 	Allocate_Video_Options();
 	Allocate_System_Options();
 	Allocate_Control_Options();
+
+	// Load palette
+	printf("Initializing NES Palette\n");
+	loadPalette("/rd/nes.pal");
 
 	printf("Initializing VQ Textures\n");
 	initVQTextures();
@@ -776,6 +810,10 @@ int main() {
 	Free_System_Options();
 	Free_Control_Options();
 
+	if (NesPalette != DEFAULT_NES_PALETTE) {
+		free(NesPalette);
+	}
+
 	destroy_font(font);
 	return 0;
 }
@@ -890,7 +928,8 @@ void pNesX_LoadFrame() {
 		filter = PVR_FILTER_NONE;
 	}
 
-	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
+//	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_ARGB1555 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
+	pvr_poly_cxt_txr(&my_cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565 | PVR_TXRFMT_NONTWIDDLED | PVR_TXRFMT_VQ_ENABLE, FRAMEBUFFER_WIDTH * 4, FRAMEBUFFER_HEIGHT, WorkFrame, filter);
 	pvr_poly_compile(&my_pheader, &my_cxt);
 	pvr_prim(&my_pheader, sizeof(my_pheader));
 

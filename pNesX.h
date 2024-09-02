@@ -176,8 +176,6 @@ extern double frames_per_second;
 extern uint16 FrameSkip;
 extern uint16 FrameCnt;
 
-extern uint16 PalTable[];
-
 /*-------------------------------------------------------------------*/
 /*  APU and Pad resources                                            */
 /*-------------------------------------------------------------------*/

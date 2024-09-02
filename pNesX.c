@@ -119,9 +119,6 @@ uint16 WorkFrameIdx;
 VQ_Texture* WorkFrames[];
 unsigned char* codebook;
 
-/* Palette Table */
-uint16 PalTable[ 32 ];
-
 /* Table for Mirroring */
 unsigned char PPU_MirrorTable[][ 4 ] = {
   { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
@@ -365,9 +362,6 @@ int pNesX_Reset() {
 
 	PollSkip = 6;
 	PollCount = 0;
-
-	// Reset palette table
-	memset( PalTable, 0, sizeof PalTable );
 
 	// Reset APU register
 	memset( APU_Reg, 0, sizeof APU_Reg );

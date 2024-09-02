@@ -262,35 +262,11 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     if (addr >= 0x3F00) {
                         byData &= 0x3F;
 //                        printf("Writing Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1f));
-                        switch (addr & 0x1F) {
-                            case 0x00:
-                            case 0x10:
-                                PPURAM[ 0x3F00 ] = PPURAM[ 0x3F10 ] = byData;
-                                PalTable[ 0x00 ] = PalTable[ 0x10 ] = NesPalette[ byData ];
-                                break;
-
-                            case 0x04:
-                            case 0x14:
-                                PPURAM[ 0x3F04 ] = PPURAM[ 0x3F14 ] = byData;
-                                PalTable[ 0x04 ] = PalTable[ 0x14 ] = NesPalette[ byData ];
-                                break;
-
-                            case 0x08:
-                            case 0x18:
-                                PPURAM[ 0x3F08 ] = PPURAM[ 0x3F18 ] = byData;
-                                PalTable[ 0x08 ] = PalTable[ 0x18 ] = NesPalette[ byData ];
-                                break;
-
-                            case 0x0C:
-                            case 0x1C:
-                                PPURAM[ 0x3F0C ] = PPURAM[ 0x3F1C ] = byData;
-                                PalTable[ 0x0C ] = PalTable[ 0x1C ] = NesPalette[ byData ];
-                                break;  
-
-                            default:
-                                PPURAM[ 0x3F00 | (addr & 0x1F) ] = byData;
-                                PalTable[ addr & 0x1F ] = NesPalette[ byData ];                            
-                                break;
+                        if (!(addr & 0xf)) {
+                            PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
+                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
+                        } else if (addr & 0x3) {
+                            PPURAM[ addr ] = byData;
                         }
                         return;
                     }
