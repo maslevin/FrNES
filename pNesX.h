@@ -88,7 +88,7 @@ typedef struct {
 extern VQ_Texture* WorkFrame;
 extern uint16 WorkFrameIdx;
 extern VQ_Texture* WorkFrames[NUM_PVR_FRAMES];
-extern unsigned char* codebook;
+extern uint8 codebook[CODEBOOK_SIZE];
 
 #define NAME_TABLE0  8
 #define NAME_TABLE1  9

@@ -117,7 +117,7 @@ int32 Auto_Frames;
 VQ_Texture* WorkFrame;
 uint16 WorkFrameIdx;
 VQ_Texture* WorkFrames[];
-unsigned char* codebook;
+__ALIGN32__ uint8 codebook[CODEBOOK_SIZE];
 
 /* Table for Mirroring */
 unsigned char PPU_MirrorTable[][ 4 ] = {

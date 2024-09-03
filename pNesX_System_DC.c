@@ -521,24 +521,23 @@ void loadPalette(char* path) {
 }
 
 void initVQTextures() {
+	//This creates an NES palette for each VQ texture, 4 pixels of each Global NES palette color in a row
+	uint16* codebookEntry = (uint16*)codebook;
+	uint32 codebookIdx;
+	for (codebookIdx = 0; codebookIdx < 64; codebookIdx++) {
+		uint16 codebookValue = NesPalette[codebookIdx];
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+		*codebookEntry++ = codebookValue;
+	}
+
 	for (uint32 i = 0; i < NUM_PVR_FRAMES; i++) {
 		WorkFrames[i] = (VQ_Texture*)pvr_mem_malloc(sizeof(VQ_Texture));
 		printf("Allocated frame [%lu] at address [0x%8lX]\n", i, (uint32)WorkFrames[i]);
-
-		//This creates an NES palette for each VQ textures, 4 pixels of each color in a row
-		uint16* codebookEntry = (uint16*)codebook;
-		uint32 codebookIdx;
-		for (codebookIdx = 0; codebookIdx < 64; codebookIdx++) {
-			uint16 codebookValue = NesPalette[codebookIdx];
-			*codebookEntry++ = codebookValue;
-			*codebookEntry++ = codebookValue;
-			*codebookEntry++ = codebookValue;
-			*codebookEntry++ = codebookValue;
-		}
 		pvr_txr_load(codebook, WorkFrames[i] -> codebook, 2048);
 		printf("Updated texture with NES Palette\n");
 	}
- 	codebook = memalign(64, 2048);	
 }
 
 bool checkForAutoROM() {
