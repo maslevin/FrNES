@@ -4,33 +4,40 @@ uint32 numEmulationFrames = 0;
 
 #ifdef PROFILE
 uint32 numProfilingFunctions = 0;
-uint64* profilingFunctionsNanoseconds = NULL;
-char** profilingFunctionsNames = NULL;
 
-uint64* profilingFunctionsStartTimes = NULL;
+typedef struct ProfilingInformation {
+    char* functionName;
+    uint64 startTime;
+    uint64 nanoseconds;
+    uint64 startOperationCacheMisses;
+    uint64 operandCacheMisses;
+} ProfilingInformation_t;
 
-void resetProfiling() {
+ProfilingInformation_t* profilingInformation;
+bool resetPerformanceCounter = false;
+
+void resetProfiling(uint32 numFunctions) {
     numEmulationFrames = 0;
-    if (profilingFunctionsNanoseconds != NULL) {
-        free(profilingFunctionsNanoseconds);
-    }
-    if (profilingFunctionsStartTimes != NULL) {
-        free(profilingFunctionsStartTimes);
-    }
-    if (profilingFunctionsNames != NULL) {
+    if (profilingInformation) {
         for (uint32 i = 0; i < numProfilingFunctions; i++) {
-            free(profilingFunctionsNames[i]);
+            free(profilingInformation[i].functionName);
         }
-        free(profilingFunctionsNames);
+        free(profilingInformation);
     }
 
-    profilingFunctionsNanoseconds = (uint64*)malloc(sizeof(uint64) * numProfilingFunctions);
-    profilingFunctionsStartTimes = (uint64*)malloc(sizeof(uint64) * numProfilingFunctions);
-    profilingFunctionsNames = (char**)malloc(sizeof(char*) * numProfilingFunctions);
+    profilingInformation = (ProfilingInformation_t*)malloc(sizeof(ProfilingInformation_t) * numFunctions);
+    memset(profilingInformation, 0, sizeof(ProfilingInformation_t) * numFunctions);
+    numProfilingFunctions = numFunctions;
 
-    memset(profilingFunctionsNanoseconds, 0, sizeof(uint64) * numProfilingFunctions);
-    memset(profilingFunctionsStartTimes, 0, sizeof(uint64) * numProfilingFunctions);
-    memset(profilingFunctionsNames, 0, sizeof(char*) * numProfilingFunctions);
+    if (resetPerformanceCounter) {
+        perf_cntr_stop(PRFC1);
+        perf_cntr_clear(PRFC1);
+    }
+
+    //TODO: change profiling statistic depending on what the user or test requires
+
+    perf_cntr_start(PRFC1, PMCR_OPERAND_CACHE_MISS_MODE, PMCR_COUNT_CPU_CYCLES);
+    resetPerformanceCounter = true;
 
     numEmulationFrames = 0;
 }
@@ -42,27 +49,38 @@ void setMaximumProfilingFunctions(uint32 maximumFunctions) {
 void setProfilingFunctionName(uint32 functionIndex, const char* functionName) {
     char* functionCopy = malloc(strlen(functionName) + 1);
     strcpy(functionCopy, functionName);
-    profilingFunctionsNames[functionIndex] = functionCopy;
+    profilingInformation[functionIndex].functionName = functionCopy;
 }
 
 void startProfiling(uint32 functionIndex) {
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-    profilingFunctionsStartTimes[functionIndex] = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+    profilingInformation[functionIndex].startTime = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+    profilingInformation[functionIndex].startOperationCacheMisses = perf_cntr_count(PRFC1);
 }
 
 void endProfiling(uint32 functionIndex) {
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-    profilingFunctionsNanoseconds[functionIndex] += (ts.tv_sec * 1000000000ULL + ts.tv_nsec) - profilingFunctionsStartTimes[functionIndex];
+    profilingInformation[functionIndex].nanoseconds += (ts.tv_sec * 1000000000ULL + ts.tv_nsec) - profilingInformation[functionIndex].startTime;
+    profilingInformation[functionIndex].operandCacheMisses += perf_cntr_count(PRFC1) - profilingInformation[functionIndex].startOperationCacheMisses;
 }
 
 void printProfilingReport() {
     printf("****************** PROFILING REPORT *****************\n");
     printf("Over [%lu] Frames\n", numEmulationFrames);
+    printf("------------------ Execution Time -------------------\n");
     for (uint32 i = 0; i < numProfilingFunctions; i++) {
-        float nanosecondsPerFrame = (float)profilingFunctionsNanoseconds[i] / (float)numEmulationFrames;
-        printf("%s: %.2f nanoseconds per frame\n", profilingFunctionsNames[i], nanosecondsPerFrame);
+        printf("%s: %.2f nanoseconds per frame\n", 
+            profilingInformation[i].functionName, 
+            (float)profilingInformation[i].nanoseconds / (float)numEmulationFrames);
     }
+    printf("---------------- Operand Cache Misses ---------------\n");    
+    for (uint32 i = 0; i < numProfilingFunctions; i++) {
+        printf("%s: %.2f operand cache misses per frame\n", 
+            profilingInformation[i].functionName,  
+            (float)profilingInformation[i].operandCacheMisses / (float)numEmulationFrames);
+    }
+    printf("*****************************************************\n");
 }
 #endif

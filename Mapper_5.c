@@ -259,8 +259,9 @@ void Mapper_5_Init() {
 	}
 
 	uint32 i;
-	// set SaveRAM	
-	for(i = 0; i < 0x10000; i++) {
+	// set SaveRAM
+//	for(i = 0; i < 0x10000; i++) { // TODO- handle larger work RAM somehow
+	for(i = 0; i < 0x2000; i++) {
 		Mapper_5_wram[i] = SRAM[i];
 	}
 	Mapper_5_Set_WRAM_Bank(3,0);
