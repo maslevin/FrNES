@@ -521,11 +521,13 @@ void loadPalette(char* path) {
 }
 
 void initVQTextures() {
-	//This creates an NES palette for each VQ texture, 4 pixels of each Global NES palette color in a row
+	// This creates an NES palette for each VQ texture, 4 pixels of each Global NES palette color in a row
 	uint16* codebookEntry = (uint16*)codebook;
 	uint32 codebookIdx;
-	for (codebookIdx = 0; codebookIdx < 64; codebookIdx++) {
-		uint16 codebookValue = NesPalette[codebookIdx];
+	// Actually we put 4 copies of the Global NES palette into the codebook - this is useful so we can use the upper 
+	// bits of these pixels as mask bits during rendering, but have them make not perceptual difference during display 
+	for (codebookIdx = 0; codebookIdx < 256; codebookIdx++) {
+		uint16 codebookValue = NesPalette[codebookIdx % 64];
 		*codebookEntry++ = codebookValue;
 		*codebookEntry++ = codebookValue;
 		*codebookEntry++ = codebookValue;

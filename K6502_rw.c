@@ -125,7 +125,7 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     return byRet;
                 }
 
-                // Read Palette RAM
+                // Read Palette RAM - this isn't supported on all NES's 
                 case 0x100 ... 0x1FF: {
 //                    printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", wAddr, 0x3F00 | (wAddr & 0x1F));
                     return PPURAM[0x3F00 | (wAddr & 0x1F)];
@@ -264,9 +264,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     if (addr >= 0x3F00) {
                         byData &= 0x3F;
 //                        printf("Writing Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1f));
+                        // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
+                        // came from a background pixel - this will be important later when we merge background tiles with sprites
+                        // during rendering, as these pixels will be transparent vs. sprites
                         if (!(addr & 0xf)) {
                             PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = byData;
+                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
                         } else if (addr & 0x3) {
                             PPURAM[ addr ] = byData;
                         }
