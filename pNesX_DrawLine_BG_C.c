@@ -107,7 +107,7 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	pPalTbl = (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 );
+	pPalTbl = &PPURAM[0x3F00 + (( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
 	
 	switch (ppuinfo.PPU_Scr_H_Bit) {
 		case 1:

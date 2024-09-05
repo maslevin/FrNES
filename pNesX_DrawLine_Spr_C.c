@@ -8,24 +8,27 @@
 #include "Mapper_5.h"
 #include "pNesX_System_DC.h"
 
-extern unsigned char pSprBuf[];
-extern int SprBufClean;
-
 // How many entries in SpritesToDrawNextScanline are valid
-unsigned char NumSpritesToDrawNextScanline;
+unsigned char NumSpritesToDrawNextScanline = 0;
 // The indexes of the top 8 sprites to draw on the next scanline
-unsigned char SpritesToDrawNextScanline[8];
+unsigned char SpritesToDrawNextScanline[8] = {0};
 // Mark whether the sprite overflow flag should be set on next scanline
-bool OverflowSpritesOnNextScanline;
+bool OverflowSpritesOnNextScanline = false;
 
 // How many entries in SpritesToDraw are valid
-unsigned char NumSpritesToDraw;
+unsigned char NumSpritesToDraw = 0;
 // The top 8 sprites to draw this scanline
-unsigned char SpritesToDraw[8];
+unsigned char SpritesToDraw[8] = {0};
 // Whether we overflowed sprites this scanline
-bool OverflowedSprites;
+bool OverflowedSprites = false;
+
+#define SPRITE_BUFFER
 
 void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
+	#ifdef SPRITE_BUFFER
+	unsigned char spriteBuffer[256];
+	#endif
+
 	int nX;
 	int nY;
 	int nYBit;
@@ -90,7 +93,9 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-
+#ifdef SPRITE_BUFFER
+//		memset4(spriteBuffer, 0, 256);
+#endif
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
@@ -149,6 +154,15 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 				patternData[ 7 ] = byData2 & 3;
 			}
 
+#ifdef SPRITE_BUFFER
+			nAttr ^= SPR_ATTR_PRI;
+			bySprCol = (( nAttr & SPR_ATTR_PRI )  << 2 ) | ((pSPRRAM == SPRRAM) ? 0x40 : 0x00);
+			for (offset; offset < pixelsToDraw; offset++) {
+				if (patternData[offset]) {
+					spriteBuffer[nX + offset] = bySprCol | (pPalTbl[patternData[offset]] & 0x3F);
+				}
+			}
+#else
 			// If we haven't hit sprite 0 yet - check for it on this sprite draw
 			if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
 				for (offset; offset < pixelsToDraw; offset++) {
@@ -158,26 +172,51 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 						SpriteJustHit = ppuinfo.PPU_Scanline;
 					}
 
-					// if the sprite pixel is not transparent, and priority over background is set for this sprite or the background pixel is not transparent, draw the pixel
-					if (patternData[offset] && (((nAttr & SPR_ATTR_PRI) == 0) || (scanline_buffer[drawOffset] & 0x40))) {
-						// keep the background transparent pixel bit set, so that no matter whether this pixel is overwritten with a sprite
-						// we remember that it was once a non-transparent pixel for the purposes of sprite 0 hit
-						scanline_buffer[drawOffset] = (scanline_buffer[drawOffset] & 0x40) | pPalTbl[patternData[ offset ]];
+					// if the sprite pixel is not transparent, and priority over background is set for this sprite or the background pixel is not transparent or we've previously drawn a sprite here, draw the pixel
+					if (patternData[offset]) {
+						if ((nAttr & SPR_ATTR_PRI) == 0) {
+							scanline_buffer[drawOffset] = (scanline_buffer[drawOffset] & 0x40) | 0x80 | pPalTbl[patternData[ offset ]];	
+						} else if ((scanline_buffer[drawOffset] & 0xC0) == 0x40) {
+							scanline_buffer[drawOffset] = (scanline_buffer[drawOffset] & 0x40) | pPalTbl[patternData[ offset ]];							
+						}
 					}
 				}
-			// Otherwise we've hit sprite 0 so we don't need to check for sprite 0 collisions
+			// Otherwise we've hit sprite 0 so we don't need to check for sprite hit
 			} else {
 				for (offset; offset < pixelsToDraw; offset++) {
 					unsigned char drawOffset = nX + offset;
 
-					// if the sprite pixel is not transparent, and priority over background is set for this sprite or the background pixel is not transparent, draw the pixel
-					if (patternData[ offset ] && (((nAttr & SPR_ATTR_PRI) == 0) || (scanline_buffer[drawOffset] & 0x40))) {
-						// keep the background transparent pixel bit set, so that no matter whether this pixel is overwritten with a sprite
-						// we remember that it was once a non-transparent pixel for the purposes of sprite 0 hit						
-						scanline_buffer[drawOffset] = (scanline_buffer[drawOffset] & 0x40) | pPalTbl[patternData[ offset ]];
+					// if the sprite pixel is not transparent, and priority over background is set for this sprite or the background pixel is not transparent or we've previously drawn a sprite here, draw the pixel
+					if (patternData[offset]) {
+						if ((nAttr & SPR_ATTR_PRI) == 0) {
+							scanline_buffer[drawOffset] = (scanline_buffer[drawOffset] & 0x40) | 0x80 | pPalTbl[patternData[ offset ]];	
+						} else if (scanline_buffer[drawOffset] & 0xC0) {
+							scanline_buffer[drawOffset] = (scanline_buffer[drawOffset] & 0x40) | pPalTbl[patternData[ offset ]];							
+						}
 					}
-				}			
+				}
 			}
-		}	
+#endif
+		}
+
+#ifdef SPRITE_BUFFER
+		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
+			for (uint16 i = 0; i < 256; i++) {
+				if ((i < 255) && (spriteBuffer[i] & 0x40) && ((scanline_buffer[i] & 0x40) == 0)) {
+					SpriteJustHit = ppuinfo.PPU_Scanline;
+				}
+
+				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
+					scanline_buffer[i] = spriteBuffer[i];
+				}
+			}
+		}  else {
+			for (uint16 i = 0; i < 256; i++) {
+				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
+					scanline_buffer[i] = spriteBuffer[i];
+				}
+			}
+		}		
+#endif
 	}
 }
