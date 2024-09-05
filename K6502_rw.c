@@ -81,9 +81,11 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     // MS - this doesn't seem to be related to reading from 0x2002 in the current documents
                     // PPU Increment is technically related to this, so maybe keeping this in a separate variable
                     // might be getting out of sync?
+                    /*
                     if ( ppuinfo.PPU_Scanline >= 241 && !( ppuinfo.PPU_R0 & R0_NMI_VB ) ) {
                         ppuinfo.PPU_R0 &= ~R0_NAME_ADDR;
                     }
+                    */
 
                     //Set the Sprite Hit Flag
                     /*
