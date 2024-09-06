@@ -17,7 +17,6 @@ ProfilingInformation_t* profilingInformation;
 bool resetPerformanceCounter = false;
 
 void resetProfiling(uint32 numFunctions) {
-    numEmulationFrames = 0;
     if (profilingInformation) {
         for (uint32 i = 0; i < numProfilingFunctions; i++) {
             free(profilingInformation[i].functionName);
@@ -40,10 +39,6 @@ void resetProfiling(uint32 numFunctions) {
     resetPerformanceCounter = true;
 
     numEmulationFrames = 0;
-}
-
-void setMaximumProfilingFunctions(uint32 maximumFunctions) {
-    numProfilingFunctions = maximumFunctions;
 }
 
 void setProfilingFunctionName(uint32 functionIndex, const char* functionName) {

@@ -492,8 +492,7 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 void pNesX_Main() {
 	pNesX_Init();
 
-	setMaximumProfilingFunctions(MAX_PROFILING_FUNCTIONS);
-	resetProfiling();
+	resetProfiling(MAX_PROFILING_FUNCTIONS);
 	setProfilingFunctionName(0, "K6502_Step");
 	setProfilingFunctionName(1, "handle_dmc_synchronization");
 	setProfilingFunctionName(2, "pNesX_DrawLine");
