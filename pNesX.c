@@ -495,8 +495,8 @@ void pNesX_Main() {
 	resetProfiling(MAX_PROFILING_FUNCTIONS);
 	setProfilingFunctionName(0, "K6502_Step");
 	setProfilingFunctionName(1, "handle_dmc_synchronization");
-	setProfilingFunctionName(2, "pNesX_DrawLine");
-	setProfilingFunctionName(3, "pNesX_LoadFrame");
+	setProfilingFunctionName(2, "pNesX_DrawLine_BG_C");
+	setProfilingFunctionName(3, "pNesX_DrawLine_Spr_C");
 	setProfilingFunctionName(4, "pNesX_DoSpu");
 	setProfilingFunctionName(5, "audio_sync_apu_registers");
 
@@ -562,6 +562,7 @@ void pNesX_Main() {
 }
 
 #define CYCLES_PER_LINE 113
+#define HSYNC_CYCLES 28
 
 void handle_dmc_synchronization(uint32 cycles) {
 	startProfiling(1);
@@ -596,7 +597,7 @@ void pNesX_Cycle() {
 	// Scanline 0-239
 	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++) {
 		uint16 cpu_cycles_to_emulate = CYCLES_PER_LINE;
-		uint16 hsync_cycles = 28;
+		uint16 hsync_cycles = HSYNC_CYCLES;
 		if ((ppuinfo.PPU_Scanline + 1) % 3 == 0) {
 			cpu_cycles_to_emulate += 2;
 			hsync_cycles += 1;
@@ -620,7 +621,6 @@ void pNesX_Cycle() {
 				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
 
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-
 
 				if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
 					ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);

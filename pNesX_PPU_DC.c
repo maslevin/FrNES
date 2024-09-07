@@ -35,7 +35,6 @@ void pNesX_StartFrame() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_DrawLine() {
-	startProfiling(2);
 	void* texture_address;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
@@ -55,5 +54,4 @@ void pNesX_DrawLine() {
 
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(Scanline_Buffer, texture_address, 256);
-	endProfiling(2);
 }

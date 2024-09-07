@@ -7,6 +7,8 @@
 #include "Mapper.h"
 #include "Mapper_9.h"
 
+#include "profile.h"
+
 void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	uint16 nX;
 	uint16 nY;
