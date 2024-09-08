@@ -15,6 +15,8 @@
 #include <kos.h>
 #include "macros.h"
 
+#include "input_recorder.h"
+
 #include "pNesX.h"
 #include "Mapper.h"
 #include "pNesX_System.h"
@@ -555,6 +557,7 @@ void pNesX_Main() {
 		}
 */		
 	}
+
 	printf("Exiting Emulator Main Loop\n");
 
 	pNesX_Fin();

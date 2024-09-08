@@ -319,8 +319,8 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                 case 0x16:  /* 0x4016 */
                     // Reset joypad
                     if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) ) {
-                      PAD1_Bit = 0;
-                      PAD2_Bit = 0;
+                        PAD1_Bit = 0;
+                        PAD2_Bit = 0;
                     }
                     break;
 

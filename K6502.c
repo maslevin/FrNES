@@ -174,7 +174,7 @@ uint16 g_wPassedClocks;
 uint32 totalClocks;
 
 // A table for the test
-unsigned char g_byTestTable[ 256 ];
+uint8 g_byTestTable[ 256 ];
 
 // Value and Flag Data
 typedef struct __attribute__ ((packed, aligned(4))) {

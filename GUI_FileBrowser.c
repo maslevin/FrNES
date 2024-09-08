@@ -288,41 +288,9 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 			(selected_string[selected_string_length - 2] == 'e') && 
 			(selected_string[selected_string_length - 1] == 's')) {
 
-			//TODO: functionalitze this so that it's not in 2 places
-
-			uint32 romFileSize = myRomInfos[mydata.Highlighted_Index].FileSize;
+			RomSize = myRomInfos[mydata.Highlighted_Index].FileSize;
 			strcpy(szRomPath, myRomInfos[mydata.Highlighted_Index].PhysFileName);
-			printf("main: loading rom [%s]\n", szRomPath);
-			if (pNesX_Load(szRomPath, romFileSize) == 0) {
-				//Load Its SaveRAM
-				if (SRAM_Enabled) {
-					LoadSRAM();
-				}
-
-				//Stay in Emulator During Operation
-				pNesX_Main();
-
-				//Clean Up Afterwards
-				free (ROM);
-				ROM = NULL;
-				
-				//There are some games that don't have VROM
-				if (VROM != NULL) {
-					free (VROM);
-					VROM = NULL;
-				} 
-				if (VRAM != NULL) {
-					free (VRAM);
-					VRAM = NULL;
-				}
-
-				//Save Its SaveRAM
-				if (SRAM_Enabled) {
-					SaveSRAM();
-				}
-			} else {
-				printf("main: error failed to start emulator!!!!\n");
-			}
+			launchEmulator();
 			disable_trigs = 1;
 			my_state -> rtrig = 255;
 		// pressed on a directory
