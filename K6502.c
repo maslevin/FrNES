@@ -177,22 +177,22 @@ uint32 totalClocks;
 unsigned char g_byTestTable[ 256 ];
 
 // Value and Flag Data
-struct value_table_tag {
+typedef struct __attribute__ ((packed, aligned(4))) {
 	unsigned char byValue;
 	unsigned char byFlag;
-};
+} value_table_tag;
 
 // A table for ASL
-struct value_table_tag g_ASLTable[ 256 ];
+value_table_tag g_ASLTable[ 256 ];
 
 // A table for LSR
-struct value_table_tag g_LSRTable[ 256 ];
+value_table_tag g_LSRTable[ 256 ];
 
 // A table for ROL
-struct value_table_tag g_ROLTable[ 2 ][ 256 ];
+value_table_tag g_ROLTable[ 2 ][ 256 ];
 
 // A table for ROR
-struct value_table_tag g_RORTable[ 2 ][ 256 ];
+value_table_tag g_RORTable[ 2 ][ 256 ];
 
 uint16 wA0;
 unsigned char byD0;

@@ -16,9 +16,9 @@
 #include "macros.h"
 
 #include "pNesX.h"
+#include "Mapper.h"
 #include "pNesX_System.h"
 #include "profile.h"
-#include "Mapper.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Sound_APU.h"
 #include "pNesX_PPU_DC.h"

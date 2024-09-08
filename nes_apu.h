@@ -75,7 +75,7 @@
 ** to keep the sample processing as lean as possible
 */
  
-typedef struct rectangle_s {
+typedef struct __attribute__ ((packed, aligned(4))) rectangle_s {
     uint8 regs[4];
 
     boolean enabled;
@@ -116,7 +116,7 @@ typedef struct rectangle_s {
     int vbl_length_cur;
 } rectangle_t;
 
-typedef struct triangle_s {
+typedef struct __attribute__ ((packed, aligned(4))) triangle_s {
     uint8 regs[3];
 
     boolean enabled;
@@ -147,7 +147,7 @@ typedef struct triangle_s {
 #endif
 } triangle_t;
 
-typedef struct noise_s {
+typedef struct __attribute__ ((packed, aligned(4))) noise_s {
     uint8 regs[3];
 
     boolean enabled;
@@ -179,7 +179,7 @@ typedef struct noise_s {
     int vbl_length_cur;
 } noise_t;
 
-typedef struct dmc_s {
+typedef struct __attribute__ ((packed, aligned(4))) dmc_s {
     uint8 regs[4];
 
     /* bodge for timestamp queue */
@@ -210,7 +210,7 @@ typedef struct dmc_s {
     boolean irq_occurred_cur;
 } dmc_t;
 
-typedef struct apusound_s {
+typedef struct __attribute__ ((packed, aligned(4))) APUSOUND_s {
     rectangle_t rectangle[2];
     triangle_t triangle;
     noise_t noise;
@@ -229,15 +229,14 @@ typedef enum {
     NES_APU_EXSOUND_FME7,
 } nes_apu_exsound_type_t;
 
-
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) nes_apu_exsound_s {
     int32 (*render_func)();
     void (*write_func)(uint32 address, uint8 value);
 } nes_apu_exsound_t;
 
 /* VRC6 Sound struct */
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) VRC6_SQUARE_s{
     uint32 cps;
     int32 cycles;
     uint32 spd;
@@ -246,7 +245,7 @@ typedef struct {
     uint8 adr;
 } VRC6_SQUARE;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) VRC6_SAW_s {
     uint32 cps;
     int32 cycles;
     uint32 spd;
@@ -256,7 +255,7 @@ typedef struct {
     uint8 adr;
 } VRC6_SAW;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) VRC6SOUND_s {
     VRC6_SQUARE square[2];
     VRC6_SAW saw;
     uint32 mastervolume;
@@ -265,7 +264,7 @@ typedef struct {
 /* ------------------------------------------------------------ */
 /* VRC7 Sound struct */
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) OPLL_OP_s {
     uint32	pg_phase;
     uint32	pg_spd;
     int32	vib_cycles;
@@ -288,7 +287,7 @@ typedef struct {
     uint8	eg_am;
 } OPLL_OP;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) OPLL_LFO_s {
     uint32	cps;
     uint32	spd;
     int32	cycles;
@@ -298,7 +297,7 @@ typedef struct {
     uint32	output;
 } OPLL_LFO;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) OPLL_CH_s {
     uint32 cps;
     int32 cycles;
     uint32 fbbuf[2];
@@ -314,7 +313,7 @@ typedef struct {
     uint8 update;
 } OPLL_CH;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) OPLLSOUND_s {
     OPLL_CH ch[6];
     OPLL_LFO lfo[2];
     uint32 mastervolume;
@@ -327,7 +326,7 @@ typedef struct {
 /* ------------------------------------------------------------ */
 /* FDS Sound struct */
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) FDS_FMOP_s {
     uint32 wave[0x40];
     uint32 envspd;
     int32 envphase;
@@ -346,7 +345,7 @@ typedef struct {
     uint32 last_spd;
 } FDS_FMOP;
 
-typedef struct FDSSOUND {
+typedef struct __attribute__ ((packed, aligned(4))) FDSSOUND_s {
     uint32 cps;
     int32 cycles;
     uint32 mastervolume;
@@ -364,7 +363,7 @@ typedef struct FDSSOUND {
 /* ------------------------------------------------------------ */
 /* MMC5 Sound struct */
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) MMC5_SQUARE_s {
     uint32 cps;
     int32 cycles;
     int32 sweepphase;
@@ -387,12 +386,12 @@ typedef struct {
     uint8 duty;
 } MMC5_SQUARE;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) MMC5_DA_s {
     int32 output;
     uint8 key;
 } MMC5_DA;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) MMC5SOUND_s {
     MMC5_SQUARE square[2];
     MMC5_DA da;
 } MMC5SOUND;
@@ -400,7 +399,7 @@ typedef struct {
 /* ------------------------------------------------------------ */
 /* N106 Sound struct */
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) N106_WM_s {
     uint32 logvol;
     int32 cycles;
     uint32 spd;
@@ -409,7 +408,7 @@ typedef struct {
     uint8 tadr;
 } N106_WM;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) N106SOUND_s {
     uint32 cps;
     uint32 mastervolume;
 
@@ -426,7 +425,7 @@ typedef struct {
 /* ------------------------------------------------------------ */
 /* FME7 Sound struct */
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) PSG_SQUARE_s {
     uint32 cps;
     int32 cycles;
     uint32 spd;
@@ -436,7 +435,7 @@ typedef struct {
     uint8 key;
 } PSG_SQUARE;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) PSG_NOISE_s {
     uint32 cps;
     int32 cycles;
     uint32 spd;
@@ -446,7 +445,7 @@ typedef struct {
     uint8 noiseout;
 } PSG_NOISE;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) PSG_ENVELOPE_s {
     uint32 cps;
     int32 cycles;
     uint32 spd;
@@ -456,7 +455,7 @@ typedef struct {
     uint8 update;
 } PSG_ENVELOPE;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) PSGSOUND_s {
     PSG_SQUARE square[3];
     PSG_ENVELOPE envelope;
     PSG_NOISE noise;
@@ -501,12 +500,14 @@ typedef void (*apu_memwrite)(uint32 address, uint8 value);
 #define  APUQUEUE_MASK  (APUQUEUE_SIZE - 1)
 
 /* apu ring buffer member */
-typedef struct apudata_s {
+typedef struct __attribute__ ((packed, aligned(4))) apudata_s {
     uint32 timestamp, address;
     uint8 value;
 } apudata_t;
 
-typedef struct apu_s {
+typedef struct __attribute__ ((packed, aligned(4))) apu_s {
+    nes_apu_exsound_type_t exsound_type;
+    nes_apu_exsound_t exsound;    
     APUSOUND apus;
     VRC6SOUND vrc6s;
     OPLLSOUND ym2413s;
@@ -525,8 +526,6 @@ typedef struct apu_s {
     apudata_t ex_queue[APUQUEUE_SIZE];
     int ex_q_head, ex_q_tail;
     int exsound_enable;
-    nes_apu_exsound_type_t exsound_type;
-    nes_apu_exsound_t exsound;
     
     uint32 elapsed_cycles;
     

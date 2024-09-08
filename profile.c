@@ -5,7 +5,7 @@ uint32 numEmulationFrames = 0;
 #ifdef PROFILE
 uint32 numProfilingFunctions = 0;
 
-typedef struct ProfilingInformation {
+typedef struct __attribute__ ((packed, aligned(4))) {
     char* functionName;
     uint64 startTime;
     uint64 nanoseconds;

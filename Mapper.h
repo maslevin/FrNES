@@ -15,17 +15,15 @@
 /*-------------------------------------------------------------------*/
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
-
 #include <kos.h>
 #include "pNesX.h"
 #include "pNesX_System_DC.h"
 #include "K6502.h"
-#include "K6502_rw.h"
 
 /*-------------------------------------------------------------------*/
 /*  Mapper Configuration                                             */
 /*-------------------------------------------------------------------*/
-typedef struct Mapper {
+typedef struct __attribute__ ((packed, aligned(4))) Mapper_s {
 	void (*init)();
 	void (*write)( uint16 wAddr, unsigned char byData );
 	unsigned char (*read)( uint16 wAddr );
@@ -33,12 +31,12 @@ typedef struct Mapper {
 	void (*hsync)();
 } Mapper;
 
-typedef struct MapperTable {
+typedef struct __attribute__ ((packed, aligned(4))) MapperTable_s {
   int nMapperNo;
-  Mapper* mapper;
+  Mapper * mapper;
 } MapperTable;
 
-extern struct MapperTable Mappers[];
+extern MapperTable Mappers[];
 
 /*-------------------------------------------------------------------*/
 /*  Macros                                                           */

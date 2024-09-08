@@ -18,6 +18,8 @@
 //#include "pNesX_Types.h"
 #include <kos.h>
 
+#include "Mapper.h"
+
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
@@ -216,7 +218,7 @@ struct NesHeader_tag {
 extern struct NesHeader_tag NesHeader;
 
 /* Mapper No. */
-extern struct Mapper* mapper;
+struct Mapper;
 extern unsigned char MapperNo;
 
 /* Other */

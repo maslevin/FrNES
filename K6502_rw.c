@@ -13,6 +13,7 @@
 #include "macros.h"
 
 extern uint16* opt_SoundEnabled;
+extern Mapper* mapper;
 
 /*===================================================================*/
 /*                                                                   */
