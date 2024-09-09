@@ -321,17 +321,6 @@ int pNesX_Reset() {
 	// TODO : make ROM loading and resetting separated
 	int nIdx;
 
-	// Get Mapper Number
-	MapperNo = NesHeader.byInfo1 >> 4;
-
-	// Check bit counts of Mapper No.
-	for ( nIdx = 4; nIdx < 8 && NesHeader.byReserve[ nIdx ] == 0; ++nIdx );
-
-	if ( nIdx == 8 ) {
-		// Mapper Number is 8bits
-		MapperNo |= ( NesHeader.byInfo2 & 0xf0 );
-	}
-
 	// Get information on the ROM
 	if (NesHeader.byInfo1 & 0x08) {
 		ROM_Mirroring = MIRRORING_FOUR_SCREEN;
