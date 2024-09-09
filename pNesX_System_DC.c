@@ -1082,12 +1082,14 @@ void handleButton(uint32* controllerBitflags,
 	if (buttonOn) {
 		*controllerBitflags |= (0x1 << controllerBitflagIndex);
 		if ((recordingMode == RECORDING_MODE_ENABLED) && (!inputActive[controllerBitflagIndex])) {
+//			printf("Button [%u] Start [%lu]\n", controllerBitflagIndex, numEmulationFrames);
 			inputActive[controllerBitflagIndex] = true;
 			inputs[controllerBitflagIndex].frameStart = numEmulationFrames;
 		}
 	} else if (inputActive[controllerBitflagIndex]) {
 		if (recordingMode == RECORDING_MODE_ENABLED) {
-			inputs[controllerBitflagIndex].frameDuration = (numEmulationFrames - 1) - inputs[controllerBitflagIndex].frameStart;
+			inputs[controllerBitflagIndex].frameDuration = numEmulationFrames - inputs[controllerBitflagIndex].frameStart;
+//			printf("Button [%u] End [%lu] Duration [%u]\n", controllerBitflagIndex, numEmulationFrames, inputs[controllerBitflagIndex].frameDuration);
 			inputs[controllerBitflagIndex].controller = controller;
 			inputs[controllerBitflagIndex].button = controllerBitflagIndex;
 			recordInput(&inputs[controllerBitflagIndex]);
@@ -1104,20 +1106,26 @@ bool playbackRecording(uint32* controllerBitflags) {
 		InputFrame_t* sample = &frameInputs[currentSample];
 		inputActive[sample -> button] = true;
 		memcpy(&inputs[sample -> button], sample, sizeof(InputFrame_t));
+//		printf("Button [%u] Start [%lu]\n", sample -> button, numEmulationFrames);
 //		printf("Added press on frame [%lu] in sample [%lu].  Next input on frame [%lu]\n", numEmulationFrames, currentSample, frameInputs[currentSample + 1].frameStart);
 		currentSample++;
 	}
 
-	if (frameInputs[currentSample].frameStart < numEmulationFrames) {
+/*
+	if (currentSam numEmulationFrames) {
 		printf("WARNING - frame inputs out of sync, head at [%lu] current frame at [%lu]\n", frameInputs[currentSample].frameStart, numEmulationFrames);
 		return false;
 	}
+*/
 
 	// process all of inputs, and if there are active ones, keep playing them
 	// if they go past their duration, turn them off
+	bool activityDone = true;
 	for (uint8 inputIndex = 0; inputIndex < 8; inputIndex++) {
 		if (inputActive[inputIndex]) {		
-			if (numEmulationFrames - inputs[inputIndex].frameStart > inputs[inputIndex].frameDuration) {
+			activityDone = false;
+			if (numEmulationFrames - inputs[inputIndex].frameStart > (inputs[inputIndex].frameDuration)) {
+//				printf("Button [%u] End [%lu] Duration [%u]\n", inputIndex, numEmulationFrames, inputs[inputIndex].frameDuration);
 				inputActive[inputIndex] = false;
 			} else {
 				*controllerBitflags |= (0x1 << inputIndex);	
@@ -1127,7 +1135,7 @@ bool playbackRecording(uint32* controllerBitflags) {
 
 	*controllerBitflags = *controllerBitflags | (*controllerBitflags << 8);
 
-	return !(currentSample == numSamples);
+	return !((currentSample == numSamples) && (activityDone));
 }
 
 void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {	
@@ -1243,7 +1251,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 			if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) {
 				(*ExitCount)++;
 			} else {
-				ExitCount = 0;
+				*ExitCount = 0;
 			}
 		}		
 	}

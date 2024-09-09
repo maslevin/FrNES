@@ -36,10 +36,11 @@ void sortInputFrames() {
             memcpy(&frameInputs[minimumFrameIndex], &temp, sizeof(InputFrame_t));
         }
     }
-
-    for (uint32 frameIndex = 0; frameIndex < numSamples - 1; frameIndex++) {
+/*
+    for (uint32 frameIndex = 0; frameIndex < numSamples; frameIndex++) {
         printf("Index [%lu]: Button [%u] Start [%lu] Duration [%u]\n", frameIndex, frameInputs[frameIndex].button, frameInputs[frameIndex].frameStart, frameInputs[frameIndex].frameDuration);
     }
+*/
 }
 
 void uploadRecording() {
@@ -51,7 +52,7 @@ void uploadRecording() {
 	char PCPath[256];
 
 	// TODO: use a log time or something like that in the filename here
-	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%lu_recording.inp", currentCRC32);	
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08X_recording.inp", currentCRC32);
 	file_t PCFile = fs_open(PCPath, O_WRONLY);
 	if (PCFile != -1) {
         fs_write(PCFile, frameInputs, currentSample * sizeof(InputFrame_t));
@@ -66,7 +67,7 @@ bool loadRecording() {
     printf("Loading Input Recording from PC Host\n");
 	char PCPath[256];
 	// TODO: use a log time or something like that in the filename here
-	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%lu_recording.inp", currentCRC32);	
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08X_recording.inp", currentCRC32);	
 	file_t PCFile = fs_open(PCPath, O_RDONLY);
 	if (PCFile != -1) {
         uint32 size = fs_read(PCFile, frameInputs, MAXIMUM_INPUT_FRAMES * sizeof(InputFrame_t));
@@ -74,6 +75,13 @@ bool loadRecording() {
         numSamples = size / sizeof(InputFrame_t);
         printf("Read Recording containing [%lu] samples\n", numSamples);
 		fs_close(PCFile);
+
+/*
+        for (uint32 frameIndex = 0; frameIndex < numSamples; frameIndex++) {
+            printf("Index [%lu]: Button [%u] Start [%lu] Duration [%u]\n", frameIndex, frameInputs[frameIndex].button, frameInputs[frameIndex].frameStart, frameInputs[frameIndex].frameDuration);
+        }
+*/
+
 		printf("Closed file on PC\n");
         return true;
 	} else {

@@ -38,7 +38,7 @@
 extern bool log_enabled;
 
 extern char szRomPath[];
-// extern char szRomName[ 256 ];
+extern uint32 RomSize;
 
 void pNesX_Texture_Write( void *dest, void* src);
 void pNesX_Texture_Fill(void *dest, uint32 val);
@@ -60,6 +60,8 @@ int LoadSRAM();
 int SaveSRAM();
 
 int draw_VMU_icon(maple_device_t* vmu, char* icon);
+
+void launchEmulator();
 
 #ifdef DEBUG
 void pNesX_DebugPrint(char* fmt, ...);
