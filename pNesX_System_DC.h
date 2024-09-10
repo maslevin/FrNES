@@ -34,6 +34,12 @@
 #define MENUNUM_CREDITS         8
 #define MENUNUM_AUTOROM         99
 
+#define RECORDING_MODE_DISABLED 0
+#define RECORDING_MODE_ENABLED 1
+#define RECORDING_MODE_PLAYBACK 2
+
+extern uint8 recordingMode;
+
 extern bool log_enabled;
 
 extern char szRomPath[];

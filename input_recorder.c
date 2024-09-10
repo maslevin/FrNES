@@ -54,8 +54,6 @@ void uploadRecording() {
     sortInputFrames();
 
 	char PCPath[256];
-
-	// TODO: use a log time or something like that in the filename here
 	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08lX_recording.inp", currentCRC32);
 	file_t PCFile = fs_open(PCPath, O_WRONLY);
 	if (PCFile != -1) {
@@ -70,7 +68,6 @@ void uploadRecording() {
 bool loadRecording() {
     printf("Loading Input Recording from PC Host\n");
 	char PCPath[256];
-	// TODO: use a log time or something like that in the filename here
 	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08lX_recording.inp", currentCRC32);	
 	file_t PCFile = fs_open(PCPath, O_RDONLY);
 	if (PCFile != -1) {

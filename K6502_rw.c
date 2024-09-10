@@ -12,7 +12,7 @@
 #include "pNesX_Sound_APU.h"
 #include "macros.h"
 
-extern uint16* opt_SoundEnabled;
+extern uint16 opt_SoundEnabled;
 extern Mapper* mapper;
 
 /*===================================================================*/
@@ -337,7 +337,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         REALPC;
                     } else {
                         APU_Reg[ wAddr & 0x1f ] = byData;
-                        if (*opt_SoundEnabled) {
+                        if (opt_SoundEnabled) {
                             audio_write(wAddr, byData);
                         }
                     }

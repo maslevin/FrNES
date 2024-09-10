@@ -13,59 +13,46 @@
 #include "pNesX_System_DC.h"
 
 char Frameskip_Buffer[50];
+char Recording_Mode_Buffer[50];
 
 //System Options Text
-char Options_System[] = "System Options";
-char Options_Frameskip[] = "Frameskip";
-char Options_Sound_Checked[] = "<Check>Enable Sound,CBC_CHECKED";
-char Options_Sound_Unchecked[] = "<Check>Enable Sound,CBC_UNCHECKED";
-char Options_Show_Framerate_Checked[] = "<Check>Show Framerate,CBC_CHECKED";
-char Options_Show_Framerate_Unchecked[] = "<Check>Show Framerate,CBC_UNCHECKED";
-char Options_VMU[] = "VMU Options";
-char Options_Port[] = "Use VMU Port";
-char Options_CXXX[] = "No VMU Detected";
-char Options_C1S1[] = "Controller 1 Slot 1";
-char Options_C1S2[] = "Controller 1 Slot 2";
-char Options_C2S1[] = "Controller 2 Slot 1";
-char Options_C2S2[] = "Controller 2 Slot 2";
-char Options_C3S1[] = "Controller 3 Slot 1";
-char Options_C3S2[] = "Controller 3 Slot 2";
-char Options_C4S1[] = "Controller 4 Slot 1";
-char Options_C4S2[] = "Controller 4 Slot 2";
-char Options_SRAM_Checked[] = "<Check>SRAM Enable,CBC_CHECKED";
-char Options_SRAM_Unchecked[] = "<Check>SRAM Enable,CBC_UNCHECKED";
-char Options_LoadVMU[] = "Load From VMU";
-char Options_SaveVMU[] = "Save From VMU";
-char Options_Rescan[] = "Rescan Maple Bus";
+const char Options_System[] = "System Options";
+const char Options_Frameskip[] = "Frameskip";
+const char Options_Sound_Checked[] = "<Check>Enable Sound,CBC_CHECKED";
+const char Options_Sound_Unchecked[] = "<Check>Enable Sound,CBC_UNCHECKED";
+const char Options_Show_Framerate_Checked[] = "<Check>Show Framerate,CBC_CHECKED";
+const char Options_Show_Framerate_Unchecked[] = "<Check>Show Framerate,CBC_UNCHECKED";
+const char Options_VMU[] = "VMU Options";
+const char Options_Port[] = "Use VMU Port";
+const char Options_CXXX[] = "No VMU Detected";
+const char Options_C1S1[] = "Controller 1 Slot 1";
+const char Options_C1S2[] = "Controller 1 Slot 2";
+const char Options_C2S1[] = "Controller 2 Slot 1";
+const char Options_C2S2[] = "Controller 2 Slot 2";
+const char Options_C3S1[] = "Controller 3 Slot 1";
+const char Options_C3S2[] = "Controller 3 Slot 2";
+const char Options_C4S1[] = "Controller 4 Slot 1";
+const char Options_C4S2[] = "Controller 4 Slot 2";
+const char Options_SRAM_Checked[] = "<Check>SRAM Enable,CBC_CHECKED";
+const char Options_SRAM_Unchecked[] = "<Check>SRAM Enable,CBC_UNCHECKED";
+const char Options_LoadVMU[] = "Load From VMU";
+const char Options_SaveVMU[] = "Save From VMU";
+const char Options_Rescan[] = "Rescan Maple Bus";
+const char Options_Recording_Mode[] = "Input Recording Mode";
+const char Options_Recording_Mode_Disabled[] = "Disabled";
+const char Options_Recording_Mode_Record[] = "Record";
+const char Options_Recording_Mode_Playback[] = "Playback";
 
-char* System_Options[10];
-const int Num_System_Options = 10;
+char* System_Options[11];
+const int Num_System_Options = 11;
 
 //Options Variables
-uint16* opt_SoundEnabled;
-uint16* opt_FrameSkip;
-uint16* opt_AutoFrameSkip;
-uint16* opt_ShowFrameRate;
-int16* opt_VMUPort;
-uint16* opt_SRAM;
-
-void Allocate_System_Options() {
-	opt_SoundEnabled = malloc(sizeof(uint16));
-	opt_FrameSkip = malloc(sizeof(uint16));
-	opt_AutoFrameSkip = malloc(sizeof(uint16));
-	opt_ShowFrameRate = malloc(sizeof(uint16));
-	opt_VMUPort = malloc(sizeof(int16));
-	opt_SRAM = malloc(sizeof(uint16));
-}
-
-void Free_System_Options() {
-	free(opt_SoundEnabled);
-	free(opt_FrameSkip);
-	free(opt_AutoFrameSkip);
-	free(opt_ShowFrameRate);
-	free(opt_VMUPort);
-	free(opt_SRAM);
-}
+uint16 opt_SoundEnabled;
+uint16 opt_FrameSkip;
+uint16 opt_AutoFrameSkip;
+uint16 opt_ShowFrameRate;
+int16 opt_VMUPort;
+uint16 opt_SRAM;
 
 void setup_system_options_screen() {
 	//Set Up Window Data Features
@@ -120,7 +107,7 @@ void setup_system_options_screen() {
 }
 
 void Generate_System_Options_List() {
-	switch(*opt_SoundEnabled) {
+	switch(opt_SoundEnabled) {
 		case 0:
 			System_Options[0] = Options_Sound_Unchecked;
 			break;
@@ -129,9 +116,9 @@ void Generate_System_Options_List() {
 			break;
 	}
 
-	switch(*opt_AutoFrameSkip) {
+	switch(opt_AutoFrameSkip) {
 		case 0:
-			snprintf(Frameskip_Buffer, 50, "%s,%u<RLAlign>", Options_Frameskip, *opt_FrameSkip);
+			snprintf(Frameskip_Buffer, 50, "%s,%u<RLAlign>", Options_Frameskip, opt_FrameSkip);
 			System_Options[1] = Frameskip_Buffer;
 			break;
 		case 1:
@@ -143,7 +130,7 @@ void Generate_System_Options_List() {
 			break;
 	}
 
-	switch(*opt_ShowFrameRate) {
+	switch(opt_ShowFrameRate) {
 		case 0:
 			System_Options[2] = Options_Show_Framerate_Unchecked;
 			break;
@@ -155,7 +142,7 @@ void Generate_System_Options_List() {
 	System_Options[3] = Options_VMU;
 	System_Options[4] = Options_Port;
 	
-	switch(*opt_VMUPort) {
+	switch(opt_VMUPort) {
 		case -1:
 			System_Options[5] = Options_CXXX;
 			break;
@@ -186,7 +173,7 @@ void Generate_System_Options_List() {
 	}
 
 
-	switch(*opt_SRAM) {
+	switch(opt_SRAM) {
 		case 0:
 			System_Options[6] = Options_SRAM_Unchecked;
 			break;
@@ -198,6 +185,19 @@ void Generate_System_Options_List() {
 	System_Options[7] = Options_LoadVMU;
 	System_Options[8] = Options_SaveVMU;
 	System_Options[9] = Options_Rescan;
+
+	switch(recordingMode) {
+		case 0:
+			snprintf(Recording_Mode_Buffer, 50, "%s,%s<RLAlign>", Options_Recording_Mode, Options_Recording_Mode_Disabled);
+			break;
+		case 1:
+			snprintf(Recording_Mode_Buffer, 50, "%s,%s<RLAlign>", Options_Recording_Mode, Options_Recording_Mode_Record);
+			break;
+		case 2:
+			snprintf(Recording_Mode_Buffer, 50, "%s,%s<RLAlign>", Options_Recording_Mode, Options_Recording_Mode_Playback);
+			break;
+	}
+	System_Options[10] = Recording_Mode_Buffer;
 }
 
 void Handle_System_Interface(cont_state_t* my_state) {
@@ -226,17 +226,17 @@ void Handle_System_Interface(cont_state_t* my_state) {
 		(invalida == 0)) {
 		switch(mydata.Highlighted_Index) {
 			case 0:
-				*opt_SoundEnabled = 1 - (*opt_SoundEnabled);
+				opt_SoundEnabled = 1 - opt_SoundEnabled;
 				Generate_System_Options_List();
 				invalida = 1;
 				break;
 			case 2:
-				*opt_ShowFrameRate = 1 - (*opt_ShowFrameRate);
+				opt_ShowFrameRate = 1 - opt_ShowFrameRate;
 				Generate_System_Options_List();
 				invalida = 1;
 				break;				
 			case 6:
-				*opt_SRAM  = 1 - (*opt_SRAM);
+				opt_SRAM  = 1 - opt_SRAM;
 				Generate_System_Options_List();
 				invalida = 1;
 				break;
@@ -280,25 +280,19 @@ void Handle_System_Interface(cont_state_t* my_state) {
 
 	//Handle the modify boxes
 	if ((my_state -> buttons & CONT_DPAD_LEFT) && 
-		(xkeyhit == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
-			case 1:
-				if ((*opt_FrameSkip) > 0)
-				{
-					(*opt_FrameSkip)--;
+		(xkeyhit == 0)) {
+		switch(mydata.Highlighted_Index) {
+			case 1: {
+				if ((opt_FrameSkip) > 0) {
+					(opt_FrameSkip)--;
+					Generate_System_Options_List();
+					xkeyhit = 1;
+				} else if (opt_FrameSkip == 0) {
+					(opt_AutoFrameSkip) = 1;
 					Generate_System_Options_List();
 					xkeyhit = 1;
 				}
-				else
-				if (*opt_FrameSkip == 0)
-				{
-					(*opt_AutoFrameSkip) = 1;
-					Generate_System_Options_List();
-					xkeyhit = 1;
-				}
-				break;
+			} break;
 
 			case 5:
 /*			
@@ -316,29 +310,32 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				}
 */				
 				break;
+
+			case 10: {
+				if (recordingMode != RECORDING_MODE_DISABLED) {
+					recordingMode--;
+					Generate_System_Options_List();
+					xkeyhit = 1;					
+				}
+			} break;
 		}
 	}					
 
 	if ((my_state -> buttons & CONT_DPAD_RIGHT) && 
-		(xkeyhit == 0))
-	{
+		(xkeyhit == 0)) {
 		switch(mydata.Highlighted_Index)
 		{
-			case 1:
-				if ((*opt_AutoFrameSkip) == 1)
-				{
-					(*opt_AutoFrameSkip) = 0;
+			case 1: {
+				if ((opt_AutoFrameSkip) == 1) {
+					(opt_AutoFrameSkip) = 0;
+					Generate_System_Options_List();
+					xkeyhit = 1;
+				} else if ((opt_FrameSkip) < Max_Frameskip) {
+					(opt_FrameSkip)++;
 					Generate_System_Options_List();
 					xkeyhit = 1;
 				}
-				else
-				if ((*opt_FrameSkip) < Max_Frameskip)
-				{
-					(*opt_FrameSkip)++;
-					Generate_System_Options_List();
-					xkeyhit = 1;
-				}
-				break;
+			} break;
 
 			case 5:
 /*			
@@ -356,14 +353,20 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				}
 */				
 				break;
+
+			case 10: {
+				if (recordingMode != RECORDING_MODE_PLAYBACK) {
+					recordingMode++;
+					Generate_System_Options_List();
+					xkeyhit = 1;					
+				}
+			} break;				
 		}
 	}					
 
-
 	// Handle Return to Main Menu
 	if ((my_state -> buttons & CONT_B) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		setup_main_menu_screen();
 		menuscreen = MENUNUM_MAIN;
 	}

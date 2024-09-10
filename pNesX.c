@@ -239,7 +239,7 @@ void pNesX_Init() {
 
 	// Initialize Sound AICA program and ring buffers, and apu emulator
 	// Initialize pNesX
-	if (*opt_SoundEnabled) {
+	if (opt_SoundEnabled) {
 		// Start Sound Emu
 		DC_SoundInit();
 		timer_spin_sleep(40);
@@ -263,7 +263,7 @@ void pNesX_Init() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Fin() {
-	if (*opt_SoundEnabled) {
+	if (opt_SoundEnabled) {
 		spu_shutdown();
 	}
 
@@ -350,7 +350,7 @@ int pNesX_Reset() {
 	memset( SRAM, 0, sizeof SRAM );
 
 	// Reset frame skip and frame count
-	FrameSkip = *opt_FrameSkip;
+	FrameSkip = opt_FrameSkip;
 	FrameCnt = 0;
 
 	PollSkip = 6;
@@ -497,7 +497,7 @@ void pNesX_Main() {
 	uint64 frame_timestamp = 0;
 	double last_frames_per_second[NUM_FPS_SAMPLES];
 	uint32 last_frames_per_second_index = 0;	
-	if (*opt_ShowFrameRate) {
+	if (opt_ShowFrameRate) {
 		clock_gettime(CLOCK_MONOTONIC, &ts);		
 		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	}
@@ -515,7 +515,7 @@ void pNesX_Main() {
 		odd_cycle = !odd_cycle;
 		numEmulationFrames++;
 
-		if (*opt_ShowFrameRate) {
+		if (opt_ShowFrameRate) {
 			clock_gettime(CLOCK_MONOTONIC, &ts);
 			frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 			last_frames_per_second[last_frames_per_second_index] = 1e9 / (double)(frame_timestamp - last_frame_timestamp);
@@ -666,7 +666,7 @@ void pNesX_Cycle() {
 		}
 	}
 
-	if (*opt_SoundEnabled) {
+	if (opt_SoundEnabled) {
 		pNesX_DoSpu();
 	}
 	audio_sync_apu_registers();

@@ -154,11 +154,7 @@ maple_device_t* VMUs[8];
 /*-------------------------------------------------------------------*/
 /*  Recording mode                                                   */
 /*-------------------------------------------------------------------*/
-#define RECORDING_MODE_DISABLED 0
-#define RECORDING_MODE_ENABLED 1
-#define RECORDING_MODE_PLAYBACK 2
-
-uint8 recordingMode;
+uint8 recordingMode = RECORDING_MODE_DISABLED;
 bool inputActive[8];
 InputFrame_t inputs[8];
 
@@ -287,7 +283,7 @@ void draw_screen() {
 
 int LoadSRAM() {
 	int loadSRAM_success = -1;
-	if (*opt_SRAM == 1) {
+	if (opt_SRAM == 1) {
 		printf("VMU: Attempting to Load SRAM from attached VMUs\n");
 		for (int i = 0; i < 8; i++) {
 			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -330,7 +326,7 @@ int LoadSRAM() {
 
 int SaveSRAM() {
 	int saveSRAM_success = -1;
-	if (*opt_SRAM == 1) {
+	if (opt_SRAM == 1) {
 		for (int i = 0; i < numVMUs; i++) {
 			printf("VMU: Attempting to Save SRAM to VMU [%i]\n", i);
 			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -577,10 +573,17 @@ void launchEmulator() {
 
 		memset(inputActive, 0, sizeof(bool) * 8);
 		memset(inputs, 0, sizeof(InputFrame_t) * 8);
-		if (loadRecording()) {
-			recordingMode = RECORDING_MODE_PLAYBACK;
-		} else {
-			recordingMode = RECORDING_MODE_ENABLED;
+		switch(recordingMode) {
+			case RECORDING_MODE_DISABLED:
+				printf("launchEmulator: Input Recording Disabled\n");
+				break;
+			case RECORDING_MODE_ENABLED:
+				printf("launchEmulator: Input Recording Enabled\n");
+				break;
+			case RECORDING_MODE_PLAYBACK:
+				printf("launchEmulator: Input Playback Mode Enabled\n");
+				loadRecording();
+				break;
 		}
 
 		//Stay in Emulator During Operation
@@ -635,7 +638,6 @@ int main() {
 
 	printf("Initializing FrNES GUI\n");	
 	Allocate_Video_Options();
-	Allocate_System_Options();
 	Allocate_Control_Options();
 
 	// Load palette
@@ -676,11 +678,11 @@ int main() {
 	opt_ClipVars[2] = default_Clip;
 	opt_ClipVars[3] = default_Clip;
 	
-	*opt_SoundEnabled = default_Sound;
-	*opt_FrameSkip = default_FrameSkip;
-	*opt_AutoFrameSkip = default_AutoFrameSkip;
-	*opt_ShowFrameRate = default_ShowFrameRate;
-	*opt_SRAM = default_SRAM;
+	opt_SoundEnabled = default_Sound;
+	opt_FrameSkip = default_FrameSkip;
+	opt_AutoFrameSkip = default_AutoFrameSkip;
+	opt_ShowFrameRate = default_ShowFrameRate;
+	opt_SRAM = default_SRAM;
 
 	printf("Initializing VMUs\n");
 	for (uint8 i = 0; i < numVMUs; i++) {
@@ -752,7 +754,7 @@ int main() {
 				keyhit = 0;
 			}
 
-			if (xkeyhit && ((my_state -> buttons & CONT_X) == 0)) {
+			if (xkeyhit && ((my_state -> buttons & (CONT_X | CONT_DPAD_LEFT | CONT_DPAD_RIGHT)) == 0)) {
 				xkeyhit = 0;
 			}
 
@@ -816,7 +818,6 @@ int main() {
 	printf("main loop: exiting\n");
 
 	Free_Video_Options();
-	Free_System_Options();
 	Free_Control_Options();
 
 	if (NesPalette != DEFAULT_NES_PALETTE) {
@@ -973,7 +974,7 @@ void pNesX_LoadFrame() {
 
 	pvr_list_finish();
 
-	if (*opt_ShowFrameRate) {
+	if (opt_ShowFrameRate) {
 		pvr_list_begin(PVR_LIST_TR_POLY);
 
 		char fps[10];
@@ -1035,14 +1036,12 @@ void handleButton(uint32* controllerBitflags,
 	if (buttonOn) {
 		*controllerBitflags |= (0x1 << controllerBitflagIndex);
 		if ((recordingMode == RECORDING_MODE_ENABLED) && (!inputActive[controllerBitflagIndex])) {
-//			printf("Button [%u] Start [%lu]\n", controllerBitflagIndex, numEmulationFrames);
 			inputActive[controllerBitflagIndex] = true;
 			inputs[controllerBitflagIndex].frameStart = numEmulationFrames;
 		}
 	} else if (inputActive[controllerBitflagIndex]) {
 		if (recordingMode == RECORDING_MODE_ENABLED) {
 			inputs[controllerBitflagIndex].frameDuration = numEmulationFrames - inputs[controllerBitflagIndex].frameStart;
-//			printf("Button [%u] End [%lu] Duration [%u]\n", controllerBitflagIndex, numEmulationFrames, inputs[controllerBitflagIndex].frameDuration);
 			inputs[controllerBitflagIndex].controller = controller;
 			inputs[controllerBitflagIndex].button = controllerBitflagIndex;
 			recordInput(&inputs[controllerBitflagIndex]);
@@ -1059,19 +1058,16 @@ bool playbackRecording(uint32* controllerBitflags) {
 		InputFrame_t* sample = &frameInputs[currentSample];
 		inputActive[sample -> button] = true;
 		memcpy(&inputs[sample -> button], sample, sizeof(InputFrame_t));
-//		printf("Button [%u] Start [%lu]\n", sample -> button, numEmulationFrames);
-//		printf("Added press on frame [%lu] in sample [%lu].  Next input on frame [%lu]\n", numEmulationFrames, currentSample, frameInputs[currentSample + 1].frameStart);
 		currentSample++;
 	}
 
-	// process all of inputs, and if there are active ones, keep playing them
-	// if they go past their duration, turn them off
+	// process all inputs, and if they are active, continue to or them into the controller bitflags
 	bool activityDone = true;
 	for (uint8 inputIndex = 0; inputIndex < 8; inputIndex++) {
 		if (inputActive[inputIndex]) {		
 			activityDone = false;
+			// if they reach their duration, turn the input off			
 			if (numEmulationFrames - inputs[inputIndex].frameStart == (inputs[inputIndex].frameDuration)) {
-//				printf("Button [%u] End [%lu] Duration [%u]\n", inputIndex, numEmulationFrames, inputs[inputIndex].frameDuration);
 				inputActive[inputIndex] = false;
 			} else {
 				*controllerBitflags |= (0x1 << inputIndex);	
@@ -1079,7 +1075,7 @@ bool playbackRecording(uint32* controllerBitflags) {
 		}
 	}
 
-	*controllerBitflags = *controllerBitflags | (*controllerBitflags << 8);
+//	*controllerBitflags = *controllerBitflags | (*controllerBitflags << 8);
 
 	return !((currentSample == numSamples) && (activityDone));
 }
