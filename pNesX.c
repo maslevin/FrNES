@@ -55,7 +55,6 @@ unsigned char *ROMBANK3;
 
 /* PPU RAM */
 unsigned char PPURAM[ PPURAM_SIZE ];
-extern unsigned char pSprBuf[272];
 
 extern unsigned char HALT;
 
@@ -106,7 +105,7 @@ bool odd_cycle;
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
 /*-------------------------------------------------------------------*/
-double frames_per_second;
+float frames_per_second;
 
 /* Frame Skip */
 uint16 FrameSkip;

@@ -21,7 +21,6 @@
 #define PAGE_CONTROLOPTIONS     2
 #define PAGE_SYSTEMOPTIONS      3
 #define PAGE_GUIOPTIONS         4
-//#define PAGE_FONTOPTIONS        5
 #define PAGE_HELP               5
 #define PAGE_CREDITS            6
 #define MENUNUM_MAIN            0
@@ -39,15 +38,6 @@ extern bool log_enabled;
 
 extern char szRomPath[];
 extern uint32 RomSize;
-
-void pNesX_Texture_Write( void *dest, void* src);
-void pNesX_Texture_Fill(void *dest, uint32 val);
-
-void pNesX_StartLog ();
-void pNesX_Logstring (char* logstring);
-void pNesX_EndLog (char* pcfile);
-
-void setup_main_menu();
 
 void Load_VMU_Options();
 void Save_VMU_Options();

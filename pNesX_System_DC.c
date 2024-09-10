@@ -977,7 +977,10 @@ void pNesX_LoadFrame() {
 		pvr_list_begin(PVR_LIST_TR_POLY);
 
 		char fps[10];
-		snprintf(fps, 10, "%u", (uint16)frames_per_second);
+		if (frames_per_second > 60.0f) {
+			frames_per_second = 60.0f;
+		}
+		snprintf(fps, 10, "%.0f", frames_per_second);
 
 		draw_string(font,
 			PVR_LIST_TR_POLY,

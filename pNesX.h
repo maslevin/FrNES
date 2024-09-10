@@ -172,7 +172,7 @@ extern int SpriteJustHit;
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
 /*-------------------------------------------------------------------*/
-extern double frames_per_second;
+extern float frames_per_second;
 
 /* Frame Skip */
 extern uint16 FrameSkip;

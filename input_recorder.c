@@ -9,12 +9,14 @@ InputFrame_t frameInputs[MAXIMUM_INPUT_FRAMES];
 
 void resetRecording() {
     currentSample = 0;
+    numSamples = 0;
     memset(frameInputs, 0, sizeof(InputFrame_t) * MAXIMUM_INPUT_FRAMES);
 }
 
 void recordInput(InputFrame_t* input) {
     memcpy(&frameInputs[currentSample], input, sizeof(InputFrame_t));
     currentSample++;
+    numSamples = currentSample;
 }
 
 void printRecording() {
@@ -25,20 +27,22 @@ void printRecording() {
 
 void sortInputFrames() {
     printf("Sorting [%lu] frames\n", numSamples);
-    for (uint32 frameIndex = 0; frameIndex < numSamples - 1; frameIndex++) {
-        uint32 minimumFrameStart = frameInputs[frameIndex].frameStart;
-        uint32 minimumFrameIndex = frameIndex;
-        for (uint32 nextIndex = frameIndex + 1; nextIndex < numSamples; nextIndex++) {
-            if (frameInputs[nextIndex].frameStart < minimumFrameStart) {
-                minimumFrameStart = frameInputs[nextIndex].frameStart;
-                minimumFrameIndex = nextIndex;
+    if (numSamples > 0) {
+        for (uint32 frameIndex = 0; frameIndex < numSamples - 1; frameIndex++) {
+            uint32 minimumFrameStart = frameInputs[frameIndex].frameStart;
+            uint32 minimumFrameIndex = frameIndex;
+            for (uint32 nextIndex = frameIndex + 1; nextIndex < numSamples; nextIndex++) {
+                if (frameInputs[nextIndex].frameStart < minimumFrameStart) {
+                    minimumFrameStart = frameInputs[nextIndex].frameStart;
+                    minimumFrameIndex = nextIndex;
+                }
             }
-        }
-        if (minimumFrameIndex != frameIndex) {
-            InputFrame_t temp;
-            memcpy(&temp, &frameInputs[frameIndex], sizeof(InputFrame_t));
-            memcpy(&frameInputs[frameIndex], &frameInputs[minimumFrameIndex], sizeof(InputFrame_t));
-            memcpy(&frameInputs[minimumFrameIndex], &temp, sizeof(InputFrame_t));
+            if (minimumFrameIndex != frameIndex) {
+                InputFrame_t temp;
+                memcpy(&temp, &frameInputs[frameIndex], sizeof(InputFrame_t));
+                memcpy(&frameInputs[frameIndex], &frameInputs[minimumFrameIndex], sizeof(InputFrame_t));
+                memcpy(&frameInputs[minimumFrameIndex], &temp, sizeof(InputFrame_t));
+            }
         }
     }
 
@@ -46,14 +50,13 @@ void sortInputFrames() {
 }
 
 void uploadRecording() {
-    numSamples = currentSample;
     printf("Uploading Input Recording to PC Host\n");
     sortInputFrames();
 
 	char PCPath[256];
 
 	// TODO: use a log time or something like that in the filename here
-	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08X_recording.inp", currentCRC32);
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08lX_recording.inp", currentCRC32);
 	file_t PCFile = fs_open(PCPath, O_WRONLY);
 	if (PCFile != -1) {
         fs_write(PCFile, frameInputs, currentSample * sizeof(InputFrame_t));
@@ -68,7 +71,7 @@ bool loadRecording() {
     printf("Loading Input Recording from PC Host\n");
 	char PCPath[256];
 	// TODO: use a log time or something like that in the filename here
-	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08X_recording.inp", currentCRC32);	
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/%08lX_recording.inp", currentCRC32);	
 	file_t PCFile = fs_open(PCPath, O_RDONLY);
 	if (PCFile != -1) {
         uint32 size = fs_read(PCFile, frameInputs, MAXIMUM_INPUT_FRAMES * sizeof(InputFrame_t));

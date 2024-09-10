@@ -9,14 +9,12 @@
 #include "profile.h"
 
 void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
-	startProfiling(2);	
-	/* C Background Renderer Vars */
+	startProfiling(2);
 	uint16 nX;
 	uint16 nY;
 	uint16 nY4;
 	uint16 nYBit;
 	unsigned char* pPalTbl;
-	int nIdx;
 	uint16 nNameTable;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
@@ -74,7 +72,7 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		pbyNameTable++;
 	}
 
-	for (nIdx = 1; nIdx < 32; nIdx++) {
+	for (uint8 nIdx = 1; nIdx < 32; nIdx++) {
 		nameTableValue = *pbyNameTable;
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
