@@ -53,22 +53,6 @@ bool log_enabled_latch;
 /*-------------------------------------------------------------------*/
 /*  Interface variables                                              */
 /*-------------------------------------------------------------------*/
-int pagesize = 640 * 480 * 16;
-int lpagesize = 153600;
-int epagesize = 320 * 240 * 16;
-int currentpage = 0;
-int xposition = 100;
-int yposition = 100;
-int xvelocity = 5;
-int yvelocity = 5;
-int i, j;
-uint16* page1;
-uint16* page2;
-uint32* lpage1;
-uint32* lpage2;
-uint16* epage1;
-uint16* epage2;
-
 int menuscreen;
 int invalida;
 int keyhit;
@@ -87,11 +71,6 @@ uint32 GUI_SelectedTextColor;
 uint32 GUI_InsideWindowColor;
 uint32 GUI_OutsideWindowColor;
 
-const int title_offset_x = 25;
-const int title_offset_y = 25;
-
-const int help_window_offset_y = 275;
-
 Window_Style mystyle;
 Window_Data mydata;
 
@@ -104,8 +83,8 @@ unsigned char *VROM;
 unsigned char *VRAM;
 uint32 SRAM_Enabled;
 
-char App_String[] = "FrNES";
-char Version_String[] = "0.7.0";
+#define APP_STRING "FrNES"
+#define APP_VERSION "0.7.1"
 
 //Help for the Options screen
 char* Options_Keys[] = {
@@ -113,8 +92,6 @@ char* Options_Keys[] = {
 	"DPad L and R to Change"
 };
 const int Num_Options_Keys = 2;
-
-//Options Screen Menu Items
 
 const int Max_Frameskip = 5;
 
@@ -133,56 +110,39 @@ uint16 default_AutoFrameSkip = 0;
 uint16 default_ShowFrameRate = 0;
 uint16 default_Clip = 0;
 
-uint16 color;
-uint16 bgcolor;
-int textwidth;
-int textheight;
-int interface_offset;
-
 Font* font;
-
-pvr_poly_hdr_t my_pheader;
-pvr_vertex_t my_vertex;
-pvr_poly_cxt_t my_cxt;
 
 //The crc32 of the currently selected rom
 uint32 currentCRC32;
 
-//Control Variables
-uint32 oldState;
-int nWait;
-
 /*-------------------------------------------------------------------*/
 /*  ROM image file information                                       */
 /*-------------------------------------------------------------------*/
-
 char szRomPath[ 256 ];
-// char szRomName[ 256 ];
 char szSaveName[ 256 ];
 int nSRAM_SaveFlag;
 uint32 RomSize;
 bool AutoROM;
 
 /*-------------------------------------------------------------------*/
-/*  Variables for Windows                                            */
+/*  Palette                                                          */
 /*-------------------------------------------------------------------*/
-
-unsigned char *pScreenMem;
-
-// Palette data
 uint16* NesPalette;
 
-uint16 DEFAULT_NES_PALETTE[64] = {
-  0x39ce, 0x1071, 0x0015, 0x2013, 0x440e, 0x5402, 0x5000, 0x3c20,
-  0x20a0, 0x0100, 0x0140, 0x00e2, 0x0ceb, 0x0000, 0x0000, 0x0000,
-  0x5ef7, 0x01dd, 0x10fd, 0x401e, 0x5c17, 0x700b, 0x6ca0, 0x6521,
-  0x45c0, 0x0240, 0x02a0, 0x0247, 0x0211, 0x0000, 0x0000, 0x0000,
-  0x7fff, 0x1eff, 0x2e5f, 0x223f, 0x79ff, 0x7dd6, 0x7dcc, 0x7e67,
-  0x7ae7, 0x4342, 0x2769, 0x2ff3, 0x03bb, 0x0000, 0x0000, 0x0000,
-  0x7fff, 0x579f, 0x635f, 0x6b3f, 0x7f1f, 0x7f1b, 0x7ef6, 0x7f75,
-  0x7f94, 0x73f4, 0x57d7, 0x5bf9, 0x4ffe, 0x0000, 0x0000, 0x0000
+const uint16 DEFAULT_NES_PALETTE[] = {
+	0x630C, 0x016F, 0x10B3, 0x3013, 0x500F, 0x6008, 0x6020, 0x50E0,
+	0x3180, 0x1220, 0x0260, 0x0260, 0x0208, 0x0000, 0x0000, 0x0000,
+	0xAD55, 0x1319, 0x3A1F, 0x695F, 0x98F9, 0xB0F0, 0xB165, 0x9A40,
+	0x6B40, 0x3C00, 0x1460, 0x0465, 0x03F0, 0x0000, 0x0000, 0x0000,
+	0xFFFF, 0x659F, 0x8C9F, 0xC3DF, 0xEB5F, 0xFB7A, 0xFBEF, 0xECC5,
+	0xC5C0, 0x8EA0, 0x6705, 0x470F, 0x467A, 0x4A69, 0x0000, 0x0000,
+	0xFFFF, 0xBF1F, 0xD69F, 0xE65F, 0xF61F, 0xFE3D, 0xFE59, 0xF6B5,
+	0xE712, 0xD772, 0xBF95, 0xB799, 0xB75D, 0xBDD7, 0x0000, 0x0000
 };
 
+/*-------------------------------------------------------------------*/
+/*  Controllers and VMUs                                             */
+/*-------------------------------------------------------------------*/
 //Controllers - will store controller addresses - NULL if not found
 uint32 numControllers;
 maple_device_t* Controllers[4];
@@ -191,13 +151,14 @@ maple_device_t* Controllers[4];
 uint32 numVMUs;
 maple_device_t* VMUs[8];
 
-// Recording mode variables
+/*-------------------------------------------------------------------*/
+/*  Recording mode                                                   */
+/*-------------------------------------------------------------------*/
 #define RECORDING_MODE_DISABLED 0
 #define RECORDING_MODE_ENABLED 1
 #define RECORDING_MODE_PLAYBACK 2
 
 uint8 recordingMode;
-
 bool inputActive[8];
 InputFrame_t inputs[8];
 
@@ -208,6 +169,9 @@ InputFrame_t inputs[8];
 #define MODE_ANALOG_Y_UP 4
 #define MODE_ANALOG_Y_DOWN 5
 
+/*-------------------------------------------------------------------*/
+/*  Screen geometry                                                  */
+/*-------------------------------------------------------------------*/
 float polygon_x1;
 float polygon_y1;
 float polygon_x2;
@@ -258,15 +222,10 @@ void initialize_controllers() {
 	printf("initialize_controllers: end scan, found [%lu] controllers and [%lu] vmus\n", numControllers, numVMUs);
 }
 
-uint16 MakeRGB(int red, int green, int blue) {
-	return ((red << 10 | green << 5 | blue << 0) | 0x8000);
-}
-
 void draw_screen() {
 	//printf("draw_screen: begin\n");
 	pvr_poly_hdr_t my_pheader;
 	pvr_poly_cxt_t my_cxt;
-	//pvr_vertex_t my_vertex;
 	pvr_vertex_t my_c_vertex;
 
 	//printf("draw_screen: waiting for PVR to be ready\n");
@@ -312,9 +271,9 @@ void draw_screen() {
 	pvr_list_begin(PVR_LIST_TR_POLY);
 
 	if (menuscreen != MENUNUM_AUTOROM) {
-		draw_string(font, PVR_LIST_TR_POLY, App_String, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
+		draw_string(font, PVR_LIST_TR_POLY, APP_STRING, 32.0f, 32.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 1.0f);
 		font -> scale = 0.50f;
-		draw_string(font, PVR_LIST_TR_POLY, Version_String, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
+		draw_string(font, PVR_LIST_TR_POLY, APP_VERSION, 32.0f, 54.0f, 30.0f, 200.0f, 50.0f, SINGLE, LEFT, 0xFF000000, 0.75f);
 		font -> scale = 1.00f;
 
 		win_draw_textwindow(&mydata, &mystyle, PVR_LIST_TR_POLY);
@@ -368,9 +327,6 @@ int LoadSRAM() {
 	}
 	return loadSRAM_success;
 }
-
-#define APP_STRING "FrNES"
-#define APP_VERSION "0.7.1"
 
 int SaveSRAM() {
 	int saveSRAM_success = -1;
@@ -531,6 +487,19 @@ void loadPalette(char* path) {
 			}
 		}
 
+/*
+		printf("const uint16 NesPalette[] = {\n");
+		for (uint i = 0; i < 64; i++) {
+			printf("0x%04X,", NesPalette[i]);
+			if ((i != 0) && ((i + 1) % 8 == 0)) {
+				printf("\n");
+			} else {
+				printf(" ");
+			}
+		}
+		printf("}\n\n");
+*/
+
 		fs_close(my_fd);
 	}
 
@@ -606,6 +575,8 @@ void launchEmulator() {
 			LoadSRAM();
 		}
 
+		memset(inputActive, 0, sizeof(bool) * 8);
+		memset(inputs, 0, sizeof(InputFrame_t) * 8);
 		if (loadRecording()) {
 			recordingMode = RECORDING_MODE_PLAYBACK;
 		} else {
@@ -683,8 +654,6 @@ int main() {
 	GUI_InsideWindowColor = 0xFF00803f;
 	GUI_OutsideWindowColor = 0xFFFFFFFF;
 
-	interface_offset = title_offset_x + 160;
-
 	romselstatus = 0;
 	invalida = 0;
 	xkeyhit = 0;
@@ -714,8 +683,8 @@ int main() {
 	*opt_SRAM = default_SRAM;
 
 	printf("Initializing VMUs\n");
-	for (i = 0; i < numVMUs; i++) {
-//		draw_VMU_icon(VMUs[i], vmu_screen_normal);
+	for (uint8 i = 0; i < numVMUs; i++) {
+		draw_VMU_icon(VMUs[i], vmu_screen_normal);
 	}
 
 	//If the default Memory card is present
@@ -767,9 +736,6 @@ int main() {
 	int exitLoop = 0;
 	maple_device_t* my_controller;
 	while (exitLoop == 0) {
-//		printf("main loop: start\n");
-
-//		printf("main loop: reading controller\n");
 		my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 		if (my_controller != NULL) {
 			my_state = (cont_state_t*)maple_dev_status(my_controller);
@@ -780,73 +746,53 @@ int main() {
 
 			if (invalida && ((my_state -> buttons & CONT_A) == 0)) {
 				invalida = 0;
-//				printf("Clearing A\n");
 			}
 
 			if (keyhit && ((my_state -> buttons & (CONT_DPAD_UP | CONT_DPAD_DOWN)) == 0)) {
 				keyhit = 0;
-//				printf("Clearing Keyhit\n");
 			}
 
 			if (xkeyhit && ((my_state -> buttons & CONT_X) == 0)) {
 				xkeyhit = 0;
-//				printf("Clearing X\n");
 			}
 
 			if (disable_trigs && ((my_state -> rtrig == 0) && (my_state -> ltrig == 0))) {
 				disable_trigs = 0;
-//				printf("Clearing Triggers\n");
 			}
 
-//			printf("main loop: handling controller input\n");
-/*
-			printf("STATE: U[%s] D[%s] L[%s] R[%s]\n", 
-				(my_state -> buttons & CONT_DPAD_UP) ? "X" : ".",
-				(my_state -> buttons & CONT_DPAD_DOWN) ? "X" : ".",
-				(my_state -> buttons & CONT_DPAD_LEFT) ? "X" : ".",
-				(my_state -> buttons & CONT_DPAD_RIGHT) ? "X" : "."
-			);
-*/			
 			//Event handling and processing section
-			switch (menuscreen)
-			{
+			switch (menuscreen) {
 				//Main Menu Screen
 				case MENUNUM_MAIN:
-//					printf("main loop: handling menu screen controller\n");
 					Handle_Main_Menu_Interface(my_state);
 					break;
 
 				//GUI Options
 				case MENUNUM_GUIOPTIONS:
-//					printf("main loop: handling gui options controller\n");
 					Handle_GUI_Interface(my_state);
 					break;
 
 				//System Options
 				case MENUNUM_SYSTEMOPTIONS:
-//					printf("main loop: handling system options controller\n");			
 					Handle_System_Interface(my_state);
 					break;
 
 				//Video Options
 				case MENUNUM_VIDEOOPTIONS:
-//					printf("main loop: handling video options controller\n");			
 					Handle_Video_Interface(my_state);
 					break;
 
 				//Control Options
 				case MENUNUM_CONTROLOPTIONS:
-//					printf("main loop: handling control options controller\n");			
 					Handle_Control_Interface(my_state);
 					break;
 
 				//Rom Selection Screen
 				case MENUNUM_ROMSELECT:
-//					printf("main loop: handling rom selection controller\n");			
 					Handle_File_Browser_Interface(my_state);
 					break;
 
-				//About HugoDC Screen
+				//Credits Screen
 				case MENUNUM_CREDITS:
 					Handle_Credits_Interface(my_state);
 					break;
@@ -858,7 +804,6 @@ int main() {
 			}
 		}
 
-//		printf("main loop: drawing screen\n");
 		draw_screen();
 
 		if (AutoROM) {
@@ -981,6 +926,11 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 
 void pNesX_LoadFrame() {
 	startProfiling(3);
+
+	pvr_poly_hdr_t my_pheader;
+	pvr_poly_cxt_t my_cxt;
+	pvr_vertex_t my_vertex;
+
 	pvr_wait_ready();
 	pvr_scene_begin();
 
@@ -1111,20 +1061,13 @@ bool playbackRecording(uint32* controllerBitflags) {
 		currentSample++;
 	}
 
-/*
-	if (currentSam numEmulationFrames) {
-		printf("WARNING - frame inputs out of sync, head at [%lu] current frame at [%lu]\n", frameInputs[currentSample].frameStart, numEmulationFrames);
-		return false;
-	}
-*/
-
 	// process all of inputs, and if there are active ones, keep playing them
 	// if they go past their duration, turn them off
 	bool activityDone = true;
 	for (uint8 inputIndex = 0; inputIndex < 8; inputIndex++) {
 		if (inputActive[inputIndex]) {		
 			activityDone = false;
-			if (numEmulationFrames - inputs[inputIndex].frameStart > (inputs[inputIndex].frameDuration)) {
+			if (numEmulationFrames - inputs[inputIndex].frameStart == (inputs[inputIndex].frameDuration)) {
 //				printf("Button [%u] End [%lu] Duration [%u]\n", inputIndex, numEmulationFrames, inputs[inputIndex].frameDuration);
 				inputActive[inputIndex] = false;
 			} else {

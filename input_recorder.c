@@ -17,8 +17,13 @@ void recordInput(InputFrame_t* input) {
     currentSample++;
 }
 
+void printRecording() {
+    for (uint32 frameIndex = 0; frameIndex < numSamples; frameIndex++) {
+        printf("Index [%lu]: Button [%u] Start [%lu] Duration [%u]\n", frameIndex, frameInputs[frameIndex].button, frameInputs[frameIndex].frameStart, frameInputs[frameIndex].frameDuration);
+    }
+}
+
 void sortInputFrames() {
-	printf("Uploading Input Recording to PC Host\n");
     printf("Sorting [%lu] frames\n", numSamples);
     for (uint32 frameIndex = 0; frameIndex < numSamples - 1; frameIndex++) {
         uint32 minimumFrameStart = frameInputs[frameIndex].frameStart;
@@ -36,17 +41,13 @@ void sortInputFrames() {
             memcpy(&frameInputs[minimumFrameIndex], &temp, sizeof(InputFrame_t));
         }
     }
-/*
-    for (uint32 frameIndex = 0; frameIndex < numSamples; frameIndex++) {
-        printf("Index [%lu]: Button [%u] Start [%lu] Duration [%u]\n", frameIndex, frameInputs[frameIndex].button, frameInputs[frameIndex].frameStart, frameInputs[frameIndex].frameDuration);
-    }
-*/
+
+    printRecording();
 }
 
 void uploadRecording() {
     numSamples = currentSample;
     printf("Uploading Input Recording to PC Host\n");
-    printf("Sorting Input Frames\n");
     sortInputFrames();
 
 	char PCPath[256];
@@ -76,12 +77,7 @@ bool loadRecording() {
         printf("Read Recording containing [%lu] samples\n", numSamples);
 		fs_close(PCFile);
 
-/*
-        for (uint32 frameIndex = 0; frameIndex < numSamples; frameIndex++) {
-            printf("Index [%lu]: Button [%u] Start [%lu] Duration [%u]\n", frameIndex, frameInputs[frameIndex].button, frameInputs[frameIndex].frameStart, frameInputs[frameIndex].frameDuration);
-        }
-*/
-
+        printRecording();
 		printf("Closed file on PC\n");
         return true;
 	} else {
