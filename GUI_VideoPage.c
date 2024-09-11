@@ -12,9 +12,9 @@
 
 #include "pNesX_System_Dc.h"
 
-uint16* opt_Stretch;
-uint16* opt_Filter;
-uint32* opt_ClipVars;
+uint16 opt_Stretch;
+uint16 opt_Filter;
+uint8 opt_ClipVars[4];
 
 char ClipLX_Buffer[50];
 char ClipRX_Buffer[50];
@@ -35,18 +35,6 @@ char Options_Clip_Top[] = "Clip Top Pixels";
 char Options_Clip_Bottom[] = "Clip Bottom Pixels";
 char* Video_Options[6];
 const int Num_Video_Options = 6;
-
-void Allocate_Video_Options() {
-	opt_Stretch = malloc(sizeof(uint16));
-	opt_Filter = malloc(sizeof(uint16));
-	opt_ClipVars = malloc(4 * sizeof(uint32));
-}
-
-void Free_Video_Options() {
-	free(opt_Stretch);
-	free(opt_Filter);
-	free(opt_ClipVars);
-}
 
 void setup_video_options_screen() {
 	//Set Up Window Data Features
@@ -102,7 +90,7 @@ void setup_video_options_screen() {
 
 //Generates the Options GUI info from the variables in memory
 void Generate_Video_Options_List() {
-	switch(*opt_Stretch) {
+	switch(opt_Stretch) {
 		case 0:
 			Video_Options[0] = Options_Stretch_Unchecked;
 			break;
@@ -110,7 +98,7 @@ void Generate_Video_Options_List() {
 			Video_Options[0] = Options_Stretch_Checked;
 			break;
 	}
-	switch(*opt_Filter) {
+	switch(opt_Filter) {
 		case 0:
 			Video_Options[1] = Options_Filter_Unchecked;
 			break;
@@ -119,16 +107,16 @@ void Generate_Video_Options_List() {
 			break;
 	}
 
-	snprintf(ClipLX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Left, opt_ClipVars[0]);
+	snprintf(ClipLX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Left, opt_ClipVars[0]);
 	Video_Options[2] = ClipLX_Buffer;
 
-	snprintf(ClipRX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Right, opt_ClipVars[1]);
+	snprintf(ClipRX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Right, opt_ClipVars[1]);
 	Video_Options[3] = ClipRX_Buffer;
 
-	snprintf(ClipTX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Top, opt_ClipVars[2]);
+	snprintf(ClipTX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Top, opt_ClipVars[2]);
 	Video_Options[4] = ClipTX_Buffer;
 
-	snprintf(ClipBX_Buffer, 50, "%s,%lu<RLAlign>", Options_Clip_Bottom, opt_ClipVars[3]);
+	snprintf(ClipBX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Bottom, opt_ClipVars[3]);
 	Video_Options[5] = ClipBX_Buffer;
 }
 
@@ -158,12 +146,12 @@ void Handle_Video_Interface(cont_state_t* my_state) {
 		(invalida == 0)) {
 		switch(mydata.Highlighted_Index) {
 			case 0:
-				*opt_Stretch = 1 - *opt_Stretch;
+				opt_Stretch = 1 - opt_Stretch;
 				Generate_Video_Options_List();
 				invalida = 1;
 				break;
 			case 1:
-				*opt_Filter = 1 - *opt_Filter;
+				opt_Filter = 1 - opt_Filter;
 				Generate_Video_Options_List();
 				invalida = 1;
 				break;

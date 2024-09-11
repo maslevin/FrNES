@@ -178,16 +178,16 @@ float texture_u2;
 float texture_v2;
 
 void calculateOutputScreenGeometry() {
-	polygon_x1 = 0.0f;
-	polygon_y1 = 0.0f;
-	polygon_x2 = 640.0f;
-	polygon_y2 = 480.0f;
+	polygon_x1 = 0.0f + (((float)opt_ClipVars[0] * 640.0f) / 256.0f);
+	polygon_y1 = 0.0f + (((float)opt_ClipVars[2] * 480.0f) / 240.0f);
+	polygon_x2 = 640.0f - (((float)opt_ClipVars[1] * 640.0f) / 256.0f);
+	polygon_y2 = 480.0f - (((float)opt_ClipVars[3] * 480.0f) / 240.0f);
 	texture_u1 = ((float)opt_ClipVars[0] * 4) / 1024.0f;
 	texture_v1 = (float)opt_ClipVars[2] / 256.0f;
 	texture_u2 = (float)(1024 - (opt_ClipVars[1] * 4)) / 1024.0f;
 	texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
 
-	if (!*opt_Stretch) {
+	if (!opt_Stretch) {
 		// Multiply clipped pixels by two because the texture is 256x256 and we are displaying as 512x512 (roughly)
 		polygon_x1 = 64.0f + (float)(opt_ClipVars[0] * 2);
 		polygon_x2 = 576.0f - (float)(opt_ClipVars[1] * 2);
@@ -636,9 +636,6 @@ int main() {
 	printf("Initializing Fonts\n");
 	font = load_font("/rd/neuro.fnt");
 
-	printf("Initializing FrNES GUI\n");	
-	Allocate_Video_Options();
-
 	// Load palette
 	printf("Initializing NES Palette\n");
 	loadPalette("/rd/nes.pal");
@@ -668,8 +665,8 @@ int main() {
 		controllerSettings[i].selectKey = default_Select;
 	}
 
-	*opt_Stretch = default_Stretch;
-	*opt_Filter = default_Filter;
+	opt_Stretch = default_Stretch;
+	opt_Filter = default_Filter;
 	opt_ClipVars[0] = default_Clip;
 	opt_ClipVars[1] = default_Clip;
 	opt_ClipVars[2] = default_Clip;
@@ -814,8 +811,6 @@ int main() {
 
 	printf("main loop: exiting\n");
 
-	Free_Video_Options();
-
 	if (NesPalette != DEFAULT_NES_PALETTE) {
 		free(NesPalette);
 	}
@@ -935,7 +930,7 @@ void pNesX_LoadFrame() {
 	pvr_poly_cxt_col(&my_cxt, PVR_LIST_OP_POLY);
 
 	uint32 filter = PVR_FILTER_BILINEAR;
-	if (!*opt_Filter) {
+	if (!opt_Filter) {
 		filter = PVR_FILTER_NONE;
 	}
 

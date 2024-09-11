@@ -19,8 +19,6 @@
 void setup_video_options_screen();
 void Generate_Video_Options_List();
 void Handle_Video_Interface(cont_state_t* my_state);
-void Allocate_Video_Options();
-void Free_Video_Options();
 
 //External Variables Required
 extern Window_Style mystyle;
@@ -57,8 +55,8 @@ extern char Options_Clip_Top[];
 extern char Options_Clip_Bottom[];
 extern const int Num_Video_Options;
 
-extern uint16* opt_Stretch;
-extern uint16* opt_Filter;
-extern uint32* opt_ClipVars;
+extern uint16 opt_Stretch;
+extern uint16 opt_Filter;
+extern uint8 opt_ClipVars[];
 
 #endif
