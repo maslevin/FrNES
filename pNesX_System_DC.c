@@ -97,10 +97,10 @@ const int Max_Frameskip = 5;
 
 uint16 default_Sound = 1;
 uint16 default_FrameSkip = 0;
-uint16 default_Analog = 0;
-uint16 default_Select = 4;
-uint16 default_AKey = 0;
-uint16 default_BKey = 2;
+bool default_Analog = false;
+uint8 default_Select = DC_CONTROLLER_BUTTON_LTRIG;
+uint8 default_AKey = DC_CONTROLLER_BUTTON_A;
+uint8 default_BKey = DC_CONTROLLER_BUTTON_X;
 uint16 default_Stretch = 1;
 uint16 default_Filter = 1;
 uint16 default_Profile = 1;
@@ -638,7 +638,6 @@ int main() {
 
 	printf("Initializing FrNES GUI\n");	
 	Allocate_Video_Options();
-	Allocate_Control_Options();
 
 	// Load palette
 	printf("Initializing NES Palette\n");
@@ -662,14 +661,12 @@ int main() {
 	disable_trigs = 0;
 	disable_rom_interface = 0;
 
-	*opt_P1AnalogEnabled = default_Analog;
-	*opt_P2AnalogEnabled = default_Analog;
-	*opt_P1SelectKey = default_Select;
-	*opt_P1AKey = default_AKey;
-	*opt_P1BKey = default_BKey;
-	*opt_P2SelectKey = default_Select;
-	*opt_P2AKey = default_AKey;
-	*opt_P2BKey = default_BKey;
+	for (uint8 i = 0; i < 4; i++) {
+		controllerSettings[0].analogEnabled = default_Analog;
+		controllerSettings[0].aKey = default_AKey;
+		controllerSettings[0].bKey = default_BKey;
+		controllerSettings[0].selectKey = default_Select;
+	}
 
 	*opt_Stretch = default_Stretch;
 	*opt_Filter = default_Filter;
@@ -818,7 +815,6 @@ int main() {
 	printf("main loop: exiting\n");
 
 	Free_Video_Options();
-	Free_Control_Options();
 
 	if (NesPalette != DEFAULT_NES_PALETTE) {
 		free(NesPalette);
@@ -1075,9 +1071,74 @@ bool playbackRecording(uint32* controllerBitflags) {
 		}
 	}
 
-//	*controllerBitflags = *controllerBitflags | (*controllerBitflags << 8);
-
 	return !((currentSample == numSamples) && (activityDone));
+}
+
+void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerIndex) {
+	//Start first
+	handleButton(bitflags, CONTROLLER_BUTTON_START, controllerIndex, state, MODE_BUTTONS, CONT_START);
+	switch (controllerSettings[controllerIndex].aKey) {
+		case 0:
+			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_BUTTONS, CONT_A);
+			break;
+		case 1:
+			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_BUTTONS, CONT_B);
+			break;
+		case 2:
+			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_BUTTONS, CONT_X);
+			break;
+		case 3:
+			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_BUTTONS, CONT_Y);
+			break;
+		case 4:
+			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_LTRIGGER, 0);
+			break;
+	}
+	switch (controllerSettings[controllerIndex].bKey) {
+		case 0:
+			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_BUTTONS, CONT_A);
+			break;
+		case 1:
+			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_BUTTONS, CONT_B);
+			break;
+		case 2:
+			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_BUTTONS, CONT_X);
+			break;
+		case 3:
+			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_BUTTONS, CONT_Y);
+			break;
+		case 4:
+			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_LTRIGGER, 0);
+			break;
+	}
+	switch (controllerSettings[controllerIndex].selectKey) {
+		case 0:
+			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_BUTTONS, CONT_A);
+			break;
+		case 1:
+			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_BUTTONS, CONT_B);
+			break;
+		case 2:
+			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_BUTTONS, CONT_X);
+			break;
+		case 3:
+			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_BUTTONS, CONT_Y);
+			break;
+		case 4:
+			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_LTRIGGER, 0);
+			break;
+	}
+	if (controllerSettings[controllerIndex].analogEnabled) {
+		handleButton(bitflags, CONTROLLER_BUTTON_UP, controllerIndex, state, MODE_ANALOG_Y_UP, 0);
+		handleButton(bitflags, CONTROLLER_BUTTON_DOWN, controllerIndex, state, MODE_ANALOG_Y_DOWN, 0);
+		handleButton(bitflags, CONTROLLER_BUTTON_LEFT, controllerIndex, state, MODE_ANALOG_X_LEFT, 0);
+		handleButton(bitflags, CONTROLLER_BUTTON_RIGHT, controllerIndex, state, MODE_ANALOG_X_RIGHT, 0);
+	} else {
+		handleButton(bitflags, CONTROLLER_BUTTON_UP, controllerIndex, state, MODE_BUTTONS, CONT_DPAD_UP);
+		handleButton(bitflags, CONTROLLER_BUTTON_DOWN, controllerIndex, state, MODE_BUTTONS, CONT_DPAD_DOWN);
+		handleButton(bitflags, CONTROLLER_BUTTON_LEFT, controllerIndex, state, MODE_BUTTONS, CONT_DPAD_LEFT);
+		handleButton(bitflags, CONTROLLER_BUTTON_RIGHT, controllerIndex, state, MODE_BUTTONS, CONT_DPAD_RIGHT);
+	}
 }
 
 void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {	
@@ -1097,9 +1158,9 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 				*ExitCount = MAX_EXIT_COUNT + 1;
 			}
 		}
-		return;
 	} else {
 		//Grab data from controller 0
+		*pdwPad1 = 0;		
 		if (numControllers > 0) {
 			my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 			if (my_controller != NULL) {
@@ -1115,176 +1176,49 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 				}
 #endif
 
-				//Start first
-				*pdwPad1 = 0;
-				handleButton(pdwPad1, CONTROLLER_BUTTON_START, 0, my_state, MODE_BUTTONS, CONT_START);
-				switch (*opt_P1AKey) {
-					case 0:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_A, 0, my_state, MODE_BUTTONS, CONT_A);
-						break;
-					case 1:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_A, 0, my_state, MODE_BUTTONS, CONT_B);
-						break;
-					case 2:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_A, 0, my_state, MODE_BUTTONS, CONT_X);
-						break;
-					case 3:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_A, 0, my_state, MODE_BUTTONS, CONT_Y);
-						break;
-					case 4:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_A, 0, my_state, MODE_LTRIGGER, 0);
-						break;
-				}
-				switch (*opt_P1BKey) {
-					case 0:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_B, 0, my_state, MODE_BUTTONS, CONT_A);
-						break;
-					case 1:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_B, 0, my_state, MODE_BUTTONS, CONT_B);
-						break;
-					case 2:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_B, 0, my_state, MODE_BUTTONS, CONT_X);
-						break;
-					case 3:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_B, 0, my_state, MODE_BUTTONS, CONT_Y);
-						break;
-					case 4:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_B, 0, my_state, MODE_LTRIGGER, 0);
-						break;
-				}
-				switch (*opt_P1SelectKey) {
-					case 0:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_SELECT, 0, my_state, MODE_BUTTONS, CONT_A);
-						break;
-					case 1:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_SELECT, 0, my_state, MODE_BUTTONS, CONT_B);
-						break;
-					case 2:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_SELECT, 0, my_state, MODE_BUTTONS, CONT_X);
-						break;
-					case 3:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_SELECT, 0, my_state, MODE_BUTTONS, CONT_Y);
-						break;
-					case 4:
-						handleButton(pdwPad1, CONTROLLER_BUTTON_SELECT, 0, my_state, MODE_LTRIGGER, 0);
-						break;
-				}
-				if (*opt_P1AnalogEnabled) {
-					handleButton(pdwPad1, CONTROLLER_BUTTON_UP, 0, my_state, MODE_ANALOG_Y_UP, 0);
-					handleButton(pdwPad1, CONTROLLER_BUTTON_DOWN, 0, my_state, MODE_ANALOG_Y_DOWN, 0);
-					handleButton(pdwPad1, CONTROLLER_BUTTON_LEFT, 0, my_state, MODE_ANALOG_X_LEFT, 0);
-					handleButton(pdwPad1, CONTROLLER_BUTTON_RIGHT, 0, my_state, MODE_ANALOG_X_RIGHT, 0);
+				handleController(my_state, pdwPad1, 0);
+			}
+
+			// Increment Exit Counter if Required
+			if ((my_state != NULL) && (numControllers > 0)) {
+				if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) {
+					(*ExitCount)++;
 				} else {
-					handleButton(pdwPad1, CONTROLLER_BUTTON_UP, 0, my_state, MODE_BUTTONS, CONT_DPAD_UP);
-					handleButton(pdwPad1, CONTROLLER_BUTTON_DOWN, 0, my_state, MODE_BUTTONS, CONT_DPAD_DOWN);
-					handleButton(pdwPad1, CONTROLLER_BUTTON_LEFT, 0, my_state, MODE_BUTTONS, CONT_DPAD_LEFT);
-					handleButton(pdwPad1, CONTROLLER_BUTTON_RIGHT, 0, my_state, MODE_BUTTONS, CONT_DPAD_RIGHT);
+					*ExitCount = 0;
 				}
-				*pdwPad1 = *pdwPad1 | (*pdwPad1 << 8);
-			} else {
-				*pdwPad1 = 0;
-			}
-		} else {
-			*pdwPad1 = 0;
+			}				
 		}
 
-		// Increment Exit Counter if Required
-		if ((my_state != NULL) && (numControllers > 0)) {
-			if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) {
-				(*ExitCount)++;
-			} else {
-				*ExitCount = 0;
+		if (numControllers > 1) {
+			*pdwPad2 = 0;
+			my_controller = maple_enum_type(1, MAPLE_FUNC_CONTROLLER);
+			if (my_controller != NULL) {
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
+				handleController(my_state, pdwPad2, 1);
 			}
-		}		
-	}
-}
-
-/*
-	//Grab data from controller 1
-	if (numControllers > 1)
-	{
-		my_controller = maple_enum_type(1, MAPLE_FUNC_CONTROLLER);
-		if (my_controller != NULL) {
-			my_state = (cont_state_t*)maple_dev_status(my_controller);	
-
-			//Start first
-			*pdwPad2 = (( (my_state -> buttons & CONT_START ) != 0 ) << 3);
-			switch (*opt_P2AKey)
-			{
-				case 0:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_A) != 0);
-					break;
-				case 1:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_B) != 0);
-					break;
-				case 2:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_X) != 0);
-					break;
-				case 3:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_Y) != 0);
-					break;
-				case 4:
-					*pdwPad2 |= (my_state -> ltrig != 0);
-			}
-			switch (*opt_P2BKey)
-			{
-				case 0:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_A) != 0) << 1;
-					break;
-				case 1:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_B) != 0) << 1;
-					break;
-				case 2:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_X) != 0) << 1;
-					break;
-				case 3:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_Y) != 0) << 1;
-					break;
-				case 4:
-					*pdwPad2 |= (my_state -> ltrig != 0) << 1;
-					break;
-			}
-			switch (*opt_P2SelectKey)
-			{
-				case 0:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_A) != 0) << 2;
-					break;
-				case 1:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_B) != 0) << 2;
-					break;
-				case 2:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_X) != 0) << 2;
-					break;
-				case 3:
-					*pdwPad2 |= ( (my_state -> buttons & CONT_Y) != 0) << 2;
-					break;
-				case 4:
-					*pdwPad2 |= (my_state -> ltrig != 0) << 2;
-					break;
-			}
-			if (*opt_P2AnalogEnabled) {
-				*pdwPad2 |= 
-					( (my_state -> joyy < 114) << 4) | // Up
-					( (my_state -> joyy > 140) << 5) | // Down
-					( (my_state -> joyx < 114) << 6) | // Left
-					( (my_state -> joyx > 140) << 7); // Right
-			} else {
-				*pdwPad2 |= 
-					( ( (my_state -> buttons & CONT_DPAD_UP    ) != 0 ) << 4) | // Up
-					( ( (my_state -> buttons & CONT_DPAD_DOWN  ) != 0 ) << 5) | // Down
-					( ( (my_state -> buttons & CONT_DPAD_LEFT  ) != 0 ) << 6) | // Left
-					( ( (my_state -> buttons & CONT_DPAD_RIGHT ) != 0 ) << 7); // Right
-			}
-
-			*pdwPad2 = *pdwPad2 | ( *pdwPad2 << 8);
-		} else {
-			*pdwPad2 = 0;			
 		}
-	} else {
-		*pdwPad2 = 0;
+
+		if (numControllers > 2) {
+			my_controller = maple_enum_type(2, MAPLE_FUNC_CONTROLLER);
+			if (my_controller != NULL) {
+				uint32 player_3_bitflags;
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
+				handleController(my_state, &player_3_bitflags, 2);
+				*pdwPad1 |= (player_3_bitflags << 8);
+			}
+		}
+
+		if (numControllers > 3) {
+			my_controller = maple_enum_type(3, MAPLE_FUNC_CONTROLLER);
+			if (my_controller != NULL) {
+				uint32 player_4_bitflags;
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
+				handleController(my_state, &player_4_bitflags, 3);
+				*pdwPad2 |= (player_4_bitflags << 8);
+			}
+		}
 	}
 }
-*/
 
 uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
 	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);

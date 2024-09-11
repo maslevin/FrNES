@@ -12,202 +12,115 @@
 
 #include "pNesX_System_DC.h"
 
+char Player_1_Option_A_Buffer[50];
+char Player_1_Option_B_Buffer[50];
+char Player_1_Option_Select_Buffer[50];
+
+char Player_2_Option_A_Buffer[50];
+char Player_2_Option_B_Buffer[50];
+char Player_2_Option_Select_Buffer[50];
+
+char Player_3_Option_A_Buffer[50];
+char Player_3_Option_B_Buffer[50];
+char Player_3_Option_Select_Buffer[50];
+
+char Player_4_Option_A_Buffer[50];
+char Player_4_Option_B_Buffer[50];
+char Player_4_Option_Select_Buffer[50];
+
 //Control Options Text
-char Options_Control[] = "Control Options";
-char Options_P1Pad[] = "1st Pad";
-char Options_P2Pad[] = "2nd Pad";
-char Options_Analog_Checked[] = "<Check>Enable Analog,CBC_CHECKED";
-char Options_Analog_Unchecked[] = "<Check>Enable Analog,CBC_UNCHECKED";
-char Options_Select_A[] = "Select - A";
-char Options_Select_B[] = "Select - B";
-char Options_Select_X[] = "Select - X";
-char Options_Select_Y[] = "Select - Y";
-char Options_Select_LTrig[] = "Select - LTrig";
-char Options_A_A[] = "NES A - A";
-char Options_A_B[] = "NES A - B";
-char Options_A_X[] = "NES A - X";
-char Options_A_Y[] = "NES A - Y";
-char Options_A_LTrig[] = "NES A - LTrig";
-char Options_B_A[] = "NES B - A";
-char Options_B_B[] = "NES B - B";
-char Options_B_X[] = "NES B - X";
-char Options_B_Y[] = "NES B - Y";
-char Options_B_LTrig[] = "NES B - LTrig";
-char* Control_Options[11];
-const int Num_Control_Options = 11;
+const char Options_Control[] = "Control Options";
+const char Options_P1[] = "1st Controller";
+const char Options_P2[] = "2nd Controller";
+const char Options_P3[] = "3rd Controller";
+const char Options_P4[] = "4th Controller";
+const char Options_Analog_Checked[] = "<Check>Enable Analog,CBC_CHECKED";
+const char Options_Analog_Unchecked[] = "<Check>Enable Analog,CBC_UNCHECKED";
+const char Options_A_Button[] = "A Button";
+const char Options_B_Button[] = "B Button";
+const char Options_Select_Button[] = "Select";
+const char Options_A[] = "A";
+const char Options_B[] = "B";
+const char Options_X[] = "X";
+const char Options_Y[] = "Y";
+const char Options_LTrig[] = "Left Trigger";
 
-uint16* opt_P1AnalogEnabled;
-uint16* opt_P2AnalogEnabled;
-uint16* opt_P1SelectKey;
-uint16* opt_P1AKey;
-uint16* opt_P1BKey;
-uint16* opt_P2SelectKey;
-uint16* opt_P2AKey;
-uint16* opt_P2BKey;
+char* Control_Options[20];
+const int Num_Control_Options = 20;
 
-void Allocate_Control_Options()
-{
-	opt_P1AnalogEnabled = malloc(sizeof(uint16));
-	opt_P2AnalogEnabled = malloc(sizeof(uint16));
-	opt_P1SelectKey = malloc(sizeof(uint16));
-	opt_P2SelectKey = malloc(sizeof(uint16));
-	opt_P1AKey = malloc(sizeof(uint16));
-	opt_P1BKey = malloc(sizeof(uint16));
-	opt_P2AKey = malloc(sizeof(uint16));
-	opt_P2BKey = malloc(sizeof(uint16));
+ControllerSettings_t controllerSettings[4];
+
+const char* ButtonOptions[5] = {
+	Options_A,
+	Options_B,
+	Options_X,
+	Options_Y,
+	Options_LTrig
+};
+
+void Generate_Control_Options_List() {
+	Control_Options[0] = Options_P1;
+
+	Control_Options[1] = controllerSettings[0].analogEnabled ?
+		Options_Analog_Checked :
+ 		Options_Analog_Unchecked;
+
+	snprintf(Player_1_Option_Select_Buffer, 50, "%s,%s<RLAlign>", Options_Select_Button, ButtonOptions[controllerSettings[0].selectKey]);
+	Control_Options[2] = Player_1_Option_Select_Buffer;
+
+	snprintf(Player_1_Option_A_Buffer, 50, "%s,%s<RLAlign>", Options_A_Button, ButtonOptions[controllerSettings[0].aKey]);
+	Control_Options[3] = Player_1_Option_A_Buffer;	
+
+	snprintf(Player_1_Option_B_Buffer, 50, "%s,%s<RLAlign>", Options_B_Button, ButtonOptions[controllerSettings[0].bKey]);
+	Control_Options[4] = Player_1_Option_B_Buffer;
+
+	Control_Options[5] = Options_P2;
+
+	Control_Options[6] = controllerSettings[1].analogEnabled ?
+		Options_Analog_Checked :
+ 		Options_Analog_Unchecked;
+
+	snprintf(Player_2_Option_Select_Buffer, 50, "%s,%s<RLAlign>", Options_Select_Button, ButtonOptions[controllerSettings[1].selectKey]);
+	Control_Options[7] = Player_2_Option_Select_Buffer;
+
+	snprintf(Player_2_Option_A_Buffer, 50, "%s,%s<RLAlign>", Options_A_Button, ButtonOptions[controllerSettings[1].aKey]);
+	Control_Options[8] = Player_2_Option_A_Buffer;	
+
+	snprintf(Player_2_Option_B_Buffer, 50, "%s,%s<RLAlign>", Options_B_Button, ButtonOptions[controllerSettings[1].bKey]);
+	Control_Options[9] = Player_2_Option_B_Buffer;
+
+	Control_Options[10] = Options_P3;
+
+	Control_Options[11] = controllerSettings[2].analogEnabled ?
+		Options_Analog_Checked :
+ 		Options_Analog_Unchecked;
+
+	snprintf(Player_3_Option_Select_Buffer, 50, "%s,%s<RLAlign>", Options_Select_Button, ButtonOptions[controllerSettings[2].selectKey]);
+	Control_Options[12] = Player_3_Option_Select_Buffer;
+
+	snprintf(Player_3_Option_A_Buffer, 50, "%s,%s<RLAlign>", Options_A_Button, ButtonOptions[controllerSettings[2].aKey]);
+	Control_Options[13] = Player_3_Option_A_Buffer;	
+
+	snprintf(Player_3_Option_B_Buffer, 50, "%s,%s<RLAlign>", Options_B_Button, ButtonOptions[controllerSettings[2].bKey]);
+	Control_Options[14] = Player_3_Option_B_Buffer;
+
+	Control_Options[15] = Options_P4;
+
+	Control_Options[16] = controllerSettings[3].analogEnabled ?
+		Options_Analog_Checked :
+ 		Options_Analog_Unchecked;
+
+	snprintf(Player_4_Option_Select_Buffer, 50, "%s,%s<RLAlign>", Options_Select_Button, ButtonOptions[controllerSettings[3].selectKey]);
+	Control_Options[17] = Player_4_Option_Select_Buffer;
+
+	snprintf(Player_4_Option_A_Buffer, 50, "%s,%s<RLAlign>", Options_A_Button, ButtonOptions[controllerSettings[3].aKey]);
+	Control_Options[18] = Player_4_Option_A_Buffer;	
+
+	snprintf(Player_4_Option_B_Buffer, 50, "%s,%s<RLAlign>", Options_B_Button, ButtonOptions[controllerSettings[3].bKey]);
+	Control_Options[19] = Player_4_Option_B_Buffer;
 }
 
-void Free_Control_Options()
-{
-	free(opt_P1AnalogEnabled);
-	free(opt_P2AnalogEnabled);
-	free(opt_P1SelectKey);
-	free(opt_P2SelectKey);
-	free(opt_P1AKey);
-	free(opt_P1BKey);
-	free(opt_P2AKey);
-	free(opt_P2BKey);
-}
-
-void Generate_Control_Options_List()
-{
-	Control_Options[0] = Options_P1Pad;
-
-	switch(*opt_P1AnalogEnabled)
-	{
-		case 0:
-			Control_Options[1] = Options_Analog_Unchecked;
-			break;
-		case 1:
-			Control_Options[1] = Options_Analog_Checked;
-			break;
-	}
-	switch(*opt_P1SelectKey)
-	{
-		case 0:
-			Control_Options[2] = Options_Select_A;
-			break;
-		case 1:
-			Control_Options[2] = Options_Select_B;
-			break;
-		case 2:
-			Control_Options[2] = Options_Select_X;
-			break;
-		case 3:
-			Control_Options[2] = Options_Select_Y;
-			break;
-		case 4:
-			Control_Options[2] = Options_Select_LTrig;
-			break;
-	}
-	switch(*opt_P1AKey)
-	{
-		case 0:
-			Control_Options[3] = Options_A_A;
-			break;
-		case 1:
-			Control_Options[3] = Options_A_B;
-			break;
-		case 2:
-			Control_Options[3] = Options_A_X;
-			break;
-		case 3:
-			Control_Options[3] = Options_A_Y;
-			break;
-		case 4:
-			Control_Options[3] = Options_A_LTrig;
-			break;
-	}
-	switch(*opt_P1BKey)
-	{
-		case 0:
-			Control_Options[4] = Options_B_A;
-			break;
-		case 1:
-			Control_Options[4] = Options_B_B;
-			break;
-		case 2:
-			Control_Options[4] = Options_B_X;
-			break;
-		case 3:
-			Control_Options[4] = Options_B_Y;
-			break;
-		case 4:
-			Control_Options[4] = Options_B_LTrig;
-			break;
-	}
-
-	Control_Options[5] = " ";
-
-	Control_Options[6] = Options_P2Pad;
-
-	switch(*opt_P2AnalogEnabled)
-	{
-		case 0:
-			Control_Options[7] = Options_Analog_Unchecked;
-			break;
-		case 1:
-			Control_Options[7] = Options_Analog_Checked;
-			break;
-	}
-	switch(*opt_P2SelectKey)
-	{
-		case 0:
-			Control_Options[8] = Options_Select_A;
-			break;
-		case 1:
-			Control_Options[8] = Options_Select_B;
-			break;
-		case 2:
-			Control_Options[8] = Options_Select_X;
-			break;
-		case 3:
-			Control_Options[8] = Options_Select_Y;
-			break;
-		case 4:
-			Control_Options[8] = Options_Select_LTrig;
-			break;
-	}
-	switch(*opt_P2AKey)
-	{
-		case 0:
-			Control_Options[9] = Options_A_A;
-			break;
-		case 1:
-			Control_Options[9] = Options_A_B;
-			break;
-		case 2:
-			Control_Options[9] = Options_A_X;
-			break;
-		case 3:
-			Control_Options[9] = Options_A_Y;
-			break;
-		case 4:
-			Control_Options[9] = Options_A_LTrig;
-			break;
-	}
-	switch(*opt_P2BKey)
-	{
-		case 0:
-			Control_Options[10] = Options_B_A;
-			break;
-		case 1:
-			Control_Options[10] = Options_B_B;
-			break;
-		case 2:
-			Control_Options[10] = Options_B_X;
-			break;
-		case 3:
-			Control_Options[10] = Options_B_Y;
-			break;
-		case 4:
-			Control_Options[10] = Options_B_LTrig;
-			break;
-	}
-}
-
-void setup_control_options_screen()
-{
+void setup_control_options_screen() {
 	//Set Up Window Data Features
 	mydata.x = 208.0f;
 	mydata.y = 32.0f;
@@ -259,13 +172,11 @@ void setup_control_options_screen()
 	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
-void Handle_Control_Interface(cont_state_t* my_state)
-{
+void Handle_Control_Interface(cont_state_t* my_state) {
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
 		(mydata.Highlighted_Index < Num_Control_Options) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index++;
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
 			mydata.Top_Index++;
@@ -275,8 +186,7 @@ void Handle_Control_Interface(cont_state_t* my_state)
 	//Up Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_UP) && 
 		(mydata.Highlighted_Index > 0) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		mydata.Highlighted_Index--;
 		if (mydata.Top_Index > mydata.Highlighted_Index)
 			mydata.Top_Index--;
@@ -285,73 +195,115 @@ void Handle_Control_Interface(cont_state_t* my_state)
 
 	//Handle the toggle boxes
 	if ((my_state -> buttons & CONT_A) && 
-		(invalida == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(invalida == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 1:
-				*opt_P1AnalogEnabled = 1 - *opt_P1AnalogEnabled;
+				controllerSettings[0].analogEnabled = !controllerSettings[0].analogEnabled;
 				Generate_Control_Options_List();
 				invalida = 1;
 				break;
-			case 7:
-				*opt_P2AnalogEnabled = 1 - *opt_P2AnalogEnabled;
+			case 6:
+				controllerSettings[1].analogEnabled = !controllerSettings[1].analogEnabled;
 				Generate_Control_Options_List();
-				invalida = 1;
+				invalida = 1;				
+				break;
+			case 11:
+				controllerSettings[2].analogEnabled = !controllerSettings[2].analogEnabled;
+				Generate_Control_Options_List();
+				invalida = 1;				
+				break;			
+			case 16:
+				controllerSettings[3].analogEnabled = !controllerSettings[3].analogEnabled;
+				Generate_Control_Options_List();
+				invalida = 1;				
 				break;
 		}
 	}
 
 	//Handle the modify boxes
 	if ((my_state -> buttons & CONT_DPAD_LEFT) && 
-		(xkeyhit == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(xkeyhit == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 2:
-				if (*opt_P1SelectKey > 0)
-				{
-					(*opt_P1SelectKey)--;
+				if (controllerSettings[0].selectKey > 0) {
+					controllerSettings[0].selectKey--;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 3:
-				if (*opt_P1AKey > 0)
-				{
-					(*opt_P1AKey)--;
+				if (controllerSettings[0].aKey > 0) {
+					controllerSettings[0].aKey--;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 4:
-				if (*opt_P1BKey > 0)
-				{
-					(*opt_P1BKey)--;
+				if (controllerSettings[0].bKey > 0) {
+					controllerSettings[0].bKey--;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 7:
+				if (controllerSettings[1].selectKey > 0) {
+					controllerSettings[1].selectKey--;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 8:
-				if (*opt_P2SelectKey > 0)
-				{
-					(*opt_P2SelectKey)--;
+				if (controllerSettings[1].aKey > 0) {
+					controllerSettings[1].aKey--;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 9:
-				if (*opt_P2AKey > 0)
-				{
-					(*opt_P2AKey)--;
+				if (controllerSettings[1].bKey > 0) {
+					controllerSettings[1].bKey--;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
-			case 10:
-				if (*opt_P2BKey > 0)
-				{
-					(*opt_P2BKey)--;
+			case 12:
+				if (controllerSettings[2].selectKey > 0) {
+					controllerSettings[2].selectKey--;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 13:
+				if (controllerSettings[2].aKey > 0) {
+					controllerSettings[2].aKey--;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 14:
+				if (controllerSettings[2].bKey > 0) {
+					controllerSettings[2].bKey--;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 17:
+				if (controllerSettings[3].selectKey > 0) {
+					controllerSettings[3].selectKey--;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 18:
+				if (controllerSettings[3].aKey > 0) {
+					controllerSettings[3].aKey--;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 19:
+				if (controllerSettings[3].bKey > 0) {
+					controllerSettings[3].bKey--;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
@@ -360,54 +312,88 @@ void Handle_Control_Interface(cont_state_t* my_state)
 	}					
 
 	if ((my_state -> buttons & CONT_DPAD_RIGHT) && 
-		(xkeyhit == 0))
-	{
-		switch(mydata.Highlighted_Index)
-		{
+		(xkeyhit == 0)) {
+		switch(mydata.Highlighted_Index) {
 			case 2:
-				if (*opt_P1SelectKey < 4)
-				{
-					(*opt_P1SelectKey)++;
+				if (controllerSettings[0].selectKey < 4) {
+					controllerSettings[0].selectKey++;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 3:
-				if (*opt_P1AKey < 4)
-				{
-					(*opt_P1AKey)++;
+				if (controllerSettings[0].aKey < 4) {
+					controllerSettings[0].aKey++;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 4:
-				if (*opt_P1BKey < 4)
-				{
-					(*opt_P1BKey)++;
+				if (controllerSettings[0].bKey < 4) {
+					controllerSettings[0].bKey++;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 7:
+				if (controllerSettings[1].selectKey < 4) {
+					controllerSettings[1].selectKey++;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 8:
-				if (*opt_P2SelectKey < 4)
-				{
-					(*opt_P2SelectKey)++;
+				if (controllerSettings[1].aKey < 4) {
+					controllerSettings[1].aKey++;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 9:
-				if (*opt_P2AKey < 4)
-				{
-					(*opt_P2AKey)++;
+				if (controllerSettings[1].bKey < 4) {
+					controllerSettings[1].bKey++;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
 				break;
-			case 10:
-				if (*opt_P2BKey < 4)
-				{
-					(*opt_P2BKey)++;
+			case 12:
+				if (controllerSettings[2].selectKey < 4) {
+					controllerSettings[2].selectKey++;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 13:
+				if (controllerSettings[2].aKey < 4) {
+					controllerSettings[2].aKey++;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 14:
+				if (controllerSettings[2].bKey < 4) {
+					controllerSettings[2].bKey++;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 17:
+				if (controllerSettings[3].selectKey < 4) {
+					controllerSettings[3].selectKey++;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 18:
+				if (controllerSettings[3].aKey < 4) {
+					controllerSettings[3].aKey++;
+					Generate_Control_Options_List();
+					xkeyhit = 1;
+				}
+				break;
+			case 19:
+				if (controllerSettings[3].bKey < 4) {
+					controllerSettings[3].bKey++;
 					Generate_Control_Options_List();
 					xkeyhit = 1;
 				}
@@ -417,8 +403,7 @@ void Handle_Control_Interface(cont_state_t* my_state)
 
 	// Handle Return to Main Menu
 	if ((my_state -> buttons & CONT_B) && 
-		(keyhit == 0))
-	{
+		(keyhit == 0)) {
 		setup_main_menu_screen();
 		menuscreen = MENUNUM_MAIN;
 	}

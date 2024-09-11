@@ -19,8 +19,6 @@
 void setup_control_options_screen();
 void Generate_Control_Options_List();
 void Handle_Control_Interface(cont_state_t* my_state);
-void Allocate_Control_Options();
-void Free_Control_Options();
 
 //External Variables Required
 extern Window_Style mystyle;
@@ -40,14 +38,19 @@ extern char* Main_Keys[];
 extern char* Options_Keys[];
 extern const int Num_Options_Keys;
 
-//Options Variables
-extern uint16* opt_P1AnalogEnabled;
-extern uint16* opt_P2AnalogEnabled;
-extern uint16* opt_P1SelectKey;
-extern uint16* opt_P1AKey;
-extern uint16* opt_P1BKey;
-extern uint16* opt_P2SelectKey;
-extern uint16* opt_P2AKey;
-extern uint16* opt_P2BKey;
+typedef struct __attribute__ ((packed, aligned(4))) ControllerSettings_s {
+    bool analogEnabled;
+    uint8 selectKey;
+    uint8 aKey;
+    uint8 bKey;
+} ControllerSettings_t;
+
+#define DC_CONTROLLER_BUTTON_A     0
+#define DC_CONTROLLER_BUTTON_B     1
+#define DC_CONTROLLER_BUTTON_X     2
+#define DC_CONTROLLER_BUTTON_Y     3
+#define DC_CONTROLLER_BUTTON_LTRIG 4
+
+extern ControllerSettings_t controllerSettings[];
 
 #endif
