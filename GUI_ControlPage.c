@@ -130,12 +130,12 @@ void setup_control_options_screen() {
 	mydata.Header_Text = Options_Control;
 	mydata.Data_Strings = Control_Options;
 	mydata.Num_Strings = Num_Control_Options;
-	mydata.Highlighted_Index = 0;
+	mydata.Highlighted_Index = 1;
 	mydata.Top_Index = 0;
 
 	//Set Up Window Style Features
 	mystyle.Header_Text_Scale = 1.0f;
-	mystyle.Text_Scale = 0.60f;		
+	mystyle.Text_Scale = 0.50f;		
 	mystyle.Border_Thickness = 5.0f;
 	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
 	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
@@ -175,9 +175,12 @@ void setup_control_options_screen() {
 void Handle_Control_Interface(cont_state_t* my_state) {
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-		(mydata.Highlighted_Index < Num_Control_Options) && 
+		(mydata.Highlighted_Index < (Num_Control_Options - 1)) && 
 		(keyhit == 0)) {
 		mydata.Highlighted_Index++;
+		if (mydata.Highlighted_Index % 5 == 0) {
+			mydata.Highlighted_Index++;
+		}
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
 			mydata.Top_Index++;
 		keyhit = 1;
@@ -185,9 +188,12 @@ void Handle_Control_Interface(cont_state_t* my_state) {
 
 	//Up Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_UP) && 
-		(mydata.Highlighted_Index > 0) && 
+		(mydata.Highlighted_Index > 1) && 
 		(keyhit == 0)) {
 		mydata.Highlighted_Index--;
+		if (mydata.Highlighted_Index % 5 == 0) {
+			mydata.Highlighted_Index--;
+		}		
 		if (mydata.Top_Index > mydata.Highlighted_Index)
 			mydata.Top_Index--;
 		keyhit = 1;

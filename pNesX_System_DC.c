@@ -662,10 +662,10 @@ int main() {
 	disable_rom_interface = 0;
 
 	for (uint8 i = 0; i < 4; i++) {
-		controllerSettings[0].analogEnabled = default_Analog;
-		controllerSettings[0].aKey = default_AKey;
-		controllerSettings[0].bKey = default_BKey;
-		controllerSettings[0].selectKey = default_Select;
+		controllerSettings[i].analogEnabled = default_Analog;
+		controllerSettings[i].aKey = default_AKey;
+		controllerSettings[i].bKey = default_BKey;
+		controllerSettings[i].selectKey = default_Select;
 	}
 
 	*opt_Stretch = default_Stretch;

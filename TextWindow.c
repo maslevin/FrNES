@@ -12,107 +12,6 @@ Updated:     December 7th, 2001 - Added Scoll Bar Control to code
 #include <math.h>
 #include "macros.h"
 
-//Corner of the window - Gets automatically flipped and whatever
-const unsigned char WindowCorner[49] = 
-{
-0, 0, 1, 1, 1, 1, 1,
-0, 1, 2, 2, 2, 2, 2,
-1, 2, 2, 2, 2, 2, 2,
-1, 2, 2, 2, 2, 2, 2,
-1, 2, 2, 2, 2, 1, 1,
-1, 2, 2, 2, 1, 1, 3,
-1, 2, 2, 2, 1, 3, 3
-};
-
-//Checkbox, 16 x 16
-const unsigned char CheckBoxOpen[256] =
-{
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-};
-
-
-//Checkbox, 16 x 16
-const unsigned char CheckBoxClosed[256] =
-{
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
-1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1,
-1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-};
-
-//Sliderbar slider, 16 x 16
-const unsigned char Slider[] =
-{
-0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 
-0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 
-0, 0, 1, 1, 2, 1, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 
-0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 0, 
-0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 
-0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0
-};
-
-//Sliderbar element, 6 x 7
-const unsigned char SliderSide[] = 
-{
-0, 0, 1, 1, 1, 1,
-0, 1, 2, 2, 2, 2,
-1, 2, 2, 2, 2, 2,
-1, 1, 1, 1, 1, 1,
-1, 2, 2, 2, 2, 2,
-0, 1, 2, 2, 2, 2,
-0, 0, 1, 1, 1, 1
-};
-
-//gradient symbol 8 x 16
-const unsigned char GradSymbol[] = 
-{
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
-};
-
 //To draw a checkbox, pass a string to the textbox in the format
 const char Tag_CheckBox[] = "<Check>";
 const char CHECKBOX_CHECKED[] = "CBC_CHECKED";
@@ -438,10 +337,10 @@ void handle_checkbox(char* text, uint32 i, Window_Data* windata, Window_Style* w
 	float checkHeight = (windata -> font -> fontHeight * winstyle -> Text_Scale);
 	if (i + windata -> Top_Index != windata -> Highlighted_Index) {
 		draw_string(windata -> font, list, tempbuffer, windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Text_Color, winstyle -> Text_Scale);
-		draw_checktext(list, windata -> x + windata -> width - winstyle -> Left_Margin - 30.0f, yposition, 35.0f, checkHeight, checkHeight, 2.0f, winstyle -> Text_Color, winstyle -> Inside_Color, index);
+		draw_checktext(list, windata -> x + windata -> width - winstyle -> Left_Margin - 25.0f, yposition, 35.0f, checkHeight, checkHeight, 2.0f, winstyle -> Text_Color, winstyle -> Inside_Color, index);
 	} else {
 		draw_string(windata -> font, list, tempbuffer, windata -> x + winstyle -> Left_Margin, yposition, 35.0f, windata -> width - (2 * winstyle -> Left_Margin) - (2 * winstyle -> Border_Thickness), windata -> height, SINGLE, LEFT, winstyle -> Selected_Text_Color, winstyle -> Text_Scale);
-		draw_checktext(list, windata -> x + windata -> width - winstyle -> Left_Margin - 30.0f, yposition, 35.0f, checkHeight, checkHeight, 2.0f, winstyle -> Selected_Text_Color, winstyle -> Inside_Color, index);
+		draw_checktext(list, windata -> x + windata -> width - winstyle -> Left_Margin - 25.0f, yposition, 35.0f, checkHeight, checkHeight, 2.0f, winstyle -> Selected_Text_Color, winstyle -> Inside_Color, index);
 	}
 }
 

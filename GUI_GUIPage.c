@@ -12,17 +12,21 @@
 
 #include "pNesX_System_DC.h"
 
-char Options_GUI[] = "GUI Options";
-char Options_OutsideWindowColor[] = "Window Border Color";
-char Options_InsideWindowColor[] = "Inside Window Color";
-char Options_TextColor[] = "Text Color";
-char Options_SelectedTextColor[] = "Highlight Color";
-char Options_BGColor[] = "Background Color";
-char Options_RedComp[] = "Red";
-char Options_GreenComp[] = "Green";
-char Options_BlueComp[] = "Blue";
+const char Options_GUI[] = "GUI Options";
+const char Options_OutsideWindowColor[] = "Window Border Color";
+const char Options_InsideWindowColor[] = "Inside Window Color";
+const char Options_TextColor[] = "Text Color";
+const char Options_SelectedTextColor[] = "Highlight Color";
+const char Options_BGColor[] = "Background Color";
+const char Options_RedComp[] = "Red";
+const char Options_GreenComp[] = "Green";
+const char Options_BlueComp[] = "Blue";
 char* GUI_Options[39];
 const int Num_GUI_Options = 39;
+
+const uint8 Valid_Options_Indeces[] = {2, 4, 6, 10, 12, 14, 18, 20, 22, 26, 28, 30, 34, 36, 38};
+const uint8 Num_Valid_Options = 15;
+uint8 Option_Index = 0;
 
 #define SLIDER_STRING_BUFFER_LENGTH 80
 
@@ -47,6 +51,8 @@ char Green_BG_Buffer[SLIDER_STRING_BUFFER_LENGTH];
 char Blue_BG_Buffer[SLIDER_STRING_BUFFER_LENGTH];
 
 void setup_gui_options_screen() {
+	Option_Index = 0;
+
 	//Set Up Window Data Features
 	mydata.x = 208.0f;
 	mydata.y = 32.0f;
@@ -56,7 +62,7 @@ void setup_gui_options_screen() {
 	mydata.Header_Text = Options_GUI;
 	mydata.Data_Strings = GUI_Options;
 	mydata.Num_Strings = Num_GUI_Options;
-	mydata.Highlighted_Index = 0;
+	mydata.Highlighted_Index = Valid_Options_Indeces[Option_Index];
 	mydata.Top_Index = 0;
 
 	//Set Up Window Style Features
@@ -165,21 +171,26 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 
 	//Down Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_DOWN) && 
-		(mydata.Highlighted_Index < Num_GUI_Options) && 
+		(Option_Index < (Num_Valid_Options - 1)) && 
 		(keyhit == 0)) {
-		mydata.Highlighted_Index++;
+		Option_Index++;
+		mydata.Highlighted_Index = Valid_Options_Indeces[Option_Index];
 		if ((mydata.Highlighted_Index - mydata.Top_Index) >= mystyle.Max_Items)
-			mydata.Top_Index++;
+			mydata.Top_Index = (mydata.Highlighted_Index - mystyle.Max_Items + 1);
 		keyhit = 1;
 	}
 
 	//Up Key Hit and Key is Ready to be hit
 	if ((my_state -> buttons & CONT_DPAD_UP) && 
-		(mydata.Highlighted_Index > 0) && 
+		(Option_Index > 0) && 
 		(keyhit == 0)) {
-		mydata.Highlighted_Index--;
+		Option_Index--;
+		if (Option_Index == 0) {
+			mydata.Top_Index = 0;
+		}
+		mydata.Highlighted_Index = Valid_Options_Indeces[Option_Index];
 		if (mydata.Top_Index > mydata.Highlighted_Index)
-			mydata.Top_Index--;
+			mydata.Top_Index = mydata.Highlighted_Index;
 		keyhit = 1;
 	}
 
@@ -191,7 +202,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				temp = ((GUI_OutsideWindowColor >> 16) & 0xFF);
 				if (temp > 0) {
 					temp--;
-					GUI_OutsideWindowColor = (GUI_InsideWindowColor & 0x0000FFFF) | (temp << 16);
+					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x0000FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
@@ -201,7 +212,7 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 				temp = ((GUI_OutsideWindowColor >> 8) & 0xFF);
 				if (temp > 0) {
 					temp--;
-					GUI_OutsideWindowColor = (GUI_InsideWindowColor & 0x00FF00FF) | (temp << 8);
+					GUI_OutsideWindowColor = (GUI_OutsideWindowColor & 0x00FF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
 					mystyle.Border_Color = GUI_OutsideWindowColor;
 					helpstyle.Border_Color = GUI_OutsideWindowColor;
@@ -291,8 +302,8 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 					temp--;
 					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFF00FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
-					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
-					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
+					mystyle.Selected_Text_Color = GUI_SelectedTextColor;
+					helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 28:
@@ -301,8 +312,8 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 					temp--;
 					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
-					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
-					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
+					mystyle.Selected_Text_Color = GUI_SelectedTextColor;
+					helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 30:
@@ -311,8 +322,8 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 					temp--;
 					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFFFF00) | (temp);
 					Generate_GUI_Options_List();
-					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
-					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
+					mystyle.Selected_Text_Color = GUI_SelectedTextColor;
+					helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 				}
 				break;
 
@@ -452,8 +463,8 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 					temp++;
 					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFF00FFFF) | (temp << 16);
 					Generate_GUI_Options_List();
-					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
-					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
+					mystyle.Selected_Text_Color = GUI_SelectedTextColor;
+					helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 28:
@@ -462,8 +473,8 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 					temp++;
 					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFF00FF) | (temp << 8);
 					Generate_GUI_Options_List();
-					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
-					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
+					mystyle.Selected_Text_Color = GUI_SelectedTextColor;
+					helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 				}
 				break;
 			case 30:
@@ -472,8 +483,8 @@ void Handle_GUI_Interface(cont_state_t* my_state) {
 					temp++;
 					GUI_SelectedTextColor = (GUI_SelectedTextColor & 0xFFFFFF00) | (temp);
 					Generate_GUI_Options_List();
-					mystyle.Selected_Background_Color = GUI_SelectedTextColor;
-					helpstyle.Selected_Background_Color = GUI_SelectedTextColor;
+					mystyle.Selected_Text_Color = GUI_SelectedTextColor;
+					helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
 				}
 				break;
 
