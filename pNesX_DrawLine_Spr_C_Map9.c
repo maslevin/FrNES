@@ -22,6 +22,8 @@ extern unsigned char SpritesToDraw[8];
 extern bool OverflowedSprites;
 
 void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
+	unsigned char spriteBuffer[256];
+
 	int nX;
 	int nY;
 	int nYBit;
@@ -30,10 +32,10 @@ void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	unsigned char bySprCol;
 	unsigned char* pbyBGData;
 	unsigned char patternData[8];	
+	unsigned char* pPalTbl;
 	unsigned char byData1;
 	unsigned char byData2;	
 	uint16 nesaddr;
-	unsigned char spriteBuffer[264];
 		
 	// Sprite Evaluation Logic
 	// Reset buffers and counts on scanline 0
@@ -113,11 +115,12 @@ void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-		memset4(spriteBuffer, 0, 264);
+		memset4(spriteBuffer, 0, 256);
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
 
+			nX = pSPRRAM[ SPR_X ];
 			nY = pSPRRAM[ SPR_Y ] + 1;
 			nAttr = pSPRRAM[ SPR_ATTR ];
 			nYBit = ppuinfo.PPU_Scanline - nY;
@@ -136,57 +139,68 @@ void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit % 8);
 			byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 			byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-			patternData[ 0 ] = ( byData1 >> 6 ) & 3;
-			patternData[ 1 ] = ( byData2 >> 6 ) & 3;
-			patternData[ 2 ] = ( byData1 >> 4 ) & 3;
-			patternData[ 3 ] = ( byData2 >> 4 ) & 3;
-			patternData[ 4 ] = ( byData1 >> 2 ) & 3;
-			patternData[ 5 ] = ( byData2 >> 2 ) & 3;
-			patternData[ 6 ] = byData1 & 3;
-			patternData[ 7 ] = byData2 & 3;
+			pPalTbl = &PPURAM[0x3F10 + ((nAttr & SPR_ATTR_COLOR) << 2)];
+
+			unsigned char offset = 0;
+			unsigned char pixelsToDraw = 8;
+			// If we aren't rendering the left 8 pixels of sprites skip past their offset
+			// before merging the sprite pixels into the render buffer
+			if ((nX < 8) && (!(PPU_R1 & R1_CLIP_SP))) {
+				offset = 8 - nX;
+			}
+			// If the sprite would go off the right side of the buffer, reduce the number of
+			// pixels to draw so that we don't overflow
+			if (nX > 248) {
+				pixelsToDraw = 256 - nX;
+			}
+
+			if ( nAttr & SPR_ATTR_H_FLIP ) {
+				patternData[ 0 ] = byData2 & 3;
+				patternData[ 1 ] = byData1 & 3;
+				patternData[ 2 ] = ( byData2 >> 2 ) & 3;
+				patternData[ 3 ] = ( byData1 >> 2 ) & 3;
+				patternData[ 4 ] = ( byData2 >> 4 ) & 3;
+				patternData[ 5 ] = ( byData1 >> 4 ) & 3;
+				patternData[ 6 ] = ( byData2 >> 6 ) & 3;
+				patternData[ 7 ] = ( byData1 >> 6 ) & 3;
+			} else {
+				patternData[ 0 ] = ( byData1 >> 6 ) & 3;
+				patternData[ 1 ] = ( byData2 >> 6 ) & 3;
+				patternData[ 2 ] = ( byData1 >> 4 ) & 3;
+				patternData[ 3 ] = ( byData2 >> 4 ) & 3;
+				patternData[ 4 ] = ( byData1 >> 2 ) & 3;
+				patternData[ 5 ] = ( byData2 >> 2 ) & 3;
+				patternData[ 6 ] = byData1 & 3;
+				patternData[ 7 ] = byData2 & 3;
+			}
 
 			// we invert the priority attribute here for some reason?
 			nAttr ^= SPR_ATTR_PRI;
-			bySprCol = (( nAttr & ( SPR_ATTR_COLOR | SPR_ATTR_PRI ) ) << 2 ) | ((pSPRRAM == SPRRAM) ? 0x40 : 0x00);
-			nX = pSPRRAM[ SPR_X ];		
-
-			unsigned char* pPoint = &spriteBuffer[nX];
-			// if we haven't hit sprite 0 yet, take that into account
-			if ( nAttr & SPR_ATTR_H_FLIP ) {
-				for (unsigned char offset = 0; offset < 8; offset++) {
-					// Horizontal flip
-					if ( patternData[ 7 - offset ] ) {
-						*pPoint = (bySprCol | patternData[ 7 - offset ]);
-					}
-					pPoint++;
+			bySprCol = (( nAttr & SPR_ATTR_PRI )  << 2 ) | ((pSPRRAM == SPRRAM) ? 0x40 : 0x00);
+			for (offset; offset < pixelsToDraw; offset++) {
+				if (patternData[offset]) {
+					spriteBuffer[nX + offset] = bySprCol | (pPalTbl[patternData[offset]] & 0x3F);
 				}
-			} else {
-				for (unsigned char offset = 0; offset < 8; offset++) {
-					if ( patternData[ offset ] ) {
-						*pPoint = (bySprCol | patternData[ offset ]);
-					}
-					pPoint++;
-				}
-			}
+			}	
 		}
 
 		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
-			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
-				if ((i < 255) && (spriteBuffer[i] & 0x40) && (scanline_buffer[i] != 0)) {
+			for (uint16 i = 0; i < 256; i++) {
+				if ((i < 255) && (spriteBuffer[i] & 0x40) && ((scanline_buffer[i] & 0x40) == 0)) {
 					SpriteJustHit = ppuinfo.PPU_Scanline;
 				}
 
-				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
-					scanline_buffer[i] = (spriteBuffer[i] & 0xf) | 0x10;
+				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
+					scanline_buffer[i] = spriteBuffer[i];
 				}
 			}
 		}  else {
-			for (uint16 i = (!(PPU_R1 & 0x04)) ? 8 : 0; i < 256; i++) {
-				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || ((scanline_buffer[i] % 4 == 0) && (scanline_buffer[i] <= 0x1c)))) {
-					scanline_buffer[i] = (spriteBuffer[i] & 0xf) | 0x10;
+			for (uint16 i = 0; i < 256; i++) {
+				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
+					scanline_buffer[i] = spriteBuffer[i];
 				}
 			}
-		}		
+		}	
 	}
 }
 

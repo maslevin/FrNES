@@ -95,20 +95,23 @@ const int Num_Options_Keys = 2;
 
 const int Max_Frameskip = 5;
 
-uint16 default_Sound = 1;
-uint16 default_FrameSkip = 0;
-bool default_Analog = false;
-uint8 default_Select = DC_CONTROLLER_BUTTON_LTRIG;
-uint8 default_AKey = DC_CONTROLLER_BUTTON_A;
-uint8 default_BKey = DC_CONTROLLER_BUTTON_X;
-uint16 default_Stretch = 1;
-uint16 default_Filter = 1;
-uint16 default_Profile = 1;
-uint16 default_VMUPort = 0;
-uint16 default_SRAM = 1;
-uint16 default_AutoFrameSkip = 0;
-uint16 default_ShowFrameRate = 0;
-uint16 default_Clip = 0;
+const uint16 default_Sound = 1;
+const uint16 default_FrameSkip = 0;
+const bool default_Analog = false;
+const uint8 default_Select = DC_CONTROLLER_BUTTON_LTRIG;
+const uint8 default_AKey = DC_CONTROLLER_BUTTON_A;
+const uint8 default_BKey = DC_CONTROLLER_BUTTON_X;
+const uint16 default_Stretch = 1;
+const uint16 default_Filter = 1;
+const uint16 default_Profile = 1;
+const uint16 default_VMUPort = 0;
+const uint16 default_SRAM = 1;
+const uint16 default_AutoFrameSkip = 0;
+const uint16 default_ShowFrameRate = 0;
+const uint8 default_Clip_Left = 0;
+const uint8 default_Clip_Right = 0;
+const uint8 default_Clip_Top = 8;
+const uint8 default_Clip_Bottom = 8;
 
 Font* font;
 
@@ -667,10 +670,10 @@ int main() {
 
 	opt_Stretch = default_Stretch;
 	opt_Filter = default_Filter;
-	opt_ClipVars[0] = default_Clip;
-	opt_ClipVars[1] = default_Clip;
-	opt_ClipVars[2] = default_Clip;
-	opt_ClipVars[3] = default_Clip;
+	opt_ClipVars[0] = default_Clip_Left;
+	opt_ClipVars[1] = default_Clip_Right;
+	opt_ClipVars[2] = default_Clip_Top;
+	opt_ClipVars[3] = default_Clip_Bottom;
 	
 	opt_SoundEnabled = default_Sound;
 	opt_FrameSkip = default_FrameSkip;
