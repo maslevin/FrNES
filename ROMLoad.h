@@ -12,25 +12,23 @@
 #include <kos.h>
 #include "string.h"
 
-typedef struct
-{
+typedef struct __attribute__ ((packed, aligned(4))) RomInfo_s {
 	char FileName[65];
 	char PhysFileName[65];
 	int FileSize;
 	int IsRead;
-} RomInfo;
+} RomInfo_t;
 
-typedef struct
-{
+typedef struct {
 	char FileName[65];
 	uint32 CheckSum;
 } RomCheck;
 
 //Initializes a RomInfo array to the unread values
-void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers);
+void InitializeFileInfos(RomInfo_t* RomInfoArray, char** RomPtrArray, int NumBuffers);
 
 //Start the Search Process
-int StartFileSearch(char* Path, RomInfo* RomInfoArray);
+int StartFileSearch(char* Path, RomInfo_t* RomInfoArray);
 
 //End the Search Process
 void EndFileSearch();
@@ -39,10 +37,10 @@ void EndFileSearch();
 int ReturnCurrentNumRoms();
 
 //Loads a file info without using checksum identification
-int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path);
+int LoadNextFileSimple(RomInfo_t* RomInfoArray, char* current_path);
 
 //Loads a file info using checksum identification
-int LoadNextFileComplex(RomInfo* RomInfoArray);
+int LoadNextFileComplex(RomInfo_t* RomInfoArray);
 
 uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temprom);
 

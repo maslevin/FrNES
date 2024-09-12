@@ -63,7 +63,6 @@ uint32 crc_32_tab[256] = { /* CRC polynomial 0xedb88320 */
 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-
 const int id_size = 1;
 
 uint32 UPDC32 (unsigned char octet, uint32 crc) {
@@ -71,20 +70,18 @@ uint32 UPDC32 (unsigned char octet, uint32 crc) {
 } 
 
 //Initializes a RomInfo array to the unread values
-void InitializeFileInfos(RomInfo* RomInfoArray, char** RomPtrArray, int NumBuffers) {
+void InitializeFileInfos(RomInfo_t* RomInfoArray, char** RomPtrArray, int NumBuffers) {
 	printf("InitializeFileInfos: clearing entries\n");
-	memset(RomInfoArray, 0, sizeof(RomInfo) * NumBuffers);
+	memset(RomInfoArray, 0, sizeof(RomInfo_t) * NumBuffers);
 	for (int i = 0; i < NumBuffers; i++) {
 		RomPtrArray[i] = RomInfoArray[i].FileName;
 	}
 };
 
 //Start the Search Process
-int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
+int StartFileSearch(char* Path, RomInfo_t* RomInfoArray) {
 	printf("StartFileSearch: beginning search\n");
 
-	//Reset CD drive to look for new rom CD..
-	//fs_iso9660_init();
 	my_file = fs_open(Path, O_DIR);
 	if (my_file == -1) {
 		printf("StartFileSearch: error unable to open directory\n");
@@ -93,6 +90,15 @@ int StartFileSearch(char* Path, RomInfo* RomInfoArray) {
 		printf("StartFileSearch: directory opened successfully\n");
 		numberOfRoms = 0;
 		currentindex = 0;
+		// The cd interface doesn't put .. into the root directory list at any level
+		// and the sd interface only does it in subdirectories, so add it here for consistency
+		if ((strstr(Path, "/cd") == Path) || (strcmp(Path, "/sd/") == 0)) {
+			strcpy(RomInfoArray[currentindex].FileName, "<Previous Directory>,DIR<RLAlign>");
+			strcpy(RomInfoArray[currentindex].PhysFileName, "..");
+			RomInfoArray[currentindex].IsRead = 1;
+			currentindex++;
+			numberOfRoms++;			
+		}
 		return 1;
 	}
 };
@@ -110,19 +116,28 @@ int ReturnCurrentNumRoms() {
 }
 
 //Loads a fileinfo
-int LoadNextFileSimple(RomInfo* RomInfoArray, char* current_path) {
+int LoadNextFileSimple(RomInfo_t* RomInfoArray, char* current_path) {
 //	printf("LoadNextFileSimple: reading directory\n");
 	my_dir = fs_readdir(my_file);
 	if (my_dir != NULL) {
 //		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
 		if (my_dir -> attr & 0x1000) {
-			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
-			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);
-			strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
-			RomInfoArray[currentindex].IsRead = 1;
-			currentindex++;
-			numberOfRoms++;			
-		} else if (strstr(my_dir -> name, ".nes") != NULL) {
+			if (strcmp(my_dir -> name, "..") == 0) {
+				strcpy(RomInfoArray[currentindex].FileName, "<Previous Directory>,DIR<RLAlign>");
+				strcpy(RomInfoArray[currentindex].PhysFileName, "..");
+				RomInfoArray[currentindex].IsRead = 1;
+				currentindex++;
+				numberOfRoms++;
+			} else if (strcmp(my_dir -> name, ".") == 0) {
+
+			} else {
+				snprintf(RomInfoArray[currentindex].FileName, 65, "%s,%s<RLAlign>", my_dir -> name, "DIR");
+				strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
+				RomInfoArray[currentindex].IsRead = 1;
+				currentindex++;
+				numberOfRoms++;
+			}
+		} else if ((strstr(my_dir -> name, ".nes") != NULL) || (strstr(my_dir -> name, ".NES") != NULL)) {
 			RomInfoArray[currentindex].FileSize = my_dir -> size;
 			strcpy(RomInfoArray[currentindex].FileName, my_dir -> name);
 			strcpy(RomInfoArray[currentindex].PhysFileName, current_path);
