@@ -10,6 +10,24 @@ typedef struct __attribute__ ((packed, aligned(4))) ControllerSettings_s {
     uint8 bKey;
 } ControllerSettings_t;
 
+typedef struct __attribute__ ((packed, aligned(4))) Options_s {
+    uint32 GUI_BGColor;
+    uint32 GUI_TextColor;
+    uint32 GUI_SelectedTextColor;
+    uint32 GUI_InsideWindowColor;
+    uint32 GUI_OutsideWindowColor;
+    uint16 opt_SoundEnabled;
+    uint16 opt_FrameSkip;
+    uint16 opt_AutoFrameSkip;
+    uint16 opt_ShowFrameRate;
+    int16 opt_VMUPort;
+    uint16 opt_SRAM;
+    uint16 opt_Stretch;
+    uint16 opt_Filter;
+    uint8 opt_ClipVars[4];
+    ControllerSettings_t controllerSettings[4];    
+} Options_t;
+
 #define DEFAULT_SOUND 1
 #define DEFAULT_FRAMESKIP 0
 #define DEFAULT_ANALOG false
@@ -34,20 +52,10 @@ typedef struct __attribute__ ((packed, aligned(4))) ControllerSettings_s {
 #define DC_CONTROLLER_BUTTON_Y     3
 #define DC_CONTROLLER_BUTTON_LTRIG 4
 
-extern ControllerSettings_t controllerSettings[];
+extern Options_t options;
 
-extern uint32 GUI_BGColor;
-extern uint32 GUI_TextColor;
-extern uint32 GUI_SelectedTextColor;
-extern uint32 GUI_InsideWindowColor;
-extern uint32 GUI_OutsideWindowColor;
-
-//Options Variables
-extern uint16 opt_SoundEnabled;
-extern uint16 opt_FrameSkip;
-extern uint16 opt_AutoFrameSkip;
-extern uint16 opt_ShowFrameRate;
-extern int16 opt_VMUPort;
-extern uint16 opt_SRAM;
+bool load_options_from_VMU();
+bool save_options_to_VMU();
+bool delete_options_from_VMU();
 
 #endif

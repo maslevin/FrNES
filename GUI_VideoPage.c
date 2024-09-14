@@ -10,11 +10,9 @@
 #include "GUI_VideoPage.h"
 #include "macros.h"
 
-#include "pNesX_System_Dc.h"
+#include "options.h"
 
-uint16 opt_Stretch;
-uint16 opt_Filter;
-uint8 opt_ClipVars[4];
+#include "pNesX_System_Dc.h"
 
 char ClipLX_Buffer[50];
 char ClipRX_Buffer[50];
@@ -53,15 +51,15 @@ void setup_video_options_screen() {
 	mystyle.Header_Text_Scale = 1.0f;
 	mystyle.Text_Scale = 0.60f;
 	mystyle.Border_Thickness = 5.0f;
-	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
-	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
+	mystyle.Border_Color = options.GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
+	mystyle.Inside_Color = options.GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
 	mystyle.Left_Margin = 15;
 	mystyle.Line_Spacing = 2.0f;
-	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
-	mystyle.Text_Color = GUI_TextColor;
+	mystyle.Header_Text_Color = options.GUI_TextColor; //0x8000;
+	mystyle.Text_Color = options.GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
-	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
+	mystyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	mystyle.Selected_Background_Color = options.GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
 
 	//Set Up Window Data Features
 	helpdata.x = 32.0f;
@@ -77,20 +75,20 @@ void setup_video_options_screen() {
 
 	//Set Up Window Style Features
 	helpstyle.Border_Thickness = 5.0f;
-	helpstyle.Border_Color = GUI_OutsideWindowColor;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
+	helpstyle.Border_Color = options.GUI_OutsideWindowColor;
+	helpstyle.Inside_Color = options.GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
 	helpstyle.Line_Spacing = 0.0f;	
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
+	helpstyle.Header_Text_Color = options.GUI_TextColor;
+	helpstyle.Text_Color = options.GUI_TextColor;
 	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
+	helpstyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	helpstyle.Selected_Background_Color = options.GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
 //Generates the Options GUI info from the variables in memory
 void Generate_Video_Options_List() {
-	switch(opt_Stretch) {
+	switch(options.opt_Stretch) {
 		case 0:
 			Video_Options[0] = Options_Stretch_Unchecked;
 			break;
@@ -98,7 +96,7 @@ void Generate_Video_Options_List() {
 			Video_Options[0] = Options_Stretch_Checked;
 			break;
 	}
-	switch(opt_Filter) {
+	switch(options.opt_Filter) {
 		case 0:
 			Video_Options[1] = Options_Filter_Unchecked;
 			break;
@@ -107,16 +105,16 @@ void Generate_Video_Options_List() {
 			break;
 	}
 
-	snprintf(ClipLX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Left, opt_ClipVars[0]);
+	snprintf(ClipLX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Left, options.opt_ClipVars[0]);
 	Video_Options[2] = ClipLX_Buffer;
 
-	snprintf(ClipRX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Right, opt_ClipVars[1]);
+	snprintf(ClipRX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Right, options.opt_ClipVars[1]);
 	Video_Options[3] = ClipRX_Buffer;
 
-	snprintf(ClipTX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Top, opt_ClipVars[2]);
+	snprintf(ClipTX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Top, options.opt_ClipVars[2]);
 	Video_Options[4] = ClipTX_Buffer;
 
-	snprintf(ClipBX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Bottom, opt_ClipVars[3]);
+	snprintf(ClipBX_Buffer, 50, "%s,%u<RLAlign>", Options_Clip_Bottom, options.opt_ClipVars[3]);
 	Video_Options[5] = ClipBX_Buffer;
 }
 
@@ -146,12 +144,12 @@ void Handle_Video_Interface(cont_state_t* my_state) {
 		(invalida == 0)) {
 		switch(mydata.Highlighted_Index) {
 			case 0:
-				opt_Stretch = 1 - opt_Stretch;
+				options.opt_Stretch = 1 - options.opt_Stretch;
 				Generate_Video_Options_List();
 				invalida = 1;
 				break;
 			case 1:
-				opt_Filter = 1 - opt_Filter;
+				options.opt_Filter = 1 - options.opt_Filter;
 				Generate_Video_Options_List();
 				invalida = 1;
 				break;
@@ -163,29 +161,29 @@ void Handle_Video_Interface(cont_state_t* my_state) {
 		(xkeyhit == 0)) {
 		switch(mydata.Highlighted_Index) {
 			case 2:
-				if (opt_ClipVars[0] > 0) {
-					(opt_ClipVars[0]) -= 8;
+				if (options.opt_ClipVars[0] > 0) {
+					(options.opt_ClipVars[0]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 3:
-				if (opt_ClipVars[1] > 0) {
-					(opt_ClipVars[1]) -= 8;
+				if (options.opt_ClipVars[1] > 0) {
+					(options.opt_ClipVars[1]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 4:
-				if (opt_ClipVars[2] > 0) {
-					(opt_ClipVars[2]) -= 8;
+				if (options.opt_ClipVars[2] > 0) {
+					(options.opt_ClipVars[2]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 5:
-				if (opt_ClipVars[3] > 0) {
-					(opt_ClipVars[3]) -= 8;
+				if (options.opt_ClipVars[3] > 0) {
+					(options.opt_ClipVars[3]) -= 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
@@ -197,29 +195,29 @@ void Handle_Video_Interface(cont_state_t* my_state) {
 		(xkeyhit == 0)) {
 		switch(mydata.Highlighted_Index) {
 			case 2:
-				if (opt_ClipVars[0] < MAX_CLIP_PIXELS) {
-					(opt_ClipVars[0]) += 8;
+				if (options.opt_ClipVars[0] < MAX_CLIP_PIXELS) {
+					(options.opt_ClipVars[0]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 3:
-				if (opt_ClipVars[1] < MAX_CLIP_PIXELS) {
-					(opt_ClipVars[1]) += 8;
+				if (options.opt_ClipVars[1] < MAX_CLIP_PIXELS) {
+					(options.opt_ClipVars[1]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 4:
-				if (opt_ClipVars[2] < MAX_CLIP_PIXELS) {
-					(opt_ClipVars[2]) += 8;
+				if (options.opt_ClipVars[2] < MAX_CLIP_PIXELS) {
+					(options.opt_ClipVars[2]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}
 				break;
 			case 5:
-				if (opt_ClipVars[3] < MAX_CLIP_PIXELS) {
-					(opt_ClipVars[3]) += 8;
+				if (options.opt_ClipVars[3] < MAX_CLIP_PIXELS) {
+					(options.opt_ClipVars[3]) += 8;
 					Generate_Video_Options_List();
 					xkeyhit = 1;
 				}

@@ -11,18 +11,13 @@
 #include "macros.h"
 
 #include "pNesX_System_DC.h"
-
-extern void setup_file_browser_screen();
-extern void setup_credits_screen();
-extern void setup_control_options_screen();
-extern void Generate_Control_Options_List();
-extern void setup_system_options_screen();
-extern void Generate_System_Options_List();
-extern void setup_help_screen();
-extern void setup_video_options_screen();
-extern void Generate_Video_Options_List();
-extern void setup_gui_options_screen();
-extern void Generate_GUI_Options_List();
+#include "GUI_ControlPage.h"
+#include "GUI_Credits.h"
+#include "GUI_FileBrowser.h"
+#include "GUI_GUIPage.h"
+#include "GUI_Help.h"
+#include "GUI_SystemPage.h"
+#include "GUI_VideoPage.h"
 
 char Main_Menu[] = "Main Menu";
 char* Main_Options[] = {
@@ -62,15 +57,15 @@ void setup_main_menu_screen()
 	mystyle.Header_Text_Scale = 1.0f;
 	mystyle.Text_Scale = 0.60f;
 	mystyle.Border_Thickness = 5.0f;
-	mystyle.Border_Color = GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
-	mystyle.Inside_Color = GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
+	mystyle.Border_Color = options.GUI_OutsideWindowColor; //		MakeRGB(8, 20, 10);
+	mystyle.Inside_Color = options.GUI_InsideWindowColor; //MakeRGB(8, 20, 32);
 	mystyle.Left_Margin = 15;
 	mystyle.Line_Spacing = 0.0f;
-	mystyle.Header_Text_Color = GUI_TextColor; //0x8000;
-	mystyle.Text_Color = GUI_TextColor;
+	mystyle.Header_Text_Color = options.GUI_TextColor; //0x8000;
+	mystyle.Text_Color = options.GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
-	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
+	mystyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	mystyle.Selected_Background_Color = options.GUI_SelectedTextColor; //MakeRGB(8, 18, 32);
 
 	//Set Up Window Data Features
 	helpdata.x = 32.0f;
@@ -88,15 +83,15 @@ void setup_main_menu_screen()
 	helpstyle.Header_Text_Scale = 0.5f;
 	helpstyle.Text_Scale = 0.5f;	
 	helpstyle.Border_Thickness = 5.0f;
-	helpstyle.Border_Color = GUI_OutsideWindowColor;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
+	helpstyle.Border_Color = options.GUI_OutsideWindowColor;
+	helpstyle.Inside_Color = options.GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
 	helpstyle.Line_Spacing = 0.0f;	
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
+	helpstyle.Header_Text_Color = options.GUI_TextColor;
+	helpstyle.Text_Color = options.GUI_TextColor;
 	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
+	helpstyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	helpstyle.Selected_Background_Color = options.GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
 void Handle_Main_Menu_Interface(cont_state_t* my_state)

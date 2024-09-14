@@ -69,7 +69,6 @@ int disable_rom_interface;
 /*------------------------------------------------------------------*/
 Window_Style mystyle;
 Window_Data mydata;
-
 Window_Style helpstyle;
 Window_Data helpdata;
 
@@ -77,10 +76,6 @@ Window_Data helpdata;
 unsigned char *ROM;
 unsigned char *VROM;
 unsigned char *VRAM;
-uint32 SRAM_Enabled;
-
-#define APP_STRING "FrNES"
-#define APP_VERSION "0.7.1"
 
 //Help for the Options screen
 char* Options_Keys[] = {
@@ -101,7 +96,7 @@ uint32 currentCRC32;
 /*-------------------------------------------------------------------*/
 char szRomPath[ 256 ];
 char szSaveName[ 256 ];
-int nSRAM_SaveFlag;
+uint32 SRAM_Enabled;
 uint32 RomSize;
 bool AutoROM;
 
@@ -159,22 +154,40 @@ float texture_u2;
 float texture_v2;
 
 void calculateOutputScreenGeometry() {
-	polygon_x1 = 0.0f + (((float)opt_ClipVars[0] * 640.0f) / 256.0f);
-	polygon_y1 = 0.0f + (((float)opt_ClipVars[2] * 480.0f) / 240.0f);
-	polygon_x2 = 640.0f - (((float)opt_ClipVars[1] * 640.0f) / 256.0f);
-	polygon_y2 = 480.0f - (((float)opt_ClipVars[3] * 480.0f) / 240.0f);
-	texture_u1 = ((float)opt_ClipVars[0] * 4) / 1024.0f;
-	texture_v1 = (float)opt_ClipVars[2] / 256.0f;
-	texture_u2 = (float)(1024 - (opt_ClipVars[1] * 4)) / 1024.0f;
-	texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
+	polygon_x1 = 0.0f + (((float)options.opt_ClipVars[0] * 640.0f) / 256.0f);
+	polygon_y1 = 0.0f + (((float)options.opt_ClipVars[2] * 480.0f) / 240.0f);
+	polygon_x2 = 640.0f - (((float)options.opt_ClipVars[1] * 640.0f) / 256.0f);
+	polygon_y2 = 480.0f - (((float)options.opt_ClipVars[3] * 480.0f) / 240.0f);
+	texture_u1 = ((float)options.opt_ClipVars[0] * 4) / 1024.0f;
+	texture_v1 = (float)options.opt_ClipVars[2] / 256.0f;
+	texture_u2 = (float)(1024 - (options.opt_ClipVars[1] * 4)) / 1024.0f;
+	texture_v2 = (float)(240 - (options.opt_ClipVars[3])) / 256.0f;
 
-	if (!opt_Stretch) {
+	if (!options.opt_Stretch) {
 		// Multiply clipped pixels by two because the texture is 256x256 and we are displaying as 512x512 (roughly)
-		polygon_x1 = 64.0f + (float)(opt_ClipVars[0] * 2);
-		polygon_x2 = 576.0f - (float)(opt_ClipVars[1] * 2);
-		polygon_y1 = 0.0f + (float)(opt_ClipVars[2] * 2);
-		polygon_y2 = 480.0f - (float)(opt_ClipVars[3] * 2);
+		polygon_x1 = 64.0f + (float)(options.opt_ClipVars[0] * 2);
+		polygon_x2 = 576.0f - (float)(options.opt_ClipVars[1] * 2);
+		polygon_y1 = 0.0f + (float)(options.opt_ClipVars[2] * 2);
+		polygon_y2 = 480.0f - (float)(options.opt_ClipVars[3] * 2);
 	}	
+}
+
+// this routine came from the ghettoplay example that comes 
+// with libdream
+int draw_VMU_icon(maple_device_t* vmu, char* icon) {
+	uint8 bitmap[48*32/8] = {0};
+	int x, y, xi, xb;
+
+	for (y=0; y<32; y++) {
+		for (x=0; x<48; x++) {
+			xi = x / 8;
+			xb = 0x80 >> (x % 8);
+			if (icon[(31-y)*48+(47-x)] == '+')
+				bitmap[y*(48/8)+xi] |= xb;
+		}
+	}
+	
+	return vmu_draw_lcd(vmu, bitmap);
 }
 
 void initialize_controllers() {
@@ -223,7 +236,7 @@ void draw_screen() {
 		my_c_vertex.x = 0.0f;
 		my_c_vertex.y = 480.0f;
 		my_c_vertex.z = 25.0f;
-		my_c_vertex.argb = GUI_BGColor;
+		my_c_vertex.argb = options.GUI_BGColor;
 		my_c_vertex.oargb = 0;
 		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
@@ -264,7 +277,7 @@ void draw_screen() {
 
 int LoadSRAM() {
 	int loadSRAM_success = -1;
-	if (opt_SRAM == 1) {
+	if (options.opt_SRAM == 1) {
 		printf("VMU: Attempting to Load SRAM from attached VMUs\n");
 		for (int i = 0; i < 8; i++) {
 			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -307,7 +320,7 @@ int LoadSRAM() {
 
 int SaveSRAM() {
 	int saveSRAM_success = -1;
-	if (opt_SRAM == 1) {
+	if (options.opt_SRAM == 1) {
 		for (int i = 0; i < numVMUs; i++) {
 			printf("VMU: Attempting to Save SRAM to VMU [%i]\n", i);
 			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -395,41 +408,6 @@ int SaveSRAM() {
 	return saveSRAM_success;
 }
 
-void Save_VMU_Options()
-{
-	//Menu Screen = Save Options
-	/*	
-	if (*opt_VMUPort != -1)
-	{
-		vmu_icon_draw(vmu_screen_saving, VMUs[*opt_VMUPort]);
-		switch (save_user_settings(VMUs[*opt_VMUPort]))
-		{
-			case -1:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
-			default:
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-				break;
-		}
-	}
-	*/
-}
-
-void Load_VMU_Options()
-{
-	//Menu Screen = Load Options
-	/*
-	if (*opt_VMUPort != -1)
-	{
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		if (load_user_settings(VMUs[*opt_VMUPort]) == -1)
-			vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-		else
-			vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-	}
-	*/
-}
-
 pvr_init_params_t pvr_params =  {
     /* Enable opaque and translucent polygons with size 16 */
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
@@ -504,6 +482,37 @@ void initVQTextures() {
 		printf("Allocated frame [%lu] at address [0x%8lX]\n", i, (uint32)WorkFrames[i]);
 		pvr_txr_load(codebook, WorkFrames[i] -> codebook, 2048);
 		printf("Updated texture with NES Palette\n");
+	}
+}
+
+void initializeUserOptions() {
+	// If we weren't able to load any FrNES Options from any of the connected VMUs set the application defaults
+	if (!load_options_from_VMU()) {
+		options.GUI_BGColor = 0xFF0080FF;
+		options.GUI_TextColor = 0xFF000000;
+		options.GUI_SelectedTextColor = 0xFF00FF00;
+		options.GUI_InsideWindowColor = 0xFF00803f;
+		options.GUI_OutsideWindowColor = 0xFFFFFFFF;
+
+		for (uint8 i = 0; i < 4; i++) {
+			options.controllerSettings[i].analogEnabled = DEFAULT_ANALOG;
+			options.controllerSettings[i].aKey = DEFAULT_AKEY;
+			options.controllerSettings[i].bKey = DEFAULT_BKEY;
+			options.controllerSettings[i].selectKey = DEFAULT_SELECT;
+		}
+
+		options.opt_Stretch = DEFAULT_STRETCH;
+		options.opt_Filter = DEFAULT_FILTER;
+		options.opt_ClipVars[0] = DEFAULT_CLIP_LEFT;
+		options.opt_ClipVars[1] = DEFAULT_CLIP_RIGHT;
+		options.opt_ClipVars[2] = DEFAULT_CLIP_TOP;
+		options.opt_ClipVars[3] = DEFAULT_CLIP_BOTTOM;
+		
+		options.opt_SoundEnabled = DEFAULT_SOUND;
+		options.opt_FrameSkip = DEFAULT_FRAMESKIP;
+		options.opt_AutoFrameSkip = DEFAULT_AUTOFRAMESKIP;
+		options.opt_ShowFrameRate = DEFAULT_SHOWFRAMERATE;
+		options.opt_SRAM = DEFAULT_SRAM;
 	}
 }
 
@@ -627,74 +636,19 @@ int main() {
 	printf("Initializing Controllers and VMUs\n");	
 	initialize_controllers();
 
-	GUI_BGColor = 0xFF0080FF;
-	GUI_TextColor = 0xFF000000;
-	GUI_SelectedTextColor = 0xFF00FF00;
-	GUI_InsideWindowColor = 0xFF00803f;
-	GUI_OutsideWindowColor = 0xFFFFFFFF;
+	printf("Initializing VMUs\n");
+	for (uint8 i = 0; i < numVMUs; i++) {
+		draw_VMU_icon(VMUs[i], vmu_screen_normal);
+	}
+
+	printf("Initializing User Options\n");
+	initializeUserOptions();
 
 	romselstatus = 0;
 	invalida = 0;
 	xkeyhit = 0;
 	disable_trigs = 0;
 	disable_rom_interface = 0;
-
-	for (uint8 i = 0; i < 4; i++) {
-		controllerSettings[i].analogEnabled = DEFAULT_ANALOG;
-		controllerSettings[i].aKey = DEFAULT_AKEY;
-		controllerSettings[i].bKey = DEFAULT_BKEY;
-		controllerSettings[i].selectKey = DEFAULT_SELECT;
-	}
-
-	opt_Stretch = DEFAULT_STRETCH;
-	opt_Filter = DEFAULT_FILTER;
-	opt_ClipVars[0] = DEFAULT_CLIP_LEFT;
-	opt_ClipVars[1] = DEFAULT_CLIP_RIGHT;
-	opt_ClipVars[2] = DEFAULT_CLIP_TOP;
-	opt_ClipVars[3] = DEFAULT_CLIP_BOTTOM;
-	
-	opt_SoundEnabled = DEFAULT_SOUND;
-	opt_FrameSkip = DEFAULT_FRAMESKIP;
-	opt_AutoFrameSkip = DEFAULT_AUTOFRAMESKIP;
-	opt_ShowFrameRate = DEFAULT_SHOWFRAMERATE;
-	opt_SRAM = DEFAULT_SRAM;
-
-	printf("Initializing VMUs\n");
-	for (uint8 i = 0; i < numVMUs; i++) {
-		draw_VMU_icon(VMUs[i], vmu_screen_normal);
-	}
-
-	//If the default Memory card is present
-	/*
-	if (VMUs[default_VMUPort] != 0)
-	{
-		*opt_VMUPort = default_VMUPort;
-		//Try to load settings if possible
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		load_user_settings(VMUs[*opt_VMUPort]);
-		vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-	}
-	else
-	//Otherwise Search for a Memcard
-	{
-		//Choose the first one available
-		for (i = 0; i < 8; i++)
-		{
-			if (VMUs[i] != 0)
-			{
-				*opt_VMUPort = i;
-				//Try to load settings if possible
-				vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-				load_user_settings(VMUs[*opt_VMUPort]);
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-				break;
-			}
-			else
-				//If one wasn't found, turn off memcard support
-				*opt_VMUPort = -1;
-		}
-	}
-	*/
 
 	printf("Checking for autoROM\n");
 	AutoROM = checkForAutoROM();
@@ -703,7 +657,6 @@ int main() {
 	} else {
 		menuscreen = MENUNUM_MAIN;
 	}
-
 
 	printf("Setting up main menu\n");
 	setup_main_menu_screen();
@@ -911,7 +864,7 @@ void pNesX_LoadFrame() {
 	pvr_poly_cxt_col(&my_cxt, PVR_LIST_OP_POLY);
 
 	uint32 filter = PVR_FILTER_BILINEAR;
-	if (!opt_Filter) {
+	if (!options.opt_Filter) {
 		filter = PVR_FILTER_NONE;
 	}
 
@@ -946,7 +899,7 @@ void pNesX_LoadFrame() {
 
 	pvr_list_finish();
 
-	if (opt_ShowFrameRate) {
+	if (options.opt_ShowFrameRate) {
 		pvr_list_begin(PVR_LIST_TR_POLY);
 
 		char fps[10];
@@ -1053,7 +1006,7 @@ bool playbackRecording(uint32* controllerBitflags) {
 void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerIndex) {
 	//Start first
 	handleButton(bitflags, CONTROLLER_BUTTON_START, controllerIndex, state, MODE_BUTTONS, CONT_START);
-	switch (controllerSettings[controllerIndex].aKey) {
+	switch (options.controllerSettings[controllerIndex].aKey) {
 		case 0:
 			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_BUTTONS, CONT_A);
 			break;
@@ -1070,7 +1023,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_LTRIGGER, 0);
 			break;
 	}
-	switch (controllerSettings[controllerIndex].bKey) {
+	switch (options.controllerSettings[controllerIndex].bKey) {
 		case 0:
 			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_BUTTONS, CONT_A);
 			break;
@@ -1087,7 +1040,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_LTRIGGER, 0);
 			break;
 	}
-	switch (controllerSettings[controllerIndex].selectKey) {
+	switch (options.controllerSettings[controllerIndex].selectKey) {
 		case 0:
 			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_BUTTONS, CONT_A);
 			break;
@@ -1104,7 +1057,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_LTRIGGER, 0);
 			break;
 	}
-	if (controllerSettings[controllerIndex].analogEnabled) {
+	if (options.controllerSettings[controllerIndex].analogEnabled) {
 		handleButton(bitflags, CONTROLLER_BUTTON_UP, controllerIndex, state, MODE_ANALOG_Y_UP, 0);
 		handleButton(bitflags, CONTROLLER_BUTTON_DOWN, controllerIndex, state, MODE_ANALOG_Y_DOWN, 0);
 		handleButton(bitflags, CONTROLLER_BUTTON_LEFT, controllerIndex, state, MODE_ANALOG_X_LEFT, 0);
@@ -1212,24 +1165,6 @@ uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 of
 		}
 		return dest;
 	}
-}
-
-// this routine came from the ghettoplay example that comes 
-// with libdream
-int draw_VMU_icon(maple_device_t* vmu, char* icon) {
-	uint8 bitmap[48*32/8] = {0};
-	int x, y, xi, xb;
-
-	for (y=0; y<32; y++) {
-		for (x=0; x<48; x++) {
-			xi = x / 8;
-			xb = 0x80 >> (x % 8);
-			if (icon[(31-y)*48+(47-x)] == '+')
-				bitmap[y*(48/8)+xi] |= xb;
-		}
-	}
-	
-	return vmu_draw_lcd(vmu, bitmap);
 }
 
 #ifdef DEBUG

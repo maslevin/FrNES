@@ -140,15 +140,15 @@ void setup_file_browser_screen() {
 	mystyle.Header_Text_Scale = 1.0f;
 	mystyle.Text_Scale = 0.50f;
 	mystyle.Border_Thickness = 5.0f;
-	mystyle.Border_Color = GUI_OutsideWindowColor; 
-	mystyle.Inside_Color = GUI_InsideWindowColor;
+	mystyle.Border_Color = options.GUI_OutsideWindowColor; 
+	mystyle.Inside_Color = options.GUI_InsideWindowColor;
 	mystyle.Left_Margin = 15;
 	mystyle.Line_Spacing = 0.0f;	
-	mystyle.Header_Text_Color = GUI_TextColor;
-	mystyle.Text_Color = GUI_TextColor;
+	mystyle.Header_Text_Color = options.GUI_TextColor;
+	mystyle.Text_Color = options.GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale) - (2 * CORNER_RADIUS)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
-	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor;
+	mystyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	mystyle.Selected_Background_Color = options.GUI_SelectedTextColor;
 
 	//Set Up Window Data Features
 	helpdata.x = 32.0f;
@@ -165,15 +165,15 @@ void setup_file_browser_screen() {
 	//Set Up Window Style Features
 	helpstyle.Header_Text_Scale = 0.75f;
 	helpstyle.Border_Thickness = 5.0f;
-	helpstyle.Border_Color = GUI_OutsideWindowColor;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
+	helpstyle.Border_Color = options.GUI_OutsideWindowColor;
+	helpstyle.Inside_Color = options.GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
 	helpstyle.Line_Spacing = 0.0f;	
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
+	helpstyle.Header_Text_Color = options.GUI_TextColor;
+	helpstyle.Text_Color = options.GUI_TextColor;
 	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
+	helpstyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	helpstyle.Selected_Background_Color = options.GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
 void Return_To_Main_Menu() {
