@@ -19,13 +19,15 @@
 /*                    - for Christmas                                */
 /*===================================================================*/
 
+#include <bzlib/bzlib.h>
+
 /*-------------------------------------------------------------------*/
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 #include "pNesX.h"
 #include "macros.h"
 
-#include <bzlib/bzlib.h>
+#include "options.h"
 
 #include "input_recorder.h"
 
@@ -65,12 +67,6 @@ int disable_rom_interface;
 /*------------------------------------------------------------------*/
 /*  GUI Customization Variables                                     */
 /*------------------------------------------------------------------*/
-uint32 GUI_BGColor;
-uint32 GUI_TextColor;
-uint32 GUI_SelectedTextColor;
-uint32 GUI_InsideWindowColor;
-uint32 GUI_OutsideWindowColor;
-
 Window_Style mystyle;
 Window_Data mydata;
 
@@ -94,24 +90,6 @@ char* Options_Keys[] = {
 const int Num_Options_Keys = 2;
 
 const int Max_Frameskip = 5;
-
-const uint16 default_Sound = 1;
-const uint16 default_FrameSkip = 0;
-const bool default_Analog = false;
-const uint8 default_Select = DC_CONTROLLER_BUTTON_LTRIG;
-const uint8 default_AKey = DC_CONTROLLER_BUTTON_A;
-const uint8 default_BKey = DC_CONTROLLER_BUTTON_X;
-const uint16 default_Stretch = 1;
-const uint16 default_Filter = 1;
-const uint16 default_Profile = 1;
-const uint16 default_VMUPort = 0;
-const uint16 default_SRAM = 1;
-const uint16 default_AutoFrameSkip = 0;
-const uint16 default_ShowFrameRate = 0;
-const uint8 default_Clip_Left = 0;
-const uint8 default_Clip_Right = 0;
-const uint8 default_Clip_Top = 8;
-const uint8 default_Clip_Bottom = 8;
 
 Font* font;
 
@@ -662,24 +640,24 @@ int main() {
 	disable_rom_interface = 0;
 
 	for (uint8 i = 0; i < 4; i++) {
-		controllerSettings[i].analogEnabled = default_Analog;
-		controllerSettings[i].aKey = default_AKey;
-		controllerSettings[i].bKey = default_BKey;
-		controllerSettings[i].selectKey = default_Select;
+		controllerSettings[i].analogEnabled = DEFAULT_ANALOG;
+		controllerSettings[i].aKey = DEFAULT_AKEY;
+		controllerSettings[i].bKey = DEFAULT_BKEY;
+		controllerSettings[i].selectKey = DEFAULT_SELECT;
 	}
 
-	opt_Stretch = default_Stretch;
-	opt_Filter = default_Filter;
-	opt_ClipVars[0] = default_Clip_Left;
-	opt_ClipVars[1] = default_Clip_Right;
-	opt_ClipVars[2] = default_Clip_Top;
-	opt_ClipVars[3] = default_Clip_Bottom;
+	opt_Stretch = DEFAULT_STRETCH;
+	opt_Filter = DEFAULT_FILTER;
+	opt_ClipVars[0] = DEFAULT_CLIP_LEFT;
+	opt_ClipVars[1] = DEFAULT_CLIP_RIGHT;
+	opt_ClipVars[2] = DEFAULT_CLIP_TOP;
+	opt_ClipVars[3] = DEFAULT_CLIP_BOTTOM;
 	
-	opt_SoundEnabled = default_Sound;
-	opt_FrameSkip = default_FrameSkip;
-	opt_AutoFrameSkip = default_AutoFrameSkip;
-	opt_ShowFrameRate = default_ShowFrameRate;
-	opt_SRAM = default_SRAM;
+	opt_SoundEnabled = DEFAULT_SOUND;
+	opt_FrameSkip = DEFAULT_FRAMESKIP;
+	opt_AutoFrameSkip = DEFAULT_AUTOFRAMESKIP;
+	opt_ShowFrameRate = DEFAULT_SHOWFRAMERATE;
+	opt_SRAM = DEFAULT_SRAM;
 
 	printf("Initializing VMUs\n");
 	for (uint8 i = 0; i < numVMUs; i++) {

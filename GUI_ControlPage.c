@@ -48,8 +48,6 @@ const char Options_LTrig[] = "Left Trigger";
 char* Control_Options[20];
 const int Num_Control_Options = 20;
 
-ControllerSettings_t controllerSettings[4];
-
 const char* ButtonOptions[5] = {
 	Options_A,
 	Options_B,

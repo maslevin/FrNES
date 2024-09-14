@@ -46,14 +46,6 @@ const char Options_Recording_Mode_Playback[] = "Playback";
 char* System_Options[11];
 const int Num_System_Options = 11;
 
-//Options Variables
-uint16 opt_SoundEnabled;
-uint16 opt_FrameSkip;
-uint16 opt_AutoFrameSkip;
-uint16 opt_ShowFrameRate;
-int16 opt_VMUPort;
-uint16 opt_SRAM;
-
 void setup_system_options_screen() {
 	//Set Up Window Data Features
 	mydata.x = 208.0f;

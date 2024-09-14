@@ -40,12 +40,4 @@ extern const int Num_Options_Keys;
 
 extern maple_device_t* VMUs[];
 
-//Options Variables
-extern uint16 opt_SoundEnabled;
-extern uint16 opt_FrameSkip;
-extern uint16 opt_AutoFrameSkip;
-extern uint16 opt_ShowFrameRate;
-extern int16 opt_VMUPort;
-extern uint16 opt_SRAM;
-
 #endif

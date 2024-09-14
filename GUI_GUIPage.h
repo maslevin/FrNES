@@ -13,6 +13,8 @@
 #include <kos.h>
 #include "TextWindow.h"
 
+#include "options.h"
+
 #include "GUI_MainMenu.h"
 
 //Function Definitions

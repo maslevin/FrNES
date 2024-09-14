@@ -14,6 +14,8 @@
 #include "TextWindow.h"
 #include "font.h"
 
+#include "options.h"
+
 extern Font* font;
 
 //Function Definitions
@@ -40,11 +42,5 @@ extern char* Main_Keys[];
 extern const int Num_Main_Keys;
 extern char* Options_Keys[];
 extern const int Num_Options_Keys;
-
-extern uint32 GUI_BGColor;
-extern uint32 GUI_OutsideWindowColor;
-extern uint32 GUI_InsideWindowColor;
-extern uint32 GUI_TextColor;
-extern uint32 GUI_SelectedTextColor;
 
 #endif
