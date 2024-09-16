@@ -134,7 +134,7 @@ apu_t *apu_getcontext(void) {
 #define  APU_QEMPTY()   (apu->q_head == apu->q_tail)
 #define  EX_QEMPTY()   (apu->ex_q_head == apu->ex_q_tail)
 
-static void apu_enqueue(apudata_t *d) {
+__attribute__ ((hot)) static void apu_enqueue(apudata_t *d) {
     apu->queue[apu->q_head] = *d;
   
     apu->q_head = (apu->q_head + 1) & APUQUEUE_MASK;
@@ -143,7 +143,7 @@ static void apu_enqueue(apudata_t *d) {
         log_printf("apu: queue overflow\n");
 }
 
-static apudata_t *apu_dequeue(void) {
+__attribute__ ((hot)) static apudata_t *apu_dequeue(void){
     int loc;
     
     if (APU_QEMPTY())
@@ -155,7 +155,7 @@ static apudata_t *apu_dequeue(void) {
     return &apu->queue[loc];
 }
 
-static void ex_enqueue(apudata_t *d) {
+__attribute__ ((hot)) static void ex_enqueue(apudata_t *d) {
     apu->ex_queue[apu->ex_q_head] = *d;
     
     apu->ex_q_head = (apu->ex_q_head + 1) & APUQUEUE_MASK;
@@ -164,7 +164,7 @@ static void ex_enqueue(apudata_t *d) {
         log_printf("ex_apu: queue overflow\n");
 }
 
-static apudata_t *ex_dequeue(void) {
+__attribute__ ((hot)) static apudata_t *ex_dequeue(void) {
     int loc;
 
     if (EX_QEMPTY())

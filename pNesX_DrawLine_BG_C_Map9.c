@@ -9,7 +9,7 @@
 
 #include "profile.h"
 
-void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
+__attribute__ ((hot)) void pNesX_Map9DrawLine_BG_C(unsigned char* pPoint) {
 	uint16 nX;
 	uint16 nY;
 	uint16 nY4;

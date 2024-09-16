@@ -47,16 +47,15 @@ extern unsigned char *ROMBANK3;
 /*-------------------------------------------------------------------*/
 /*  PPU resources                                                    */
 /*-------------------------------------------------------------------*/
-typedef struct
-{
+typedef struct __attribute__ ((packed, aligned(4))) PPU_Info_s {
 	uint32 PPU_Addr;
 	uint32 PPU_Scr_H_Bit;
 	uint32 PPU_Scanline;
 	uint32 PPU_SP_Height;
 	uint32 PPU_R0;
-} PPU_Info;
+} PPU_Info_t;
 
-extern PPU_Info ppuinfo;
+extern PPU_Info_t ppuinfo;
 
 /* PPU RAM */
 extern unsigned char PPURAM[];

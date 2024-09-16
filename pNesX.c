@@ -67,7 +67,7 @@ unsigned char *PPUBANK[ 16 ];
 unsigned char SPRRAM[ SPRRAM_SIZE ];
 
 /* PPU Info Struct */
-PPU_Info ppuinfo;
+PPU_Info_t ppuinfo;
 
 /* PPU Register */
 unsigned char PPU_R1;
@@ -476,7 +476,7 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 /*              pNesX_Main() : The main loop of pNesX                */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Main() {
+__attribute__ ((hot)) void pNesX_Main() {
 	pNesX_Init();
 
 	resetProfiling(MAX_PROFILING_FUNCTIONS);
@@ -552,7 +552,7 @@ void pNesX_Main() {
 #define CYCLES_PER_LINE 113
 #define HSYNC_CYCLES 28
 
-void handle_dmc_synchronization(uint32 cycles) {
+__attribute__ ((hot)) void handle_dmc_synchronization(uint32 cycles) {
 	startProfiling(1);
 	if (audio_sync_dmc_registers(cycles)) {
 		K6502_DoIRQ();
@@ -565,7 +565,7 @@ void handle_dmc_synchronization(uint32 cycles) {
 /*              pNesX_Cycle() : The loop of emulation                */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Cycle() {
+__attribute__ ((hot)) void pNesX_Cycle() {
 	SpriteJustHit = SPRITE_HIT_SENTINEL;
 
 	//Set the PPU adress to the buffered value
@@ -669,7 +669,7 @@ void pNesX_Cycle() {
 	audio_sync_apu_registers();
 }
 
-void pNesX_VSync() {
+__attribute__ ((hot)) void pNesX_VSync() {
 	// Set a V-Blank flag
 	PPU_R2 |= R2_IN_VBLANK;
 

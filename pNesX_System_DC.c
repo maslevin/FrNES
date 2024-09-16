@@ -850,7 +850,7 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 	return returnValue;
 }
 
-void pNesX_LoadFrame() {
+__attribute__ ((hot)) void pNesX_LoadFrame() {
 	startProfiling(3);
 
 	pvr_poly_hdr_t my_pheader;
@@ -929,7 +929,7 @@ void pNesX_LoadFrame() {
 	endProfiling(3);
 }
 
-void handleButton(uint32* controllerBitflags, 
+__attribute__ ((hot)) void handleButton(uint32* controllerBitflags, 
 	uint8 controllerBitflagIndex, 
 	uint8 controller, 
 	cont_state_t* controller_state,
@@ -1003,7 +1003,7 @@ bool playbackRecording(uint32* controllerBitflags) {
 	return !((currentSample == numSamples) && (activityDone));
 }
 
-void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerIndex) {
+__attribute__ ((hot)) void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerIndex) {
 	//Start first
 	handleButton(bitflags, CONTROLLER_BUTTON_START, controllerIndex, state, MODE_BUTTONS, CONT_START);
 	switch (options.controllerSettings[controllerIndex].aKey) {
@@ -1070,7 +1070,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 	}
 }
 
-void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {	
+__attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {	
 	maple_device_t* my_controller;
 	cont_state_t* my_state = NULL;
 
@@ -1149,7 +1149,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 	}
 }
 
-uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
+__attribute__ ((hot)) uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
 	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
 	if (offset == 0) {
 		return memcpy(dest, src, count);		

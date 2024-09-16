@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define utstring_oom() exit(-1)
 #endif
 
-typedef struct {
+typedef struct __attribute__ ((packed, align(4))) {
     char *d;  /* pointer to allocated buffer */
     size_t n; /* allocated capacity */
     size_t i; /* index of first unused byte */

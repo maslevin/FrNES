@@ -437,7 +437,7 @@ void K6502_Set_Int_Wiring( unsigned char byNMI_Wiring, unsigned char byIRQ_Wirin
 	IRQ_Wiring = byIRQ_Wiring;
 }
 
-void K6502_DoNMI() {
+__attribute__ ((hot)) void K6502_DoNMI() {
 	if (NMI_State != NMI_Wiring) {
 		// NMI Interrupt
 		CLK( 7 );
@@ -455,7 +455,7 @@ void K6502_DoNMI() {
 	}
 }
 
-void K6502_DoIRQ() {
+__attribute__ ((hot)) void K6502_DoIRQ() {
 	if ( IRQ_State != IRQ_Wiring ) {
 		// IRQ Interrupt
 		// Execute IRQ if an I flag isn't being set
@@ -483,7 +483,7 @@ void K6502_DoIRQ() {
 /*          Only the specified number of the clocks execute Op.      */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Step( uint16 wClocks ) {
+__attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 	startProfiling(0);
 	wA0 = 0;
 	byD0 = 0;
@@ -1311,11 +1311,11 @@ inline unsigned char K6502_ReadAbsY(){ uint16 wA0, wA1; wA0 = AA_ABS; pPC += 2; 
 inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = RAM[ *pPC ] | RAM[ (unsigned char)(*pPC + 1) ] << 8; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 //static inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = *(uint16 *)&RAM[ *pPC ]; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 
-void K6502_Burn(uint16 wClocks) {
+__attribute__ ((hot)) void K6502_Burn(uint16 wClocks) {
 	g_wPassedClocks += wClocks;
 	totalClocks += wClocks;
 }
 
-uint32 K6502_GetCycles() {
+__attribute__ ((hot)) uint32 K6502_GetCycles() {
 	return totalClocks;
 }
