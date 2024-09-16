@@ -59,7 +59,7 @@ int menuscreen;
 int invalida;
 int keyhit;
 int xkeyhit;
-int disable_trigs;
+int disable_trigs;   
 
 int romselstatus;
 int disable_rom_interface;
@@ -72,11 +72,6 @@ Window_Data mydata;
 Window_Style helpstyle;
 Window_Data helpdata;
 
-//Rom buffer area ... uses dynamic memory allocation
-unsigned char *ROM;
-unsigned char *VROM;
-unsigned char *VRAM;
-
 //Help for the Options screen
 char* Options_Keys[] = {
 	"A - Toggle",
@@ -88,15 +83,11 @@ const int Max_Frameskip = 5;
 
 Font* font;
 
-//The crc32 of the currently selected rom
-uint32 currentCRC32;
-
 /*-------------------------------------------------------------------*/
 /*  ROM image file information                                       */
 /*-------------------------------------------------------------------*/
 char szRomPath[ 256 ];
 char szSaveName[ 256 ];
-uint32 SRAM_Enabled;
 uint32 RomSize;
 bool AutoROM;
 
@@ -579,20 +570,6 @@ void launchEmulator() {
 		//Stay in Emulator During Operation
 		pNesX_Main();
 
-		//Clean Up Afterwards
-		free (ROM);
-		ROM = NULL;
-
-		//There are some games that don't have VROM
-		if (VROM != NULL) {
-			free (VROM);
-			VROM = NULL;
-		} 
-		if (VRAM != NULL) {
-			free (VRAM);
-			VRAM = NULL;
-		}
-
 		//Save Its SaveRAM
 		if (SRAM_Enabled) {
 			SaveSRAM();
@@ -751,103 +728,6 @@ int main() {
 
 	destroy_font(font);
 	return 0;
-}
-
-int pNesX_ReadRom (const char *filepath, uint32 filesize) {
-	unsigned char* ROM_Buffer;
-	int i;
-	int ROM_offset;
-	int VROM_offset;
-
-	ROM_Buffer = malloc(filesize);
-
-	//MS - checksum calculation loads the rom currently, we should decouple that
-	currentCRC32 = ReturnChecksum(filepath, filesize, ROM_Buffer);
-
-	//Attempt to read an iNES header
-	memcpy(&NesHeader, ROM_Buffer, sizeof(NesHeader));
-
-	//Check if bytes 0-3 are NES header bytes
-	int returnValue = -1;
-	if ((NesHeader.byID[0] == 0x4E) && (NesHeader.byID[1] == 0x45) && (NesHeader.byID[2] == 0x53) && (NesHeader.byID[3] == 0x1A)) {
-		if ((NesHeader.byInfo2 & 0x0C) == 0x08) {
-			printf("ReadRom: NES 2.0 Header Detected\n");
-		} else {
-			printf("ReadRom: iNES Header Detected\n");			
-		}
-
-		MapperNo = ((NesHeader.byInfo1 & 0xF0) >> 4) | (NesHeader.byInfo2 & 0xF0);
-		printf("ReadRom: Mapper Number [%i]\n", MapperNo);
-		printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
-
-		// Handle VRAM - sometimes we will just use the VROM variable for it
-		// but other times we'll need somewhere else to store aux. bank switched VRAM
-		if (NesHeader.byVRomSize == 0) {
-			printf("ReadRom: Implied 8kB CHR RAM\n");
-			// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
-			VROM = malloc(0x2000);
-		} else {
-			printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);
-			switch (MapperNo) {
-				case 30: {
-					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-					VROM = malloc(4 * 0x2000);					
-				} break;
-
-				case 119: {
-					printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
-					VRAM = malloc(0x2000);
-				} break;
-			}
-		}
-
-		printf("ReadRom: Nametable Arrangement [%s]\n", (NesHeader.byInfo1 & 1) ? "horizontal mirrored" : "vertically mirrored");			
-		printf("ReadRom: Battery Backed RAM [%s]\n", (NesHeader.byInfo1 & 2) ? "present" : "not present");
-		printf("ReadRom: Trainer Present [%s]\n", (NesHeader.byInfo1 & 4) ? "true" : "false");
-		printf("ReadRom: Alternative Nametable Layout [%s]\n", (NesHeader.byInfo1 & 8) ? "present" : "not present");
-		if (NesHeader.byInfo2 & 0x01) {
-			printf("ReadRom: VS Unisystem ROM detected");
-		}
-		if (NesHeader.byInfo2 & 0x02) {
-			printf("ReadRom: PlayChoice-10 ROM detected");
-		}
-		if (NesHeader.byReserve[0] != 0) {
-			printf("ReadRom: PRG RAM [%i] * 8kB banks\n", NesHeader.byReserve[0]);
-		}
-
-		if (NesHeader.byInfo1 & 2) {
-			SRAM_Enabled = 1;
-		} else {
-			SRAM_Enabled = 0;
-		}
-
-		i = 16;
-		//Read past the trainer
-		if (NesHeader.byInfo1 & 4) {
-			i += 512;
-		}
-
-		ROM_offset = i;
-		ROM = malloc (NesHeader.byRomSize * 0x4000);
-		for (; i < (ROM_offset + (NesHeader.byRomSize * 0x4000)); i++)
-			ROM[i - ROM_offset] = ROM_Buffer[i];
-
-		if (NesHeader.byVRomSize > 0) {
-			VROM_offset = i;
-			VROM = malloc (NesHeader.byVRomSize * 0x2000);
-			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
-				VROM[i - VROM_offset] = ROM_Buffer[i];
-		}
-
-		//Load success
-		returnValue = 0;
-	} else {
-		printf("ReadRom: NOT AN NES FILE - exiting");
-	}
-
-	free(ROM_Buffer);
-
-	return returnValue;
 }
 
 __attribute__ ((hot)) void pNesX_LoadFrame() {

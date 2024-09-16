@@ -15,6 +15,7 @@
 #include <kos.h>
 #include "macros.h"
 
+#include "cartridge.h"
 #include "input_recorder.h"
 
 #include "pNesX.h"
@@ -54,11 +55,6 @@ unsigned char *ROMBANK3;
 unsigned char PPURAM[ PPURAM_SIZE ];
 
 extern unsigned char HALT;
-
-/* Cartridge VROM */
-extern unsigned char* VROM;
-/* Cartridge VRAM */
-extern unsigned char* VRAM;
 
 /* PPU BANK ( 1Kb * 16 ) */
 unsigned char *PPUBANK[ 16 ];
@@ -159,26 +155,6 @@ uint32 PAD2_Bit;
 
 uint32 PollCount;
 uint32 PollSkip;
-
-/*-------------------------------------------------------------------*/
-/*  ROM information                                                  */
-/*-------------------------------------------------------------------*/
-
-/* .nes File Header */
-struct NesHeader_tag NesHeader;
-
-/* Mapper Number */
-unsigned char MapperNo;
-Mapper* mapper;
-
-/* Mirroring 0:Horizontal 1:Vertical */
-unsigned char ROM_Mirroring;
-/* It has SRAM */
-unsigned char ROM_SRAM;
-/* It has Trainer */
-unsigned char ROM_Trainer;
-/* Four screen VRAM  */
-unsigned char ROM_FourScr;
 
 void DC_SoundInit() {
 	sound_address = 0;
@@ -289,7 +265,7 @@ void pNesX_Fin() {
 /*                                                                   */
 /*===================================================================*/
 int pNesX_Load( const char *filepath, uint32 filesize ) {
-	if ( pNesX_ReadRom( filepath, filesize ) < 0 )
+	if ( !ReadRom( filepath, filesize ) < 0 )
 		return -1;
 
 	if ( pNesX_Reset() < 0 )

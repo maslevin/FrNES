@@ -13,7 +13,7 @@
 #include "macros.h"
 #include "options.h"
 
-extern Mapper* mapper;
+extern Mapper_t* mapper;
 
 /*===================================================================*/
 /*                                                                   */

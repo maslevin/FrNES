@@ -46,13 +46,16 @@
 #include "Mapper_85.h"
 #include "Mapper_119.h"
 
+Mapper_t* mapper;
+uint8 MapperNo;
+
 /*-------------------------------------------------------------------*/
 /*  Table of Mapper initialize function                              */
 /*-------------------------------------------------------------------*/
 
-MapperTable Mappers[] = {
+MapperTable_t Mappers[] = {
 	{
-		0, &(Mapper) { 
+		0, &(Mapper_t) { 
 			.init = Mapper_0_Init, 
 			.write = Mapper_0_Write,
 			.read = Mapper_0_Read,
@@ -61,7 +64,7 @@ MapperTable Mappers[] = {
 		}
 	},
 	{ 
-		1, &(Mapper) {
+		1, &(Mapper_t) {
 			.init = Mapper_1_Init, 
 			.write = Mapper_1_Write,
 			.read = Mapper_0_Read,
@@ -70,7 +73,7 @@ MapperTable Mappers[] = {
 		} 
 	},
 	{ 
-		2, &(Mapper) { 
+		2, &(Mapper_t) { 
 			.init = Mapper_2_Init, 
 			.write = Mapper_2_Write,
 			.read = Mapper_0_Read,
@@ -79,7 +82,7 @@ MapperTable Mappers[] = {
 		}
 	},
 	{ 
-		3, &(Mapper) { 
+		3, &(Mapper_t) { 
 			.init = Mapper_3_Init, 
 			.write = Mapper_3_Write,
 			.read = Mapper_0_Read,
@@ -88,7 +91,7 @@ MapperTable Mappers[] = {
 		}
 	},
 	{
-		4, &(Mapper) { 
+		4, &(Mapper_t) { 
 			.init = Mapper_4_Init, 
 			.write = Mapper_4_Write,
 			.read = Mapper_0_Read,
@@ -97,7 +100,7 @@ MapperTable Mappers[] = {
 		}
 	},
   	{
-		5, &(Mapper) { 
+		5, &(Mapper_t) { 
 			.init = Mapper_5_Init, 
 			.write = Mapper_5_Write,
 			.read = Mapper_5_Read,
@@ -107,7 +110,7 @@ MapperTable Mappers[] = {
 	},
   	{ 6, NULL },
     { 
-		7, &(Mapper) { 
+		7, &(Mapper_t) { 
 			.init = Mapper_7_Init, 
 			.write = Mapper_7_Write,
 			.read = Mapper_0_Read,
@@ -117,7 +120,7 @@ MapperTable Mappers[] = {
 	},
 	{ 8, NULL },
   	{
-		9, &(Mapper) { 
+		9, &(Mapper_t) { 
 			.init = Mapper_9_Init, 
 			.write = Mapper_9_Write,
 			.read = Mapper_0_Read,
@@ -127,7 +130,7 @@ MapperTable Mappers[] = {
 	},
 	{ 10, NULL },
 	{
-		11, &(Mapper) { 
+		11, &(Mapper_t) { 
 			.init = Mapper_11_Init, 
 			.write = Mapper_11_Write,
 			.read = Mapper_0_Read,
@@ -145,7 +148,7 @@ MapperTable Mappers[] = {
 	{ 19, NULL },
 	{ 20, NULL },
 	{ 
-		21, &(Mapper) { 
+		21, &(Mapper_t) { 
 			.init = Mapper_21_Init, 
 			.write = Mapper_21_Write,
 			.read = Mapper_0_Read,
@@ -154,7 +157,7 @@ MapperTable Mappers[] = {
 		}  
 	},
 	{
-		22, &(Mapper) { 
+		22, &(Mapper_t) { 
 			.init = Mapper_22_Init, 
 			.write = Mapper_22_Write,
 			.read = Mapper_0_Read,
@@ -163,7 +166,7 @@ MapperTable Mappers[] = {
 		}
 	},
 	{ 
-		23, &(Mapper) { 
+		23, &(Mapper_t) { 
 			.init = Mapper_23_Init, 
 			.write = Mapper_23_Write,
 			.read = Mapper_0_Read,
@@ -172,7 +175,7 @@ MapperTable Mappers[] = {
 		}
 	},
 	{
-		24, &(Mapper) { 
+		24, &(Mapper_t) { 
 			.init = Mapper_24_Init, 
 			.write = Mapper_24_Write,
 			.read = Mapper_0_Read,
@@ -181,7 +184,7 @@ MapperTable Mappers[] = {
 		} 
 	},
 	{ 
-		25, &(Mapper) { 
+		25, &(Mapper_t) { 
 			.init = Mapper_25_Init, 
 			.write = Mapper_25_Write,
 			.read = Mapper_0_Read,
@@ -190,7 +193,7 @@ MapperTable Mappers[] = {
 		}  
 	},
 	{
-		26, &(Mapper) { 
+		26, &(Mapper_t) { 
 			.init = Mapper_26_Init, 
 			.write = Mapper_26_Write,
 			.read = Mapper_0_Read,
@@ -202,7 +205,7 @@ MapperTable Mappers[] = {
 	{ 28, NULL },
 	{ 29, NULL },
 	{
-		30, &(Mapper) { 
+		30, &(Mapper_t) { 
 			.init = Mapper_30_Init, 
 			.write = Mapper_30_Write,
 			.read = Mapper_0_Read,
@@ -244,7 +247,7 @@ MapperTable Mappers[] = {
 	{ 62, NULL },
 	{ 63, NULL },
 	{ 
-		64, &(Mapper) { 
+		64, &(Mapper_t) { 
 			.init = Mapper_64_Init, 
 			.write = Mapper_64_Write,
 			.read = Mapper_0_Read,
@@ -254,7 +257,7 @@ MapperTable Mappers[] = {
 	},
 	{ 65, NULL },
 	{ 
-		66, &(Mapper) { 
+		66, &(Mapper_t) { 
 			.init = Mapper_66_Init, 
 			.write = Mapper_66_Write,
 			.read = Mapper_0_Read,
@@ -263,7 +266,7 @@ MapperTable Mappers[] = {
 		} 
 	},
 	{ 
-		67, &(Mapper) { 
+		67, &(Mapper_t) { 
 			.init = Mapper_67_Init, 
 			.write = Mapper_67_Write,
 			.read = Mapper_0_Read,
@@ -272,7 +275,7 @@ MapperTable Mappers[] = {
 		} 
 	},
 	{
-		68, &(Mapper) { 
+		68, &(Mapper_t) { 
 			.init = Mapper_68_Init, 
 			.write = Mapper_68_Write,
 			.read = Mapper_0_Read,
@@ -281,7 +284,7 @@ MapperTable Mappers[] = {
 		}  
 	},
 	{
-		69, &(Mapper) { 
+		69, &(Mapper_t) { 
 			.init = Mapper_69_Init, 
 			.write = Mapper_69_Write,
 			.read = Mapper_0_Read,
@@ -293,7 +296,7 @@ MapperTable Mappers[] = {
 	{ 71, NULL },
 	{ 72, NULL },
 	{ 
-		73, &(Mapper) {
+		73, &(Mapper_t) {
 			.init = Mapper_73_Init,
 			.write = Mapper_73_Write,
 			.read = Mapper_0_Read,
@@ -303,7 +306,7 @@ MapperTable Mappers[] = {
 	},
 	{ 74, NULL },
 	{ 
-		75, &(Mapper) {
+		75, &(Mapper_t) {
 			.init = Mapper_75_Init,
 			.write = Mapper_75_Write,
 			.read = Mapper_0_Read,
@@ -321,7 +324,7 @@ MapperTable Mappers[] = {
 	{ 83, NULL },
 	{ 84, NULL },
 	{ 
-		85, &(Mapper) { 
+		85, &(Mapper_t) { 
 			.init = Mapper_85_Init, 
 			.write = Mapper_85_Write,
 			.read = Mapper_0_Read,
@@ -363,7 +366,7 @@ MapperTable Mappers[] = {
 	{ 117, NULL }, 
 	{ 118, NULL },
 	{ 
-		119, &(Mapper) { 
+		119, &(Mapper_t) { 
 			.init = Mapper_119_Init, 
 			.write = Mapper_119_Write,
 			.read = Mapper_0_Read,

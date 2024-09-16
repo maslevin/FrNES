@@ -1,4 +1,5 @@
 #include "Mapper_69.h"
+
 #include "nes_apu.h"
 
 uint8 Mapper_69_regs[1];

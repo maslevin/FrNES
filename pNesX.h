@@ -18,8 +18,6 @@
 //#include "pNesX_Types.h"
 #include <kos.h>
 
-#include "Mapper.h"
-
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
@@ -34,9 +32,6 @@ extern unsigned char RAM[];
 
 /* SRAM */
 extern unsigned char SRAM[];
-
-/* ROM */
-extern unsigned char *ROM;
 
 /* ROM BANK ( 8Kb * 4 ) */
 extern unsigned char *ROMBANK0;
@@ -59,12 +54,6 @@ extern PPU_Info_t ppuinfo;
 
 /* PPU RAM */
 extern unsigned char PPURAM[];
-
-/* Cartridge VROM */
-extern unsigned char *VROM;
-
-/* Cartridge VRAM */
-extern unsigned char *VRAM;
 
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
@@ -203,36 +192,7 @@ extern uint32 PAD2_Bit;
 /*  ROM information                                                  */
 /*-------------------------------------------------------------------*/
 
-/* .nes File Header */
-struct NesHeader_tag {
-  unsigned char byID[ 4 ];
-  unsigned char byRomSize;
-  unsigned char byVRomSize;
-  unsigned char byInfo1;
-  unsigned char byInfo2;
-  unsigned char byReserve[ 8 ];
-};
-
-/* .nes File Header */
-extern struct NesHeader_tag NesHeader;
-
-/* Mapper No. */
-struct Mapper;
-extern unsigned char MapperNo;
-
-/* Other */
-extern unsigned char ROM_Mirroring;
-extern unsigned char ROM_SRAM;
-extern unsigned char ROM_Trainer;
-extern unsigned char ROM_FourScr;
-
-struct Timestamp_tag {
-	unsigned char byData;
-	uint16 reg;
-	uint16 sample_write;
-};
-
-extern bool odd_cycle;
+//extern bool odd_cycle;
 
 /*-------------------------------------------------------------------*/
 /*  Function prototypes                                              */

@@ -31,10 +31,8 @@ void Mapper_0_Init() {
 	}
 
 	/* Set PPU Banks */
-//	if ( NesHeader.byVRomSize > 0 ) {
-		for ( nPage = 0; nPage < 8; ++nPage )
-			PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-//	}
+	for ( nPage = 0; nPage < 8; ++nPage )
+		PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 

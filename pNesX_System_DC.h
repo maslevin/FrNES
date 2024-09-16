@@ -14,6 +14,7 @@
 #include "font.h"
 #include "TextWindow.h"
 #include "ROMLoad.h"
+#include "cartridge.h"
 
 #define APP_STRING "FrNES"
 #define APP_VERSION "0.7.1"
@@ -66,10 +67,6 @@ extern bool log_enabled;
 
 extern char szRomPath[];
 extern uint32 RomSize;
-
-extern unsigned char *ROM;
-extern unsigned char *VROM;
-extern unsigned char *VRAM;
 
 void initialize_controllers();
 void rescan_controllers();
