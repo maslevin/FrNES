@@ -852,20 +852,28 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 		// Handle VRAM - sometimes we will just use the VROM variable for it
 		// but other times we'll need somewhere else to store aux. bank switched VRAM
 		if (NesHeader.byVRomSize == 0) {
-			printf("ReadRom: Implied 8kB CHR RAM\n");
-			// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
-			VROM = malloc(0x2000);
-		} else {
-			printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);
 			switch (MapperNo) {
 				case 30: {
 					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-					VROM = malloc(4 * 0x2000);					
+					VROM = malloc(4 * 0x2000);	
 				} break;
 
+				default: {
+					printf("ReadRom: Implied 8kB CHR RAM\n");
+					// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
+					VROM = malloc(0x2000);
+				} break;
+			}
+		} else {
+			switch (MapperNo) {
 				case 119: {
 					printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
 					VRAM = malloc(0x2000);
+				} // Intentional Fallthrough - mapper 119 uses VROM and VRAM
+
+				default: {
+					printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);					
+					VROM = malloc (NesHeader.byVRomSize * 0x2000);
 				} break;
 			}
 		}
@@ -903,7 +911,6 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 
 		if (NesHeader.byVRomSize > 0) {
 			VROM_offset = i;
-			VROM = malloc (NesHeader.byVRomSize * 0x2000);
 			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
 				VROM[i - VROM_offset] = ROM_Buffer[i];
 		}

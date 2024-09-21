@@ -200,7 +200,7 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 1024 * 128
+#define MAX_DISASM_STEPS 131072
 #define MAX_DISASM_STRING 20
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
@@ -1241,7 +1241,7 @@ void K6502_Step( uint16 wClocks ) {
 				break;
 
 			case 0xF0:
-				DisassembleInstruction("BEQ", "$%04x", AA_ABS);	
+				DisassembleInstruction("BEQ", "$%04x", PC + *pPC);	
 				BRA( F & FLAG_Z );
 				break;
 
