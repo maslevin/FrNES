@@ -849,13 +849,18 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 		printf("ReadRom: Mapper Number [%i]\n", MapperNo);
 		printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
 
-		// Handle VRAM - sometimes we will just use the VROM variable for it
+		// Handle VRAM - sometimes we will just use the VROM variable for itgit 
 		// but other times we'll need somewhere else to store aux. bank switched VRAM
 		if (NesHeader.byVRomSize == 0) {
 			switch (MapperNo) {
 				case 30: {
 					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
 					VROM = malloc(4 * 0x2000);	
+				} break;
+
+				case 111: {
+					printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
+					VROM = malloc(2 * 0x2000);	
 				} break;
 
 				default: {

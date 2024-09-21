@@ -1130,6 +1130,11 @@ void K6502_Step( uint16 wClocks ) {
 				--X; TEST( X ); CLK( 2 );
 				break;
 
+			case 0xCB:
+				DisassembleInstruction("AXS", NULL, 0);	
+				pPC++; X = X & A; TEST( X ); CLK( 2 );
+				break;				
+
 			case 0xCC:
 				DisassembleInstruction("CPY", "$%04x", AA_ABS);	
 				CPY( A_ABS ); pPC += 2; CLK( 4 );
