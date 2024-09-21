@@ -196,94 +196,91 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
 /*                                                                   */
 /*===================================================================*/
 inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
-
     switch ( wAddr & 0xe000 ) {
-        case 0x0000:  /* RAM */
+        case 0x0000: { /* RAM */
             RAM[ wAddr & 0x7ff ] = byData;
-            break;
+        } break;
 
-    case 0x2000:  /* PPU */
-        switch ( wAddr & 0x7 ) {
-            case 0:    /* 0x2000 */
-                ppuinfo.PPU_R0 = byData;
-                PPU_Increment = ( ppuinfo.PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
-                ppuinfo.PPU_SP_Height = ( ppuinfo.PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+        case 0x2000: { /* PPU */
+            switch ( wAddr & 0x7 ) {
+                case 0: {   /* 0x2000 */
+                    ppuinfo.PPU_R0 = byData;
+                    PPU_Increment = ( ppuinfo.PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+                    ppuinfo.PPU_SP_Height = ( ppuinfo.PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
 
-                //Account for Loopy's scrolling discoveries
-                PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
-                break;
+                    //Account for Loopy's scrolling discoveries
+                    PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
+                } break;
 
-            case 1:   /* 0x2001 */
-                PPU_R1 = byData;
-                break;
+                case 1: { /* 0x2001 */
+                    PPU_R1 = byData;
+                } break;
 
-            case 2:   /* 0x2002 */
-                //PPU_R2 = byData; // 0x2002 is not writable
-                break;
+                case 2: {  /* 0x2002 */
+                    //PPU_R2 = byData; // 0x2002 is not writable
+                } break;
 
-            case 3:   /* 0x2003 */
-                // Sprite RAM Address
-                PPU_R3 = byData;
-                break;
+                case 3: {   /* 0x2003 */
+                    // Sprite RAM Address
+                    PPU_R3 = byData;
+                } break;
 
-            case 4:   /* 0x2004 */
-                // Write data to Sprite RAM
-                SPRRAM[ PPU_R3++ ] = byData;
-                break;
+                case 4: {  /* 0x2004 */
+                    // Write data to Sprite RAM
+                    SPRRAM[ PPU_R3++ ] = byData;
+                } break;
 
-            case 5:   /* 0x2005 */
-                // Set Scroll Register
-                if ( PPU_Latch_Flag ) {
-                    //Added : more Loopy Stuff
-                    PPU_Temp = (PPU_Temp & 0xFC1F) | ( (((uint16)byData) & 0xF8) << 2);
-                    PPU_Temp = (PPU_Temp & 0x8FFF) | ( (((uint16)byData) & 0x07) << 12);
-                } else {
-                    ppuinfo.PPU_Scr_H_Bit = byData & 7;
-                    PPU_Temp = (PPU_Temp & 0xFFE0) | ( (((uint16)byData) & 0xF8) >> 3);
-                }
-                PPU_Latch_Flag ^= 1;
-                break;
-
-            case 6:   /* 0x2006 */
-                // Set PPU Address
-                if ( PPU_Latch_Flag ) {
-                    PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
-                    ppuinfo.PPU_Addr = PPU_Temp;
-                } else {
-                    PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
-                }
-                PPU_Latch_Flag ^= 1;
-                break;
-
-            case 7: { /* 0x2007 */
-                uint16 addr;
-                addr = ppuinfo.PPU_Addr;
-                ppuinfo.PPU_Addr += PPU_Increment;
-                addr &= 0x3FFF;
-
-                if (addr >= 0x3000) {
-                    if (addr >= 0x3F00) {
-                        byData &= 0x3F;
-//                        printf("Writing Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1f));
-                        // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
-                        // came from a background pixel - this will be important later when we merge background tiles with sprites
-                        // during rendering, as these pixels will be transparent vs. sprites
-                        if (!(addr & 0xf)) {
-                            PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
-                        } else if (addr & 0x3) {
-                            PPURAM[ addr ] = byData;
-                        }
-                        return;
+                case 5: {  /* 0x2005 */
+                    // Set Scroll Register
+                    if ( PPU_Latch_Flag ) {
+                        //Added : more Loopy Stuff
+                        PPU_Temp = (PPU_Temp & 0xFC1F) | ( (((uint16)byData) & 0xF8) << 2);
+                        PPU_Temp = (PPU_Temp & 0x8FFF) | ( (((uint16)byData) & 0x07) << 12);
+                    } else {
+                        ppuinfo.PPU_Scr_H_Bit = byData & 7;
+                        PPU_Temp = (PPU_Temp & 0xFFE0) | ( (((uint16)byData) & 0xF8) >> 3);
                     }
-                    addr &= 0xEFFF;
-                }
+                    PPU_Latch_Flag ^= 1;
+                } break;
 
-                PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                case 6: {  /* 0x2006 */
+                    // Set PPU Address
+                    if ( PPU_Latch_Flag ) {
+                        PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
+                        ppuinfo.PPU_Addr = PPU_Temp;
+                    } else {
+                        PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
+                    }
+                    PPU_Latch_Flag ^= 1;
+                } break;
+
+                case 7: { /* 0x2007 */
+                    uint16 addr;
+                    addr = ppuinfo.PPU_Addr;
+                    ppuinfo.PPU_Addr += PPU_Increment;
+                    addr &= 0x3FFF;
+
+                    if (addr >= 0x3000) {
+                        if (addr >= 0x3F00) {
+                            byData &= 0x3F;
+                            // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
+                            // came from a background pixel - this will be important later when we merge background tiles with sprites
+                            // during rendering, as these pixels will be transparent vs. sprites
+                            if (!(addr & 0xf)) {
+                                PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
+                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
+                            } else if (addr & 0x3) {
+                                PPURAM[ addr ] = byData;
+                            }
+                            return;
+                        }
+                        addr &= 0xEFFF;
+                    }
+                    
+                    PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                } break;
             }
-            break;
-        }
-        break;
+        } break;
 
         case 0x4000:  /* Sound */
             switch ( wAddr & 0x1f ) {
@@ -372,7 +369,7 @@ inline uint16 K6502_ReadW( uint16 wAddr ){
     if ((wAddr & 0xFF) == 0xFF) {
         nextWAddr = wAddr & 0xFF00;
     }
-    return K6502_Read( wAddr ) | (uint16)K6502_Read( nextWAddr ) << 8;
+    return K6502_Read( wAddr ) | (K6502_Read( nextWAddr ) << 8);
 };
 inline void K6502_WriteW( uint16 wAddr, uint16 wData ){ K6502_Write( wAddr, wData & 0xff ); K6502_Write( wAddr + 1, wData >> 8 ); };
 inline uint16 K6502_ReadZpW( unsigned char byAddr ){ return K6502_ReadZp( byAddr ) | ( K6502_ReadZp( byAddr + 1 ) << 8 ); };

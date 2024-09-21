@@ -200,7 +200,7 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 1024 * 16
+#define MAX_DISASM_STEPS 1024 * 128
 #define MAX_DISASM_STRING 20
 char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
 
@@ -469,13 +469,15 @@ void K6502_DoIRQ() {
 			RSTF( FLAG_D );
 			SETF( FLAG_I );
 
-			PC = K6502_ReadW( VECTOR_IRQ );
+			PC = K6502_ReadW( VECTOR_IRQ );		
 			REALPC;
 		}
 
 		IRQ_State = IRQ_Wiring;	
 	}
 }
+
+bool writeOnce = true;
 
 /*===================================================================*/
 /*                                                                   */
