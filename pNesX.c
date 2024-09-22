@@ -573,6 +573,10 @@ void handle_dmc_synchronization(uint32 cycles) {
 void pNesX_Cycle() {
 	SpriteJustHit = SPRITE_HIT_SENTINEL;
 
+//	printf("Start Frame [%lu]\n", numEmulationFrames);
+	// clear out that OAM buffer and see what the output looks like
+	memset(&RAM[0x200], 0, 256);
+
 	//Set the PPU adress to the buffered value
 	pNesX_StartFrame();
 
@@ -595,6 +599,20 @@ void pNesX_Cycle() {
 			cpu_cycles_to_emulate += 2;
 			hsync_cycles += 1;
 		}
+
+/*
+		if (ppuinfo.PPU_Scanline == 1) {
+			printf("SPR[");
+			uint8* pSprRam = SPRRAM;
+			for (int i = 0; i < 64; i++) {
+				if ((pSprRam[SPR_Y] > 0) && (pSprRam[SPR_Y] < 240)) {
+					printf("%u [%u] ", i, pSprRam[SPR_Y]);
+				}
+				pSprRam += 4;
+ 			}
+			printf("]\n");
+		}
+*/
 
 		switch (ppuinfo.PPU_Scanline) {
 			case 0 ... 239: {

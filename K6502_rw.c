@@ -15,6 +15,25 @@
 extern uint16 opt_SoundEnabled;
 extern Mapper* mapper;
 
+// TODO: More optimizations possible here
+uint32* memcpy_offset( uint32* dest, uint32* src, int count, uint32 offset) {
+	//printf("memcpy_offset: [%u] [%u]\n", count, offset);
+	if (offset == 0) {
+		return memcpy4(dest, src, count);		
+	} else {
+	// wrapping behaviour for sprite DMA operations
+		unsigned char* u8dest = (unsigned char*)dest;
+		unsigned char* u8src = (unsigned char*) src;		
+		for (int i = 0; i < (count - offset); i++) {
+			u8dest[i + offset] = u8src[i];
+		}
+		for (int i = 0; i < offset; i++) {
+			u8dest[i] = u8src[i + (count - offset)];
+		}
+		return dest;
+	}
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*            K6502_ReadZp() : Reading from the zero page            */
@@ -198,6 +217,14 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
 inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
     switch ( wAddr & 0xe000 ) {
         case 0x0000: { /* RAM */
+/*            uint16 offset = wAddr & 0x7ff;
+            if (((offset) >= 0x200) && 
+                ((offset) <= 0x2FF)) {
+                uint8 spriteIndex = (offset - 0x200) >> 2;
+                if (offset % 4 == 0) {
+                    printf("Write Sprite [%u] Y [$%04X]: [$%02X]\n", spriteIndex, offset, byData);
+                }
+            } */
             RAM[ wAddr & 0x7ff ] = byData;
         } break;
 
@@ -288,29 +315,31 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     // Sprite DMA
                     switch ( byData >> 5 ) {
                         case 0x0:  /* RAM */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x7ff ], SPRRAM_SIZE, PPU_R3 );
+//                            printf("DMA from RAM Offset [$%04X]\n", ( (uint16)byData << 8 ) & 0x1fff);
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x3:  /* SRAM */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x4:  /* ROM BANK 0 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x5:  /* ROM BANK 1 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x6:  /* ROM BANK 2 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x7:  /* ROM BANK 3 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
+                    K6502_Burn(513);
                     break;
 
                 case 0x16:  /* 0x4016 */

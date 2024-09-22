@@ -118,6 +118,9 @@ Font* font;
 //The crc32 of the currently selected rom
 uint32 currentCRC32;
 
+// DEBUG
+bool debug_sprites;
+
 /*-------------------------------------------------------------------*/
 /*  ROM image file information                                       */
 /*-------------------------------------------------------------------*/
@@ -859,8 +862,8 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 				} break;
 
 				case 111: {
-					printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
-					VROM = malloc(2 * 0x2000);	
+					printf("ReadRom: Mapper 111 Defaulting to 4 * 8kB CHR RAM\n");
+					VROM = malloc(4 * 0x2000);	
 				} break;
 
 				default: {
@@ -1176,6 +1179,16 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 			if (my_controller != NULL) {
 				my_state = (cont_state_t*)maple_dev_status(my_controller);		
 
+/*
+				// Toggle pNesX_DebugPrint messages while in operation
+				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
+					debug_sprites = !debug_sprites;
+					log_enabled_latch = true;
+				} else if ((my_state -> buttons & CONT_Y) == 0) {
+					log_enabled_latch = false;
+				}
+*/
+
 #ifdef DEBUG
 				// Toggle pNesX_DebugPrint messages while in operation
 				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
@@ -1227,24 +1240,6 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 				*pdwPad2 |= (player_4_bitflags << 8);
 			}
 		}
-	}
-}
-
-uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
-	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
-	if (offset == 0) {
-		return memcpy(dest, src, count);		
-	} else {
-	// wrapping behaviour for sprite DMA operations
-		unsigned char* u8dest = (unsigned char*)dest;
-		unsigned char* u8src = (unsigned char*) src;		
-		for (int i = 0; i < (count - offset); i++) {
-			u8dest[i + offset] = u8src[i];
-		}
-		for (int i = 0; i < offset; i++) {
-			u8dest[i] = u8src[i + (count - offset)];
-		}
-		return dest;
 	}
 }
 

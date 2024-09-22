@@ -40,6 +40,7 @@
 
 extern uint8 recordingMode;
 
+extern bool debug_sprites;
 extern bool log_enabled;
 
 extern char szRomPath[];
