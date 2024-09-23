@@ -167,7 +167,7 @@ extern int SpriteJustHit;
 #define NES_DISP_WIDTH      256
 #define NES_DISP_HEIGHT     224
 
-#define MAX_EXIT_COUNT 1
+#define MAX_EXIT_COUNT 50
 
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
