@@ -45,8 +45,6 @@ extern bool log_enabled;
 extern char szRomPath[];
 extern uint32 RomSize;
 
-void Load_VMU_Options();
-void Save_VMU_Options();
 void initialize_controllers();
 void rescan_controllers();
 

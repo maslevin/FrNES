@@ -131,7 +131,7 @@ int LoadNextFileSimple(RomInfo_t* RomInfoArray, char* current_path) {
 			} else if (strcmp(my_dir -> name, ".") == 0) {
 
 			} else {
-				snprintf(RomInfoArray[currentindex].FileName, 65, "%s,%s<RLAlign>", my_dir -> name, "DIR");
+				snprintf(RomInfoArray[currentindex].FileName, 269, "%s,%s<RLAlign>", my_dir -> name, "DIR");
 				strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
 				RomInfoArray[currentindex].IsRead = 1;
 				currentindex++;

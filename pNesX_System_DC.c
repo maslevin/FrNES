@@ -417,41 +417,6 @@ int SaveSRAM() {
 	return saveSRAM_success;
 }
 
-void Save_VMU_Options()
-{
-	//Menu Screen = Save Options
-	/*	
-	if (*opt_VMUPort != -1)
-	{
-		vmu_icon_draw(vmu_screen_saving, VMUs[*opt_VMUPort]);
-		switch (save_user_settings(VMUs[*opt_VMUPort]))
-		{
-			case -1:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
-			default:
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-				break;
-		}
-	}
-	*/
-}
-
-void Load_VMU_Options()
-{
-	//Menu Screen = Load Options
-	/*
-	if (*opt_VMUPort != -1)
-	{
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		if (load_user_settings(VMUs[*opt_VMUPort]) == -1)
-			vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-		else
-			vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-	}
-	*/
-}
-
 pvr_init_params_t pvr_params =  {
     /* Enable opaque and translucent polygons with size 16 */
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
@@ -686,38 +651,6 @@ int main() {
 		draw_VMU_icon(VMUs[i], vmu_screen_normal);
 	}
 
-	//If the default Memory card is present
-	/*
-	if (VMUs[default_VMUPort] != 0)
-	{
-		*opt_VMUPort = default_VMUPort;
-		//Try to load settings if possible
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		load_user_settings(VMUs[*opt_VMUPort]);
-		vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-	}
-	else
-	//Otherwise Search for a Memcard
-	{
-		//Choose the first one available
-		for (i = 0; i < 8; i++)
-		{
-			if (VMUs[i] != 0)
-			{
-				*opt_VMUPort = i;
-				//Try to load settings if possible
-				vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-				load_user_settings(VMUs[*opt_VMUPort]);
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-				break;
-			}
-			else
-				//If one wasn't found, turn off memcard support
-				*opt_VMUPort = -1;
-		}
-	}
-	*/
-
 	printf("Checking for autoROM\n");
 	AutoROM = checkForAutoROM();
 	if (AutoROM) {
@@ -827,6 +760,13 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 	int i;
 	int ROM_offset;
 	int VROM_offset;
+	bool nes2header = false;
+	uint32 prgRomSize = 0;
+	uint32 chrRomSize = 0;
+	uint32 prgRamSize = 0;
+	uint32 prgNVRamSize = 0;
+	uint32 chrRamSize = 0;
+	uint32 chrNVRamSize = 0;
 
 	ROM_Buffer = malloc(filesize);
 
@@ -841,61 +781,134 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 	if ((NesHeader.byID[0] == 0x4E) && (NesHeader.byID[1] == 0x45) && (NesHeader.byID[2] == 0x53) && (NesHeader.byID[3] == 0x1A)) {
 		if ((NesHeader.byInfo2 & 0x0C) == 0x08) {
 			printf("ReadRom: NES 2.0 Header Detected\n");
+			nes2header = true;
 		} else {
 			printf("ReadRom: iNES Header Detected\n");			
 		}
 
 		MapperNo = ((NesHeader.byInfo1 & 0xF0) >> 4) | (NesHeader.byInfo2 & 0xF0);
-		printf("ReadRom: Mapper Number [%i]\n", MapperNo);
-		printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
+		if (nes2header) {
+			MapperNo |= (NesHeader.byReserve[0] & 0x0F) << 16;
+			SubmapperNo = (NesHeader.byReserve[0] >> 4);
 
-		// Handle VRAM - sometimes we will just use the VROM variable for itgit 
-		// but other times we'll need somewhere else to store aux. bank switched VRAM
-		if (NesHeader.byVRomSize == 0) {
-			switch (MapperNo) {
-				case 30: {
-					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-					VROM = malloc(4 * 0x2000);	
-				} break;
+			prgRomSize = (((uint16)NesHeader.byReserve[1] & 0x0F) << 8 | NesHeader.byRomSize) * 0x4000;
+			chrRomSize = (((uint16)NesHeader.byReserve[1] & 0xF0) << 4 | NesHeader.byVRomSize) * 0x2000; 
+			uint8 shifts = (NesHeader.byReserve[2] & 0x0F);
+			if (shifts != 0) {
+				prgRamSize = 64 << shifts;
+			}
+			shifts = ((NesHeader.byReserve[2] & 0xF0) >> 4);
+			if (shifts != 0) {
+				prgNVRamSize = 64 << shifts;
+			}
+			shifts = (NesHeader.byReserve[3] & 0x0F);
+			if (shifts != 0) {
+				chrRamSize = 64 << shifts;
+			}
+			shifts = ((NesHeader.byReserve[3] & 0xF0) >> 4);
+			if (shifts != 0) {
+				chrNVRamSize = 64 << shifts;
+			}
 
-				case 111: {
-					printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
-					VROM = malloc(2 * 0x2000);	
-				} break;
+			printf("ReadRom: CPU/PPU timing mode [");
+			switch (NesHeader.byReserve[4] & 0x3) {
+				case 0:
+					printf("NTSC NES]\n");
+					break;
+				case 1:
+					printf("PAL NES]\n");
+					break;
+				case 2:
+					printf("Multi-region]\n");				
+					break;
+				case 3:
+					printf("Dendy]\n");				
+					break;
+			}
 
-				default: {
-					printf("ReadRom: Implied 8kB CHR RAM\n");
-					// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
-					VROM = malloc(0x2000);
-				} break;
+			switch (NesHeader.byInfo2 & 0x3) {
+				case 0:
+					printf("ReadRom: ROM is NES / Famicom type\n");
+					break;
+				case 1:
+					printf("ReadRom: ROM is Vs. System type\n");
+					printf("ReadRom: Vs. PPU Type [%u]\n", NesHeader.byReserve[5] & 0x0F);
+					printf("ReadRom: Vs. Hardware Type [%u]\n", (NesHeader.byReserve[5] & 0xF0) >> 4);
+					break;
+				case 2:
+					printf("ReadRom: ROM is Playchoice 10 type\n");
+					break;
+				case 3: 
+					printf("ReadRom: ROM is Extended? type\n");
+					printf("ReadRom: Extended Console Type [%u]\n", (NesHeader.byReserve[5] & 0x0F));
+					break;
+			}
+
+			if (NesHeader.byReserve[6] & 0x03) {
+				printf("ReadRom: [%u] Miscellaneous ROMs Present\n", NesHeader.byReserve[6] & 0x03);
+			}
+
+			if (NesHeader.byReserve[7] & 0x3F) {
+				printf("ReadRom: Default Expansion Device [%u]\n", NesHeader.byReserve[7] & 0x3F);
 			}
 		} else {
-			switch (MapperNo) {
-				case 119: {
-					printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
-					VRAM = malloc(0x2000);
-				} // Intentional Fallthrough - mapper 119 uses VROM and VRAM
 
-				default: {
-					printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);					
-					VROM = malloc (NesHeader.byVRomSize * 0x2000);
-				} break;
+			prgRomSize = NesHeader.byRomSize * 0x4000;
+			chrRomSize = NesHeader.byVRomSize * 0x2000;
+			if (NesHeader.byReserve[0] != 0) {
+				prgRamSize = NesHeader.byReserve[0] * 0x4000;
 			}
+
+			// Handle VRAM - sometimes we will just use the VROM variable for itgit 
+			// but other times we'll need somewhere else to store aux. bank switched VRAM
+			if (NesHeader.byVRomSize == 0) {
+				switch (MapperNo) {
+					case 30: {
+						printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
+						chrRamSize = 0x8000;
+					} break;
+
+					case 111: {
+						printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
+						chrRamSize = 0x4000;
+					} break;
+
+					default: {
+						printf("ReadRom: Implied 8kB CHR RAM\n");
+						chrRamSize = 0x2000;
+					} break;
+				}
+			} else {
+				switch (MapperNo) {
+					case 119: {
+						printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
+						chrRamSize = 0x2000;
+					} break;
+				}
+			}			
+		}
+
+		printf("ReadRom: Mapper Number [%u]\n", MapperNo);
+		printf("ReadRom: NES 2.0 Submapper [%u]\n", SubmapperNo);		
+		printf("ReadRom: PRG ROM [%lu kB] - [%lu] * 16kB banks\n", prgRomSize / 1024, prgRomSize / 16384);
+		printf("ReadRom: CHR ROM [%lu kB] - [%lu] * 8kB banks\n", chrRomSize / 1024, chrRomSize / 8192);
+		if (prgRamSize != 0) {
+			printf("ReadRom: PRG RAM [%lu kB] - [%lu] * 16kB banks\n", prgRamSize / 1024, prgRamSize / 16384);
+		}
+		if (prgNVRamSize != 0) {
+			printf("ReadRom: PRG NVRAM [%lu kB] - [%lu] * 16kB banks\n", prgNVRamSize / 1024, prgNVRamSize / 16384);
+		}
+		if (chrRamSize != 0) {
+			printf("ReadRom: CHR RAM [%lu kB] - [%lu] * 8kB banks\n", chrRamSize / 1024, chrRamSize / 8192);
+		}
+		if (chrNVRamSize != 0) {
+			printf("ReadRom: CHR NVRAM [%lu kB] - [%lu] * 8kB banks\n", chrNVRamSize / 1024, chrNVRamSize / 8192);
 		}
 
 		printf("ReadRom: Nametable Arrangement [%s]\n", (NesHeader.byInfo1 & 1) ? "horizontal mirrored" : "vertically mirrored");			
 		printf("ReadRom: Battery Backed RAM [%s]\n", (NesHeader.byInfo1 & 2) ? "present" : "not present");
 		printf("ReadRom: Trainer Present [%s]\n", (NesHeader.byInfo1 & 4) ? "true" : "false");
 		printf("ReadRom: Alternative Nametable Layout [%s]\n", (NesHeader.byInfo1 & 8) ? "present" : "not present");
-		if (NesHeader.byInfo2 & 0x01) {
-			printf("ReadRom: VS Unisystem ROM detected");
-		}
-		if (NesHeader.byInfo2 & 0x02) {
-			printf("ReadRom: PlayChoice-10 ROM detected");
-		}
-		if (NesHeader.byReserve[0] != 0) {
-			printf("ReadRom: PRG RAM [%i] * 8kB banks\n", NesHeader.byReserve[0]);
-		}
 
 		if (NesHeader.byInfo1 & 2) {
 			SRAM_Enabled = 1;
@@ -910,14 +923,21 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 		}
 
 		ROM_offset = i;
-		ROM = malloc (NesHeader.byRomSize * 0x4000);
-		for (; i < (ROM_offset + (NesHeader.byRomSize * 0x4000)); i++)
+		ROM = malloc(prgRomSize);
+		for (; i < (ROM_offset + prgRomSize); i++)
 			ROM[i - ROM_offset] = ROM_Buffer[i];
 
-		if (NesHeader.byVRomSize > 0) {
+		if (chrRomSize != 0) {
 			VROM_offset = i;
-			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
+			VROM = malloc(chrRomSize);
+			for (; i < (VROM_offset + chrRomSize); i++)
 				VROM[i - VROM_offset] = ROM_Buffer[i];
+		} else if ((chrRomSize == 0) && (chrRamSize != 0)) {
+			VROM = malloc(chrRamSize);
+			memset(VROM, 0, chrRamSize);
+		} else if ((chrRomSize != 0) && (chrRamSize != 0)) {
+			VRAM = malloc(chrRamSize);
+			memset(VRAM, 0, chrRamSize);
 		}
 
 		//Load success

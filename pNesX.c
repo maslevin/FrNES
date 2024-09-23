@@ -171,7 +171,8 @@ uint32 PollSkip;
 struct NesHeader_tag NesHeader;
 
 /* Mapper Number */
-unsigned char MapperNo;
+uint16 MapperNo;
+uint16 SubmapperNo;
 Mapper* mapper;
 
 /* Mirroring 0:Horizontal 1:Vertical */

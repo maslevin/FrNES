@@ -242,12 +242,12 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				break;
 			// Load From VMU
 			case 7:
-				Load_VMU_Options();
+//				Load_VMU_Options();
 				invalida = 1;
 				break;
 			// Save To VMU
 			case 8:
-				Save_VMU_Options();
+//				Save_VMU_Options();
 				invalida = 1;
 				break;
 			// Scan Maple Bus
