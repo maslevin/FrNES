@@ -7,16 +7,6 @@ void set_gtrom_bank(uint8 prg) {
     ROMBANK1 = ROMPAGE((prg * 4) + 1);
     ROMBANK2 = ROMPAGE((prg * 4) + 2);
     ROMBANK3 = ROMPAGE((prg * 4) + 3);
-/*    
-    PPUBANK[8] = &VROM[NAME_TABLE0 * 0x400];
-    PPUBANK[9] = &VROM[(NAME_TABLE0 + 1) * 0x400];
-    PPUBANK[10] = &VROM[(NAME_TABLE0 + 2) * 0x400];
-    PPUBANK[11] = &VROM[(NAME_TABLE0 + 3) * 0x400];
-    PPUBANK[12] = &VROM[(NAME_TABLE0 + 4) * 0x400];
-    PPUBANK[13] = &VROM[(NAME_TABLE0 + 5) * 0x400];
-    PPUBANK[14] = &VROM[(NAME_TABLE0 + 6) * 0x400];
-    PPUBANK[15] = &VROM[(NAME_TABLE0 + 7) * 0x400];    
-*/
 }
 
 void Mapper_111_Init() {
@@ -45,35 +35,22 @@ void Mapper_111_Write(uint16 addr, uint8 data) {
     }
 
     uint8 prg = data & 0xf;
-    uint8 chr = (data & 0x10) >> 4;
+    uint8 chr = ((data & 0x10) >> 4) << 3;
     uint8 nametable = (data & 0x20) >> 5;
-
-//    printf("Mapper_111: Prg [%u] Chr [%u] Nt [%u]\n", prg, chr, nametable);
 
     set_gtrom_bank(prg);
 
-//    uint8 c = chr * 8;
-    if (chr) {
-//        printf("Mapper_111: Setting chr ram bank 1\n");
-        for (int i = 0; i < 8; i++) {
-            PPUBANK[ i ] = &VROM[(i + 8) * 0x400];
-        }
-    } else {
-//        printf("Mapper_111: Setting chr ram bank 0\n");        
-        for (int i = 0; i < 8; i++) {
-            PPUBANK[ i ] = &VROM[i * 0x400];
-        }
+    for (int i = 0; i < 8; i++) {
+        PPUBANK[ i ] = &VROM[(i + chr) * 0x400];
     }
 
-    /*
     nametable <<= 3;
-    PPUBANK[8] = &VROM[(NAME_TABLE0 + nametable) * 0x400];
-    PPUBANK[9] = &VROM[(NAME_TABLE0 + nametable + 1) * 0x400];
-    PPUBANK[10] = &VROM[(NAME_TABLE0 + nametable + 2) * 0x400];
-    PPUBANK[11] = &VROM[(NAME_TABLE0 + nametable + 3) * 0x400];
-    PPUBANK[12] = &VROM[(NAME_TABLE0 + nametable + 4) * 0x400];
-    PPUBANK[13] = &VROM[(NAME_TABLE0 + nametable + 5) * 0x400];
-    PPUBANK[14] = &VROM[(NAME_TABLE0 + nametable + 6) * 0x400];
-    PPUBANK[15] = &VROM[(NAME_TABLE0 + nametable + 7) * 0x400];
-    */
+    PPUBANK[8] = &PPURAM[(NAME_TABLE0 + nametable) * 0x400];
+    PPUBANK[9] = &PPURAM[(NAME_TABLE0 + nametable + 1) * 0x400];
+    PPUBANK[10] = &PPURAM[(NAME_TABLE0 + nametable + 2) * 0x400];
+    PPUBANK[11] = &PPURAM[(NAME_TABLE0 + nametable + 3) * 0x400];
+    PPUBANK[12] = &PPURAM[(NAME_TABLE0 + nametable + 4) * 0x400];
+    PPUBANK[13] = &PPURAM[(NAME_TABLE0 + nametable + 5) * 0x400];
+    PPUBANK[14] = &PPURAM[(NAME_TABLE0 + nametable + 6) * 0x400];
+    PPUBANK[15] = &PPURAM[(NAME_TABLE0 + nametable + 7) * 0x400];
 }

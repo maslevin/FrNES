@@ -35,21 +35,6 @@ void pNesX_StartFrame() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_DrawLine() {
-	/*
-	if (debug_sprites) {
-		PPU_R1 |= R1_SHOW_SP;
-		ppuinfo.PPU_SP_Height = 16;
-		uint8* pSPRRAM = SPRRAM;
-		for (uint8 row = 0; row < 8; row++) {
-			for (uint8 column = 0; column < 8; column++) {
-				pSPRRAM[SPR_X] = column * 8;
-				pSPRRAM[SPR_Y] = 16 + (row * 16);
-				pSPRRAM += 4;
-			}
-		}
-	}
-	*/
-
 	void* texture_address;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in

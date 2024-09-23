@@ -118,9 +118,6 @@ Font* font;
 //The crc32 of the currently selected rom
 uint32 currentCRC32;
 
-// DEBUG
-bool debug_sprites;
-
 /*-------------------------------------------------------------------*/
 /*  ROM image file information                                       */
 /*-------------------------------------------------------------------*/
@@ -862,8 +859,8 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 				} break;
 
 				case 111: {
-					printf("ReadRom: Mapper 111 Defaulting to 4 * 8kB CHR RAM\n");
-					VROM = malloc(4 * 0x2000);	
+					printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
+					VROM = malloc(2 * 0x2000);	
 				} break;
 
 				default: {
@@ -1177,18 +1174,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 		if (numControllers > 0) {
 			my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 			if (my_controller != NULL) {
-				my_state = (cont_state_t*)maple_dev_status(my_controller);		
-
-/*
-				// Toggle pNesX_DebugPrint messages while in operation
-				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
-					debug_sprites = !debug_sprites;
-					log_enabled_latch = true;
-				} else if ((my_state -> buttons & CONT_Y) == 0) {
-					log_enabled_latch = false;
-				}
-*/
-
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
 #ifdef DEBUG
 				// Toggle pNesX_DebugPrint messages while in operation
 				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
@@ -1198,7 +1184,6 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 					log_enabled_latch = false;
 				}
 #endif
-
 				handleController(my_state, pdwPad1, 0);
 			}
 

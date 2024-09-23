@@ -217,14 +217,6 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
 inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
     switch ( wAddr & 0xe000 ) {
         case 0x0000: { /* RAM */
-/*            uint16 offset = wAddr & 0x7ff;
-            if (((offset) >= 0x200) && 
-                ((offset) <= 0x2FF)) {
-                uint8 spriteIndex = (offset - 0x200) >> 2;
-                if (offset % 4 == 0) {
-                    printf("Write Sprite [%u] Y [$%04X]: [$%02X]\n", spriteIndex, offset, byData);
-                }
-            } */
             RAM[ wAddr & 0x7ff ] = byData;
         } break;
 
@@ -309,13 +301,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
             }
         } break;
 
-        case 0x4000:  /* Sound */
+        case 0x4000: { /* Sound */
             switch ( wAddr & 0x1f ) {
-                case 0x14:  /* 0x4014 */
+                case 0x14: { /* 0x4014 */
                     // Sprite DMA
                     switch ( byData >> 5 ) {
                         case 0x0:  /* RAM */
-//                            printf("DMA from RAM Offset [$%04X]\n", ( (uint16)byData << 8 ) & 0x1fff);
                             memcpy_offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
@@ -339,16 +330,16 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
-                    K6502_Burn(513);
-                    break;
+                    K6502_Burn(odd_cycle ? 514 : 513);
+                } break;
 
-                case 0x16:  /* 0x4016 */
+                case 0x16: { /* 0x4016 */
                     // Reset joypad
                     if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) ) {
                         PAD1_Bit = 0;
                         PAD2_Bit = 0;
                     }
-                    break;
+                } break;
 
                 default: {               
                     if (wAddr >= 0x4017) {
@@ -368,16 +359,17 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         }
                     }
                 } break;
-            } break;
+            }
+        } break;
 
-        case 0x6000:  /* SRAM */
+        case 0x6000: { /* SRAM */
             SRAM[ wAddr & 0x1fff ] = byData;
-            break;
+        } break;
 
         case 0x8000:  /* ROM BANK 0 */
         case 0xa000:  /* ROM BANK 1 */
         case 0xc000:  /* ROM BANK 2 */
-        case 0xe000:  /* ROM BANK 3 */
+        case 0xe000:  /* ROM BANK 3 */ {
             // Write to Mapper
             mapper -> write( wAddr, byData );
 
@@ -388,7 +380,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
             BankTable[ 6 ] = ROMBANK2;
             BankTable[ 7 ] = ROMBANK3;
             REALPC;
-            break;
+        } break;
     }
 }
 
