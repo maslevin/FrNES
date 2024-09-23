@@ -11,7 +11,7 @@ void set_gtrom_bank(uint8 prg) {
 
 void Mapper_111_Init() {
     set_gtrom_bank(0);
-//    pNesX_Mirroring(MIRRORING_FOUR_SCREEN);
+    pNesX_Mirroring(MIRRORING_FOUR_SCREEN);
 }
 
 /*
@@ -35,14 +35,22 @@ void Mapper_111_Write(uint16 addr, uint8 data) {
     }
 
     uint8 prg = data & 0xf;
-    uint8 chr = (data & 0x10) >> 4;
+    uint8 chr = ((data & 0x10) >> 4) << 3;
     uint8 nametable = (data & 0x20) >> 5;
 
     set_gtrom_bank(prg);
 
-    uint8 c = chr * 8;
     for (int i = 0; i < 8; i++) {
-        PPUBANK[ i ] = &VROM[(i + c) * 0x400];
+        PPUBANK[ i ] = &VROM[(i + chr) * 0x400];
     }
-//    PPUBANK[8] = &PPURAM[(NAME_TABLE0 + nametable) * 0x400];
+
+    nametable <<= 3;
+    PPUBANK[8] = &PPURAM[(NAME_TABLE0 + nametable) * 0x400];
+    PPUBANK[9] = &PPURAM[(NAME_TABLE0 + nametable + 1) * 0x400];
+    PPUBANK[10] = &PPURAM[(NAME_TABLE0 + nametable + 2) * 0x400];
+    PPUBANK[11] = &PPURAM[(NAME_TABLE0 + nametable + 3) * 0x400];
+    PPUBANK[12] = &PPURAM[(NAME_TABLE0 + nametable + 4) * 0x400];
+    PPUBANK[13] = &PPURAM[(NAME_TABLE0 + nametable + 5) * 0x400];
+    PPUBANK[14] = &PPURAM[(NAME_TABLE0 + nametable + 6) * 0x400];
+    PPUBANK[15] = &PPURAM[(NAME_TABLE0 + nametable + 7) * 0x400];
 }

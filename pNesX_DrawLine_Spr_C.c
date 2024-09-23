@@ -8,17 +8,19 @@
 #include "Mapper_5.h"
 #include "pNesX_System_DC.h"
 
+#define MAX_SPRITES_ON_A_LINE 8
+
 // How many entries in SpritesToDrawNextScanline are valid
 unsigned char NumSpritesToDrawNextScanline = 0;
 // The indexes of the top 8 sprites to draw on the next scanline
-unsigned char SpritesToDrawNextScanline[8] = {0};
+unsigned char SpritesToDrawNextScanline[MAX_SPRITES_ON_A_LINE] = {0};
 // Mark whether the sprite overflow flag should be set on next scanline
 bool OverflowSpritesOnNextScanline = false;
 
 // How many entries in SpritesToDraw are valid
 unsigned char NumSpritesToDraw = 0;
 // The top 8 sprites to draw this scanline
-unsigned char SpritesToDraw[8] = {0};
+unsigned char SpritesToDraw[MAX_SPRITES_ON_A_LINE] = {0};
 // Whether we overflowed sprites this scanline
 bool OverflowedSprites = false;
 
@@ -69,20 +71,22 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	}
 
 	// Calculate the sprites to draw on the next scanline
+	pSPRRAM = SPRRAM;
 	for ( unsigned char spriteIndex = 0; spriteIndex < 64; spriteIndex++) {
-		pSPRRAM = SPRRAM + (spriteIndex << 2);
 		nY = pSPRRAM[ SPR_Y ];
 
-		if ((nY > ppuinfo.PPU_Scanline) || ((nY + ppuinfo.PPU_SP_Height) <= ppuinfo.PPU_Scanline))
-			continue;  // This sprite is not active on the next scanline, skip to next one
-
-		if (NumSpritesToDrawNextScanline < 8) {
-			SpritesToDrawNextScanline[NumSpritesToDrawNextScanline] = spriteIndex;
-			NumSpritesToDrawNextScanline++;
-		} else {
-			OverflowSpritesOnNextScanline = true;
-			break;
+		if (!((nY > ppuinfo.PPU_Scanline) || ((nY + ppuinfo.PPU_SP_Height) <= ppuinfo.PPU_Scanline))) {
+			if (NumSpritesToDrawNextScanline < MAX_SPRITES_ON_A_LINE) {
+				SpritesToDrawNextScanline[NumSpritesToDrawNextScanline] = spriteIndex;
+				NumSpritesToDrawNextScanline++;
+			} else {
+//				printf("Overflowed Sprites on Scanline [%u]\n", ppuinfo.PPU_Scanline);
+				OverflowSpritesOnNextScanline = true;
+				break;
+			}
 		}
+
+		pSPRRAM+=4;
 	}
 
 	// If sprite Rendering is Enabled and we're not on scanline 0 and we have sprites to draw

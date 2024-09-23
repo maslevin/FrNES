@@ -1174,8 +1174,7 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 		if (numControllers > 0) {
 			my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 			if (my_controller != NULL) {
-				my_state = (cont_state_t*)maple_dev_status(my_controller);		
-
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
 #ifdef DEBUG
 				// Toggle pNesX_DebugPrint messages while in operation
 				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
@@ -1185,7 +1184,6 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 					log_enabled_latch = false;
 				}
 #endif
-
 				handleController(my_state, pdwPad1, 0);
 			}
 
@@ -1227,24 +1225,6 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 				*pdwPad2 |= (player_4_bitflags << 8);
 			}
 		}
-	}
-}
-
-uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
-	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
-	if (offset == 0) {
-		return memcpy(dest, src, count);		
-	} else {
-	// wrapping behaviour for sprite DMA operations
-		unsigned char* u8dest = (unsigned char*)dest;
-		unsigned char* u8src = (unsigned char*) src;		
-		for (int i = 0; i < (count - offset); i++) {
-			u8dest[i + offset] = u8src[i];
-		}
-		for (int i = 0; i < offset; i++) {
-			u8dest[i] = u8src[i + (count - offset)];
-		}
-		return dest;
 	}
 }
 

@@ -1131,8 +1131,8 @@ void K6502_Step( uint16 wClocks ) {
 				break;
 
 			case 0xCB:
-				DisassembleInstruction("AXS", NULL, 0);	
-				pPC++; X = X & A; TEST( X ); CLK( 2 );
+				DisassembleInstruction("AXS", "$%02x", *pPC);	
+				X = (A & X) - (*pPC++); TEST( X ); CLK( 2 );
 				break;				
 
 			case 0xCC:

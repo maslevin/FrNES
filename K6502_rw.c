@@ -15,6 +15,25 @@
 extern uint16 opt_SoundEnabled;
 extern Mapper* mapper;
 
+// TODO: More optimizations possible here
+uint32* memcpy_offset( uint32* dest, uint32* src, int count, uint32 offset) {
+	//printf("memcpy_offset: [%u] [%u]\n", count, offset);
+	if (offset == 0) {
+		return memcpy4(dest, src, count);		
+	} else {
+	// wrapping behaviour for sprite DMA operations
+		unsigned char* u8dest = (unsigned char*)dest;
+		unsigned char* u8src = (unsigned char*) src;		
+		for (int i = 0; i < (count - offset); i++) {
+			u8dest[i + offset] = u8src[i];
+		}
+		for (int i = 0; i < offset; i++) {
+			u8dest[i] = u8src[i + (count - offset)];
+		}
+		return dest;
+	}
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*            K6502_ReadZp() : Reading from the zero page            */
@@ -282,44 +301,45 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
             }
         } break;
 
-        case 0x4000:  /* Sound */
+        case 0x4000: { /* Sound */
             switch ( wAddr & 0x1f ) {
-                case 0x14:  /* 0x4014 */
+                case 0x14: { /* 0x4014 */
                     // Sprite DMA
                     switch ( byData >> 5 ) {
                         case 0x0:  /* RAM */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x7ff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x3:  /* SRAM */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x4:  /* ROM BANK 0 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x5:  /* ROM BANK 1 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x6:  /* ROM BANK 2 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x7:  /* ROM BANK 3 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
-                    break;
+                    K6502_Burn(odd_cycle ? 514 : 513);
+                } break;
 
-                case 0x16:  /* 0x4016 */
+                case 0x16: { /* 0x4016 */
                     // Reset joypad
                     if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) ) {
                         PAD1_Bit = 0;
                         PAD2_Bit = 0;
                     }
-                    break;
+                } break;
 
                 default: {               
                     if (wAddr >= 0x4017) {
@@ -339,16 +359,17 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         }
                     }
                 } break;
-            } break;
+            }
+        } break;
 
-        case 0x6000:  /* SRAM */
+        case 0x6000: { /* SRAM */
             SRAM[ wAddr & 0x1fff ] = byData;
-            break;
+        } break;
 
         case 0x8000:  /* ROM BANK 0 */
         case 0xa000:  /* ROM BANK 1 */
         case 0xc000:  /* ROM BANK 2 */
-        case 0xe000:  /* ROM BANK 3 */
+        case 0xe000:  /* ROM BANK 3 */ {
             // Write to Mapper
             mapper -> write( wAddr, byData );
 
@@ -359,7 +380,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
             BankTable[ 6 ] = ROMBANK2;
             BankTable[ 7 ] = ROMBANK3;
             REALPC;
-            break;
+        } break;
     }
 }
 
