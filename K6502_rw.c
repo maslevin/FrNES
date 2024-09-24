@@ -84,10 +84,10 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
           return RAM[ wAddr & 0x7ff ];
 
         case 0x2000: {
-            switch (wAddr & 0x10F) {
+            switch (wAddr & 0xF) {
                 /* PPU Status $2002*/              
-                case 0x002: 
-                case 0x00A: {
+                case 0x2: 
+                case 0xA: {
                     // Set return value
                     byRet = PPU_R2;
 
@@ -117,12 +117,12 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     return byRet;
                 }
 
-                case 0x004: {
+                case 0x4: {
                     /* PPU Sprite RAM $2004 */
                     return SPRRAM[PPU_R3];
                 }
 
-                case 0x007: {
+                case 0x7: {
                     uint16 addr;
                     addr = ppuinfo.PPU_Addr;
                     // Increment PPU Address
@@ -138,11 +138,12 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                         return byRet;
                     }
                 } break;
-
+/*
                 // Read Palette RAM - this isn't supported on all NES's 
                 case 0x100 ... 0x1FF: {
                     return PPURAM[0x3F00 | (wAddr & 0x1F)];
                 } break;
+*/
             }
         } break;
 
@@ -353,7 +354,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
-                    // K6502_Burn(odd_cycle ? 514 : 513);
+                    K6502_Burn(odd_cycle ? 514 : 513);
                 } break;
 
                 case 0x16: { /* 0x4016 */

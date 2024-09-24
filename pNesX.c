@@ -363,6 +363,9 @@ int pNesX_Reset() {
 	PAD1_Latch = PAD2_Latch = ExitCount = 0;
 	PAD1_Bit = PAD2_Bit = 0;
 
+	// Set Interrupt Wiring to 1, 1 by default
+	K6502_Set_Int_Wiring(1, 1);
+
 	/*-------------------------------------------------------------------*/
 	/*  Initialize PPU                                                   */
 	/*-------------------------------------------------------------------*/
@@ -560,7 +563,7 @@ void pNesX_Main() {
 void handle_dmc_synchronization(uint32 cycles) {
 	startProfiling(1);
 	if (audio_sync_dmc_registers(cycles)) {
-		K6502_DoIRQ();
+		IRQ_REQ;
 	}
 	endProfiling(1);
 }
@@ -650,25 +653,33 @@ void pNesX_Cycle() {
 				WorkFrameIdx%=NUM_PVR_FRAMES;
 				WorkFrame = WorkFrames[WorkFrameIdx];
 
-				K6502_Step(cpu_cycles_to_emulate);
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				K6502_Step(hsync_cycles);
 				mapper -> hsync();
+				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+//				mapper -> hsync();
 			} break;
 
 			case 241: {
-				K6502_Step(1);
-				pNesX_VSync();
-				mapper -> vsync();
-				K6502_DoNMI();
-				K6502_Step(cpu_cycles_to_emulate - 1);
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				K6502_Step(hsync_cycles);
 				mapper -> hsync();
+				PPU_R2 |= R2_IN_VBLANK;
+				PPU_Latch_Flag = 0;
+				pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
+				if ( ppuinfo.PPU_R0 & R0_NMI_VB )
+					NMI_REQ;
+				mapper -> vsync();
+				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+//				mapper -> hsync();
 			} break;
 
 			case 242 ... 260 : {
-				K6502_Step(cpu_cycles_to_emulate);
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
+				K6502_Step(hsync_cycles);
 				mapper -> hsync();
+				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
+//				mapper -> hsync();
 			} break;
 		}
 	}
@@ -677,18 +688,4 @@ void pNesX_Cycle() {
 		pNesX_DoSpu();
 	}
 	audio_sync_apu_registers();
-}
-
-void pNesX_VSync() {
-	// Set a V-Blank flag
-	PPU_R2 |= R2_IN_VBLANK;
-
-	// Reset latch flag
-	PPU_Latch_Flag = 0;
-
-	pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
-
-	// NMI on V-Blank
-	if ( ppuinfo.PPU_R0 & R0_NMI_VB )
-		NMI_REQ;
 }

@@ -135,6 +135,8 @@
 #define BRA(a)  if ( a ) { VIRPC; wA0 = PC; PC += (char)(*pPC); CLK( 3 + ( ( wA0 & 0x0100 ) != ( PC & 0x0100 ) ) ); ++PC; REALPC; } else { ++pPC; CLK( 2 ); }
 #define JMP(a)  PC = a; REALPC;
 
+
+
 /*-------------------------------------------------------------------*/
 /*  Global valiables                                                 */
 /*-------------------------------------------------------------------*/
@@ -433,11 +435,12 @@ void K6502_Reset() {
 /*                                                                   */
 /*===================================================================*/
 void K6502_Set_Int_Wiring( unsigned char byNMI_Wiring, unsigned char byIRQ_Wiring ) {
+	printf("Set interrupt wiring to NMI_Wiring = [%u] and IRQ_Wiring = [%u]\n", byNMI_Wiring, byIRQ_Wiring);
 	NMI_Wiring = byNMI_Wiring;
 	IRQ_Wiring = byIRQ_Wiring;
 }
 
-void K6502_DoNMI() {
+void K6502_Handle_Interrupts() {
 	if (NMI_State != NMI_Wiring) {
 		// NMI Interrupt
 		CLK( 7 );
@@ -452,11 +455,7 @@ void K6502_DoNMI() {
 		REALPC;
 
 		NMI_State = NMI_Wiring;
-	}
-}
-
-void K6502_DoIRQ() {
-	if ( IRQ_State != IRQ_Wiring ) {
+	} else if ( IRQ_State != IRQ_Wiring ) {
 		// IRQ Interrupt
 		// Execute IRQ if an I flag isn't being set
 		if ( !( F & FLAG_I ) ) {
@@ -477,8 +476,6 @@ void K6502_DoIRQ() {
 	}
 }
 
-bool writeOnce = true;
-
 /*===================================================================*/
 /*                                                                   */
 /*  K6502_Step() :                                                   */
@@ -496,7 +493,7 @@ void K6502_Step( uint16 wClocks ) {
 
 	// It has a loop until a constant clock passes
 	while ( g_wPassedClocks < wClocks ) {
-		K6502_DoIRQ();
+		K6502_Handle_Interrupts();
 
 		// Read an instruction
 		opcode = *(pPC++);

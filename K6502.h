@@ -46,9 +46,6 @@ void K6502_Step( register uint16 wClocks );
 void K6502_Burn(uint16 wClocks);
 uint32 K6502_GetCycles();
 
-void K6502_DoNMI();
-void K6502_DoIRQ();
-
 // The state of the IRQ pin
 extern unsigned char IRQ_State;
 

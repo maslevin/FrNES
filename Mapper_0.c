@@ -31,10 +31,8 @@ void Mapper_0_Init() {
 	}
 
 	/* Set PPU Banks */
-//	if ( NesHeader.byVRomSize > 0 ) {
-		for ( nPage = 0; nPage < 8; ++nPage )
-			PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-//	}
+	for ( nPage = 0; nPage < 8; ++nPage )
+		PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
 
 	/* Set up wiring of the interrupt pin */
 	K6502_Set_Int_Wiring( 1, 1 ); 
@@ -50,8 +48,7 @@ unsigned char Mapper_0_Read( uint16 wAddr ) {
 /*-------------------------------------------------------------------*/
 /*  Mapper 0 Write Function                                          */
 /*-------------------------------------------------------------------*/
-void Mapper_0_Write( uint16 wAddr, unsigned char byData )
-{
+void Mapper_0_Write( uint16 wAddr, unsigned char byData ) {
 /*
  *  Dummy Write to Mapper
  *
@@ -61,8 +58,7 @@ void Mapper_0_Write( uint16 wAddr, unsigned char byData )
 /*-------------------------------------------------------------------*/
 /*  Mapper 0 V-Sync Function                                         */
 /*-------------------------------------------------------------------*/
-void Mapper_0_VSync()
-{
+void Mapper_0_VSync() {
 /*
  *  Dummy Callback at VSync
  *
@@ -72,8 +68,7 @@ void Mapper_0_VSync()
 /*-------------------------------------------------------------------*/
 /*  Mapper 0 H-Sync Function                                         */
 /*-------------------------------------------------------------------*/
-void Mapper_0_HSync()
-{
+void Mapper_0_HSync() {
 /*
  *  Dummy Callback at HSync
  *
