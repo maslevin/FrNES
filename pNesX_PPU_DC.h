@@ -11,6 +11,5 @@
 #define PNESX_PPU_DC
 
 void pNesX_DrawLine();
-void pNesX_StartFrame();
 
 #endif

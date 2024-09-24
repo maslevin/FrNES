@@ -574,7 +574,11 @@ void pNesX_Cycle() {
 	SpriteJustHit = SPRITE_HIT_SENTINEL;
 
 	//Set the PPU adress to the buffered value
-	pNesX_StartFrame();
+	if (PPU_R1 & 0x18) {
+		ppuinfo.PPU_Addr = PPU_Temp;
+	}
+
+//	printf("Start Frame [%lu]\n", numEmulationFrames);
 
 	// Dummy scanline -1 or 261;
 	K6502_Step(1);
@@ -604,9 +608,10 @@ void pNesX_Cycle() {
 					// Set the sprite hit flag
 					PPU_R2 |= R2_HIT_SP;
 
-					// NMI is required if there is necessity
-					if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
+					// NMI will be generated if requested in R0
+					if ( ppuinfo.PPU_R0 & R0_NMI_SP ) {
 						NMI_REQ;
+					}
 				}
 
 				K6502_Step(hsync_cycles);
@@ -615,7 +620,7 @@ void pNesX_Cycle() {
 
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 
-				if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
+				if (PPU_R1 & 0x18) {
 					ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
 
 					if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) {  /* is subtile y offset == 7? */

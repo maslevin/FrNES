@@ -162,7 +162,7 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
             } else if((Mapper_1_Size == MMC1_512K) && (!num_1k_VROM_banks)) {
                 Mapper_1_256K_base = (Mapper_1_regs[1] & 0x10) >> 4;
                 Mapper_1_Set_CPU_Banks();
-            } else if (num_1k_VROM_banks) {
+            } else {
                 // set VROM bank at $0000
                 if (Mapper_1_regs[0] & 0x10) {
                     // swap 4K
@@ -183,16 +183,6 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                     PPUBANK[6] = &VROM[(bank_num + 6) * 0x400];
                     PPUBANK[7] = &VROM[(bank_num + 7) * 0x400];
                 }
-            } else {
-                if (Mapper_1_regs[0] & 0x10) {
-                    bank_num <<= 2;
-                    /* // TODO: How to handle VRAM ... 
-                    set_VRAM_bank0(0, bank_num+0);
-                    set_VRAM_bank0(1, bank_num+1);
-                    set_VRAM_bank0(2, bank_num+2);
-                    set_VRAM_bank0(3, bank_num+3);
-                    */
-                }
             }
         } break;
 
@@ -208,19 +198,6 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                     Mapper_1_swap = 0;
                 } else {
                     Mapper_1_swap = 1;
-                }
-            }
-
-            if (!num_1k_VROM_banks) {
-                if (Mapper_1_regs[0] & 0x10) {
-                    bank_num <<= 2;
-                    /* // TODO: How to handle VRAM ...
-                    set_VRAM_bank0(4, bank_num+0);
-                    set_VRAM_bank0(5, bank_num+1);
-                    set_VRAM_bank0(6, bank_num+2);
-                    set_VRAM_bank0(7, bank_num+3);
-                    */
-                    break;
                 }
             }
 

@@ -129,25 +129,18 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     ppuinfo.PPU_Addr += PPU_Increment;
                     addr &= 0x3fff;
 
-                    if (addr >= 0x3000) {
-                        if (addr >= 0x3f00) {
-                            PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
-//                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
-                            return PPURAM[0x3F00 | (addr & 0x1F)];
-                        }
-
-                        // handle mirroring
-                        addr &= 0xefff;
+                    if (addr >= 0x3f00) {
+                        PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
+                        return PPURAM[0x3F00 | (addr & 0x1F)];
+                    } else {
+                        byRet = PPU_R7;
+                        PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+                        return byRet;
                     }
-
-                    byRet = PPU_R7;
-                    PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
-                    return byRet;
-                }
+                } break;
 
                 // Read Palette RAM - this isn't supported on all NES's 
                 case 0x100 ... 0x1FF: {
-//                    printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", wAddr, 0x3F00 | (wAddr & 0x1F));
                     return PPURAM[0x3F00 | (wAddr & 0x1F)];
                 } break;
             }
@@ -229,6 +222,12 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
 
                     //Account for Loopy's scrolling discoveries
                     PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
+
+                    // If we are in vertical blank, and we just enabled the vertical blank bit of R0
+                    // start an NMI immediately
+                    if ((PPU_R2 & R2_IN_VBLANK) && (byData & R0_NMI_VB)) {
+                        NMI_REQ;
+                    }
                 } break;
 
                 case 1: { /* 0x2001 */
@@ -278,25 +277,49 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     addr = ppuinfo.PPU_Addr;
                     ppuinfo.PPU_Addr += PPU_Increment;
                     addr &= 0x3FFF;
+/*
+                    switch (addr) {
+                        case 0x0000 ... 0x1fff:
+                            if ((PPU_R1 & 0x18) && (ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
+                                printf("WARNING!!!! - Pattern Table being written to during visible frame\n");
+                            }
+                            printf("Pattern Table Write [$%04X]: [$%02X]\n", addr, byData);
+                            break;
 
-                    if (addr >= 0x3000) {
-                        if (addr >= 0x3F00) {
-                            byData &= 0x3F;
+                        case 0x2000 ... 0x2fff:
+                            if ((PPU_R1 & 0x18) && (ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
+                                printf("WARNING!!!! - Name Table being written to during visible frame\n");
+                            }                        
+                            printf("Name Table Write [$%04X]: [$%02X]\n", addr, byData);
+                            break;
+
+                        case 0x3000 ... 0x3eff:
+                            printf("$3000 Range Write [$%04X]: [$%02X]\n", addr, byData);
+                            break;
+
+                        case 0x3f00 ... 0x3fff:
+                            printf("Palette Write [$%04X]: [$%02X]\n", addr, byData);
+                            break;
+                    }
+*/
+
+                    if (addr >= 0x3f00) {
+                        byData &= 0x3f;
+                        if (addr & 0x3) {
+                            PPURAM[ addr ] = byData;
+                        } else if (!(addr & 0xf)) {
                             // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
                             // came from a background pixel - this will be important later when we merge background tiles with sprites
                             // during rendering, as these pixels will be transparent vs. sprites
-                            if (!(addr & 0xf)) {
-                                PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
-                            } else if (addr & 0x3) {
-                                PPURAM[ addr ] = byData;
-                            }
-                            return;
+                            PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
+                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
                         }
-                        addr &= 0xEFFF;
+                        return;
+                    } else if (addr >= 0x3000) {
+                        addr &= 0xefff;
                     }
                     
-                    PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                    PPUBANK[addr >> 10][addr & 0x3ff] = byData;
                 } break;
             }
         } break;
@@ -330,7 +353,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
-                    K6502_Burn(odd_cycle ? 514 : 513);
+                    // K6502_Burn(odd_cycle ? 514 : 513);
                 } break;
 
                 case 0x16: { /* 0x4016 */

@@ -13,16 +13,11 @@
 #include "string.h"
 
 typedef struct __attribute__ ((packed, aligned(4))) RomInfo_s {
-	char FileName[65];
+	char FileName[269];
 	char PhysFileName[65];
 	int FileSize;
 	int IsRead;
 } RomInfo_t;
-
-typedef struct {
-	char FileName[65];
-	uint32 CheckSum;
-} RomCheck;
 
 //Initializes a RomInfo array to the unread values
 void InitializeFileInfos(RomInfo_t* RomInfoArray, char** RomPtrArray, int NumBuffers);

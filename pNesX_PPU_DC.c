@@ -22,13 +22,6 @@
 #define __ALIGN32__		__attribute__ ((aligned (32)))
 __ALIGN32__ unsigned char Scanline_Buffer[256];
 
-extern uint16 PPU_Temp;
-
-void pNesX_StartFrame() {
-	if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08))
-		ppuinfo.PPU_Addr = PPU_Temp;
-}
-
 /*===================================================================*/
 /*                                                                   */
 /*              pNesX_NewDrawLine() : Render a scanline              */
@@ -40,9 +33,7 @@ void pNesX_DrawLine() {
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 
-	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
-		memset4(Scanline_Buffer, (PPURAM[0x3F00] << 24) | (PPURAM[0x3F00] << 16) | (PPURAM[0x3F00] << 8) | PPURAM[0x3F00], 256);
-	} else {
+	if ( PPU_R1 & 0x18 ) {
 		if (MapperNo == 9) {
 			pNesX_Map9DrawLine_BG_C(Scanline_Buffer);
 			pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
@@ -50,6 +41,8 @@ void pNesX_DrawLine() {
 			pNesX_DrawLine_BG_C(Scanline_Buffer);
 			pNesX_DrawLine_Spr_C(Scanline_Buffer);
 		}
+	} else {
+		memset4(Scanline_Buffer, (PPURAM[0x3F00] << 24) | (PPURAM[0x3F00] << 16) | (PPURAM[0x3F00] << 8) | PPURAM[0x3F00], 256);
 	}
 
 	//Move the scanline buffer to the PVR texture
