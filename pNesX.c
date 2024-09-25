@@ -270,7 +270,7 @@ void pNesX_Fin() {
 	audio_shutdown();
 
 #ifdef DEBUG
-	UploadDisassembly();
+	EndTracing();
 #endif
 }
 
@@ -679,7 +679,7 @@ void pNesX_VSync() {
 	PPU_R2 |= R2_IN_VBLANK;
 
 	// Reset latch flag
-	PPU_Latch_Flag = 0;
+	//PPU_Latch_Flag = 0;
 
 	pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
 

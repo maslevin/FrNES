@@ -76,7 +76,7 @@ inline unsigned char K6502_ReadZp( unsigned char byAddr ) {
 /*                                                                   */
 /*                                                                   */
 /*===================================================================*/
-inline unsigned char K6502_Read( uint16 wAddr ) {
+unsigned char K6502_Read( uint16 wAddr ) {
     unsigned char byRet;
 
     switch ( wAddr & 0xE000 ) {
@@ -86,8 +86,8 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
         case 0x2000: {
             switch (wAddr & 0x10F) {
                 /* PPU Status $2002*/              
-                case 0x002: 
-                case 0x00A: {
+                case 0x2: 
+                case 0xA: {
                     // Set return value
                     byRet = PPU_R2;
 
@@ -97,32 +97,15 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     // Reset address latch
                     PPU_Latch_Flag = 0;
 
-                    // Make a Nametable 0 in V-Blank
-                    // MS - this doesn't seem to be related to reading from 0x2002 in the current documents
-                    // PPU Increment is technically related to this, so maybe keeping this in a separate variable
-                    // might be getting out of sync?
-                    /*
-                    if ( ppuinfo.PPU_Scanline >= 241 && !( ppuinfo.PPU_R0 & R0_NMI_VB ) ) {
-                        ppuinfo.PPU_R0 &= ~R0_NAME_ADDR;
-                    }
-                    */
-
-                    //Set the Sprite Hit Flag
-                    /*
-                    if (SpriteHitPos == 1) {
-                        byRet |= R2_HIT_SP;
-                    }
-                    */
-
                     return byRet;
                 }
 
-                case 0x004: {
+                case 0x4: {
                     /* PPU Sprite RAM $2004 */
                     return SPRRAM[PPU_R3];
                 }
 
-                case 0x007: {
+                case 0x7: {
                     uint16 addr;
                     addr = ppuinfo.PPU_Addr;
                     // Increment PPU Address
@@ -144,12 +127,6 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
                     return byRet;
                 }
-
-                // Read Palette RAM - this isn't supported on all NES's 
-                case 0x100 ... 0x1FF: {
-//                    printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", wAddr, 0x3F00 | (wAddr & 0x1F));
-                    return PPURAM[0x3F00 | (wAddr & 0x1F)];
-                } break;
             }
         } break;
 
@@ -191,6 +168,8 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
     return ( wAddr >> 8 );
 }
 
+bool inColumnInQuestion = false;
+
 /*===================================================================*/
 /*                                                                   */
 /*               K6502_Write() : Writing operation                   */
@@ -214,7 +193,7 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
 /*                                                                   */
 /*                                                                   */
 /*===================================================================*/
-inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
+void K6502_Write( uint16 wAddr, unsigned char byData ) {
     switch ( wAddr & 0xe000 ) {
         case 0x0000: { /* RAM */
             RAM[ wAddr & 0x7ff ] = byData;
@@ -265,10 +244,20 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                 case 6: {  /* 0x2006 */
                     // Set PPU Address
                     if ( PPU_Latch_Flag ) {
+                        printf("[%04X] : Write $2006 LSB [$%02X]\n", PC, byData);
                         PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
                         ppuinfo.PPU_Addr = PPU_Temp;
+                        printf("Updated PPU Address to [$%04X]\n", ppuinfo.PPU_Addr);
                     } else {
+                        printf("[%04X] : Write $2006 MSB [$%02X]\n", PC, byData);                        
                         PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
+//                        ppuinfo.PPU_Addr = PPU_Temp;                        
+                    }
+                    if (ppuinfo.PPU_Addr == 0x200D) {
+                        printf("Starting Upload of Column 13\n");
+                        inColumnInQuestion = true;
+                    } else {
+                        inColumnInQuestion = false;
                     }
                     PPU_Latch_Flag ^= 1;
                 } break;
@@ -277,7 +266,13 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     uint16 addr;
                     addr = ppuinfo.PPU_Addr;
                     ppuinfo.PPU_Addr += PPU_Increment;
+
                     addr &= 0x3FFF;
+                    if (inColumnInQuestion) {
+                        printf("[$%04X] : Write [$%04X]: $%02X\n", PC, addr, byData);                            
+                    } else if (addr == 0x232D) {
+                        printf("[$%04X] : Update 232D outside column [$%04X]: $%02X\n", PC, addr, byData);                            
+                    }
 
                     if (addr >= 0x3000) {
                         if (addr >= 0x3F00) {
@@ -295,7 +290,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         }
                         addr &= 0xEFFF;
                     }
-                    
+
                     PPUBANK[addr >> 10][addr & 0x3FF] = byData;
                 } break;
             }

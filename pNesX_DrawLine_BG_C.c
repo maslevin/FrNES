@@ -73,6 +73,13 @@ void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	}
 
 	for (uint8 nIdx = 1; nIdx < 32; nIdx++) {
+
+/*
+		if ((nX == 13) && (nY == 25)) {
+			printf("BG [%u, %u]: [$%02X]\n", nX, nY, *pbyNameTable);
+		}
+*/
+
 		nameTableValue = *pbyNameTable;
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
