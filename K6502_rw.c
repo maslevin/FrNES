@@ -77,6 +77,7 @@ inline unsigned char K6502_ReadZp( unsigned char byAddr ) {
 /*                                                                   */
 /*===================================================================*/
 unsigned char K6502_Read( uint16 wAddr ) {
+    static unsigned char ppuOpenBus = 0;
     unsigned char byRet;
 
     switch ( wAddr & 0xE000 ) {
@@ -84,24 +85,29 @@ unsigned char K6502_Read( uint16 wAddr ) {
           return RAM[ wAddr & 0x7ff ];
 
         case 0x2000: {
-            switch (wAddr & 0x10F) {
+            switch (wAddr & 0xF) {
                 /* PPU Status $2002*/              
                 case 0x2: 
                 case 0xA: {
                     // Set return value
-                    byRet = PPU_R2;
+                    byRet = ((PPU_R2 & 0xe0) | (ppuOpenBus & 0x1f));
 
-                    // Reset a V-Blank flag
+                    // Reset the V-Blank flag
                     PPU_R2 &= ~R2_IN_VBLANK;
 
                     // Reset address latch
                     PPU_Latch_Flag = 0;
 
+                    if (byRet != 0) {
+//                        printf("Yay Finally Reading [$2002]: [$%02X]\n", byRet);
+                    }
+                    ppuOpenBus = byRet;
                     return byRet;
                 }
 
                 case 0x4: {
                     /* PPU Sprite RAM $2004 */
+                    ppuOpenBus = SPRRAM[PPU_R3];
                     return SPRRAM[PPU_R3];
                 }
 
@@ -116,6 +122,7 @@ unsigned char K6502_Read( uint16 wAddr ) {
                         if (addr >= 0x3f00) {
                             PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
 //                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
+                            ppuOpenBus = PPURAM[0x3F00 | (addr & 0x1F)];
                             return PPURAM[0x3F00 | (addr & 0x1F)];
                         }
 
@@ -124,6 +131,7 @@ unsigned char K6502_Read( uint16 wAddr ) {
                     }
 
                     byRet = PPU_R7;
+                    ppuOpenBus = byRet;
                     PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
                     return byRet;
                 }

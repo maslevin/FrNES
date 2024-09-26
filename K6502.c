@@ -538,6 +538,7 @@ __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 
 	// It has a loop until a constant clock passes
 	while ( g_wPassedClocks < wClocks ) {
+		K6502_DoNMI();
 		K6502_DoIRQ();
 
 		// Read an instruction

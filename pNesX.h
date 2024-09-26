@@ -222,7 +222,8 @@ extern struct NesHeader_tag NesHeader;
 
 /* Mapper No. */
 struct Mapper;
-extern unsigned char MapperNo;
+extern uint16 MapperNo;
+extern uint16 SubmapperNo;
 
 /* Other */
 extern unsigned char ROM_Mirroring;

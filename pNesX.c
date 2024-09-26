@@ -168,7 +168,8 @@ uint32 PollSkip;
 struct NesHeader_tag NesHeader;
 
 /* Mapper Number */
-unsigned char MapperNo;
+uint16 MapperNo;
+uint16 SubmapperNo;
 Mapper* mapper;
 
 /* Mirroring 0:Horizontal 1:Vertical */
@@ -242,6 +243,8 @@ void pNesX_Init() {
 		timer_spin_sleep(40);
 		*start = 0xFFFFFFFF;
 	}
+
+	K6502_Set_Int_Wiring( 1, 1 ); 
 
 	// Call mapper initialization function - important that this comes before mapper
 	// init, for expansion audio
@@ -648,11 +651,10 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 			} break;
 
 			case 241: {
-				K6502_Step(1);
+				K6502_Step(5);
 				pNesX_VSync();
 				mapper -> vsync();
-				K6502_DoNMI();
-				K6502_Step(cpu_cycles_to_emulate - 1);
+				K6502_Step(cpu_cycles_to_emulate - 5);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
 			} break;

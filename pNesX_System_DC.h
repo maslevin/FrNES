@@ -67,10 +67,6 @@ extern bool log_enabled;
 extern char szRomPath[];
 extern uint32 RomSize;
 
-extern unsigned char *ROM;
-extern unsigned char *VROM;
-extern unsigned char *VRAM;
-
 void initialize_controllers();
 void rescan_controllers();
 
