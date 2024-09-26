@@ -172,24 +172,6 @@ void calculateOutputScreenGeometry() {
 	}	
 }
 
-// this routine came from the ghettoplay example that comes 
-// with libdream
-int draw_VMU_icon(maple_device_t* vmu, char* icon) {
-	uint8 bitmap[48*32/8] = {0};
-	int x, y, xi, xb;
-
-	for (y=0; y<32; y++) {
-		for (x=0; x<48; x++) {
-			xi = x / 8;
-			xb = 0x80 >> (x % 8);
-			if (icon[(31-y)*48+(47-x)] == '+')
-				bitmap[y*(48/8)+xi] |= xb;
-		}
-	}
-	
-	return vmu_draw_lcd(vmu, bitmap);
-}
-
 void initialize_controllers() {
 	printf("initialize_controllers: start scan\n");
 	numControllers = 0;
@@ -780,23 +762,36 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 		printf("ReadRom: Mapper Number [%i]\n", MapperNo);
 		printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
 
-		// Handle VRAM - sometimes we will just use the VROM variable for it
+		// Handle VRAM - sometimes we will just use the VROM variable for itgit 
 		// but other times we'll need somewhere else to store aux. bank switched VRAM
 		if (NesHeader.byVRomSize == 0) {
-			printf("ReadRom: Implied 8kB CHR RAM\n");
-			// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
-			VROM = malloc(0x2000);
-		} else {
-			printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);
 			switch (MapperNo) {
 				case 30: {
 					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-					VROM = malloc(4 * 0x2000);					
+					VROM = malloc(4 * 0x2000);	
 				} break;
 
+				case 111: {
+					printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
+					VROM = malloc(2 * 0x2000);	
+				} break;
+
+				default: {
+					printf("ReadRom: Implied 8kB CHR RAM\n");
+					// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
+					VROM = malloc(0x2000);
+				} break;
+			}
+		} else {
+			switch (MapperNo) {
 				case 119: {
 					printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
 					VRAM = malloc(0x2000);
+				} // Intentional Fallthrough - mapper 119 uses VROM and VRAM
+
+				default: {
+					printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);					
+					VROM = malloc (NesHeader.byVRomSize * 0x2000);
 				} break;
 			}
 		}
@@ -834,7 +829,6 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 
 		if (NesHeader.byVRomSize > 0) {
 			VROM_offset = i;
-			VROM = malloc (NesHeader.byVRomSize * 0x2000);
 			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
 				VROM[i - VROM_offset] = ROM_Buffer[i];
 		}
@@ -1093,8 +1087,7 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 		if (numControllers > 0) {
 			my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 			if (my_controller != NULL) {
-				my_state = (cont_state_t*)maple_dev_status(my_controller);		
-
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
 #ifdef DEBUG
 				// Toggle pNesX_DebugPrint messages while in operation
 				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
@@ -1104,7 +1097,6 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 					log_enabled_latch = false;
 				}
 #endif
-
 				handleController(my_state, pdwPad1, 0);
 			}
 
@@ -1149,22 +1141,22 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 	}
 }
 
-__attribute__ ((hot)) uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
-	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
-	if (offset == 0) {
-		return memcpy(dest, src, count);		
-	} else {
-	// wrapping behaviour for sprite DMA operations
-		unsigned char* u8dest = (unsigned char*)dest;
-		unsigned char* u8src = (unsigned char*) src;		
-		for (int i = 0; i < (count - offset); i++) {
-			u8dest[i + offset] = u8src[i];
+// this routine came from the ghettoplay example that comes 
+// with libdream
+int draw_VMU_icon(maple_device_t* vmu, char* icon) {
+	uint8 bitmap[48*32/8] = {0};
+	int x, y, xi, xb;
+
+	for (y=0; y<32; y++) {
+		for (x=0; x<48; x++) {
+			xi = x / 8;
+			xb = 0x80 >> (x % 8);
+			if (icon[(31-y)*48+(47-x)] == '+')
+				bitmap[y*(48/8)+xi] |= xb;
 		}
-		for (int i = 0; i < offset; i++) {
-			u8dest[i] = u8src[i + (count - offset)];
-		}
-		return dest;
 	}
+	
+	return vmu_draw_lcd(vmu, bitmap);
 }
 
 #ifdef DEBUG

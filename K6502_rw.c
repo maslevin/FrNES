@@ -15,6 +15,25 @@
 
 extern Mapper* mapper;
 
+// TODO: More optimizations possible here
+uint32* memcpy_offset( uint32* dest, uint32* src, int count, uint32 offset) {
+	//printf("memcpy_offset: [%u] [%u]\n", count, offset);
+	if (offset == 0) {
+		return memcpy4(dest, src, count);		
+	} else {
+	// wrapping behaviour for sprite DMA operations
+		unsigned char* u8dest = (unsigned char*)dest;
+		unsigned char* u8src = (unsigned char*) src;		
+		for (int i = 0; i < (count - offset); i++) {
+			u8dest[i + offset] = u8src[i];
+		}
+		for (int i = 0; i < offset; i++) {
+			u8dest[i] = u8src[i + (count - offset)];
+		}
+		return dest;
+	}
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*            K6502_ReadZp() : Reading from the zero page            */
@@ -57,7 +76,7 @@ inline unsigned char K6502_ReadZp( unsigned char byAddr ) {
 /*                                                                   */
 /*                                                                   */
 /*===================================================================*/
-inline unsigned char K6502_Read( uint16 wAddr ) {
+unsigned char K6502_Read( uint16 wAddr ) {
     unsigned char byRet;
 
     switch ( wAddr & 0xE000 ) {
@@ -67,8 +86,8 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
         case 0x2000: {
             switch (wAddr & 0x10F) {
                 /* PPU Status $2002*/              
-                case 0x002: 
-                case 0x00A: {
+                case 0x2: 
+                case 0xA: {
                     // Set return value
                     byRet = PPU_R2;
 
@@ -78,30 +97,15 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     // Reset address latch
                     PPU_Latch_Flag = 0;
 
-                    // Make a Nametable 0 in V-Blank
-                    // MS - this doesn't seem to be related to reading from 0x2002 in the current documents
-                    // PPU Increment is technically related to this, so maybe keeping this in a separate variable
-                    // might be getting out of sync?
-                    if ( ppuinfo.PPU_Scanline >= 241 && !( ppuinfo.PPU_R0 & R0_NMI_VB ) ) {
-                        ppuinfo.PPU_R0 &= ~R0_NAME_ADDR;
-                    }
-
-                    //Set the Sprite Hit Flag
-                    /*
-                    if (SpriteHitPos == 1) {
-                        byRet |= R2_HIT_SP;
-                    }
-                    */
-
                     return byRet;
                 }
 
-                case 0x004: {
+                case 0x4: {
                     /* PPU Sprite RAM $2004 */
                     return SPRRAM[PPU_R3];
                 }
 
-                case 0x007: {
+                case 0x7: {
                     uint16 addr;
                     addr = ppuinfo.PPU_Addr;
                     // Increment PPU Address
@@ -123,12 +127,6 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
                     PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
                     return byRet;
                 }
-
-                // Read Palette RAM - this isn't supported on all NES's 
-                case 0x100 ... 0x1FF: {
-//                    printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", wAddr, 0x3F00 | (wAddr & 0x1F));
-                    return PPURAM[0x3F00 | (wAddr & 0x1F)];
-                } break;
             }
         } break;
 
@@ -193,134 +191,133 @@ inline unsigned char K6502_Read( uint16 wAddr ) {
 /*                                                                   */
 /*                                                                   */
 /*===================================================================*/
-inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
-
+void K6502_Write( uint16 wAddr, unsigned char byData ) {
     switch ( wAddr & 0xe000 ) {
-        case 0x0000:  /* RAM */
+        case 0x0000: { /* RAM */
             RAM[ wAddr & 0x7ff ] = byData;
-            break;
+        } break;
 
-    case 0x2000:  /* PPU */
-        switch ( wAddr & 0x7 ) {
-            case 0:    /* 0x2000 */
-                ppuinfo.PPU_R0 = byData;
-                PPU_Increment = ( ppuinfo.PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
-                ppuinfo.PPU_SP_Height = ( ppuinfo.PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
+        case 0x2000: { /* PPU */
+            switch ( wAddr & 0x7 ) {
+                case 0: {   /* 0x2000 */
+                    ppuinfo.PPU_R0 = byData;
+                    PPU_Increment = ( ppuinfo.PPU_R0 & R0_INC_ADDR ) ? 32 : 1;
+                    ppuinfo.PPU_SP_Height = ( ppuinfo.PPU_R0 & R0_SP_SIZE ) ? 16 : 8;
 
-                //Account for Loopy's scrolling discoveries
-                PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
-                break;
+                    //Account for Loopy's scrolling discoveries
+                    PPU_Temp = (PPU_Temp & 0xF3FF) | ( (((uint16)byData) & 0x0003) << 10);
+                } break;
 
-            case 1:   /* 0x2001 */
-                PPU_R1 = byData;
-                break;
+                case 1: { /* 0x2001 */
+                    PPU_R1 = byData;
+                } break;
 
-            case 2:   /* 0x2002 */
-                //PPU_R2 = byData; // 0x2002 is not writable
-                break;
+                case 2: {  /* 0x2002 */
+                    //PPU_R2 = byData; // 0x2002 is not writable
+                } break;
 
-            case 3:   /* 0x2003 */
-                // Sprite RAM Address
-                PPU_R3 = byData;
-                break;
+                case 3: {   /* 0x2003 */
+                    // Sprite RAM Address
+                    PPU_R3 = byData;
+                } break;
 
-            case 4:   /* 0x2004 */
-                // Write data to Sprite RAM
-                SPRRAM[ PPU_R3++ ] = byData;
-                break;
+                case 4: {  /* 0x2004 */
+                    // Write data to Sprite RAM
+                    SPRRAM[ PPU_R3++ ] = byData;
+                } break;
 
-            case 5:   /* 0x2005 */
-                // Set Scroll Register
-                if ( PPU_Latch_Flag ) {
-                    //Added : more Loopy Stuff
-                    PPU_Temp = (PPU_Temp & 0xFC1F) | ( (((uint16)byData) & 0xF8) << 2);
-                    PPU_Temp = (PPU_Temp & 0x8FFF) | ( (((uint16)byData) & 0x07) << 12);
-                } else {
-                    ppuinfo.PPU_Scr_H_Bit = byData & 7;
-                    PPU_Temp = (PPU_Temp & 0xFFE0) | ( (((uint16)byData) & 0xF8) >> 3);
-                }
-                PPU_Latch_Flag ^= 1;
-                break;
-
-            case 6:   /* 0x2006 */
-                // Set PPU Address
-                if ( PPU_Latch_Flag ) {
-                    PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
-                    ppuinfo.PPU_Addr = PPU_Temp;
-                } else {
-                    PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
-                }
-                PPU_Latch_Flag ^= 1;
-                break;
-
-            case 7: { /* 0x2007 */
-                uint16 addr;
-                addr = ppuinfo.PPU_Addr;
-                ppuinfo.PPU_Addr += PPU_Increment;
-                addr &= 0x3FFF;
-
-                if (addr >= 0x3000) {
-                    if (addr >= 0x3F00) {
-                        byData &= 0x3F;
-//                        printf("Writing Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1f));
-                        // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
-                        // came from a background pixel - this will be important later when we merge background tiles with sprites
-                        // during rendering, as these pixels will be transparent vs. sprites
-                        if (!(addr & 0xf)) {
-                            PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                            PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
-                        } else if (addr & 0x3) {
-                            PPURAM[ addr ] = byData;
-                        }
-                        return;
+                case 5: {  /* 0x2005 */
+                    // Set Scroll Register
+                    if ( PPU_Latch_Flag ) {
+                        //Added : more Loopy Stuff
+                        PPU_Temp = (PPU_Temp & 0xFC1F) | ( (((uint16)byData) & 0xF8) << 2);
+                        PPU_Temp = (PPU_Temp & 0x8FFF) | ( (((uint16)byData) & 0x07) << 12);
+                    } else {
+                        ppuinfo.PPU_Scr_H_Bit = byData & 7;
+                        PPU_Temp = (PPU_Temp & 0xFFE0) | ( (((uint16)byData) & 0xF8) >> 3);
                     }
-                    addr &= 0xEFFF;
-                }
+                    PPU_Latch_Flag ^= 1;
+                } break;
 
-                PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                case 6: {  /* 0x2006 */
+                    // Set PPU Address
+                    if ( PPU_Latch_Flag ) {
+                        PPU_Temp = (PPU_Temp & 0xFF00) | ( ((uint16)byData) & 0x00FF);
+                        ppuinfo.PPU_Addr = PPU_Temp;
+                    } else {
+                        PPU_Temp = (PPU_Temp & 0x00FF) | ( ( ((uint16)byData) & 0x003F) << 8 );
+                    }
+                    PPU_Latch_Flag ^= 1;
+                } break;
+
+                case 7: { /* 0x2007 */
+                    uint16 addr;
+                    addr = ppuinfo.PPU_Addr;
+                    ppuinfo.PPU_Addr += PPU_Increment;
+
+                    addr &= 0x3FFF;
+
+                    if (addr >= 0x3000) {
+                        if (addr >= 0x3F00) {
+                            byData &= 0x3F;
+                            // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
+                            // came from a background pixel - this will be important later when we merge background tiles with sprites
+                            // during rendering, as these pixels will be transparent vs. sprites
+                            if (!(addr & 0xf)) {
+                                PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
+                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
+                            } else if (addr & 0x3) {
+                                PPURAM[ addr ] = byData;
+                            }
+                            return;
+                        }
+                        addr &= 0xEFFF;
+                    }
+
+                    PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                } break;
             }
-            break;
-        }
-        break;
+        } break;
 
-        case 0x4000:  /* Sound */
+        case 0x4000: { /* Sound */
             switch ( wAddr & 0x1f ) {
-                case 0x14:  /* 0x4014 */
+                case 0x14: { /* 0x4014 */
                     // Sprite DMA
                     switch ( byData >> 5 ) {
                         case 0x0:  /* RAM */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x7ff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x3:  /* SRAM */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x4:  /* ROM BANK 0 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x5:  /* ROM BANK 1 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x6:  /* ROM BANK 2 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x7:  /* ROM BANK 3 */
-                            pNesX_MemoryCopy_Offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
-                    break;
+                    //K6502_Burn(odd_cycle ? 514 : 513);
+                } break;
 
-                case 0x16:  /* 0x4016 */
+                case 0x16: { /* 0x4016 */
                     // Reset joypad
                     if ( !( APU_Reg[ 0x16 ] & 1 ) && ( byData & 1 ) ) {
                         PAD1_Bit = 0;
                         PAD2_Bit = 0;
                     }
-                    break;
+                } break;
 
                 default: {               
                     if (wAddr >= 0x4017) {
@@ -340,16 +337,17 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         }
                     }
                 } break;
-            } break;
+            }
+        } break;
 
-        case 0x6000:  /* SRAM */
+        case 0x6000: { /* SRAM */
             SRAM[ wAddr & 0x1fff ] = byData;
-            break;
+        } break;
 
         case 0x8000:  /* ROM BANK 0 */
         case 0xa000:  /* ROM BANK 1 */
         case 0xc000:  /* ROM BANK 2 */
-        case 0xe000:  /* ROM BANK 3 */
+        case 0xe000:  /* ROM BANK 3 */ {
             // Write to Mapper
             mapper -> write( wAddr, byData );
 
@@ -360,7 +358,7 @@ inline void K6502_Write( uint16 wAddr, unsigned char byData ) {
             BankTable[ 6 ] = ROMBANK2;
             BankTable[ 7 ] = ROMBANK3;
             REALPC;
-            break;
+        } break;
     }
 }
 
@@ -370,7 +368,7 @@ inline uint16 K6502_ReadW( uint16 wAddr ){
     if ((wAddr & 0xFF) == 0xFF) {
         nextWAddr = wAddr & 0xFF00;
     }
-    return K6502_Read( wAddr ) | (uint16)K6502_Read( nextWAddr ) << 8;
+    return K6502_Read( wAddr ) | (K6502_Read( nextWAddr ) << 8);
 };
 inline void K6502_WriteW( uint16 wAddr, uint16 wData ){ K6502_Write( wAddr, wData & 0xff ); K6502_Write( wAddr + 1, wData >> 8 ); };
 inline uint16 K6502_ReadZpW( unsigned char byAddr ){ return K6502_ReadZp( byAddr ) | ( K6502_ReadZp( byAddr + 1 ) << 8 ); };

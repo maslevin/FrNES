@@ -90,15 +90,6 @@ int StartFileSearch(char* Path, RomInfo_t* RomInfoArray) {
 		printf("StartFileSearch: directory opened successfully\n");
 		numberOfRoms = 0;
 		currentindex = 0;
-		// The cd interface doesn't put .. into the root directory list at any level
-		// and the sd interface only does it in subdirectories, so add it here for consistency
-		if ((strstr(Path, "/cd") == Path) || (strcmp(Path, "/sd/") == 0)) {
-			strcpy(RomInfoArray[currentindex].FileName, "<Previous Directory>,DIR<RLAlign>");
-			strcpy(RomInfoArray[currentindex].PhysFileName, "..");
-			RomInfoArray[currentindex].IsRead = 1;
-			currentindex++;
-			numberOfRoms++;			
-		}
 		return 1;
 	}
 };

@@ -60,7 +60,7 @@ extern unsigned char* BankTable[8];
 extern unsigned char HALT;
 
 #ifdef DEBUG
-void UploadDisassembly();
+void EndTracing();
 #endif
 
 #endif /* !K6502_H_INCLUDED */
