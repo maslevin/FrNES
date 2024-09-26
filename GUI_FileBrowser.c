@@ -27,9 +27,9 @@ char* Rom_Keys[] = {
 const int Num_Rom_Keys = 6;
 
 //ROM data storage
-const int MAX_ROMS = 2048;
-RomInfo_t myRomInfos[2048];
-char* myRomStrings[2048];
+#define MAX_ROMS 1024
+RomInfo_t myRomInfos[MAX_ROMS];
+char* myRomStrings[MAX_ROMS];
 
 #define FILEBROWSER_ROOT_MENU 0
 #define FILEBROWSER_START_LISTING_DIRECTORY 1

@@ -13,7 +13,7 @@
 #include "string.h"
 
 typedef struct __attribute__ ((packed, aligned(4))) RomInfo_s {
-	char FileName[65];
+	char FileName[269];
 	char PhysFileName[65];
 	int FileSize;
 	int IsRead;

@@ -76,6 +76,7 @@ void InitializeFileInfos(RomInfo_t* RomInfoArray, char** RomPtrArray, int NumBuf
 	for (int i = 0; i < NumBuffers; i++) {
 		RomPtrArray[i] = RomInfoArray[i].FileName;
 	}
+	printf("InitializeFileInfos: entries cleared\n");
 };
 
 //Start the Search Process
@@ -108,10 +109,10 @@ int ReturnCurrentNumRoms() {
 
 //Loads a fileinfo
 int LoadNextFileSimple(RomInfo_t* RomInfoArray, char* current_path) {
-//	printf("LoadNextFileSimple: reading directory\n");
+	printf("LoadNextFileSimple: reading directory\n");
 	my_dir = fs_readdir(my_file);
 	if (my_dir != NULL) {
-//		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
+		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
 		if (my_dir -> attr & 0x1000) {
 			if (strcmp(my_dir -> name, "..") == 0) {
 				strcpy(RomInfoArray[currentindex].FileName, "<Previous Directory>,DIR<RLAlign>");
@@ -120,9 +121,9 @@ int LoadNextFileSimple(RomInfo_t* RomInfoArray, char* current_path) {
 				currentindex++;
 				numberOfRoms++;
 			} else if (strcmp(my_dir -> name, ".") == 0) {
-
+				// Don't put an entry onscreen for the "." directory entry
 			} else {
-				snprintf(RomInfoArray[currentindex].FileName, 65, "%s,%s<RLAlign>", my_dir -> name, "DIR");
+				snprintf(RomInfoArray[currentindex].FileName, 269, "%s,%s<RLAlign>", my_dir -> name, "DIR");
 				strcat(RomInfoArray[currentindex].PhysFileName, my_dir -> name);
 				RomInfoArray[currentindex].IsRead = 1;
 				currentindex++;

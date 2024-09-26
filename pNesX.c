@@ -675,9 +675,6 @@ __attribute__ ((hot)) void pNesX_VSync() {
 	// Set a V-Blank flag
 	PPU_R2 |= R2_IN_VBLANK;
 
-	// Reset latch flag
-	//PPU_Latch_Flag = 0;
-
 	pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
 
 	// NMI on V-Blank
