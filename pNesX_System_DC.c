@@ -365,7 +365,7 @@ int SaveSRAM() {
 			package.data_len = compressedLength;
 			package.icon_data = NULL;
 			package.eyecatch_data = NULL;
-			package.data = compressedBuffer;	
+			package.data = (uint8*)compressedBuffer;	
 
 			printf("VMU: Compiling Package\n");
 			unsigned char* packageBuffer;
@@ -428,6 +428,7 @@ void loadPalette(char* path) {
 		}
 
 /*
+		// Keep this commented out - this is just for creating another default palette though if you want to in the future
 		printf("const uint16 NesPalette[] = {\n");
 		for (uint i = 0; i < 64; i++) {
 			printf("0x%04X,", NesPalette[i]);
@@ -444,7 +445,7 @@ void loadPalette(char* path) {
 	}
 
 	if (errored_out) {
-		NesPalette = DEFAULT_NES_PALETTE;
+		NesPalette = (uint16*)DEFAULT_NES_PALETTE;
 	}
 }
 
@@ -839,7 +840,7 @@ int pNesX_ReadRom (const char *filepath, uint32 filesize) {
 		//Load success
 		returnValue = 0;
 	} else {
-		printf("ReadRom: NOT AN NES FILE - exiting");
+		printf("ReadRom: NES header failed validation - exiting");
 	}
 
 	free(ROM_Buffer);

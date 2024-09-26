@@ -71,17 +71,17 @@ uint32 UPDC32 (unsigned char octet, uint32 crc) {
 
 //Initializes a RomInfo array to the unread values
 void InitializeFileInfos(RomInfo_t* RomInfoArray, char** RomPtrArray, int NumBuffers) {
-	printf("InitializeFileInfos: clearing entries\n");
+	// printf("InitializeFileInfos: clearing entries\n");
 	memset(RomInfoArray, 0, sizeof(RomInfo_t) * NumBuffers);
 	for (int i = 0; i < NumBuffers; i++) {
 		RomPtrArray[i] = RomInfoArray[i].FileName;
 	}
-	printf("InitializeFileInfos: entries cleared\n");
+	// printf("InitializeFileInfos: entries cleared\n");
 };
 
 //Start the Search Process
 int StartFileSearch(char* Path, RomInfo_t* RomInfoArray) {
-	printf("StartFileSearch: beginning search\n");
+	// printf("StartFileSearch: beginning search\n");
 
 	my_file = fs_open(Path, O_DIR);
 	if (my_file == -1) {
@@ -96,6 +96,7 @@ int StartFileSearch(char* Path, RomInfo_t* RomInfoArray) {
 };
 
 void EndFileSearch() {
+	printf("EndFileSearch: found [%u]\n", numberOfRoms);
 	printf("EndFileSearch: closing directory\n");
 	if (fs_close(my_file) == -1) {
 		printf("EndFileSearch: error, unable to close directory\n");
@@ -109,10 +110,10 @@ int ReturnCurrentNumRoms() {
 
 //Loads a fileinfo
 int LoadNextFileSimple(RomInfo_t* RomInfoArray, char* current_path) {
-	printf("LoadNextFileSimple: reading directory\n");
+//	printf("LoadNextFileSimple: reading directory\n");
 	my_dir = fs_readdir(my_file);
 	if (my_dir != NULL) {
-		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
+//		printf("LoadNextFileSimple: returned new entry [%s] with attributes [%lX]\n", my_dir -> name, my_dir -> attr);
 		if (my_dir -> attr & 0x1000) {
 			if (strcmp(my_dir -> name, "..") == 0) {
 				strcpy(RomInfoArray[currentindex].FileName, "<Previous Directory>,DIR<RLAlign>");
@@ -150,10 +151,10 @@ uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temp
 	uint32 oldcrc32;
 	int i;
 
-	printf("ReturnChecksum: loading ROM image into buffer\n");
+	printf("ReturnChecksum: loading ROM file into buffer\n");
 	my_fd = fs_open(filepath, O_RDONLY);
 	if (my_fd == -1) {
-		printf("ReturnChecksum: failed to open ROM image\n");
+		printf("ReturnChecksum: failed to open ROM file\n");
 		return 0;
 	}
 	if (fs_read(my_fd, temprom, filesize) != filesize) {
