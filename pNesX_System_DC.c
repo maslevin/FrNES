@@ -1032,16 +1032,16 @@ __attribute__ ((hot)) void handleButton(uint32* controllerBitflags,
 			buttonOn = (controller_state -> ltrig > 0);
 			break;
 		case MODE_ANALOG_X_LEFT:
-			buttonOn = (controller_state -> joyx < 114);
+			buttonOn = (controller_state -> joyx < -114);
 			break;
 		case MODE_ANALOG_X_RIGHT:
-			buttonOn = (controller_state -> joyx > 140);
+			buttonOn = (controller_state -> joyx > 114);
 			break;
 		case MODE_ANALOG_Y_UP:
-			buttonOn = (controller_state -> joyy < 114);
+			buttonOn = (controller_state -> joyy < -114);
 			break;
 		case MODE_ANALOG_Y_DOWN:
-			buttonOn = (controller_state -> joyy > 140);
+			buttonOn = (controller_state -> joyy > 114);
 			break;	
 	}
 
