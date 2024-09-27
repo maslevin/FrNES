@@ -9,6 +9,8 @@
 #include "ROMLoad.h"
 #include "macros.h"
 
+#include <errno.h>
+
 #include "GUI_SystemPage.h"
 #include "pNesX_System_DC.h"
 
@@ -161,7 +163,7 @@ uint32 ReturnChecksum(const char* filepath, uint32 filesize, unsigned char* temp
 	printf("ReturnChecksum: loading ROM image into buffer\n");
 	my_fd = fs_open(filepath, O_RDONLY);
 	if (my_fd == -1) {
-		printf("ReturnChecksum: failed to open ROM image\n");
+		printf("ReturnChecksum: failed to open ROM image with error [%s]\n", strerror(errno));
 		return 0;
 	}
 	if (fs_read(my_fd, temprom, filesize) != filesize) {
