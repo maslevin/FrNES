@@ -27,7 +27,7 @@ char* Rom_Keys[] = {
 const int Num_Rom_Keys = 6;
 
 //ROM data storage
-#define MAX_ROMS 500
+#define MAX_ROMS 1024
 RomInfo_t myRomInfos[MAX_ROMS];
 char* myRomStrings[MAX_ROMS];
 
