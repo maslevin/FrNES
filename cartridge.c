@@ -218,8 +218,8 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 		}
 
 		ROM_offset = i;
-        num_8k_ROM_pages = prgRomSize / 16384;
-        num_1k_VROM_pages = chrRomSize / 8192;
+        num_8k_ROM_pages = prgRomSize / 8192;
+        num_1k_VROM_pages = chrRomSize / 1024;
         num_ROM_bytes_allocated = prgRomSize;
 		for (; i < (ROM_offset + prgRomSize); i++) {
 			ROM[i - ROM_offset] = ROM_Buffer[i];
