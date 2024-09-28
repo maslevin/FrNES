@@ -163,24 +163,6 @@ void calculateOutputScreenGeometry() {
 	}	
 }
 
-// this routine came from the ghettoplay example that comes 
-// with libdream
-int draw_VMU_icon(maple_device_t* vmu, char* icon) {
-	uint8 bitmap[48*32/8] = {0};
-	int x, y, xi, xb;
-
-	for (y=0; y<32; y++) {
-		for (x=0; x<48; x++) {
-			xi = x / 8;
-			xb = 0x80 >> (x % 8);
-			if (icon[(31-y)*48+(47-x)] == '+')
-				bitmap[y*(48/8)+xi] |= xb;
-		}
-	}
-	
-	return vmu_draw_lcd(vmu, bitmap);
-}
-
 void initialize_controllers() {
 	printf("initialize_controllers: start scan\n");
 	numControllers = 0;
@@ -284,7 +266,7 @@ int LoadSRAM() {
 			if (vmufs_read(vmu, sramFilename, (void**)&readBuffer, &readBufferSize) == 0) {
 				vmu_pkg_t package;
 				if (vmu_pkg_parse(readBuffer, &package) == 0) {
-					printf("VMU: Found SRAM Save File from VMU [%i]\n", i);
+					printf("VMU: Found SRAM Save File on VMU [%i]\n", i);
 
 					unsigned int destLength = 0x2000;
 					int result = BZ2_bzBuffToBuffDecompress((char*)SRAM, &destLength, (char*)package.data, readBufferSize - sizeof(vmu_pkg_t), 0, 0);
@@ -310,6 +292,9 @@ int LoadSRAM() {
 }
 
 int SaveSRAM() {
+	unsigned int compressedLength = 0x2200 + 0x1000;
+	char* compressedBuffer = malloc(compressedLength);	
+
 	int saveSRAM_success = -1;
 	if (options.opt_SRAM == 1) {
 		for (int i = 0; i < numVMUs; i++) {
@@ -324,12 +309,10 @@ int SaveSRAM() {
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
 
 			printf("VMU: Compressing SRAM buffer\n");
-			unsigned int compressedLength = 0x2200 + 0x1000;
-			const unsigned char compressedBuffer[compressedLength];
-			int result = BZ2_bzBuffToBuffCompress((char*)compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 9, 0, 0);
+			int result = BZ2_bzBuffToBuffCompress(compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 5, 4, 30);
 
 			if (result != BZ_OK) {
-				printf("VMU: bz2 Compression Failed [%i]\n", result);
+				printf("VMU: bz2 Compression Failed With Error Code [%i]\n", result);
 				draw_VMU_icon(vmu, vmu_screen_error);
 				break;
 			} else {
@@ -373,7 +356,7 @@ int SaveSRAM() {
 			package.data_len = compressedLength;
 			package.icon_data = NULL;
 			package.eyecatch_data = NULL;
-			package.data = compressedBuffer;	
+			package.data = (uint8*)compressedBuffer;	
 
 			printf("VMU: Compiling Package\n");
 			unsigned char* packageBuffer;
@@ -396,6 +379,8 @@ int SaveSRAM() {
 			}
 		}
 	}
+
+	free(compressedBuffer);		
 	return saveSRAM_success;
 }
 
@@ -434,6 +419,7 @@ void loadPalette(char* path) {
 		}
 
 /*
+		// Keep this commented out - this is just for creating another default palette though if you want to in the future
 		printf("const uint16 NesPalette[] = {\n");
 		for (uint i = 0; i < 64; i++) {
 			printf("0x%04X,", NesPalette[i]);
@@ -450,7 +436,7 @@ void loadPalette(char* path) {
 	}
 
 	if (errored_out) {
-		NesPalette = DEFAULT_NES_PALETTE;
+		NesPalette = (uint16*)DEFAULT_NES_PALETTE;
 	}
 }
 
@@ -825,16 +811,16 @@ __attribute__ ((hot)) void handleButton(uint32* controllerBitflags,
 			buttonOn = (controller_state -> ltrig > 0);
 			break;
 		case MODE_ANALOG_X_LEFT:
-			buttonOn = (controller_state -> joyx < 114);
+			buttonOn = (controller_state -> joyx < -114);
 			break;
 		case MODE_ANALOG_X_RIGHT:
-			buttonOn = (controller_state -> joyx > 140);
+			buttonOn = (controller_state -> joyx > 114);
 			break;
 		case MODE_ANALOG_Y_UP:
-			buttonOn = (controller_state -> joyy < 114);
+			buttonOn = (controller_state -> joyy < -114);
 			break;
 		case MODE_ANALOG_Y_DOWN:
-			buttonOn = (controller_state -> joyy > 140);
+			buttonOn = (controller_state -> joyy > 114);
 			break;	
 	}
 
@@ -973,8 +959,7 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 		if (numControllers > 0) {
 			my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 			if (my_controller != NULL) {
-				my_state = (cont_state_t*)maple_dev_status(my_controller);		
-
+				my_state = (cont_state_t*)maple_dev_status(my_controller);
 #ifdef DEBUG
 				// Toggle pNesX_DebugPrint messages while in operation
 				if (((my_state -> buttons & CONT_Y) != 0) && !log_enabled_latch) {
@@ -984,7 +969,6 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 					log_enabled_latch = false;
 				}
 #endif
-
 				handleController(my_state, pdwPad1, 0);
 			}
 
@@ -1029,22 +1013,22 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 	}
 }
 
-__attribute__ ((hot)) uint32* pNesX_MemoryCopy_Offset( uint32* dest, uint32* src, int count, uint32 offset) {
-	//printf("memcpy_w_offset: [%u] [%u]\n", count, offset);
-	if (offset == 0) {
-		return memcpy(dest, src, count);		
-	} else {
-	// wrapping behaviour for sprite DMA operations
-		unsigned char* u8dest = (unsigned char*)dest;
-		unsigned char* u8src = (unsigned char*) src;		
-		for (int i = 0; i < (count - offset); i++) {
-			u8dest[i + offset] = u8src[i];
+// this routine came from the ghettoplay example that comes 
+// with libdream
+int draw_VMU_icon(maple_device_t* vmu, char* icon) {
+	uint8 bitmap[48*32/8] = {0};
+	int x, y, xi, xb;
+
+	for (y=0; y<32; y++) {
+		for (x=0; x<48; x++) {
+			xi = x / 8;
+			xb = 0x80 >> (x % 8);
+			if (icon[(31-y)*48+(47-x)] == '+')
+				bitmap[y*(48/8)+xi] |= xb;
 		}
-		for (int i = 0; i < offset; i++) {
-			u8dest[i] = u8src[i + (count - offset)];
-		}
-		return dest;
 	}
+	
+	return vmu_draw_lcd(vmu, bitmap);
 }
 
 #ifdef DEBUG

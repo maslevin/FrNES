@@ -200,67 +200,109 @@ unsigned char byD1;
 uint16 wD0;
 
 #ifdef DEBUG
-#define MAX_DISASM_STEPS 1024 * 16
-#define MAX_DISASM_STRING 20
-char DisassemblyBuffer[MAX_DISASM_STEPS][MAX_DISASM_STRING];
+extern uint32 currentCRC32;
+file_t traceFile;
+bool traceEnabled;
+char* pTraceBuffer;
+#define TRACE_BUFFER_LENGTH 1048576
+char traceBuffer[TRACE_BUFFER_LENGTH];
 
-uint16 DisassemblyBufferIndex = 0;
-
-void DisassembleInstruction(char* Opcode, char* fmt, uint16 value) {
-	VIRPC;
-	char p[16];
-	if (fmt) {
-		snprintf(p, 16, fmt, value);
-	} else {
-		p[0] = '\0';
-	}
-	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
-	DisassemblyBufferIndex++;
-	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
-	REALPC;
+void UploadTraceBuffer() {
+	fs_write(traceFile, traceBuffer, (pTraceBuffer - traceBuffer));
+	pTraceBuffer = traceBuffer;
 }
 
-void DisassembleInstruction2(char* Opcode, char* fmt, uint16 value, uint16 value2) {
-	VIRPC;
-	char p[16];
-	if (fmt) {
-		snprintf(p, 16, fmt, value, value2);
-	} else {
-		p[0] = '\0';
+void TraceInstruction(char* Opcode, char* fmt, uint16 value) {
+	if (traceEnabled) {
+		VIRPC;
+		char p[32];
+		char trace[80];
+		if (fmt) {
+			snprintf(p, 32, fmt, value);
+		} else {
+			p[0] = '\0';
+		}
+		snprintf(trace, 80, "A:%02X X:%02X Y:%02X S:%02X    $%04X: %s %s\n", A, X, Y, SP, PC - 1, Opcode, p);
+		uint32 traceLength = strlen(trace);
+		if ((TRACE_BUFFER_LENGTH - (pTraceBuffer - traceBuffer)) < traceLength) {
+			UploadTraceBuffer();
+		}
+		strcpy(pTraceBuffer, trace);
+		pTraceBuffer += traceLength;
+		REALPC;
 	}
-	snprintf(DisassemblyBuffer[DisassemblyBufferIndex], MAX_DISASM_STRING, "$%04x: %s %s", PC - 1, Opcode, p); 
-	DisassemblyBufferIndex++;
-	DisassemblyBufferIndex %= MAX_DISASM_STEPS;
-	REALPC;
 }
 
-void UploadDisassembly() {
-	printf("Uploading Disassembly to PC Host\n");
+void TraceInstruction2(char* Opcode, char* fmt, uint16 value, uint16 value2) {
+	if (traceEnabled) {
+		VIRPC;
+		char p[32];
+		char trace[64];
+		if (fmt) {
+			snprintf(p, 32, fmt, value, value2);
+		} else {
+			p[0] = '\0';
+		}
+		snprintf(trace, 80, "A:%02X X:%02X Y:%02X S:%02X    $%04X: %s %s\n", A, X, Y, SP, PC - 1, Opcode, p);
+		uint32 traceLength = strlen(trace);
+		if ((TRACE_BUFFER_LENGTH - (pTraceBuffer - traceBuffer)) < traceLength) {
+			UploadTraceBuffer();
+		}
+		strcpy(pTraceBuffer, trace);
+		pTraceBuffer += traceLength;
+		REALPC;
+	}
+}
+
+void TraceInstruction3(char* Opcode, char* fmt, uint16 value, uint16 value2, uint16 value3) {
+	if (traceEnabled) {
+		VIRPC;
+		char p[32];
+		char trace[64];
+		if (fmt) {
+			snprintf(p, 32, fmt, value, value2, value3);
+		} else {
+			p[0] = '\0';
+		}
+		snprintf(trace, 80, "A:%02X X:%02X Y:%02X S:%02X    $%04X: %s %s\n", A, X, Y, SP, PC - 1, Opcode, p);
+		uint32 traceLength = strlen(trace);
+		if ((TRACE_BUFFER_LENGTH - (pTraceBuffer - traceBuffer)) < traceLength) {
+			UploadTraceBuffer();
+		}
+		strcpy(pTraceBuffer, trace);
+		pTraceBuffer += traceLength;
+		REALPC;
+	}
+}
+
+void EndTracing() {
+	printf("Closing tracing with PC Host\n");
+	UploadTraceBuffer();
+	fs_close(traceFile);
+}
+
+void StartTracing() {
+	printf("Connecting to PC Host for Tracing\n");
 	char PCPath[256];
 	// TODO: use a log time or something like that in the filename here
-	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/disasm.txt");	
-	file_t PCFile = fs_open(PCPath, O_WRONLY);
-	if (PCFile != -1) {
-		int bufferIndex = DisassemblyBufferIndex;
-		while (bufferIndex != DisassemblyBufferIndex - 1) {
-			if (strcmp(DisassemblyBuffer[bufferIndex], "") != 0) {
-				fs_write(PCFile, DisassemblyBuffer[bufferIndex], strlen(DisassemblyBuffer[bufferIndex]));
-				fs_write(PCFile, "\n", 1);
-			}
-			bufferIndex++;
-			bufferIndex %= MAX_DISASM_STEPS;
-		}
-		fs_close(PCFile);
-		printf("Closed file on PC\n");
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/trace_%08lX.txt", currentCRC32);
+	traceFile = fs_open(PCPath, O_WRONLY);
+	if (traceFile != -1) {
+		printf("Opened Trace File [%s] on PC host\n", PCPath);
+		traceEnabled = true;
+		pTraceBuffer = traceBuffer;
 	} else {
-		printf("Error: Unable to Open File on PC Host\n");
+		printf("Error: Unable to start tracing with PC host, disabling trace\n");
+		traceEnabled = false;
 	}
 }
 
 #else
-//#define PrintRegisters() (0)
-#define DisassembleInstruction(...) (0)
-#define DisassembleInstruction2(...) (0)
+#define StartTracing() (0)
+#define EndTracing() (0)
+#define TraceInstruction(...) (0)
+#define TraceInstruction2(...) (0)
+#define TraceInstruction3(...) (0)
 #endif
 
 void PrintRegisters() {
@@ -273,7 +315,7 @@ void PrintRegisters() {
 
 // Unknown Instruction
 void Op_XX() {
-	DisassembleInstruction("HACF", NULL, 0);
+	TraceInstruction("HACF", NULL, 0);
 	printf("WARNING: RUNNING UNDOCUMENTED INSTRUCTION - HALTING\n");
 	PrintRegisters();
 
@@ -423,7 +465,7 @@ void K6502_Reset() {
 	totalClocks = 0;
 
 	#ifdef DEBUG
-	memset(DisassemblyBuffer, 0, MAX_DISASM_STEPS * MAX_DISASM_STRING);
+	StartTracing();
 	#endif
 }
 
@@ -469,13 +511,15 @@ __attribute__ ((hot)) void K6502_DoIRQ() {
 			RSTF( FLAG_D );
 			SETF( FLAG_I );
 
-			PC = K6502_ReadW( VECTOR_IRQ );
+			PC = K6502_ReadW( VECTOR_IRQ );		
 			REALPC;
 		}
 
 		IRQ_State = IRQ_Wiring;	
 	}
 }
+
+bool writeOnce = true;
 
 /*===================================================================*/
 /*                                                                   */
@@ -494,6 +538,7 @@ __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 
 	// It has a loop until a constant clock passes
 	while ( g_wPassedClocks < wClocks ) {
+		K6502_DoNMI();
 		K6502_DoIRQ();
 
 		// Read an instruction
@@ -501,257 +546,257 @@ __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 
 		switch (opcode) {
 			case 0x00:
-				DisassembleInstruction("BRK", NULL, 0);
+				TraceInstruction("BRK", NULL, 0);
 				VIRPC; PC++; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
 				break;
 
 			case 0x01:
-				DisassembleInstruction("ORA", "($%04x,x)", AA_ABS);
+				TraceInstruction("ORA", "($%04x,x)", AA_ABS);
 				ORA( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0x05:
-				DisassembleInstruction("ORA", "$%02x", *pPC);
+				TraceInstruction("ORA", "$%02x", *pPC);
 				ORA( A_ZP ); CLK( 3 );
 				break;
 
 			case 0x06:
-				DisassembleInstruction("ASL", "$%02x", *pPC);
+				TraceInstruction("ASL", "$%02x", *pPC);
 				ASL( AA_ZP ); CLK( 5 );
 				break;
 
 			case 0x08:
-				DisassembleInstruction("PHP", NULL, 0);
+				TraceInstruction("PHP", NULL, 0);
 				PUSH( F | FLAG_B | FLAG_R ); CLK( 3 );
 				break;
 
 			case 0x09:
-				DisassembleInstruction("ORA", "#$%02x", *pPC);
+				TraceInstruction("ORA", "#$%02x", *pPC);
 				ORA( A_IMM ); CLK( 2 );
 				break;
 
 			case 0x0A:
-				DisassembleInstruction("ASL", NULL, 0);
+				TraceInstruction("ASL", NULL, 0);
 				ASLA; CLK( 2 );
 				break;
 
 			case 0x0D:
-				DisassembleInstruction("ORA", "$%04x", AA_ABS);
+				TraceInstruction("ORA", "$%04x", AA_ABS);
 				ORA( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x0E:
-				DisassembleInstruction("ASL", "$%04x", AA_ABS);
+				TraceInstruction("ASL", "$%04x", AA_ABS);
 				ASL( AA_ABS ); pPC += 2; CLK( 6 );
 				break;
 
 			case 0x10:
-				DisassembleInstruction("BPL", "$%04x", AA_ABS);
+				TraceInstruction("BPL", "$%04x", AA_ABS);
 				BRA( !( F & FLAG_N ) );
 				break;
 
 			case 0x11:
-				DisassembleInstruction("ORA", "($%04x),y", AA_ABS);
+				TraceInstruction("ORA", "($%04x),y", AA_ABS);
 				ORA( A_IY ); CLK( 5 );
 				break;
 			
 			case 0x15:
-				DisassembleInstruction("ORA", "$%02x,x", *pPC);	
+				TraceInstruction("ORA", "$%02x,x", *pPC);	
 				ORA( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0x16:
-				DisassembleInstruction("ASL", "$%02x,x", *pPC);	
+				TraceInstruction("ASL", "$%02x,x", *pPC);	
 				ASL( AA_ZPX ); CLK( 6 );
 				break;
 
 			case 0x18:
-				DisassembleInstruction("CLC", NULL, 0);
+				TraceInstruction("CLC", NULL, 0);
 				RSTF( FLAG_C ); CLK( 2 );
 				break;
 
 			case 0x19:
-				DisassembleInstruction("ORA", "$%04x,y", AA_ABS);	
+				TraceInstruction("ORA", "$%04x,y", AA_ABS);	
 				ORA( A_ABSY ); CLK( 4 );
 				break;
 
 			case 0x1D:
-				DisassembleInstruction("ORA", "$%04x,x", AA_ABS);
+				TraceInstruction("ORA", "$%04x,x", AA_ABS);
 				ORA( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0x1E:
-				DisassembleInstruction("ASL", "$%04x,x", AA_ABS);
+				TraceInstruction("ASL", "$%04x,x", AA_ABS);
 				ASL( AA_ABSX ); pPC += 2; CLK( 7 );
 				break;
 
 			case 0x20:
-				DisassembleInstruction("JSR", "$%04x", AA_ABS);
+				TraceInstruction("JSR", "$%04x", AA_ABS);
 				JSR; CLK( 6 );
 				break;
 
 			case 0x21:
-				DisassembleInstruction("AND", "($%02x,x)", *pPC);
+				TraceInstruction("AND", "($%02x,x)", *pPC);
 				AND( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0x24:
-				DisassembleInstruction("BIT", "$%02x", *pPC);
+				TraceInstruction("BIT", "$%02x", *pPC);
 				BIT( A_ZP ); CLK( 3 );
 				break;
 
 			case 0x25:
-				DisassembleInstruction("AND", "$%02x", *pPC);
+				TraceInstruction("AND", "$%02x", *pPC);
 				AND( A_ZP ); CLK( 3 );
 				break;
 
 			case 0x26:
-				DisassembleInstruction("ROL", "$%02x", *pPC);
+				TraceInstruction("ROL", "$%02x", *pPC);
 				ROL( AA_ZP ); CLK( 5 );
 				break;
 
 			case 0x28:
-				DisassembleInstruction("PLP", NULL, 0);
+				TraceInstruction("PLP", NULL, 0);
 				POP( F ); SETF( FLAG_R ); CLK( 4 );
 				break;
 
 			case 0x29:
-				DisassembleInstruction("AND", "#$%02x", *pPC);	
+				TraceInstruction("AND", "#$%02x", *pPC);	
 				AND( A_IMM ); CLK( 2 );
 				break;
 
 			case 0x2A:
-				DisassembleInstruction("ROL", NULL, 0);	
+				TraceInstruction("ROL", NULL, 0);	
 				ROLA; CLK( 2 );
 				break;
 
 			case 0x2C:
-				DisassembleInstruction("BIT", "$%04x", AA_ABS);	
+				TraceInstruction("BIT", "$%04x", AA_ABS);	
 				BIT( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x2D:
-				DisassembleInstruction("AND", "$%04x", AA_ABS);
+				TraceInstruction("AND", "$%04x", AA_ABS);
 				AND( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x2E:
-				DisassembleInstruction("ROL", "$%04x", AA_ABS);
+				TraceInstruction("ROL", "$%04x", AA_ABS);
 				ROL( AA_ABS ); pPC += 2; CLK( 6 );
 				break;
 
 			case 0x30:
-				DisassembleInstruction("BMI", "$%02x", *pPC);	
+				TraceInstruction("BMI", "$%02x", *pPC);	
 				BRA( F & FLAG_N );
 				break;
 
 			case 0x31:
-				DisassembleInstruction("AND", "($%02x),y", *pPC);
+				TraceInstruction("AND", "($%02x),y", *pPC);
 				AND( A_IY ); CLK( 5 );
 				break;
 
 			case 0x35:
-				DisassembleInstruction("AND", "$%02x,x", *pPC);	
+				TraceInstruction("AND", "$%02x,x", *pPC);	
 				AND( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0x36:
-				DisassembleInstruction("ROL", "$%02x,x", *pPC);	
+				TraceInstruction("ROL", "$%02x,x", *pPC);	
 				ROL( AA_ZPX ); CLK( 6 );
 				break;				
 
 			case 0x38:
-				DisassembleInstruction("SEC", NULL, 0);
+				TraceInstruction("SEC", NULL, 0);
 				SETF( FLAG_C ); CLK( 2 );
 				break;
 
 			case 0x39:
-				DisassembleInstruction("AND", "$%04x,y", AA_ABS);
+				TraceInstruction("AND", "$%04x,y", AA_ABS);
 				AND( A_ABSY ); CLK( 4 );
 				break;
 
 			case 0x3D:
-				DisassembleInstruction("AND", "$%04x,x", AA_ABS);	
+				TraceInstruction("AND", "$%04x,x", AA_ABS);	
 				AND( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0x3E:
-				DisassembleInstruction("ROL", "$%04x,x", AA_ABS);
+				TraceInstruction("ROL", "$%04x,x", AA_ABS);
 				ROL( AA_ABSX ); pPC += 2; CLK( 7 );
 				break;
 
 			case 0x40:
-				DisassembleInstruction("RTI", NULL, 0);
+				TraceInstruction("RTI", NULL, 0);
 				POP( F ); SETF( FLAG_R ); POPW( PC ); REALPC; CLK( 6 );
 				break;
 
 			case 0x41:
-				DisassembleInstruction("EOR", "($%02x,x)", *pPC);	
+				TraceInstruction("EOR", "($%02x,x)", *pPC);	
 				EOR( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0x45:
-				DisassembleInstruction("EOR", "$%02x", *pPC);	
+				TraceInstruction("EOR", "$%02x", *pPC);	
 				EOR( A_ZP ); CLK( 3 );
 				break;
 
 			case 0x46:
-				DisassembleInstruction("LSR", "$%02x", *pPC);
+				TraceInstruction("LSR", "$%02x", *pPC);
 				LSR( AA_ZP ); CLK( 5 );
 				break;
 
 			case 0x48:
-				DisassembleInstruction("PHA", NULL, 0);
+				TraceInstruction("PHA", NULL, 0);
 				PUSH( A ); CLK( 3 );
 				break;
 
 			case 0x49:
-				DisassembleInstruction("EOR", "#$%02x", *pPC);
+				TraceInstruction("EOR", "#$%02x", *pPC);
 				EOR( A_IMM ); CLK( 2 );
 				break;				
 
 			case 0x4A:
-				DisassembleInstruction("LSR", NULL, 0);	
+				TraceInstruction("LSR", NULL, 0);	
 				LSRA; CLK( 2 );
 				break;
 
 			case 0x4C:
-				DisassembleInstruction("JMP", "$%04x", AA_ABS);	
+				TraceInstruction("JMP", "$%04x", AA_ABS);	
 				JMP( AA_ABS ); CLK( 3 );
 				break;
 
 			case 0x4D:
-				DisassembleInstruction("EOR", "$%04x", AA_ABS);	
+				TraceInstruction("EOR", "$%04x", AA_ABS);	
 				EOR( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x4E:
-				DisassembleInstruction("LSR", "$%04x", AA_ABS);	
+				TraceInstruction("LSR", "$%04x", AA_ABS);	
 				LSR( AA_ABS ); pPC += 2; CLK( 6 );
 				break;
 
 			case 0x50:
-				DisassembleInstruction("BVC", "$%02x", *pPC);
+				TraceInstruction("BVC", "$%02x", *pPC);
 				BRA( !( F & FLAG_V ) );
 				break;
 
 			case 0x51:
-				DisassembleInstruction("EOR", "($%02x),y", *pPC);
+				TraceInstruction("EOR", "($%02x),y", *pPC);
 				EOR( A_IY ); CLK( 5 );
 				break;				
 
 			case 0x55:
-				DisassembleInstruction("EOR", "$%02x,x", *pPC);	
+				TraceInstruction("EOR", "$%02x,x", *pPC);	
 				EOR( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0x56:
-				DisassembleInstruction("LSR", "$%02x,x", *pPC);	
+				TraceInstruction("LSR", "$%02x,x", *pPC);	
 				LSR( AA_ZPX ); CLK( 6 );
 				break;						
 
 			case 0x58:
-				DisassembleInstruction("CLI", NULL, 0);	
+				TraceInstruction("CLI", NULL, 0);	
 				byD0 = F;
 				RSTF( FLAG_I ); CLK( 2 );
 				if ( ( byD0 & FLAG_I ) && IRQ_State == 0 ) {
@@ -774,507 +819,512 @@ __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 				break;
 
 			case 0x59:
-				DisassembleInstruction("EOR", "$%04x,y", AA_ABS);	
+				TraceInstruction("EOR", "$%04x,y", AA_ABS);	
 				EOR( A_ABSY ); CLK( 4 );
 				break;
 
 			case 0x5D:
-				DisassembleInstruction("EOR", "$%04x,x", AA_ABS);
+				TraceInstruction("EOR", "$%04x,x", AA_ABS);
 				EOR( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0x5E:
-				DisassembleInstruction("LSR", "$%04x,x", AA_ABS);
+				TraceInstruction("LSR", "$%04x,x", AA_ABS);
 				LSR( AA_ABSX ); pPC += 2; CLK( 7 );
 				break;
 
 			case 0x60:
-				DisassembleInstruction("RTS", NULL, 0);	
+				TraceInstruction("RTS", NULL, 0);	
 				POPW( PC ); ++PC; REALPC; CLK( 6 );
 				break;
 
 			case 0x61:
-				DisassembleInstruction("ADC", "($%02x,x)", *pPC);
+				TraceInstruction("ADC", "($%02x,x)", *pPC);
 				ADC( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0x65:
-				DisassembleInstruction("ADC", "$%02x", *pPC);	
+				TraceInstruction("ADC", "$%02x", *pPC);	
 				ADC( A_ZP ); CLK( 3 );
 				break;
 
 			case 0x66:
-				DisassembleInstruction("ROR", "$%02x", *pPC);
+				TraceInstruction("ROR", "$%02x", *pPC);
 				ROR( AA_ZP ); CLK( 5 );
 				break;
 
 			case 0x68:
-				DisassembleInstruction("PLA", NULL, 0);	
+				TraceInstruction("PLA", NULL, 0);	
 				POP( A ); TEST( A ); CLK( 4 );
 				break;
 
 			case 0x69:
-				DisassembleInstruction("ADC", "#$%02x", *pPC);
+				TraceInstruction("ADC", "#$%02x", *pPC);
 				ADC( A_IMM ); CLK( 2 );
 				break;
 
 			case 0x6A:
-				DisassembleInstruction("ROR", NULL, 0);	
+				TraceInstruction("ROR", NULL, 0);	
 				RORA; CLK( 2 );
 				break;
 
 			case 0x6C:
-				DisassembleInstruction2("JMP", "($%04x) = $%04x", AA_ABS, K6502_ReadW(AA_ABS));
+				TraceInstruction2("JMP", "($%04x) = $%04x", AA_ABS, K6502_ReadW(AA_ABS));
 				JMP( K6502_ReadW( AA_ABS ) ); CLK( 5 );
 				break;
 		
 			case 0x6D:
-				DisassembleInstruction("ADC", "$%04x", AA_ABS);
+				TraceInstruction("ADC", "$%04x", AA_ABS);
 				ADC( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 	
 			case 0x6E:
-				DisassembleInstruction("ROR", "$%04x", AA_ABS);	
+				TraceInstruction("ROR", "$%04x", AA_ABS);	
 				ROR( AA_ABS ); pPC += 2; CLK( 6 );
 				break;
 
 			case 0x70:
-				DisassembleInstruction("BVS", "$%02x", *pPC);
+				TraceInstruction("BVS", "$%02x", *pPC);
 				BRA( F & FLAG_V );
 				break;
 
 			case 0x71:
-				DisassembleInstruction("ADC", "($%04x),y", AA_ABS);
+				TraceInstruction("ADC", "($%04x),y", AA_ABS);
 				ADC( A_IY ); CLK( 5 );
 				break;				
 
 			case 0x75:
-				DisassembleInstruction("ADC", "$%02x,x", *pPC);	
+				TraceInstruction("ADC", "$%02x,x", *pPC);	
 				ADC( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0x76:
-				DisassembleInstruction("ROR", "$%02x,x", *pPC);	
+				TraceInstruction("ROR", "$%02x,x", *pPC);	
 				ROR( AA_ZPX ); CLK( 6 );
 				break;
 
 			case 0x78:
-				DisassembleInstruction("SEI", NULL, 0);	
+				TraceInstruction("SEI", NULL, 0);	
 				SETF( FLAG_I ); CLK( 2 );
 				break;
 
 			case 0x79:
-				DisassembleInstruction("ADC", "$%04x,y", AA_ABS);
+				TraceInstruction("ADC", "$%04x,y", AA_ABS);
 				ADC( A_ABSY ); CLK( 4 );
 				break;				
 
 			case 0x7D:
-				DisassembleInstruction("ADC", "$%04x,x", AA_ABS);	
+				TraceInstruction("ADC", "$%04x,x", AA_ABS);	
 				ADC( A_ABSX ); CLK( 4 );
 				break;				
 
 			case 0x7E:
-				DisassembleInstruction("ROR", "$%04x,x", AA_ABS);
+				TraceInstruction("ROR", "$%04x,x", AA_ABS);
 				ROR( AA_ABSX ); pPC += 2; CLK( 7 );
 				break;
 
 			case 0x81:
-				DisassembleInstruction("STA", "($%02x,x)", *pPC);	
+				TraceInstruction("STA", "($%02x,x)", *pPC);	
 				STA( AA_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0x84:
-				DisassembleInstruction("STY", "$%02x", *pPC);
+				TraceInstruction("STY", "$%02x", *pPC);
 				STY( AA_ZP ); CLK( 3 );
 				break;
 
 			case 0x85:
-				DisassembleInstruction("STA", "$%02x", *pPC);
+				TraceInstruction("STA", "$%02x", *pPC);
 				STA( AA_ZP ); CLK( 3 );
 				break;
 
 			case 0x86:
-				DisassembleInstruction("STX", "$%02x", *pPC);	
+				TraceInstruction("STX", "$%02x", *pPC);	
 				STX( AA_ZP ); CLK( 3 );
 				break;
 
 			case 0x88:
-				DisassembleInstruction("DEY", NULL, 0);
+				TraceInstruction("DEY", NULL, 0);
 				--Y; TEST( Y ); CLK( 2 );
 				break;
 
 			case 0x89:
-				DisassembleInstruction("BIT", "#$%02x", *pPC);
+				TraceInstruction("BIT", "#$%02x", *pPC);
 				BIT( AA_ZP ); CLK( 2 );
 				break;
 
 			case 0x8A:
-				DisassembleInstruction("TXA", NULL, 0);
+				TraceInstruction("TXA", NULL, 0);
 				A = X; TEST( A ); CLK( 2 );
 				break;
 
 			case 0x8C:
-				DisassembleInstruction("STY", "$%04x", AA_ABS);
+				TraceInstruction("STY", "$%04x", AA_ABS);
 				STY( AA_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x8D:
-				DisassembleInstruction("STA", "$%04x", AA_ABS);	
+				TraceInstruction("STA", "$%04x", AA_ABS);
 				STA( AA_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x8E:
-				DisassembleInstruction("STX", "$%04x", AA_ABS);	
+				TraceInstruction("STX", "$%04x", AA_ABS);	
 				STX( AA_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0x90:
-				DisassembleInstruction("BCC", "$%02x", *pPC);
+				TraceInstruction("BCC", "$%02x", *pPC);
 				BRA( !( F & FLAG_C ) );
 				break;
 
 			case 0x91:
-				DisassembleInstruction("STA", "($%04x),y", AA_ABS);	
+				TraceInstruction("STA", "($%04x),y", AA_ABS);	
 				STA( AA_IY ); ++pPC; CLK( 6 );
 				break;			
 
 			case 0x94:
-				DisassembleInstruction("STY", "$%02x,x", *pPC);
+				TraceInstruction("STY", "$%02x,x", *pPC);
 				STY( AA_ZPX ); CLK( 4 );
 				break;
 
 			case 0x95:
-				DisassembleInstruction("STA", "$%02x,x", *pPC);	
+				TraceInstruction("STA", "$%02x,x", *pPC);	
 				STA( AA_ZPX ); CLK( 4 );
 				break;
 
 			case 0x96:
-				DisassembleInstruction("STX", "$%02x,x", *pPC);	
+				TraceInstruction("STX", "$%02x,x", *pPC);	
 				STX( AA_ZPY ); CLK( 4 );
 				break;
 
 			case 0x98:
-				DisassembleInstruction("TYA", NULL, 0);	
+				TraceInstruction("TYA", NULL, 0);	
 				A = Y; TEST( A ); CLK( 2 );
 				break;
 
 			case 0x99:
-				DisassembleInstruction("STA", "$%04x,y", AA_ABS);
+				TraceInstruction("STA", "$%04x,y", AA_ABS);
 				STA( AA_ABSY ); pPC += 2; CLK( 5 );
 				break;
 
 			case 0x9A:
-				DisassembleInstruction("TXS", NULL, 0);	
+				TraceInstruction("TXS", NULL, 0);	
 				SP = X; CLK( 2 );
 				break;
 
 			case 0x9D:
-				DisassembleInstruction("STA", "$%04x,x", AA_ABS);
+				TraceInstruction("STA", "$%04x,x", AA_ABS);
 				STA( AA_ABSX ); pPC += 2; CLK( 5 );
 				break;
 
 			case 0xA0:
-				DisassembleInstruction("LDY", "#$%02x", *pPC);	
+				TraceInstruction("LDY", "#$%02x", *pPC);	
 				LDY( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xA1:
-				DisassembleInstruction("LDA", "($%04x,x)", AA_ABS);	
+				TraceInstruction("LDA", "($%04x,x)", AA_ABS);	
 				LDA( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0xA2:
-				DisassembleInstruction("LDX", "#$%02x", *pPC);	
+				TraceInstruction("LDX", "#$%02x", *pPC);	
 				LDX( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xA4:
-				DisassembleInstruction("LDY", "$%02x", *pPC);
+				TraceInstruction("LDY", "$%02x", *pPC);
 				LDY( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xA5:
-				DisassembleInstruction("LDA", "$%02x", *pPC);
+				TraceInstruction("LDA", "$%02x", *pPC);
 				LDA( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xA6:
-				DisassembleInstruction("LDX", "$%02x", *pPC);	
+				TraceInstruction("LDX", "$%02x", *pPC);	
 				LDX( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xA8:
-				DisassembleInstruction("TAY", NULL, 0);	
+				TraceInstruction("TAY", NULL, 0);	
 				Y = A; TEST( A ); CLK( 2 );
 				break;
 
 			case 0xA9:
-				DisassembleInstruction("LDA", "#$%02x", *pPC);	
+				TraceInstruction("LDA", "#$%02x", *pPC);	
 				LDA( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xAA:
-				DisassembleInstruction("TAX", NULL, 0);	
+				TraceInstruction("TAX", NULL, 0);	
 				X = A; TEST( A ); CLK( 2 );
 				break;
 
 			case 0xAC:
-				DisassembleInstruction("LDY", "$%04x", AA_ABS);	
+				TraceInstruction("LDY", "$%04x", AA_ABS);	
 				LDY( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0xAD:
-				DisassembleInstruction("LDA", "$%04x", AA_ABS);	
+				TraceInstruction("LDA", "$%04x", AA_ABS);	
 				LDA( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0xAE:
-				DisassembleInstruction("LDX", "$%04x", AA_ABS);	
+				TraceInstruction("LDX", "$%04x", AA_ABS);	
 				LDX( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0xB0:
-				DisassembleInstruction("BCS", "$%02x", *pPC);	
+				TraceInstruction("BCS", "$%02x", *pPC);	
 				BRA( F & FLAG_C );
 				break;
 
 			case 0xB1:
-				DisassembleInstruction("LDA", "($%04x),y", AA_ABS);	
+				TraceInstruction("LDA", "($%04x),y", AA_ABS);	
 				LDA( A_IY ); CLK( 5 );
 				break;
 
 			case 0xB4:
-				DisassembleInstruction("LDY", "$%02x,x", *pPC);
+				TraceInstruction("LDY", "$%02x,x", *pPC);
 				LDY( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0xB5:
-				DisassembleInstruction("LDA", "$%02x,x", *pPC);
+				TraceInstruction("LDA", "$%02x,x", *pPC);
 				LDA( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0xB6:
-				DisassembleInstruction("LDX", "$%02x,x", *pPC);
+				TraceInstruction("LDX", "$%02x,x", *pPC);
 				LDX( A_ZPY ); CLK( 4 );
 				break;
 
 			case 0xB8:
-				DisassembleInstruction("CLV", NULL, 0);	
+				TraceInstruction("CLV", NULL, 0);	
 				RSTF( FLAG_V ); CLK( 2 );
 				break;
 
 			case 0xB9:
-				DisassembleInstruction("LDA", "$%04x,y", AA_ABS);
+				TraceInstruction3("LDA", "$%04x,y @ $%04x = #$%02x", AA_ABS, AA_ABS | Y, RAM[AA_ABS | Y]);
 				LDA( A_ABSY ); CLK( 4 );
 				break;																
 
 			case 0xBA:
-				DisassembleInstruction("TSX", NULL, 0);
+				TraceInstruction("TSX", NULL, 0);
 				X = SP; TEST( X ); CLK( 2 );
 				break;
 
 			case 0xBC:
-				DisassembleInstruction("LDY", "$%04x,x", AA_ABS);
+				TraceInstruction("LDY", "$%04x,x", AA_ABS);
 				LDY( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0xBD:
-				DisassembleInstruction("LDA", "$%04x,x", AA_ABS);
+				TraceInstruction("LDA", "$%04x,x", AA_ABS);
 				LDA( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0xBE:
-				DisassembleInstruction("LDX", "$%04x,x", AA_ABS);
+				TraceInstruction("LDX", "$%04x,x", AA_ABS);
 				LDX( A_ABSY ); CLK( 4 );
 				break;
 
 			case 0xC0:
-				DisassembleInstruction("CPY", "#$%02x", *pPC);	
+				TraceInstruction("CPY", "#$%02x", *pPC);	
 				CPY( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xC1:
-				DisassembleInstruction("CMP", "($%04x,x)", A_IX);	
+				TraceInstruction("CMP", "($%04x,x)", A_IX);	
 				CMP( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0xC4:
-				DisassembleInstruction("CPY", "$%02x", *pPC);	
+				TraceInstruction("CPY", "$%02x", *pPC);	
 				CPY( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xC5:
-				DisassembleInstruction("CMP", "$%02x", *pPC);	
+				TraceInstruction("CMP", "$%02x", *pPC);	
 				CMP( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xC6:
-				DisassembleInstruction("DEC", "$%02x", *pPC);
+				TraceInstruction("DEC", "$%02x", *pPC);
 				DEC( AA_ZP ); CLK( 5 );
 				break;
 
 			case 0xC8:
-				DisassembleInstruction("INY", NULL, 0);	
+				TraceInstruction("INY", NULL, 0);	
 				++Y; TEST( Y ); CLK( 2 );	
 				break;
 
 			case 0xC9:
-				DisassembleInstruction("CMP", "#$%02x", *pPC);
+				TraceInstruction("CMP", "#$%02x", *pPC);
 				CMP( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xCA:
-				DisassembleInstruction("DEX", NULL, 0);	
+				TraceInstruction("DEX", NULL, 0);	
 				--X; TEST( X ); CLK( 2 );
 				break;
 
+			case 0xCB:
+				TraceInstruction("AXS", "$%02x", *pPC);	
+				X = (A & X) - (*pPC++); TEST( X ); CLK( 2 );
+				break;				
+
 			case 0xCC:
-				DisassembleInstruction("CPY", "$%04x", AA_ABS);	
+				TraceInstruction("CPY", "$%04x", AA_ABS);	
 				CPY( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0xCD:
-				DisassembleInstruction("CMP", "$%04x", AA_ABS);	
+				TraceInstruction("CMP", "$%04x", AA_ABS);	
 				CMP( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0xCE:
-				DisassembleInstruction("DEC", "$%04x", AA_ABS);	
+				TraceInstruction("DEC", "$%04x", AA_ABS);	
 				DEC( AA_ABS ); pPC += 2;CLK( 6 );
 				break;
 
 			case 0xD0:
-				DisassembleInstruction("BNE", "$%04x", ((pPC - pPC_Offset) + (char)(*pPC) + 1));
+				TraceInstruction("BNE", "$%04x", ((pPC - pPC_Offset) + (char)(*pPC) + 1));
 				BRA( !( F & FLAG_Z ) );
 				break;																																					
 
 			case 0xD1:
-				DisassembleInstruction("CMP", "($%04x),y", AA_ABS);	
+				TraceInstruction("CMP", "($%04x),y", AA_ABS);	
 				CMP( A_IY ); CLK( 5 );
 				break;
 
 			case 0xD5:
-				DisassembleInstruction("CMP", "$%02x,x", *pPC);	
+				TraceInstruction("CMP", "$%02x,x", *pPC);	
 				CMP( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0xD6:
-				DisassembleInstruction("DEC", "$%02x,x", *pPC);	
+				TraceInstruction("DEC", "$%02x,x", *pPC);	
 				DEC( AA_ZPX ); CLK( 6 );
 				break;
 
 			case 0xD8:
-				DisassembleInstruction("CLD", NULL, 0);	
+				TraceInstruction("CLD", NULL, 0);	
 				RSTF( FLAG_D ); CLK( 2 );
 				break;
 
 			case 0xD9:
-				DisassembleInstruction("CMP", "$%04x,y", AA_ABS);
+				TraceInstruction("CMP", "$%04x,y", AA_ABS);
 				CMP( A_ABSY ); CLK( 4 );
 				break;
 
 			case 0xDD:
-				DisassembleInstruction("CMP", "$%04x,x", AA_ABS);
+				TraceInstruction("CMP", "$%04x,x", AA_ABS);
 				CMP( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0xDE:
-				DisassembleInstruction("DEC", "$%04x,x", AA_ABS);
+				TraceInstruction("DEC", "$%04x,x", AA_ABS);
 				DEC( AA_ABSX ); pPC += 2; CLK( 7 );
 				break;
 
 			case 0xE0:
-				DisassembleInstruction("CPX", "#$%02x", *pPC);
+				TraceInstruction("CPX", "#$%02x", *pPC);
 				CPX( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xE1:
-				DisassembleInstruction("SBC", "($%04x,x)", AA_ABS);	
+				TraceInstruction("SBC", "($%04x,x)", AA_ABS);	
 				SBC( A_IX ); ++pPC; CLK( 6 );
 				break;
 
 			case 0xE4:
-				DisassembleInstruction("CPX", "$%02x", *pPC);
+				TraceInstruction("CPX", "$%02x", *pPC);
 				CPX( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xE5:
-				DisassembleInstruction("SBC", "$%02x", *pPC);
+				TraceInstruction("SBC", "$%02x", *pPC);
 				SBC( A_ZP ); CLK( 3 );
 				break;
 
 			case 0xE6:
-				DisassembleInstruction("INC", "$%02x", *pPC);
+				TraceInstruction("INC", "$%02x", *pPC);
 				INC( AA_ZP ); CLK( 5 );
 				break;
 
 			case 0xE8:
-				DisassembleInstruction("INX", NULL, 0);
+				TraceInstruction("INX", NULL, 0);
 				++X; TEST( X ); CLK( 2 );
 				break;
 
 			case 0xE9:
-				DisassembleInstruction("SBC", "#$%02x", *pPC);
+				TraceInstruction("SBC", "#$%02x", *pPC);
 				SBC( A_IMM ); CLK( 2 );
 				break;
 
 			case 0xEA:
-				DisassembleInstruction("NOP", NULL, 0);	
+				TraceInstruction("NOP", NULL, 0);	
 				CLK( 2 );
 				break;
 
 			case 0xEC:
-				DisassembleInstruction("CPX", "$%04x", AA_ABS);
+				TraceInstruction("CPX", "$%04x", AA_ABS);
 				CPX( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 
 			case 0xED:
-				DisassembleInstruction("SBC", "$%04x", AA_ABS);	
+				TraceInstruction("SBC", "$%04x", AA_ABS);	
 				SBC( A_ABS ); pPC += 2; CLK( 4 );
 				break;
 				
 			case 0xEE:
-				DisassembleInstruction("INC", "$%04x", AA_ABS);	
+				TraceInstruction("INC", "$%04x", AA_ABS);	
 				INC( AA_ABS ); pPC += 2; CLK( 6 );
 				break;
 
 			case 0xF0:
-				DisassembleInstruction("BEQ", "$%04x", AA_ABS);	
+				TraceInstruction("BEQ", "$%04x", PC + *pPC);	
 				BRA( F & FLAG_Z );
 				break;
 
 			case 0xF1:
-				DisassembleInstruction("SBC", "($%04x),y", AA_ABS);	
+				TraceInstruction("SBC", "($%04x),y", AA_ABS);	
 				SBC( A_IY ); CLK( 5 );
 				break;
 
 			case 0xF5:
-				DisassembleInstruction("SBC", "$%02x,x", *pPC);	
+				TraceInstruction("SBC", "$%02x,x", *pPC);	
 				SBC( A_ZPX ); CLK( 4 );
 				break;
 
 			case 0xF6:
-				DisassembleInstruction("INC", "$%02x,x", *pPC);	
+				TraceInstruction("INC", "$%02x,x", *pPC);	
 				INC( AA_ZPX ); CLK( 6 );
 				break;
 
 			case 0xF8:
-				DisassembleInstruction("SED", NULL, 0);	
+				TraceInstruction("SED", NULL, 0);	
 				SETF( FLAG_D ); CLK( 2 );
 				break;
 
 			case 0xF9:
-				DisassembleInstruction("SBC", "$%04x,y", AA_ABS);
+				TraceInstruction("SBC", "$%04x,y", AA_ABS);
 				SBC( A_ABSY ); CLK( 4 );
 				break;
 
 			case 0xFD:
-				DisassembleInstruction("SBC", "$%04x,x", AA_ABS);
+				TraceInstruction("SBC", "$%04x,x", AA_ABS);
 				SBC( A_ABSX ); CLK( 4 );
 				break;
 
 			case 0xFE:
-				DisassembleInstruction("INC", "$%04x,x", AA_ABS);
+				TraceInstruction("INC", "$%04x,x", AA_ABS);
 				INC( AA_ABSX ); pPC += 2; CLK( 7 );
 				break;
 

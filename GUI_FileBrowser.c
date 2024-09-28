@@ -27,9 +27,9 @@ char* Rom_Keys[] = {
 const int Num_Rom_Keys = 6;
 
 //ROM data storage
-const int MAX_ROMS = 2048;
-RomInfo_t myRomInfos[2048];
-char* myRomStrings[2048];
+#define MAX_ROMS 1024
+RomInfo_t myRomInfos[MAX_ROMS];
+char* myRomStrings[MAX_ROMS];
 
 #define FILEBROWSER_ROOT_MENU 0
 #define FILEBROWSER_START_LISTING_DIRECTORY 1
@@ -341,7 +341,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 	switch (romselstatus) {
 		case FILEBROWSER_START_LISTING_DIRECTORY:
 			file_search_completed = false;
-			printf("starting search of path [%s]\n", current_directory_path);
+			// printf("starting search of path [%s]\n", current_directory_path);
 			InitializeFileInfos(myRomInfos, myRomStrings, MAX_ROMS);
 			mydata.Data_Strings = myRomStrings;
 			mydata.Num_Strings = ReturnCurrentNumRoms();
@@ -356,7 +356,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 			}			
 			break;
 		case FILEBROWSER_CONTINUE_LISTING_DIRECTORY:
-			if (LoadNextFileSimple(myRomInfos, current_directory_path) != 1) {
+			if ((ReturnCurrentNumRoms() >= MAX_ROMS) || LoadNextFileSimple(myRomInfos, current_directory_path) != 1) {
 				romselstatus = FILEBROWSER_DIRECTORY_LISTING_COMPLETE;
 			} else {
 				mydata.Num_Strings = ReturnCurrentNumRoms();

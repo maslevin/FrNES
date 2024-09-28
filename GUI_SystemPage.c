@@ -22,17 +22,6 @@ const char Options_Sound_Checked[] = "<Check>Enable Sound,CBC_CHECKED";
 const char Options_Sound_Unchecked[] = "<Check>Enable Sound,CBC_UNCHECKED";
 const char Options_Show_Framerate_Checked[] = "<Check>Show Framerate,CBC_CHECKED";
 const char Options_Show_Framerate_Unchecked[] = "<Check>Show Framerate,CBC_UNCHECKED";
-const char Options_VMU[] = "VMU Options";
-const char Options_Port[] = "Use VMU Port";
-const char Options_CXXX[] = "No VMU Detected";
-const char Options_C1S1[] = "Controller 1 Slot 1";
-const char Options_C1S2[] = "Controller 1 Slot 2";
-const char Options_C2S1[] = "Controller 2 Slot 1";
-const char Options_C2S2[] = "Controller 2 Slot 2";
-const char Options_C3S1[] = "Controller 3 Slot 1";
-const char Options_C3S2[] = "Controller 3 Slot 2";
-const char Options_C4S1[] = "Controller 4 Slot 1";
-const char Options_C4S2[] = "Controller 4 Slot 2";
 const char Options_SRAM_Checked[] = "<Check>SRAM Enable,CBC_CHECKED";
 const char Options_SRAM_Unchecked[] = "<Check>SRAM Enable,CBC_UNCHECKED";
 const char Options_LoadVMU[] = "Load Options From VMU";
@@ -43,8 +32,8 @@ const char Options_Recording_Mode_Disabled[] = "Disabled";
 const char Options_Recording_Mode_Record[] = "Record";
 const char Options_Recording_Mode_Playback[] = "Playback";
 
-char* System_Options[11];
-const int Num_System_Options = 11;
+char* System_Options[8];
+const int Num_System_Options = 8;
 
 void setup_system_options_screen() {
 	//Set Up Window Data Features
@@ -131,52 +120,18 @@ void Generate_System_Options_List() {
 			break;
 	}
 
-	System_Options[3] = Options_VMU;
-	System_Options[4] = Options_Port;
-	
-	switch(options.opt_VMUPort) {
-		case -1:
-			System_Options[5] = Options_CXXX;
-			break;
-		case 0:
-			System_Options[5] = Options_C1S1;
-			break;
-		case 1:
-			System_Options[5] = Options_C1S2;
-			break;
-		case 2:
-			System_Options[5] = Options_C2S1;
-			break;
-		case 3:
-			System_Options[5] = Options_C2S2;
-			break;
-		case 4:
-			System_Options[5] = Options_C3S1;
-			break;
-		case 5:
-			System_Options[5] = Options_C3S2;
-			break;
-		case 6:
-			System_Options[5] = Options_C4S1;
-			break;
-		case 7:
-			System_Options[5] = Options_C4S2;
-			break;
-	}
-
-
 	switch(options.opt_SRAM) {
 		case 0:
-			System_Options[6] = Options_SRAM_Unchecked;
+			System_Options[3] = Options_SRAM_Unchecked;
 			break;
 		case 1:
-			System_Options[6] = Options_SRAM_Checked;
+			System_Options[3] = Options_SRAM_Checked;
 			break;
 	}
 
-	System_Options[7] = Options_LoadVMU;
-	System_Options[8] = Options_SaveVMU;
-	System_Options[9] = Options_DeleteVMU;
+	System_Options[4] = Options_LoadVMU;
+	System_Options[5] = Options_SaveVMU;
+	System_Options[6] = Options_DeleteVMU;
 
 	switch(recordingMode) {
 		case 0:
@@ -189,7 +144,7 @@ void Generate_System_Options_List() {
 			snprintf(Recording_Mode_Buffer, 50, "%s,%s<RLAlign>", Options_Recording_Mode, Options_Recording_Mode_Playback);
 			break;
 	}
-	System_Options[10] = Recording_Mode_Buffer;
+	System_Options[7] = Recording_Mode_Buffer;
 }
 
 void Handle_System_Interface(cont_state_t* my_state) {
@@ -227,23 +182,23 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				Generate_System_Options_List();
 				invalida = 1;
 				break;				
-			case 6:
+			case 3:
 				options.opt_SRAM  = 1 - options.opt_SRAM;
 				Generate_System_Options_List();
 				invalida = 1;
 				break;
 			// Load From VMU
-			case 7:
+			case 4:
 				load_options_from_VMU();
 				invalida = 1;
 				break;
 			// Save To VMU
-			case 8:
+			case 5:
 				save_options_to_VMU();
 				invalida = 1;
 				break;
-			// Scan Maple Bus
-			case 9:
+			// Delete options from VMU
+			case 6:
 				delete_options_from_VMU();
 				invalida = 1;
 				break;
@@ -266,24 +221,7 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				}
 			} break;
 
-			case 5:
-/*			
-				if ((*opt_VMUPort) > 0)
-				{
-					for (i = (*opt_VMUPort) - 1; i >= 0; i--)
-						if (VMUs[i] != 0)
-						{
-							(*opt_VMUPort) = i;
-							break;
-						}
-					Generate_System_Options_List();
-					isMainChanged = 1;
-					xkeyhit = 1;
-				}
-*/				
-				break;
-
-			case 10: {
+			case 7: {
 				if (recordingMode != RECORDING_MODE_DISABLED) {
 					recordingMode--;
 					Generate_System_Options_List();
@@ -295,8 +233,7 @@ void Handle_System_Interface(cont_state_t* my_state) {
 
 	if ((my_state -> buttons & CONT_DPAD_RIGHT) && 
 		(xkeyhit == 0)) {
-		switch(mydata.Highlighted_Index)
-		{
+		switch(mydata.Highlighted_Index) {
 			case 1: {
 				if ((options.opt_AutoFrameSkip) == 1) {
 					(options.opt_AutoFrameSkip) = 0;
@@ -309,24 +246,7 @@ void Handle_System_Interface(cont_state_t* my_state) {
 				}
 			} break;
 
-			case 5:
-/*			
-				if ((*opt_VMUPort < 7) && (*opt_VMUPort != -1))
-				{
-					for (i = (*opt_VMUPort) + 1; i < 8; i++)
-						if (VMUs[i] != 0)
-						{
-							*opt_VMUPort = i;
-							break;
-						}
-					Generate_System_Options_List();
-					isMainChanged = 1;
-					xkeyhit = 1;
-				}
-*/				
-				break;
-
-			case 10: {
+			case 7: {
 				if (recordingMode != RECORDING_MODE_PLAYBACK) {
 					recordingMode++;
 					Generate_System_Options_List();

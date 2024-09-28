@@ -219,6 +219,8 @@ void pNesX_Init() {
 		*start = 0xFFFFFFFF;
 	}
 
+	K6502_Set_Int_Wiring( 1, 1 ); 
+
 	// Call mapper initialization function - important that this comes before mapper
 	// init, for expansion audio
 	mapper -> init();
@@ -243,7 +245,7 @@ void pNesX_Fin() {
 	audio_shutdown();
 
 #ifdef DEBUG
-	UploadDisassembly();
+	EndTracing();
 #endif
 }
 
@@ -399,16 +401,18 @@ void pNesX_SetupPPU() {
 	ppuinfo.PPU_SP_Height = 8;
 
 	// Reset PPU banks
+	// This isn't accurate because the NES doesn't actually have 16kB of PPU memory
+	// I will refactor this to be more accurate with a more accurate memory map
 	for ( nPage = 0; nPage < 8; ++nPage )
 		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
 	PPUBANK[ 8 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 9 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 10 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 11 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 12 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 13 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 14 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 15 ] = &PPURAM[ 8 * 0x400 ];
+	PPUBANK[ 9 ] = &PPURAM[ 9 * 0x400 ];
+	PPUBANK[ 10 ] = &PPURAM[ 10 * 0x400 ];
+	PPUBANK[ 11 ] = &PPURAM[ 11 * 0x400 ];
+	PPUBANK[ 12 ] = &PPURAM[ 12 * 0x400 ];
+	PPUBANK[ 13 ] = &PPURAM[ 13 * 0x400 ];
+	PPUBANK[ 14 ] = &PPURAM[ 14 * 0x400 ];
+	PPUBANK[ 15 ] = &PPURAM[ 15 * 0x400 ];
 
 	/* Mirroring of Name Table */
 	pNesX_Mirroring( ROM_Mirroring );
@@ -622,11 +626,10 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 			} break;
 
 			case 241: {
-				K6502_Step(1);
+				K6502_Step(5);
 				pNesX_VSync();
 				mapper -> vsync();
-				K6502_DoNMI();
-				K6502_Step(cpu_cycles_to_emulate - 1);
+				K6502_Step(cpu_cycles_to_emulate - 5);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
 			} break;
@@ -648,9 +651,6 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 __attribute__ ((hot)) void pNesX_VSync() {
 	// Set a V-Blank flag
 	PPU_R2 |= R2_IN_VBLANK;
-
-	// Reset latch flag
-	PPU_Latch_Flag = 0;
 
 	pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
 

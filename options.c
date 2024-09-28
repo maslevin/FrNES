@@ -98,7 +98,6 @@ bool save_options_to_VMU() {
                 printf("VMU: Saved SRAM Save File to VMU [%i]\n", i);
                 saved = 1;
                 draw_VMU_icon(vmu, vmu_screen_normal);
-                break;
             } else {
                 printf("VMU: Unable to save SRAM Save File to VMU [%i]\n", i);
                 draw_VMU_icon(vmu, vmu_screen_error);				

@@ -12,8 +12,6 @@
 
 #include "options.h"
 
-#include "pNesX_System_Dc.h"
-
 char ClipLX_Buffer[50];
 char ClipRX_Buffer[50];
 char ClipTX_Buffer[50];

@@ -36,6 +36,7 @@
 #include "Mapper_25.h"
 #include "Mapper_26.h"
 #include "Mapper_30.h"
+#include "Mapper_34.h"
 #include "Mapper_64.h"
 #include "Mapper_66.h"
 #include "Mapper_67.h"
@@ -44,6 +45,7 @@
 #include "Mapper_73.h"
 #include "Mapper_75.h"
 #include "Mapper_85.h"
+#include "Mapper_111.h"
 #include "Mapper_119.h"
 
 Mapper_t* mapper;
@@ -216,7 +218,15 @@ MapperTable_t Mappers[] = {
 	{ 31, NULL },
 	{ 32, NULL },
 	{ 33, NULL },
-	{ 34, NULL },
+	{ 
+		34, &(Mapper_t) { 
+			.init = Mapper_34_Init, 
+			.write = Mapper_34_Write,
+			.read = Mapper_0_Read,
+			.vsync = Mapper_0_VSync,
+			.hsync = Mapper_0_HSync		
+		}
+	},
 	{ 35, NULL },
 	{ 36, NULL },
 	{ 37, NULL }, 
@@ -357,7 +367,15 @@ MapperTable_t Mappers[] = {
 	{ 108, NULL },
 	{ 109, NULL },
 	{ 110, NULL },
-	{ 111, NULL },
+	{ 
+		111, &(Mapper_t) { 
+			.init = Mapper_111_Init, 
+			.write = Mapper_111_Write,
+			.read = Mapper_0_Read,
+			.vsync = Mapper_0_VSync,
+			.hsync = Mapper_0_HSync		
+		}
+	},
 	{ 112, NULL },
 	{ 113, NULL },
 	{ 114, NULL },

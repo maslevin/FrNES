@@ -43,7 +43,7 @@ extern unsigned char *ROMBANK3;
 /*  PPU resources                                                    */
 /*-------------------------------------------------------------------*/
 typedef struct __attribute__ ((packed, aligned(4))) PPU_Info_s {
-	uint32 PPU_Addr;
+	uint16 PPU_Addr;
 	uint32 PPU_Scr_H_Bit;
 	uint32 PPU_Scanline;
 	uint32 PPU_SP_Height;
@@ -155,7 +155,11 @@ extern int SpriteJustHit;
 #define NES_DISP_WIDTH      256
 #define NES_DISP_HEIGHT     224
 
+#ifdef DEBUG
+#define MAX_EXIT_COUNT 1
+#else
 #define MAX_EXIT_COUNT 50
+#endif
 
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
@@ -187,12 +191,6 @@ extern uint32 PAD2_Bit;
 #define PAD_SYS_RIGHT  0x40
 
 #define PAD_PUSH(a,b)  ( ( (a) & (b) ) != 0 )
-
-/*-------------------------------------------------------------------*/
-/*  ROM information                                                  */
-/*-------------------------------------------------------------------*/
-
-//extern bool odd_cycle;
 
 /*-------------------------------------------------------------------*/
 /*  Function prototypes                                              */
