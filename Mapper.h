@@ -41,6 +41,7 @@ typedef struct __attribute__ ((packed, aligned(4))) MapperTable_s {
 extern MapperTable_t Mappers[];
 extern Mapper_t* mapper;
 extern uint8 MapperNo;
+extern uint8 SubmapperNo;
 
 /*-------------------------------------------------------------------*/
 /*  Macros                                                           */

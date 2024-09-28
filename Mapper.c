@@ -50,6 +50,7 @@
 
 Mapper_t* mapper;
 uint8 MapperNo;
+uint8 SubmapperNo;
 
 /*-------------------------------------------------------------------*/
 /*  Table of Mapper initialize function                              */

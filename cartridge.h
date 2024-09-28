@@ -24,9 +24,11 @@ extern uint32 num_1k_VROM_pages;
 
 #define MAXIMUM_ROM_PAGES (MAXIMUM_ROM_SIZE / 8192)
 #define MAXIMUM_VROM_PAGES (MAXIMUM_VROM_SIZE / 1024)
+#define MAXIMUM_WRAM_PAGES (MAXIMUM_WRAM_SIZE / 8192)
 
 extern uint8* ROM_pages[MAXIMUM_ROM_PAGES];
 extern uint8* VROM_pages[MAXIMUM_VROM_PAGES];
+extern uint8* WRAM_pages[MAXIMUM_WRAM_PAGES];
 
 /* .nes File Header */
 typedef struct __attribute__ ((packed, aligned(4))) NesHeader_s {
