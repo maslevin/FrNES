@@ -17,8 +17,8 @@
 /*-------------------------------------------------------------------*/
 #include <kos.h>
 
-#include "pNesX.h"
 #include "cartridge.h"
+#include "pNesX.h"
 #include "K6502.h"
 #include "pNesX_System_DC.h"
 
