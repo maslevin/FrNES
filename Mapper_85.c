@@ -9,14 +9,13 @@ unsigned char Mapper_85_irq_latch;
 void Mapper_85_Init() {
     apu_set_exsound(NES_APU_EXSOUND_VRC7);
 
-    // set CPU bank pointers
-    ROMBANK0 = ROMPAGE(0);
-    ROMBANK1 = ROMPAGE(1);
-    ROMBANK2 = ROMLASTPAGE(1);
-    ROMBANK3 = ROMLASTPAGE(0);
+	ROMBANK0 = ROM_pages[0];
+	ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
-        PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
+        PPUBANK[ nPage ] = VROM_pages[ nPage ];
 
     Mapper_85_irq_enabled = 0;
     Mapper_85_irq_counter = 0;
@@ -26,16 +25,16 @@ void Mapper_85_Init() {
 void Mapper_85_Write(uint16 addr, uint8 data) {
     switch(addr & 0xF038) {
         case 0x8000: {
-            ROMBANK0 = ROMPAGE(data);
+            ROMBANK0 = ROM_pages[data];
         } break;
 
         case 0x8008:
         case 0x8010: {
-            ROMBANK1 = ROMPAGE(data);
+            ROMBANK1 = ROM_pages[data];
         } break;
 
         case 0x9000: {
-            ROMBANK2 = ROMPAGE(data);
+            ROMBANK2 = ROM_pages[data];
         }
         break;
 
@@ -45,39 +44,39 @@ void Mapper_85_Write(uint16 addr, uint8 data) {
         } break;
 
         case 0xA000: {
-            PPUBANK[ 0 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 0 ] = VROM_pages[ data ];
         } break;
 
         case 0xA008:
         case 0xA010: {
-            PPUBANK[ 1 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 1 ] = VROM_pages[ data ];
         } break;
 
         case 0xB000: {
-            PPUBANK[ 2 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 2 ] = VROM_pages[ data ];
         } break;
 
         case 0xB008:
         case 0xB010: {
-            PPUBANK[ 3 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 3 ] = VROM_pages[ data ];
         } break;
 
         case 0xC000: {
-            PPUBANK[ 4 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 4 ] = VROM_pages[ data ];
         } break;
 
         case 0xC008:
         case 0xC010: {
-            PPUBANK[ 5 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 5 ] = VROM_pages[ data ];
         } break;
 
         case 0xD000: {
-            PPUBANK[ 6 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 6 ] = VROM_pages[ data ];
         } break;
 
         case 0xD008:
         case 0xD010: {
-            PPUBANK[ 7 ] = &VROM[ data * 0x400 ];
+            PPUBANK[ 7 ] = VROM_pages[ data ];
         } break;
 
         case 0xE000: {

@@ -5,22 +5,19 @@ uint8 Mapper_67_irq_counter;
 uint8 Mapper_67_irq_latch;
 
 void Mapper_67_Init() {
-    // set CPU bank pointers
-    ROMBANK0 = ROMPAGE(0);
-    ROMBANK1 = ROMPAGE(1);
-    ROMBANK2 = ROMLASTPAGE(1);
-    ROMBANK3 = ROMLASTPAGE(0);
+    ROMBANK0 = ROM_pages[0];
+    ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
-    // set PPU bank pointers
-    uint32 num_1k_VROM_banks = NesHeader.byVRomSize * 8;
-    PPUBANK[0] = &VROM[ 0 * 0x400 ];
-    PPUBANK[1] = &VROM[ 1 * 0x400 ];
-    PPUBANK[2] = &VROM[ 2 * 0x400 ];
-    PPUBANK[3] = &VROM[ 3 * 0x400 ];
-    PPUBANK[4] = &VROM[ (num_1k_VROM_banks - 4) * 0x400 ];
-    PPUBANK[5] = &VROM[ (num_1k_VROM_banks - 3) * 0x400 ];
-    PPUBANK[6] = &VROM[ (num_1k_VROM_banks - 2) * 0x400 ];
-    PPUBANK[7] = &VROM[ (num_1k_VROM_banks - 1) * 0x400 ];
+    PPUBANK[0] = VROM_pages[0];
+    PPUBANK[1] = VROM_pages[1];
+    PPUBANK[2] = VROM_pages[2];
+    PPUBANK[3] = VROM_pages[3];
+    PPUBANK[4] = VROM_pages[num_1k_VROM_pages - 4];
+    PPUBANK[5] = VROM_pages[num_1k_VROM_pages - 3];
+    PPUBANK[6] = VROM_pages[num_1k_VROM_pages - 2];
+    PPUBANK[7] = VROM_pages[num_1k_VROM_pages - 1];
 
     Mapper_67_irq_enabled = 0;
     Mapper_67_irq_counter = 0;
@@ -30,23 +27,23 @@ void Mapper_67_Init() {
 void Mapper_67_Write(uint16 addr, uint8 data) {
     switch (addr & 0xF800) {
         case 0x8800: {
-            PPUBANK[0] = &VROM[ (data * 2) * 0x400 ];
-            PPUBANK[1] = &VROM[ ((data * 2) + 1) * 0x400 ];
+            PPUBANK[0] = VROM_pages[ (data * 2) ];
+            PPUBANK[1] = VROM_pages[ ((data * 2) + 1) ];
         } break;
 
         case 0x9800: {
-            PPUBANK[2] = &VROM[ (data * 2) * 0x400 ];
-            PPUBANK[3] = &VROM[ ((data * 2) + 1) * 0x400 ];
+            PPUBANK[2] = VROM_pages[ (data * 2) ];
+            PPUBANK[3] = VROM_pages[ ((data * 2) + 1) ];
         } break;
 
         case 0xA800: {
-            PPUBANK[4] = &VROM[ (data * 2) * 0x400 ];
-            PPUBANK[5] = &VROM[ ((data * 2) + 1) * 0x400 ];
+            PPUBANK[4] = VROM_pages[ (data * 2) ];
+            PPUBANK[5] = VROM_pages[ ((data * 2) + 1) ];
         } break;
 
         case 0xB800: {
-            PPUBANK[6] = &VROM[ (data * 2) * 0x400 ];
-            PPUBANK[7] = &VROM[ ((data * 2) + 1) * 0x400 ];
+            PPUBANK[6] = VROM_pages[ (data * 2) ];
+            PPUBANK[7] = VROM_pages[ ((data * 2) + 1) ];
         } break;
 
         case 0xC800: {
@@ -72,10 +69,8 @@ void Mapper_67_Write(uint16 addr, uint8 data) {
         } break;
 
         case 0xF800: {
-            uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;            
-            //printf("Setting configurable ROM banks to [%lu] and [%lu]\n", ((data & 0xF) * 2) % num_8k_ROM_banks, (((data & 0xF) * 2) + 1) % num_8k_ROM_banks);
-            ROMBANK0 = ROMPAGE(((data & 0xF) * 2) % num_8k_ROM_banks);
-            ROMBANK1 = ROMPAGE((((data & 0xF) * 2) + 1) % num_8k_ROM_banks);
+            ROMBANK0 = ROM_pages[ (data << 1) % num_8k_ROM_pages ];
+            ROMBANK1 = ROM_pages[ ((data << 1) + 1) % num_8k_ROM_pages ];
         } break;
     }
 }

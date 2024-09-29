@@ -4,10 +4,10 @@ uint8 Mapper_73_irq_enabled;
 uint32 Mapper_73_irq_counter;
 
 void Mapper_73_Init() {
-    ROMBANK0 = ROMPAGE( 0 );
-	ROMBANK1 = ROMPAGE( 1 );
-	ROMBANK2 = ROMLASTPAGE( 1 );
-	ROMBANK3 = ROMLASTPAGE( 0 );
+	ROMBANK0 = ROM_pages[0];
+	ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
     Mapper_73_irq_counter = 0;
     Mapper_73_irq_enabled = 0;
@@ -36,9 +36,8 @@ void Mapper_73_Write( uint16 wAddr, unsigned char byData ) {
         } break;
 
         case 0xF000: {
-            uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
-            ROMBANK0 = ROMPAGE((byData*2) % num_8k_ROM_banks);
-            ROMBANK1 = ROMPAGE((byData*2+1) % num_8k_ROM_banks);
+            ROMBANK0 = ROM_pages[(byData << 1) % num_8k_ROM_pages];
+            ROMBANK1 = ROM_pages[((byData << 1) +1) % num_8k_ROM_pages];
         } break;
     }
 }

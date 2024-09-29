@@ -4,7 +4,7 @@
 
 uint8 Mapper_69_regs[1];
 uint8 Mapper_69_irq_enabled;
-uint32 Mapper_69_irq_counter;
+int32 Mapper_69_irq_counter;
 
 /////////////////////////////////////////////////////////////////////
 // Mapper 69
@@ -12,15 +12,13 @@ void Mapper_69_Init() {
     // Init ExSound
     apu_set_exsound(NES_APU_EXSOUND_FME7);
 
-	ROMBANK0 = ROMPAGE( 0 );
-	ROMBANK1 = ROMPAGE( 1 );
-	ROMBANK2 = ROMLASTPAGE( 1 );
-	ROMBANK3 = ROMLASTPAGE( 0 );
+	ROMBANK0 = ROM_pages[0];
+	ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
-	if ( NesHeader.byVRomSize > 0 ) {
-		for ( int nPage = 0; nPage < 8; ++nPage )
-			PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-	}
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = VROM_pages[ nPage ];
 
     Mapper_69_irq_enabled = 0;
     Mapper_69_irq_counter = 0;
@@ -37,70 +35,67 @@ void Mapper_69_Write(uint16 addr, uint8 data) {
             switch (Mapper_69_regs[0]) {
                 case 0x00: {
                     pNesX_DebugPrint("Map69: Set PPUBANK0 to Page [%u]\n", data);
-                    PPUBANK[0] = &VROM[ data * 0x400 ];
+                    PPUBANK[0] = VROM_pages[ data ];
                 } break;
 
                 case 0x01: {
                     pNesX_DebugPrint("Map69: Set PPUBANK1 to Page [%u]\n", data);
-                    PPUBANK[1] = &VROM[ data * 0x400 ];
+                    PPUBANK[1] = VROM_pages[ data ];
                 } break;
 
                 case 0x02: {
                     pNesX_DebugPrint("Map69: Set PPUBANK2 to Page [%u]\n", data);                    
-                    PPUBANK[2] = &VROM[ data * 0x400 ];
+                    PPUBANK[2] = VROM_pages[ data ];
                 } break;
 
                 case 0x03: {
                     pNesX_DebugPrint("Map69: Set PPUBANK3 to Page [%u]\n", data);                    
-                    PPUBANK[3] = &VROM[ data * 0x400 ];
+                    PPUBANK[3] = VROM_pages[ data ];
                 } break;
 
                 case 0x04: {
                     pNesX_DebugPrint("Map69: Set PPUBANK4 to Page [%u]\n", data);                    
-                    PPUBANK[4] = &VROM[ data * 0x400 ];
+                    PPUBANK[4] = VROM_pages[ data ];
                 } break;
 
                 case 0x05: {
                     pNesX_DebugPrint("Map69: Set PPUBANK5 to Page [%u]\n", data);                    
-                    PPUBANK[5] = &VROM[ data * 0x400 ];
+                    PPUBANK[5] = VROM_pages[ data ];
                 } break;
 
                 case 0x06: {
                     pNesX_DebugPrint("Map69: Set PPUBANK6 to Page [%u]\n", data);                    
-                    PPUBANK[6] = &VROM[ data * 0x400 ];
+                    PPUBANK[6] = VROM_pages[ data ];
                 } break;
 
                 case 0x07: {
                     pNesX_DebugPrint("Map69: Set PPUBANK7 to Page [%u]\n", data);
-                    PPUBANK[7] = &VROM[ data * 0x400 ];
+                    PPUBANK[7] = VROM_pages[ data ];
                 } break;
 
                 case 0x08: {
                     if(!(data & 0x40)) {
-                        uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;                         
-                        pNesX_DebugPrint("Map69: Set 0x6000-0x7FFF to Rom Page [%u]\n", data & 0x1f);
+                        printf("Map69: Set 0x6000-0x7FFF to Rom Page [%u]\n", data & 0x1f);
                         // OK - this is really crappy, because the emulator wasn't architected to bank switch 0x6000 - 0x7FFF and just has a statically allocated buffer here
                         // for now, just copy whatever page is bank swapped into the SRAM buffer so that everything works.  This is way slower than just adjusting a bank pointer.
-                        memcpy(SRAM, ROMPAGE((data & 0x1f) % num_8k_ROM_banks), 0x2000);
+                        // TODO: set up a universal bank swapping solution
+                        memcpy(SRAM, ROM_pages[(data & 0x1f) % num_8k_ROM_pages], 0x2000);
                     }
                 } break;
 
-                case 0x09: {
-                    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;                    
+                case 0x09: {                
                     pNesX_DebugPrint("Map69: Set ROMBANK0 to Rom Page [%u]\n", data & 0x1f);
-                    ROMBANK0 = ROMPAGE((data & 0x1f) % num_8k_ROM_banks);
+                    ROMBANK0 = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                 } break;
 
                 case 0x0A: {
-                    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
                     pNesX_DebugPrint("Map69: Set ROMBANK1 to Rom Page [%u]\n", data & 0x1f);                    
-                    ROMBANK1 = ROMPAGE((data & 0x1f) % num_8k_ROM_banks);
+                    ROMBANK1 = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                 } break;
 
                 case 0x0B: {
-                    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
                     pNesX_DebugPrint("Map69: Set ROMBANK2 to Rom Page [%u]\n", data & 0x1f);                    
-                    ROMBANK2 = ROMPAGE((data & 0x1f) % num_8k_ROM_banks);
+                    ROMBANK2 = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                 } break;
 
                 case 0x0C: {
@@ -146,7 +141,7 @@ void Mapper_69_Write(uint16 addr, uint8 data) {
 
 void Mapper_69_HSync() {
     if (Mapper_69_irq_enabled) {
-        if (Mapper_69_irq_counter <= 113) {
+        if (Mapper_69_irq_counter < 113) {
             IRQ_REQ;
             Mapper_69_irq_counter = 0;
         } else {

@@ -17,17 +17,23 @@ extern uint8 WRAM[MAXIMUM_WRAM_SIZE];
 
 extern uint32 num_ROM_bytes_allocated;
 extern uint32 num_VROM_bytes_allocated;
+extern uint32 num_VRAM_bytes_allocated;
 extern uint32 num_WRAM_bytes_allocated;
 
 extern uint32 num_8k_ROM_pages;
+extern uint32 num_8k_WRAM_pages;
 extern uint32 num_1k_VROM_pages;
+extern uint32 num_8k_NVRAM_pages;
+extern uint32 num_1k_VRAM_pages;
 
 #define MAXIMUM_ROM_PAGES (MAXIMUM_ROM_SIZE / 8192)
 #define MAXIMUM_VROM_PAGES (MAXIMUM_VROM_SIZE / 1024)
+#define MAXIMUM_VRAM_PAGES (MAXIMUM_VRAM_SIZE / 1024)
 #define MAXIMUM_WRAM_PAGES (MAXIMUM_WRAM_SIZE / 8192)
 
 extern uint8* ROM_pages[MAXIMUM_ROM_PAGES];
 extern uint8* VROM_pages[MAXIMUM_VROM_PAGES];
+extern uint8* VRAM_pages[MAXIMUM_VRAM_PAGES];
 extern uint8* WRAM_pages[MAXIMUM_WRAM_PAGES];
 
 /* .nes File Header */

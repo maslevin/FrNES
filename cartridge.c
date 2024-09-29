@@ -14,9 +14,11 @@ uint32 num_8k_ROM_pages;
 uint32 num_1k_VROM_pages;
 uint32 num_1k_VRAM_pages;
 uint32 num_8k_NVRAM_pages;
+uint32 num_8k_WRAM_pages;
 
 uint8* ROM_pages[MAXIMUM_ROM_PAGES];
 uint8* VROM_pages[MAXIMUM_VROM_PAGES];
+uint8* VRAM_pages[];
 uint8* WRAM_pages[MAXIMUM_WRAM_PAGES];
 
 uint32 SRAM_Enabled;
@@ -245,6 +247,11 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 		if (num_1k_VROM_pages) {
 			for (i = 0; i < num_1k_VROM_pages; i++) {
 				VROM_pages[i] = &VROM[i * 0x400];
+			}
+			if (num_1k_VRAM_pages) {
+				for (i = 0; i < num_1k_VROM_pages; i++) {
+					VRAM_pages[i] = &VRAM[i * 0x400];
+				}				
 			}
 		} else if (num_1k_VRAM_pages) {
 			for (i = 0; i < num_1k_VRAM_pages; i++) {

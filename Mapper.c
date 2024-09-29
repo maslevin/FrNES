@@ -396,3 +396,26 @@ MapperTable_t Mappers[] = {
 	{ 120, NULL },			
 	{ -1, NULL }
 };
+
+void debugRomPages() {
+	printf("ROMBANK0: ");
+    for (uint32 i = 0; i < 32; i++) {
+        printf("$%02X ", ROMBANK0[i]);
+    }
+    printf("\n");
+    printf("ROMBANK1: ");
+    for (uint32 i = 0; i < 32; i++) {
+        printf("$%02X ", ROMBANK1[i]);
+    }
+    printf("\n");
+    printf("ROMBANK2: ");
+    for (uint32 i = 0; i < 32; i++) {
+        printf("$%02X ", ROMBANK2[i]);
+    }
+    printf("\n");
+    printf("ROMBANK3: ");
+    for (uint32 i = 0; i < 32; i++) {
+        printf("$%02X ", ROMBANK3[i]);
+    }
+    printf("\n");  
+}

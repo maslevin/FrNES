@@ -16,16 +16,16 @@ void Mapper_119_MMC3_set_CPU_banks() {
     uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
     if (prg_swap()) {
         //printf("Setting Prg Bank1 to page [%u] and Bank2 to page [%u]\n",Mapper_119_prg1,Mapper_119_prg0);
-        ROMBANK0 = ROMLASTPAGE(1);
-        ROMBANK1 = ROMPAGE(Mapper_119_prg1 % num_8k_ROM_banks);
-        ROMBANK2 = ROMPAGE(Mapper_119_prg0 % num_8k_ROM_banks);
-        ROMBANK3 = ROMLASTPAGE(0);
+        ROMBANK0 = ROM_pages[ num_8k_ROM_pages - 2];
+        ROMBANK1 = ROM_pages[Mapper_119_prg1 % num_8k_ROM_banks];
+        ROMBANK2 = ROM_pages[Mapper_119_prg0 % num_8k_ROM_banks];
+        ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
     } else {
         //printf("Setting Prg Bank0 to page [%u] and Bank1 to page [%u]\n",Mapper_119_prg0,Mapper_119_prg1);
-        ROMBANK0 = ROMPAGE(Mapper_119_prg0 % num_8k_ROM_banks);
-        ROMBANK1 = ROMPAGE(Mapper_119_prg1 % num_8k_ROM_banks);
-        ROMBANK2 = ROMLASTPAGE(1);
-        ROMBANK3 = ROMLASTPAGE(0);      
+        ROMBANK0 = ROM_pages[Mapper_119_prg0 % num_8k_ROM_banks];
+        ROMBANK1 = ROM_pages[Mapper_119_prg1 % num_8k_ROM_banks];
+        ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+        ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];     
     }
 }
 
@@ -53,51 +53,51 @@ void Mapper_119_MMC3_set_PPU_banks() {
     }
 
     if (chr_bank[0] & 0x40) {
-        PPUBANK[0] = &VRAM[(chr_bank[0] & 0x07) * 0x400];
+        PPUBANK[0] = VRAM_pages[(chr_bank[0] & 0x07)];
     } else {
-        PPUBANK[0] = &VROM[chr_bank[0] * 0x400];
+        PPUBANK[0] = VROM_pages[chr_bank[0]];
     }
 
     if (chr_bank[1] & 0x40) {
-        PPUBANK[1] = &VRAM[(chr_bank[1] & 0x07) * 0x400];
+        PPUBANK[1] = VRAM_pages[(chr_bank[1] & 0x07)];
     } else {
-        PPUBANK[1] = &VROM[chr_bank[1] * 0x400];
+        PPUBANK[1] = VROM_pages[chr_bank[1]];
     }
 
     if (chr_bank[2] & 0x40) {
-        PPUBANK[2] = &VRAM[(chr_bank[2] & 0x07) * 0x400];
+        PPUBANK[2] = VRAM_pages[(chr_bank[2] & 0x07)];
     } else {
-        PPUBANK[2] = &VROM[chr_bank[2] * 0x400];
+        PPUBANK[2] = VROM_pages[chr_bank[2]];
     }
 
     if (chr_bank[3] & 0x40) {
-        PPUBANK[3] = &VRAM[(chr_bank[3] & 0x07) * 0x400];
+        PPUBANK[3] = VRAM_pages[(chr_bank[3] & 0x07)];
     } else {
-        PPUBANK[3] = &VROM[chr_bank[3] * 0x400];
+        PPUBANK[3] = VROM_pages[chr_bank[3]];
     }
 
     if (chr_bank[4] & 0x40) {
-        PPUBANK[4] = &VRAM[(chr_bank[4] & 0x07) * 0x400];
+        PPUBANK[4] = VRAM_pages[(chr_bank[4] & 0x07)];
     } else {
-        PPUBANK[4] = &VROM[chr_bank[4] * 0x400];
+        PPUBANK[4] = VROM_pages[chr_bank[4]];
     }
 
     if (chr_bank[5] & 0x40) {
-        PPUBANK[5] = &VRAM[(chr_bank[5] & 0x07) * 0x400];
+        PPUBANK[5] = VRAM_pages[(chr_bank[5] & 0x07)];
     } else {
-        PPUBANK[5] = &VROM[chr_bank[5] * 0x400];
+        PPUBANK[5] = VROM_pages[chr_bank[5]];
     }
 
     if (chr_bank[6] & 0x40) {
-        PPUBANK[6] = &VRAM[(chr_bank[6] & 0x07) * 0x400];
+        PPUBANK[6] = VRAM_pages[(chr_bank[6] & 0x07)];
     } else {
-        PPUBANK[6] = &VROM[chr_bank[6]  * 0x400];
+        PPUBANK[6] = VROM_pages[chr_bank[6]];
     }
 
     if (chr_bank[7] & 0x40) {
-        PPUBANK[7] = &VRAM[(chr_bank[7] & 0x07) * 0x400];
+        PPUBANK[7] = VRAM_pages[(chr_bank[7] & 0x07)];
     } else {
-        PPUBANK[7] = &VROM[chr_bank[7] * 0x400];
+        PPUBANK[7] = VROM_pages[chr_bank[7]];
     }
 }
 

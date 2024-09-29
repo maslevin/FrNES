@@ -3,15 +3,13 @@
 uint8 Mapper_75_regs[2];
 
 void Mapper_75_Init() {
-    ROMBANK0 = ROMPAGE( 0 );
-	ROMBANK1 = ROMPAGE( 1 );
-	ROMBANK2 = ROMLASTPAGE( 1 );
-	ROMBANK3 = ROMLASTPAGE( 0 );
+	ROMBANK0 = ROM_pages[0];
+	ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
-    if ( NesHeader.byVRomSize > 0 ) {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-    }
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = VROM_pages[ nPage ];
 
     Mapper_75_regs[0] = 0;
     Mapper_75_regs[1] = 1;
@@ -20,7 +18,7 @@ void Mapper_75_Init() {
 void Mapper_75_Write( uint16 wAddr, unsigned char byData ) {
     switch(wAddr & 0xF000) {
         case 0x8000: {
-            ROMBANK0 = ROMPAGE(byData);
+            ROMBANK0 = ROM_pages[byData];
         } break;
 
         case 0x9000: {
@@ -30,39 +28,43 @@ void Mapper_75_Write( uint16 wAddr, unsigned char byData ) {
                 pNesX_Mirroring(MIRRORING_VERTICAL);
             }
             Mapper_75_regs[0] = (Mapper_75_regs[0] & 0x0F) | ((byData & 0x02) << 3);
-            PPUBANK[0] = &VROM[ (Mapper_75_regs[0] * 4) * 0x400 ];
-            PPUBANK[1] = &VROM[ ((Mapper_75_regs[0] * 4) + 1) * 0x400 ];
-            PPUBANK[2] = &VROM[ ((Mapper_75_regs[0] * 4) + 2) * 0x400 ];
-            PPUBANK[3] = &VROM[ ((Mapper_75_regs[0] * 4) + 3) * 0x400 ];
+            uint8 base = Mapper_75_regs[0] << 2;
+            PPUBANK[0] = VROM_pages[ base ];
+            PPUBANK[1] = VROM_pages[ base + 1];
+            PPUBANK[2] = VROM_pages[ base + 2];
+            PPUBANK[3] = VROM_pages[ base + 3];
             Mapper_75_regs[1] = (Mapper_75_regs[1] & 0x0F) | ((byData & 0x04) << 2);
-            PPUBANK[4] = &VROM[ (Mapper_75_regs[1] * 4) * 0x400 ];
-            PPUBANK[5] = &VROM[ ((Mapper_75_regs[1] * 4) + 1) * 0x400 ];
-            PPUBANK[6] = &VROM[ ((Mapper_75_regs[1] * 4) + 2) * 0x400 ];
-            PPUBANK[7] = &VROM[ ((Mapper_75_regs[1] * 4) + 3) * 0x400 ];
+            base = Mapper_75_regs[1] << 2;            
+            PPUBANK[4] = VROM_pages[ base ];
+            PPUBANK[5] = VROM_pages[ base + 1];
+            PPUBANK[6] = VROM_pages[ base + 2];
+            PPUBANK[7] = VROM_pages[ base + 3];
         } break;
 
         case 0xA000: {
-            ROMBANK1 = ROMPAGE(byData);
+            ROMBANK1 = ROM_pages[ byData ];
         } break;
 
         case 0xC000: {
-            ROMBANK2 = ROMPAGE(byData);
+            ROMBANK2 = ROM_pages[ byData ];
         } break;
 
         case 0xE000: {
             Mapper_75_regs[0] = (Mapper_75_regs[0] & 0x10) | (byData & 0x0F);
-            PPUBANK[0] = &VROM[ (Mapper_75_regs[0] * 4) * 0x400 ];
-            PPUBANK[1] = &VROM[ ((Mapper_75_regs[0] * 4) + 1) * 0x400 ];
-            PPUBANK[2] = &VROM[ ((Mapper_75_regs[0] * 4) + 2) * 0x400 ];
-            PPUBANK[3] = &VROM[ ((Mapper_75_regs[0] * 4) + 3) * 0x400 ];
+            uint8 base = Mapper_75_regs[0] << 2;
+            PPUBANK[0] = VROM_pages[ base ];
+            PPUBANK[1] = VROM_pages[ base + 1];
+            PPUBANK[2] = VROM_pages[ base + 2];
+            PPUBANK[3] = VROM_pages[ base + 3];
         } break;
 
         case 0xF000: {
             Mapper_75_regs[1] = (Mapper_75_regs[1] & 0x10) | (byData & 0x0F);
-            PPUBANK[4] = &VROM[ (Mapper_75_regs[1] * 4) * 0x400 ];
-            PPUBANK[5] = &VROM[ ((Mapper_75_regs[1] * 4) + 1) * 0x400 ];
-            PPUBANK[6] = &VROM[ ((Mapper_75_regs[1] * 4) + 2) * 0x400 ];
-            PPUBANK[7] = &VROM[ ((Mapper_75_regs[1] * 4) + 3) * 0x400 ];
+            uint8 base = Mapper_75_regs[1] << 2;   
+            PPUBANK[4] = VROM_pages[ base ];
+            PPUBANK[5] = VROM_pages[ base + 1];
+            PPUBANK[6] = VROM_pages[ base + 2];
+            PPUBANK[7] = VROM_pages[ base + 3];
         } break;
     }
 }
