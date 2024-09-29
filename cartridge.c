@@ -12,6 +12,7 @@ uint32 num_WRAM_bytes_allocated;
 
 uint32 num_8k_ROM_pages;
 uint32 num_1k_VROM_pages;
+uint32 num_1k_VRAM_pages;
 uint32 num_8k_NVRAM_pages;
 
 uint8* ROM_pages[MAXIMUM_ROM_PAGES];
@@ -220,6 +221,7 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 		ROM_offset = i;
         num_8k_ROM_pages = prgRomSize / 8192;
         num_1k_VROM_pages = chrRomSize / 1024;
+		num_1k_VRAM_pages = chrRamSize / 1024;
         num_ROM_bytes_allocated = prgRomSize;
 		for (; i < (ROM_offset + prgRomSize); i++) {
 			ROM[i - ROM_offset] = ROM_Buffer[i];
@@ -240,9 +242,15 @@ bool ReadRom (const char *filepath, uint32 filesize) {
         for (i = 0; i < num_8k_ROM_pages; i++) {
             ROM_pages[i] = &ROM[i * 0x2000];
         }
-        for (i = 0; i < num_1k_VROM_pages; i++) {
-            VROM_pages[i] = &VROM[i * 0x400];
-        }
+		if (num_1k_VROM_pages) {
+			for (i = 0; i < num_1k_VROM_pages; i++) {
+				VROM_pages[i] = &VROM[i * 0x400];
+			}
+		} else if (num_1k_VRAM_pages) {
+			for (i = 0; i < num_1k_VRAM_pages; i++) {
+				VROM_pages[i] = &VROM[i * 0x400];
+			}			
+		}
 		for (i = 0; i < num_8k_NVRAM_pages; i++) {
 			WRAM_pages[i] = &WRAM[i * 0x2000];
 		}
