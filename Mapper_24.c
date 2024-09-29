@@ -10,19 +10,16 @@ unsigned char Mapper_24_irq_latch;
 void Mapper_24_Init() {
     apu_set_exsound(NES_APU_EXSOUND_VRC6);
 
-    // set CPU bank pointers
-    ROMBANK0 = ROMPAGE(0);
-    ROMBANK1 = ROMPAGE(1);
-    ROMBANK2 = ROMLASTPAGE(1);
-    ROMBANK3 = ROMLASTPAGE(0);
+    ROMBANK0 = ROM_pages[0];
+    ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
-    if ( NesHeader.byVRomSize > 0 ) {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-    }
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = VROM_pages[nPage];
 
     Mapper_24_irq_enabled_l = 0;
-    Mapper_24_irq_enabled_h = 0;    
+    Mapper_24_irq_enabled_h = 0;
     Mapper_24_irq_counter = 0;
     Mapper_24_irq_latch = 0;
 }
@@ -30,8 +27,8 @@ void Mapper_24_Init() {
 void Mapper_24_Write(uint16 addr, unsigned char data) {
     switch(addr) {
         case 0x8000: {
-            ROMBANK0 = ROMPAGE(data << 1);
-            ROMBANK1 = ROMPAGE((data << 1) + 1);
+            ROMBANK0 = ROM_pages[data << 1];
+            ROMBANK1 = ROM_pages[(data << 1) + 1];
         } break;
 
         case 0xB003: {
@@ -48,15 +45,15 @@ void Mapper_24_Write(uint16 addr, unsigned char data) {
         } break;
 
         case 0xC000: {
-            ROMBANK2 = ROMPAGE(data);
+            ROMBANK2 = ROM_pages[data];
         } break;
 
         case 0xD000 ... 0xD003: {
-            PPUBANK[(addr & 0xf003) - 0xd000] = VROMPAGE(data);
+            PPUBANK[(addr & 0xf003) - 0xd000] = VROM_pages[data];
         } break;
 
         case 0xE000 ... 0xE003: {
-            PPUBANK[(addr & 0xf003) - 0xe000 + 4] = VROMPAGE(data);
+            PPUBANK[(addr & 0xf003) - 0xe000 + 4] = VROM_pages[data];
         } break;
 
         case 0xF000: {
