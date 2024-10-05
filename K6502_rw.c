@@ -98,9 +98,6 @@ unsigned char K6502_Read( uint16 wAddr ) {
                     // Reset address latch
                     PPU_Latch_Flag = 0;
 
-                    if (byRet != 0) {
-//                        printf("Yay Finally Reading [$2002]: [$%02X]\n", byRet);
-                    }
                     ppuOpenBus = byRet;
                     return byRet;
                 }
