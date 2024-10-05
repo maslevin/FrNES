@@ -25,6 +25,7 @@ unsigned char SpritesToDraw[MAX_SPRITES_ON_A_LINE] = {0};
 bool OverflowedSprites = false;
 
 __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
+	startProfiling(3);
 	unsigned char spriteBuffer[256];
 
 	int nX;
@@ -98,7 +99,6 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
-//			dcache_pref_block(pSPRRAM);
 
 			nX = pSPRRAM[ SPR_X ];
 			nY = pSPRRAM[ SPR_Y ] + 1;
@@ -181,4 +181,5 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 			}
 		}		
 	}
+	endProfiling(3);	
 }
