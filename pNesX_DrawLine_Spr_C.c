@@ -1,5 +1,6 @@
 #include <kos.h>
 #include "macros.h"
+#include "profile.h"
 
 #include "pNesX.h"
 #include "pNesX_PPU_DC.h"
@@ -25,6 +26,7 @@ unsigned char SpritesToDraw[MAX_SPRITES_ON_A_LINE] = {0};
 bool OverflowedSprites = false;
 
 __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
+	startProfiling(3);	
 	unsigned char spriteBuffer[256];
 
 	int nX;
@@ -98,7 +100,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
-//			dcache_pref_block(pSPRRAM);
+			dcache_pref_block(pSPRRAM);
 
 			nX = pSPRRAM[ SPR_X ];
 			nY = pSPRRAM[ SPR_Y ] + 1;
@@ -117,9 +119,12 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 				(nameTableValue & 0x3F);
 
 			pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit % 8);
+			dcache_pref_block(pbyBGData);
 			byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 			byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 			pPalTbl = &PPURAM[0x3F10 + ((nAttr & SPR_ATTR_COLOR) << 2)];
+			dcache_pref_block(pPalTbl);
+			dcache_pref_block(patternData);
 
 			unsigned char offset = 0;
 			unsigned char pixelsToDraw = 8;
@@ -133,6 +138,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 			if (nX > 248) {
 				pixelsToDraw = 256 - nX;
 			}
+			dcache_pref_block(&spriteBuffer[nX]);
 
 			if ( nAttr & SPR_ATTR_H_FLIP ) {
 				patternData[ 0 ] = byData2 & 3;
@@ -161,10 +167,20 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 					spriteBuffer[nX + offset] = bySprCol | (pPalTbl[patternData[offset]] & 0x3F);
 				}
 			}
+			dcache_purge_range((uintptr_t)&spriteBuffer[nX], (pixelsToDraw - offset));
 		}
 
 		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
+			dcache_pref_block(spriteBuffer);
+			dcache_pref_block(scanline_buffer);
 			for (uint16 i = 0; i < 256; i++) {
+				if ((i % 32 == 0) && (i < 224)) {
+					if (i != 0) {
+						dcache_flush_range((uintptr_t)&scanline_buffer[i - 32], 32);
+					}
+					dcache_pref_block(&spriteBuffer[i + 32]);
+					dcache_pref_block(&scanline_buffer[i + 32]);
+				}
 				if ((i < 255) && (spriteBuffer[i] & 0x40) && ((scanline_buffer[i] & 0x40) == 0)) {
 					SpriteJustHit = ppuinfo.PPU_Scanline;
 				}
@@ -173,12 +189,24 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) 
 					scanline_buffer[i] = spriteBuffer[i];
 				}
 			}
+			dcache_purge_range((uintptr_t)&scanline_buffer[224], 32);
 		}  else {
+			dcache_pref_block(spriteBuffer);
+			dcache_pref_block(scanline_buffer);			
 			for (uint16 i = 0; i < 256; i++) {
+				if ((i % 32 == 0) && (i < 224)) {
+					if (i != 0) {
+						dcache_flush_range((uintptr_t)&scanline_buffer[i - 32], 32);
+					}
+					dcache_pref_block(&spriteBuffer[i + 32]);
+					dcache_pref_block(&scanline_buffer[i + 32]);
+				}			
 				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
 					scanline_buffer[i] = spriteBuffer[i];
 				}
 			}
+			dcache_purge_range((uintptr_t)&scanline_buffer[224], 32);			
 		}		
 	}
+	endProfiling(3);	
 }

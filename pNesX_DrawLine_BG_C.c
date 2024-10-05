@@ -18,9 +18,12 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	uint16 nYBit;
 	unsigned char* pPalTbl;
 	uint16 nNameTable;
+	unsigned char* currentBlockStart = pPoint;
+	unsigned char* nextBlockStart = pPoint + 32;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
-	unsigned char* paletteRegisters = &PPURAM[0x3f00];
+	dcache_pref_block(&PPURAM[0x3f00]);
+	dcache_pref_block(&ppuinfo);
 
 	nNameTable = ((ppuinfo.PPU_Addr & 0x0C00) >> 10) + 8;
 	nX = (ppuinfo.PPU_Addr & 0x001F);
@@ -28,8 +31,11 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	nYBit = ((ppuinfo.PPU_Addr >> 12) & 0x0007);
 	nY4 = ( ( nY & 2 ) << 1 );
 
+	unsigned char* paletteRegisters = &PPURAM[0x3f00];
 	pbyNameTable = PPUBANK[nNameTable] + (nY << 5) + nX;
+	dcache_pref_block(pbyNameTable);
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY >> 2) << 3);
+	dcache_pref_block(pAlBase);
 	pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
 
 	if (MapperNo == 5) {
@@ -39,7 +45,10 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char nameTableValue = *pbyNameTable;
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	unsigned char characterIndex = (nameTableValue & 0x3F);
+	dcache_pref_block(currentBlockStart);
+	dcache_pref_block(nextBlockStart);
 	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+	dcache_pref_block(pbyBGData);
 	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
     unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 
@@ -61,7 +70,6 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		case 7:
 			*(pPoint++) = pPalTbl[byData2 & 0x3];
 	}
-
 	nX++;
 
 	// crossing a name table boundary
@@ -69,23 +77,19 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		nNameTable ^= NAME_TABLE_H_MASK;
 		nX = 0;
 		pbyNameTable = PPUBANK[nNameTable] + (nY << 5) + nX;
+		dcache_pref_block(pbyNameTable);		
 		pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY >> 2) << 3);
+		dcache_pref_block(pAlBase);		
 	} else {
 		pbyNameTable++;
 	}
 
 	for (uint8 nIdx = 1; nIdx < 32; nIdx++) {
-
-/*
-		if ((nX == 13) && (nY == 25)) {
-			printf("BG [%u, %u]: [$%02X]\n", nX, nY, *pbyNameTable);
-		}
-*/
-
 		nameTableValue = *pbyNameTable;
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
 		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+		dcache_pref_block(pbyBGData);		
 		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 		pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
@@ -99,6 +103,13 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		*(pPoint++) = pPalTbl[byData1 & 0x3];
 		*(pPoint++) = pPalTbl[byData2 & 0x3];
 
+		if (pPoint > nextBlockStart) {
+			dcache_purge_range((uintptr_t)currentBlockStart, 32);			
+			currentBlockStart = nextBlockStart;
+			nextBlockStart += 32;
+			dcache_pref_block(nextBlockStart);
+		}
+
 		nX++;
 
 		// are we crossing a name table boundary?
@@ -106,7 +117,9 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 			nNameTable ^= NAME_TABLE_H_MASK;
 			nX = 0;
 			pbyNameTable = PPUBANK[nNameTable] + (nY << 5) + nX;
+			dcache_pref_block(pbyNameTable);			
 			pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY >> 2) << 3);
+			dcache_pref_block(pAlBase);					
 		} else {
 			pbyNameTable++;
 		}
@@ -116,6 +129,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	characterIndex = (nameTableValue & 0x3F);
 	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+	dcache_pref_block(pbyBGData);		
 	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 	pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
@@ -165,9 +179,11 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 			break;
 	}
 
+	dcache_purge_range((uintptr_t)currentBlockStart, 32);
+
 	if (!(PPU_R1 & 0x02)) {
 		pPoint -= 256;
-		memset(pPoint, pPalTbl[0], 8);
+		memset4(pPoint, pPalTbl[0], 8);
 	}
 	endProfiling(2);
 }
