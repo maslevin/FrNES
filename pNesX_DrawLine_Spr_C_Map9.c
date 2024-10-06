@@ -21,9 +21,7 @@ extern unsigned char SpritesToDraw[8];
 // Whether we overflowed sprites this scanline
 extern bool OverflowedSprites;
 
-__attribute__ ((hot)) void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
-	unsigned char spriteBuffer[256];
-
+__attribute__ ((hot)) void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer, unsigned char* sprite_buffer) {
 	int nX;
 	int nY;
 	int nYBit;
@@ -115,7 +113,7 @@ __attribute__ ((hot)) void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buff
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-		memset4(spriteBuffer, 0, 256);
+		memset4(sprite_buffer, 0, 256);
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
@@ -179,25 +177,25 @@ __attribute__ ((hot)) void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buff
 			bySprCol = (( nAttr & SPR_ATTR_PRI )  << 2 ) | ((pSPRRAM == SPRRAM) ? 0x40 : 0x00);
 			for (offset; offset < pixelsToDraw; offset++) {
 				if (patternData[offset]) {
-					spriteBuffer[nX + offset] = bySprCol | (pPalTbl[patternData[offset]] & 0x3F);
+					sprite_buffer[nX + offset] = bySprCol | (pPalTbl[patternData[offset]] & 0x3F);
 				}
 			}	
 		}
 
 		if (SpriteJustHit == SPRITE_HIT_SENTINEL) {
 			for (uint16 i = 0; i < 256; i++) {
-				if ((i < 255) && (spriteBuffer[i] & 0x40) && ((scanline_buffer[i] & 0x40) == 0)) {
+				if ((i < 255) && (sprite_buffer[i] & 0x40) && ((scanline_buffer[i] & 0x40) == 0)) {
 					SpriteJustHit = ppuinfo.PPU_Scanline;
 				}
 
-				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
-					scanline_buffer[i] = spriteBuffer[i];
+				if ((sprite_buffer[i] != 0) && ((sprite_buffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
+					scanline_buffer[i] = sprite_buffer[i];
 				}
 			}
 		}  else {
 			for (uint16 i = 0; i < 256; i++) {
-				if ((spriteBuffer[i] != 0) && ((spriteBuffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
-					scanline_buffer[i] = spriteBuffer[i];
+				if ((sprite_buffer[i] != 0) && ((sprite_buffer[i] & 0x80) || (scanline_buffer[i] & 0x40))) {
+					scanline_buffer[i] = sprite_buffer[i];
 				}
 			}
 		}	

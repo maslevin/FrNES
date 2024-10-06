@@ -19,8 +19,8 @@
 #include "profile.h"
 #include "Mapper.h"
 
-#define __ALIGN32__		__attribute__ ((aligned (32)))
-__ALIGN32__ unsigned char Scanline_Buffer[256];
+uint8* scanline_buffer = (uint8*)(void*)0x7dfff000;
+uint8* sprite_buffer = (uint8*)(void*)0x7e000f00;
 
 extern uint16 PPU_Temp;
 
@@ -40,18 +40,18 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 	//texture_address is the Texture the frame currently being rendered will be displayed in
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 
-	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
-		memset4(Scanline_Buffer, (PPURAM[0x3F00] << 24) | (PPURAM[0x3F00] << 16) | (PPURAM[0x3F00] << 8) | PPURAM[0x3F00], 256);
+	if ( !(PPU_R1 & 0x18) ) {
+		memset4(scanline_buffer, PPURAM[0x3F00] << 24 | PPURAM[0x3F00] << 16 | PPURAM[0x3F00] << 8 | PPURAM[0x3F00], 256);
 	} else {
 		if (MapperNo == 9) {
-			pNesX_Map9DrawLine_BG_C(Scanline_Buffer);
-			pNesX_Map9DrawLine_Spr_C(Scanline_Buffer);
+			pNesX_Map9DrawLine_BG_C(scanline_buffer);
+			pNesX_Map9DrawLine_Spr_C(scanline_buffer, sprite_buffer);
 		} else {
-			pNesX_DrawLine_BG_C(Scanline_Buffer);
-			pNesX_DrawLine_Spr_C(Scanline_Buffer);
+			pNesX_DrawLine_BG_C(scanline_buffer);
+			pNesX_DrawLine_Spr_C(scanline_buffer, sprite_buffer);
 		}
 	}
 
 	//Move the scanline buffer to the PVR texture
-	pvr_txr_load(Scanline_Buffer, texture_address, 256);
+	pvr_txr_load(scanline_buffer, texture_address, 256);
 }

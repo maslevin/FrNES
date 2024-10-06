@@ -47,7 +47,7 @@
 #include "K6502.h"
 
 extern uint8 romdisk[];
-KOS_INIT_FLAGS(INIT_DEFAULT | INIT_VMU);
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_VMU | INIT_OCRAM);
 
 bool log_enabled;
 bool log_enabled_latch;
