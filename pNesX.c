@@ -132,7 +132,6 @@ unsigned char APU_Reg[ 0x18 ];
 uint32 num_bytes = 5880;
 uint32 firmware_size = 3292;
 
-//void* sample_buffer = 0x7C002000;
 static volatile unsigned long *position  = (volatile unsigned long*)(0x10014 + 0xa0800000);
 static volatile unsigned long *start  = (volatile unsigned long*)(0x10000 + 0xa0800000);
 

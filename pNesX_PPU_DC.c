@@ -35,6 +35,7 @@ __attribute__ ((hot)) void pNesX_StartFrame() {
 /*                                                                   */
 /*===================================================================*/
 __attribute__ ((hot)) void pNesX_DrawLine() {
+	dcache_enable_ocram();
 	void* texture_address;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
@@ -54,4 +55,5 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(scanline_buffer, texture_address, 256);
+	dcache_disable_ocram();
 }
