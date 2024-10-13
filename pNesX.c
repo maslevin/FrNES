@@ -36,11 +36,8 @@
 /* RAM */
 unsigned char RAM[ RAM_SIZE ];
 
-/* SRAM */
-unsigned char SRAM[ SRAM_SIZE ];
-
 /* ROM BANK ( 8Kb * 4 ) */
-unsigned char *ROMBANK_LO; // 0x6000
+unsigned char *ROMBANK_WRAM; // 0x6000
 unsigned char *ROMBANK0;
 unsigned char *ROMBANK1;
 unsigned char *ROMBANK2;
@@ -321,8 +318,12 @@ int pNesX_Reset() {
 	// Clear SPR RAM
 	memset( SPRRAM, 0, SPRRAM_SIZE );
 
-	// Clear SRAM
-	memset( SRAM, 0, sizeof SRAM );
+	// Setup WRAM if present
+	if (num_8k_WRAM_pages) {
+		ROMBANK_WRAM = WRAM_pages[0];
+	} else {
+		ROMBANK_WRAM = NULL;
+	}
 
 	// Reset frame skip and frame count
 	FrameSkip = options.opt_FrameSkip;

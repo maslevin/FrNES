@@ -23,21 +23,18 @@
 /*-------------------------------------------------------------------*/
 
 #define RAM_SIZE     0x2000
-#define SRAM_SIZE    0x2000
 #define PPURAM_SIZE  0x4000
 #define SPRRAM_SIZE  256
 
 /* RAM */
 extern unsigned char RAM[];
 
-/* SRAM */
-extern unsigned char SRAM[];
-
 /* ROM BANK ( 8Kb * 4 ) */
-extern unsigned char *ROMBANK0;
-extern unsigned char *ROMBANK1;
-extern unsigned char *ROMBANK2;
-extern unsigned char *ROMBANK3;
+extern unsigned char* ROMBANK_WRAM;
+extern unsigned char* ROMBANK0;
+extern unsigned char* ROMBANK1;
+extern unsigned char* ROMBANK2;
+extern unsigned char* ROMBANK3;
 
 /*-------------------------------------------------------------------*/
 /*  PPU resources                                                    */

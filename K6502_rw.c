@@ -154,7 +154,7 @@ unsigned char K6502_Read( uint16 wAddr ) {
         } break;
 
         case 0x6000:  /* SRAM */
-            return SRAM[ wAddr & 0x1fff ];
+            return ROMBANK_WRAM[ wAddr & 0x1fff ];
 
         case 0x8000:  /* ROM BANK 0 */
             return ROMBANK0[ wAddr & 0x1fff ];
@@ -294,7 +294,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             break;
 
                         case 0x3:  /* SRAM */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK_WRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x4:  /* ROM BANK 0 */
@@ -345,8 +345,10 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
             }
         } break;
 
-        case 0x6000: { /* SRAM */
-            SRAM[ wAddr & 0x1fff ] = byData;
+        case 0x6000: { /* WRAM */
+            if (ROMBANK_WRAM != NULL) {
+                ROMBANK_WRAM[ wAddr & 0x1fff ] = byData;
+            }
         } break;
 
         case 0x8000:  /* ROM BANK 0 */

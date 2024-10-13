@@ -268,8 +268,8 @@ int LoadSRAM() {
 				if (vmu_pkg_parse(readBuffer, &package) == 0) {
 					printf("VMU: Found SRAM Save File on VMU [%i]\n", i);
 
-					unsigned int destLength = 0x2000;
-					int result = BZ2_bzBuffToBuffDecompress((char*)SRAM, &destLength, (char*)package.data, readBufferSize - sizeof(vmu_pkg_t), 0, 0);
+					unsigned int destLength = num_8k_NVRAM_pages * 0x2000;
+					int result = BZ2_bzBuffToBuffDecompress((char*)WRAM, &destLength, (char*)package.data, readBufferSize - sizeof(vmu_pkg_t), 0, 0);
 					if (result != BZ_OK) {
 						printf("VMU: bz2 decompress error [%i]\n", result);
 					}
@@ -292,7 +292,7 @@ int LoadSRAM() {
 }
 
 int SaveSRAM() {
-	unsigned int compressedLength = 0x2200 + 0x1000;
+	unsigned int compressedLength = (num_8k_NVRAM_pages * 0x2000) + 0x1200; // compressed length originally needs extra space for buffering
 	char* compressedBuffer = malloc(compressedLength);	
 
 	int saveSRAM_success = -1;
@@ -309,7 +309,7 @@ int SaveSRAM() {
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
 
 			printf("VMU: Compressing SRAM buffer\n");
-			int result = BZ2_bzBuffToBuffCompress(compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 5, 4, 30);
+			int result = BZ2_bzBuffToBuffCompress(compressedBuffer, &compressedLength, (char*)WRAM, num_8k_NVRAM_pages * 0x2000, 5, 4, 30);
 
 			if (result != BZ_OK) {
 				printf("VMU: bz2 Compression Failed With Error Code [%i]\n", result);

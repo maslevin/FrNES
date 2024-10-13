@@ -18,7 +18,7 @@ uint32 num_8k_WRAM_pages;
 
 uint8* ROM_pages[MAXIMUM_ROM_PAGES];
 uint8* VROM_pages[MAXIMUM_VROM_PAGES];
-uint8* VRAM_pages[];
+uint8* VRAM_pages[MAXIMUM_VRAM_PAGES];
 uint8* WRAM_pages[MAXIMUM_WRAM_PAGES];
 
 uint32 SRAM_Enabled;
@@ -187,7 +187,7 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 		}
 		printf("ReadRom: PRG ROM [%lu kB] - [%lu] * 16kB banks\n", prgRomSize / 1024, prgRomSize / 16384);
 		if (prgRamSize != 0) {
-			printf("ReadRom: PRG RAM [%lu kB] - [%lu] * 16kB banks\n", prgRamSize / 1024, prgRamSize / 16384);
+			printf("ReadRom: PRG RAM [%lu kB] - [%lu] * 8kB banks\n", prgRamSize / 1024, prgRamSize / 8192);
 		}
 		if (prgNVRamSize != 0) {
 			printf("ReadRom: PRG NVRAM [%lu kB] - [%lu] * 8kB banks\n", prgNVRamSize / 1024, prgNVRamSize / 8192);
@@ -224,6 +224,7 @@ bool ReadRom (const char *filepath, uint32 filesize) {
         num_8k_ROM_pages = prgRomSize / 8192;
         num_1k_VROM_pages = chrRomSize / 1024;
 		num_1k_VRAM_pages = chrRamSize / 1024;
+		
         num_ROM_bytes_allocated = prgRomSize;
 		for (; i < (ROM_offset + prgRomSize); i++) {
 			ROM[i - ROM_offset] = ROM_Buffer[i];
@@ -239,6 +240,7 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 
 		num_VRAM_bytes_allocated = chrRamSize;
 		num_WRAM_bytes_allocated = prgNVRamSize + prgRamSize;
+		num_8k_WRAM_pages = (prgNVRamSize + prgRamSize) / 8192;
 		num_8k_NVRAM_pages = prgNVRamSize / 8192;
 
         for (i = 0; i < num_8k_ROM_pages; i++) {
@@ -249,16 +251,18 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 				VROM_pages[i] = &VROM[i * 0x400];
 			}
 			if (num_1k_VRAM_pages) {
+				memset4(VRAM, 0, MAXIMUM_VRAM_SIZE);
 				for (i = 0; i < num_1k_VROM_pages; i++) {
 					VRAM_pages[i] = &VRAM[i * 0x400];
 				}				
 			}
 		} else if (num_1k_VRAM_pages) {
+			memset4(VROM, 0, MAXIMUM_VROM_SIZE);			
 			for (i = 0; i < num_1k_VRAM_pages; i++) {
 				VROM_pages[i] = &VROM[i * 0x400];
 			}			
 		}
-		for (i = 0; i < num_8k_NVRAM_pages; i++) {
+		for (i = 0; i < num_8k_WRAM_pages; i++) {
 			WRAM_pages[i] = &WRAM[i * 0x2000];
 		}
 

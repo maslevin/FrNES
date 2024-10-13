@@ -75,11 +75,8 @@ void Mapper_69_Write(uint16 addr, uint8 data) {
 
                 case 0x08: {
                     if(!(data & 0x40)) {
-                        printf("Map69: Set 0x6000-0x7FFF to Rom Page [%u]\n", data & 0x1f);
-                        // OK - this is really crappy, because the emulator wasn't architected to bank switch 0x6000 - 0x7FFF and just has a statically allocated buffer here
-                        // for now, just copy whatever page is bank swapped into the SRAM buffer so that everything works.  This is way slower than just adjusting a bank pointer.
-                        // TODO: set up a universal bank swapping solution
-                        memcpy(SRAM, ROM_pages[(data & 0x1f) % num_8k_ROM_pages], 0x2000);
+                        //printf("Map69: Set 0x6000-0x7FFF to Rom Page [%u]\n", data & 0x1f);
+                        BankTable[3] = ROMBANK_WRAM = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                     }
                 } break;
 

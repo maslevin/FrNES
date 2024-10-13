@@ -13,17 +13,16 @@ uint8 Mapper_119_irq_counter; // IRQ scanline counter, decreasing
 uint8 Mapper_119_irq_latch;   // IRQ scanline counter latch
 
 void Mapper_119_MMC3_set_CPU_banks() {
-    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
     if (prg_swap()) {
         //printf("Setting Prg Bank1 to page [%u] and Bank2 to page [%u]\n",Mapper_119_prg1,Mapper_119_prg0);
         ROMBANK0 = ROM_pages[ num_8k_ROM_pages - 2];
-        ROMBANK1 = ROM_pages[Mapper_119_prg1 % num_8k_ROM_banks];
-        ROMBANK2 = ROM_pages[Mapper_119_prg0 % num_8k_ROM_banks];
+        ROMBANK1 = ROM_pages[ Mapper_119_prg1 % num_8k_ROM_pages];
+        ROMBANK2 = ROM_pages[ Mapper_119_prg0 % num_8k_ROM_pages];
         ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
     } else {
         //printf("Setting Prg Bank0 to page [%u] and Bank1 to page [%u]\n",Mapper_119_prg0,Mapper_119_prg1);
-        ROMBANK0 = ROM_pages[Mapper_119_prg0 % num_8k_ROM_banks];
-        ROMBANK1 = ROM_pages[Mapper_119_prg1 % num_8k_ROM_banks];
+        ROMBANK0 = ROM_pages[ Mapper_119_prg0 % num_8k_ROM_pages];
+        ROMBANK1 = ROM_pages[ Mapper_119_prg1 % num_8k_ROM_pages];
         ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
         ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];     
     }
@@ -102,7 +101,8 @@ void Mapper_119_MMC3_set_PPU_banks() {
 }
 
 void Mapper_119_Init() {
-    for(int i = 0; i < 8; i++) Mapper_119_regs[i] = 0x00;
+    for (int i = 0; i < 8; i++)
+        Mapper_119_regs[i] = 0x00;
 
     // set CPU bank pointers
     Mapper_119_prg0 = 0;
@@ -121,8 +121,6 @@ void Mapper_119_Init() {
     Mapper_119_irq_enabled = 0;
     Mapper_119_irq_counter = 0;
     Mapper_119_irq_latch = 0;
-
-	K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
 void Mapper_119_Write(uint16 addr, uint8 data) {
@@ -141,7 +139,7 @@ void Mapper_119_Write(uint16 addr, uint8 data) {
 
             switch (Mapper_119_regs[0] & 0x07) {
                 case 0x00: {
-                    if (NesHeader.byRomSize > 0) {
+                    if (num_1k_VROM_pages) {
                         bank_num &= 0xfe;
                         Mapper_119_chr01 = bank_num;
                         Mapper_119_MMC3_set_PPU_banks();
@@ -149,7 +147,7 @@ void Mapper_119_Write(uint16 addr, uint8 data) {
                 } break;
 
                 case 0x01: {
-                    if (NesHeader.byRomSize > 0) {
+                    if (num_1k_VROM_pages) {
                         bank_num &= 0xfe;
                         Mapper_119_chr23 = bank_num;
                         Mapper_119_MMC3_set_PPU_banks();
@@ -157,28 +155,28 @@ void Mapper_119_Write(uint16 addr, uint8 data) {
                 } break;
 
                 case 0x02: {
-                    if (NesHeader.byRomSize > 0) {
+                    if (num_1k_VROM_pages) {
                         Mapper_119_chr4 = bank_num;
                         Mapper_119_MMC3_set_PPU_banks();
                     }
                 } break;
 
                 case 0x03: {
-                    if (NesHeader.byRomSize > 0) {
+                    if (num_1k_VROM_pages) {
                         Mapper_119_chr5 = bank_num;
                         Mapper_119_MMC3_set_PPU_banks();
                     }
                 } break;
 
                 case 0x04: {
-                    if (NesHeader.byRomSize > 0) {
+                    if (num_1k_VROM_pages) {
                         Mapper_119_chr6 = bank_num;
                         Mapper_119_MMC3_set_PPU_banks();
                     }
                 } break;
 
                 case 0x05: {
-                    if (NesHeader.byRomSize > 0) {
+                    if (num_1k_VROM_pages) {
                         Mapper_119_chr7 = bank_num;
                         Mapper_119_MMC3_set_PPU_banks();
                     }
