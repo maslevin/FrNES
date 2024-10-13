@@ -5,10 +5,10 @@
 
 extern uint32 numEmulationFrames;
 
-//#define PROFILE
+// #define PROFILE
 
 #ifdef PROFILE
-void resetProfiling(uint32 numFunctions);
+void resetProfiling(uint16 newProfilingMode, uint32 numFunctions);
 void setProfilingFunctionName(uint32 functionIndex, const char* functionName);
 void startProfiling(uint32 functionIndex);
 void endProfiling(uint32 functionIndex);
