@@ -313,8 +313,943 @@ void PrintRegisters() {
 	}
 }
 
+static void Op_00() {
+	TraceInstruction("BRK", NULL, 0);
+	VIRPC; PC++; PUSHW( PC ); SETF( FLAG_B ); PUSH( F ); SETF( FLAG_I ); PC = K6502_ReadW( VECTOR_IRQ ); REALPC; CLK( 7 );
+}
+
+// ORA (Zpg,X)
+static void Op_01() {
+	TraceInstruction("ORA", "($%04x,x)", AA_ABS);
+	ORA( A_IX ); ++pPC; CLK( 6 );
+}
+
+// ORA Zpg
+static void Op_05() {
+	TraceInstruction("ORA", "$%02x", *pPC);
+	ORA( A_ZP ); CLK( 3 );
+}
+
+// ASL Zpg
+static void Op_06() {
+	TraceInstruction("ASL", "$%02x", *pPC);
+	ASL( AA_ZP ); CLK( 5 );
+}
+
+// PHP
+static void Op_08() {
+	TraceInstruction("PHP", NULL, 0);
+	PUSH( F | FLAG_B | FLAG_R ); CLK( 3 );
+}
+
+// ORA #Oper
+static void Op_09() {
+	TraceInstruction("ORA", "#$%02x", *pPC);
+	ORA( A_IMM ); CLK( 2 );
+}
+
+// ASL A
+static void Op_0A() {
+	TraceInstruction("ASL", NULL, 0);
+	ASLA; CLK( 2 );
+}
+
+// ORA Abs
+static void Op_0D() {
+	TraceInstruction("ORA", "$%04x", AA_ABS);
+	ORA( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// ASL Abs
+static void Op_0E() {
+	TraceInstruction("ASL", "$%04x", AA_ABS);
+	ASL( AA_ABS ); pPC += 2; CLK( 6 );
+}
+
+// BPL Oper
+static void Op_10 () {
+	TraceInstruction("BPL", "$%04x", AA_ABS);
+	BRA( !( F & FLAG_N ) );
+}
+
+// ORA (Zpg),Y
+static void Op_11 () {
+	TraceInstruction("ORA", "($%04x),y", AA_ABS);
+	ORA( A_IY ); CLK( 5 );
+}
+
+// ORA Zpg,X
+static void Op_15 () {
+	TraceInstruction("ORA", "$%02x,x", *pPC);	
+	ORA( A_ZPX ); CLK( 4 );
+}
+
+// ASL Zpg,X
+static void Op_16() {
+	TraceInstruction("ASL", "$%02x,x", *pPC);	
+	ASL( AA_ZPX ); CLK( 6 );
+}
+
+// CLC
+static void Op_18() {
+	TraceInstruction("CLC", NULL, 0);
+	RSTF( FLAG_C ); CLK( 2 );
+}
+
+// ORA Abs,Y
+static void Op_19 () {
+	TraceInstruction("ORA", "$%04x,y", AA_ABS);	
+	ORA( A_ABSY ); CLK( 4 );
+}
+
+// ORA Abs,X
+static void Op_1D() {
+	TraceInstruction("ORA", "$%04x,x", AA_ABS);
+	ORA( A_ABSX ); CLK( 4 );
+}
+
+// ASL Abs,X
+static void Op_1E() {
+	TraceInstruction("ASL", "$%04x,x", AA_ABS);
+	ASL( AA_ABSX ); pPC += 2; CLK( 7 );
+}
+
+// JSR Abs
+static void Op_20() {
+	TraceInstruction("JSR", "$%04x", AA_ABS);
+	JSR; CLK( 6 );
+}
+
+// AND (Zpg,X)
+static void Op_21() {
+	TraceInstruction("AND", "($%02x,x)", *pPC);
+	AND( A_IX ); ++pPC; CLK( 6 );
+}
+
+// BIT Zpg
+static void Op_24() {
+	TraceInstruction("BIT", "$%02x", *pPC);
+	BIT( A_ZP ); CLK( 3 );
+}
+
+// AND Zpg
+static void Op_25() {
+	TraceInstruction("AND", "$%02x", *pPC);
+	AND( A_ZP ); CLK( 3 );
+}
+
+// ROL Zpg
+static void Op_26() {
+	TraceInstruction("ROL", "$%02x", *pPC);	
+	ROL( AA_ZP ); CLK( 5 );
+}
+
+// PLP
+static void Op_28() {
+	TraceInstruction("PLP", NULL, 0);
+	POP( F ); SETF( FLAG_R ); CLK( 4 );
+}
+
+// AND #Oper
+static void Op_29() {
+	TraceInstruction("AND", "#$%02x", *pPC);	
+	AND( A_IMM ); CLK( 2 );
+}
+
+// ROL A
+static void Op_2A() {
+	TraceInstruction("ROL", NULL, 0);	
+	ROLA; CLK( 2 );
+}
+
+// BIT Abs
+static void Op_2C()  {
+	TraceInstruction("BIT", "$%04x", AA_ABS);	
+	BIT( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// AND Abs 
+static void Op_2D() {
+	TraceInstruction("AND", "$%04x", AA_ABS);
+	AND( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// ROL Abs
+static void Op_2E() {
+	TraceInstruction("ROL", "$%04x", AA_ABS);
+	ROL( AA_ABS ); pPC += 2; CLK( 6 );
+}
+
+// BMI Oper 
+static void Op_30() {
+	TraceInstruction("BMI", "$%02x", *pPC);		
+	BRA( F & FLAG_N );
+}
+
+// AND (Zpg),Y
+static void Op_31() {
+	TraceInstruction("AND", "($%02x),y", *pPC);	
+	AND( A_IY ); CLK( 5 );
+}
+
+// AND Zpg,X
+static void Op_35() {
+	TraceInstruction("AND", "$%02x,x", *pPC);		
+	AND( A_ZPX ); CLK( 4 );
+}
+
+// ROL Zpg,X
+static void Op_36() {
+	TraceInstruction("ROL", "$%02x,x", *pPC);		
+	ROL( AA_ZPX ); CLK( 6 );
+}
+
+// SEC
+static void Op_38() {
+	TraceInstruction("SEC", NULL, 0);
+	SETF( FLAG_C ); CLK( 2 );
+}
+
+// AND Abs,Y
+static void Op_39() {
+	TraceInstruction("AND", "$%04x,y", AA_ABS);		
+	AND( A_ABSY ); CLK( 4 );
+}
+
+// AND Abs,X
+static void Op_3D() {
+	TraceInstruction("AND", "$%04x,x", AA_ABS);	
+	AND( A_ABSX ); CLK( 4 );
+}
+
+// ROL Abs,X
+static void Op_3E() {
+	TraceInstruction("ROL", "$%04x,x", AA_ABS);	
+	ROL( AA_ABSX ); pPC += 2; CLK( 7 );
+}
+
+// RTI
+static void Op_40() {
+	TraceInstruction("RTI", NULL, 0);
+	POP( F ); SETF( FLAG_R ); POPW( PC ); REALPC; CLK( 6 );
+}
+
+// EOR (Zpg,X)
+static void Op_41() {
+	TraceInstruction("EOR", "($%02x,x)", *pPC);	
+	EOR( A_IX ); ++pPC; CLK( 6 );
+}
+
+// EOR Zpg
+static void Op_45() {
+	TraceInstruction("EOR", "$%02x", *pPC);	
+	EOR( A_ZP ); CLK( 3 );
+}
+
+// LSR Zpg
+static void Op_46() {
+	TraceInstruction("LSR", "$%02x", *pPC);	
+	LSR( AA_ZP ); CLK( 5 );
+}
+
+// PHA
+static void Op_48() {
+	TraceInstruction("PHA", NULL, 0);	
+	PUSH( A ); CLK( 3 );
+}
+
+// EOR #Oper
+static void Op_49() {
+	TraceInstruction("EOR", "#$%02x", *pPC);		
+	EOR( A_IMM ); CLK( 2 );
+}
+
+// LSR A
+static void Op_4A() {
+	TraceInstruction("LSR", NULL, 0);	
+	LSRA; CLK( 2 );
+}
+
+// JMP Abs
+static void Op_4C() {
+	TraceInstruction("JMP", "$%04x", AA_ABS);	
+	JMP( AA_ABS ); CLK( 3 );
+}
+
+// EOR Abs
+static void Op_4D() {
+	TraceInstruction("EOR", "$%04x", AA_ABS);	
+	EOR( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// LSR Abs
+static void Op_4E() {
+	TraceInstruction("LSR", "$%04x", AA_ABS);	
+	LSR( AA_ABS ); pPC += 2; CLK( 6 );
+}
+
+// BVC
+static void Op_50() {
+	TraceInstruction("BVC", "$%02x", *pPC);		
+	BRA( !( F & FLAG_V ) );
+}
+
+// EOR (Zpg),Y
+static void Op_51() {
+	TraceInstruction("EOR", "($%02x),y", *pPC);	
+	EOR( A_IY ); CLK( 5 );
+}
+
+// EOR Zpg,X
+static void Op_55() {
+	TraceInstruction("EOR", "$%02x,x", *pPC);		
+	EOR( A_ZPX ); CLK( 4 );
+}
+
+// LSR Zpg,X
+static void Op_56() {
+	TraceInstruction("LSR", "$%02x,x", *pPC);		
+	LSR( AA_ZPX ); CLK( 6 );
+}
+
+// CLI
+static void Op_58() {
+	TraceInstruction("CLI", NULL, 0);	
+	byD0 = F;
+    RSTF( FLAG_I ); CLK( 2 );
+    if ( ( byD0 & FLAG_I ) && IRQ_State == 0 ) {
+		// IRQ Interrupt
+		// Execute IRQ if an I flag isn't being set
+		if ( !( F & FLAG_I ) ) {
+			CLK( 7 );
+
+			VIRPC;
+			PUSHW( PC );
+			PUSH( F & ~FLAG_B );
+
+			RSTF( FLAG_D );
+			SETF( FLAG_I );
+
+			PC = K6502_ReadW( VECTOR_IRQ );
+			REALPC;
+		}
+    }
+}
+
+// EOR Abs,Y
+static void Op_59() {
+	TraceInstruction("EOR", "$%04x,y", AA_ABS);		
+	EOR( A_ABSY ); CLK( 4 );
+}
+
+// EOR Abs,X
+static void Op_5D() {
+	TraceInstruction("EOR", "$%04x,x", AA_ABS);	
+	EOR( A_ABSX ); CLK( 4 );
+}
+
+// LSR Abs,X
+static void Op_5E() {
+	TraceInstruction("LSR", "$%04x,x", AA_ABS);	
+	LSR( AA_ABSX ); pPC += 2; CLK( 7 );
+}
+
+// RTS
+static void Op_60() {
+	TraceInstruction("RTS", NULL, 0);	
+	POPW( PC ); ++PC; REALPC; CLK( 6 );
+}
+
+// ADC (Zpg,X)
+static void Op_61() {
+	TraceInstruction("ADC", "($%02x,x)", *pPC);	
+	ADC( A_IX ); ++pPC; CLK( 6 );
+}
+
+// ADC Zpg
+static void Op_65() {
+	TraceInstruction("ADC", "$%02x", *pPC);	
+	ADC( A_ZP ); CLK( 3 );
+}
+
+// ROR Zpg
+static void Op_66() {
+	TraceInstruction("ROR", "$%02x", *pPC);	
+	ROR( AA_ZP ); CLK( 5 );
+}
+
+// PLA
+static void Op_68() {
+	TraceInstruction("PLA", NULL, 0);	
+	POP( A ); TEST( A ); CLK( 4 );
+}
+
+// ADC #Oper
+static void Op_69() {
+	TraceInstruction("ADC", "#$%02x", *pPC);		
+	ADC( A_IMM ); CLK( 2 );
+}
+
+// ROR A
+static void Op_6A() {
+	TraceInstruction("ROR", NULL, 0);	
+	RORA; CLK( 2 );
+}
+
+// JMP (Abs)
+static void Op_6C() {
+	TraceInstruction2("JMP", "($%04x) = $%04x", AA_ABS, K6502_ReadW(AA_ABS));
+	JMP( K6502_ReadW( AA_ABS ) ); CLK( 5 );
+}
+
+// ADC Abs
+static void Op_6D() {
+	TraceInstruction("ADC", "$%04x", AA_ABS);	
+	ADC( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// ROR Abs
+static void Op_6E() {
+	TraceInstruction("ROR", "$%04x", AA_ABS);	
+	ROR( AA_ABS ); pPC += 2; CLK( 6 );
+}
+
+// BVS
+static void Op_70() {
+	TraceInstruction("BVS", "$%02x", *pPC);
+	BRA( F & FLAG_V );
+}
+
+// ADC (Zpg),Y
+static void Op_71() {
+	TraceInstruction("ADC", "($%04x),y", AA_ABS);
+	ADC( A_IY ); CLK( 5 );
+}
+
+// ADC Zpg,X
+static void Op_75() {
+	TraceInstruction("ADC", "$%02x,x", *pPC);		
+	ADC( A_ZPX ); CLK( 4 );
+}
+
+// ROR Zpg,X
+static void Op_76() {
+	TraceInstruction("ROR", "$%02x,x", *pPC);		
+	ROR( AA_ZPX ); CLK( 6 );
+}
+
+// SEI
+static void Op_78() {
+	TraceInstruction("SEI", NULL, 0);	
+	SETF( FLAG_I ); CLK( 2 );
+}
+
+// ADC Abs,Y
+static void Op_79() {
+	TraceInstruction("ADC", "$%04x,y", AA_ABS);		
+	ADC( A_ABSY ); CLK( 4 );
+}
+
+// ADC Abs,X
+static void Op_7D() {
+	TraceInstruction("ADC", "$%04x,x", AA_ABS);	
+    ADC( A_ABSX ); CLK( 4 );
+}
+
+// ROR Abs,X
+static void Op_7E() {
+	TraceInstruction("ROR", "$%04x,x", AA_ABS);	
+	ROR( AA_ABSX ); pPC += 2; CLK( 7 );
+}
+
+// STA (Zpg,X)
+static void Op_81() {
+	TraceInstruction("STA", "($%02x,x)", *pPC);	
+	STA( AA_IX ); ++pPC; CLK( 6 );
+}
+      
+ // STY Zpg
+static void Op_84() {
+	TraceInstruction("STY", "$%02x", *pPC);	
+	STY( AA_ZP ); CLK( 3 );
+}
+
+// STA Zpg
+static void Op_85() {
+	TraceInstruction("STA", "$%02x", *pPC);
+	STA( AA_ZP ); CLK( 3 );
+}
+
+// STX Zpg
+static void Op_86() {
+	TraceInstruction("STX", "$%02x", *pPC);	
+	STX( AA_ZP ); CLK( 3 );
+}
+
+// DEY
+static void Op_88() {
+	TraceInstruction("DEY", NULL, 0);
+	--Y; TEST( Y ); CLK( 2 );
+}
+
+// BIT #
+static void Op_89() {
+	TraceInstruction("BIT", "#$%02x", *pPC);
+	BIT( AA_ZP ); CLK( 2 );
+}
+
+// TXA
+static void Op_8A() {
+	TraceInstruction("TXA", NULL, 0);
+	A = X; TEST( A ); CLK( 2 );
+}
+
+// STY Abs
+static void Op_8C() {
+	TraceInstruction("STY", "$%04x", AA_ABS);	
+	STY( AA_ABS ); pPC += 2; CLK( 4 );
+}
+
+// STA Abs
+static void Op_8D() {
+	TraceInstruction("STA", "$%04x", AA_ABS);	
+	STA( AA_ABS ); pPC += 2; CLK( 4 );
+}
+
+// STX Abs
+static void Op_8E() {
+	TraceInstruction("STX", "$%04x", AA_ABS);	
+	STX( AA_ABS ); pPC += 2; CLK( 4 );
+}
+
+// BCC
+static void Op_90() {
+	TraceInstruction("BCC", "$%02x", *pPC);		
+	BRA( !( F & FLAG_C ) );
+}
+
+// STA (Zpg),Y
+static void Op_91() {
+	TraceInstruction("STA", "($%04x),y", AA_ABS);		
+	STA( AA_IY ); ++pPC; CLK( 6 );
+}
+
+// STY Zpg,X
+static void Op_94() {
+	TraceInstruction("STY", "$%02x,x", *pPC);	
+	STY( AA_ZPX ); CLK( 4 );
+}
+
+// STA Zpg,X
+static void Op_95() {
+	TraceInstruction("STA", "$%02x,x", *pPC);		
+	STA( AA_ZPX ); CLK( 4 );
+}
+
+// STX Zpg,Y
+static void Op_96() {
+	TraceInstruction("STX", "$%02x,x", *pPC);		
+	STX( AA_ZPY ); CLK( 4 );
+}
+
+// TYA
+static void Op_98() {
+	TraceInstruction("TYA", NULL, 0);	
+	A = Y; TEST( A ); CLK( 2 );
+}
+
+// STA Abs,Y
+static void Op_99() {
+	TraceInstruction("STA", "$%04x,y", AA_ABS);		
+	STA( AA_ABSY ); pPC += 2; CLK( 5 );
+}
+
+// TXS
+static void Op_9A() {
+	TraceInstruction("TXS", NULL, 0);	
+	SP = X; CLK( 2 );
+}
+
+// STA Abs,X
+static void Op_9D() {
+	TraceInstruction("STA", "$%04x,x", AA_ABS);	
+	STA( AA_ABSX ); pPC += 2; CLK( 5 );
+}
+
+// LDY #Oper
+static void Op_A0() {
+	TraceInstruction("LDY", "#$%02x", *pPC);	
+	LDY( A_IMM ); CLK( 2 );
+}
+
+// LDA (Zpg,X)
+static void Op_A1() {
+	TraceInstruction("LDA", "($%04x,x)", AA_ABS);	
+	LDA( A_IX ); ++pPC; CLK( 6 );
+}
+
+// LDX #Oper
+static void Op_A2() {
+	TraceInstruction("LDX", "#$%02x", *pPC);	
+	LDX( A_IMM ); CLK( 2 );
+}
+
+// LDY Zpg
+static void Op_A4() {
+	TraceInstruction("LDY", "$%02x", *pPC);	
+	LDY( A_ZP ); CLK( 3 );
+}
+
+// LDA Zpg
+static void Op_A5() {
+	TraceInstruction("LDA", "$%02x", *pPC);
+	LDA( A_ZP ); CLK( 3 );
+}
+
+// LDX Zpg
+static void Op_A6() {
+	TraceInstruction("LDX", "$%02x", *pPC);	
+	LDX( A_ZP ); CLK( 3 );
+}
+
+// TAY
+static void Op_A8() {
+	TraceInstruction("TAY", NULL, 0);	
+	Y = A; TEST( A ); CLK( 2 );
+}
+
+// LDA #Oper
+static void Op_A9() {
+	TraceInstruction("LDA", "#$%02x", *pPC);		
+	LDA( A_IMM ); CLK( 2 );
+}
+
+// TAX
+static void Op_AA() {
+	TraceInstruction("TAX", NULL, 0);	
+	X = A; TEST( A ); CLK( 2 );
+}
+
+// LDY Abs
+static void Op_AC() {
+	TraceInstruction("LDY", "$%04x", AA_ABS);	
+	LDY( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// LDA Abs
+static void Op_AD() {
+	TraceInstruction("LDA", "$%04x", AA_ABS);	
+	LDA( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// LDX Abs
+static void Op_AE() {
+	TraceInstruction("LDX", "$%04x", AA_ABS);	
+	LDX( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// BCS
+static void Op_B0() {
+	TraceInstruction("BCS", "$%02x", *pPC);		
+	BRA( F & FLAG_C );
+}
+
+// LDA (Zpg),Y
+static void Op_B1() {
+	TraceInstruction("LDA", "($%04x),y", AA_ABS);		
+	LDA( A_IY ); CLK( 5 );
+}
+
+// LDY Zpg,X
+static void Op_B4() {
+	TraceInstruction("LDY", "$%02x,x", *pPC);
+	LDY( A_ZPX ); CLK( 4 );
+}
+
+// LDA Zpg,X
+static void Op_B5() {
+	TraceInstruction("LDA", "$%02x,x", *pPC);
+	LDA( A_ZPX ); CLK( 4 );
+}
+
+// LDX Zpg,Y
+static void Op_B6() {
+	TraceInstruction("LDX", "$%02x,x", *pPC);		
+	LDX( A_ZPY ); CLK( 4 );
+}
+
+// CLV
+static void Op_B8() {
+	TraceInstruction("CLV", NULL, 0);	
+	RSTF( FLAG_V ); CLK( 2 );
+}
+
+// LDA Abs,Y
+static void Op_B9() {
+	TraceInstruction("LDA", "$%04x,y", AA_ABS);		
+	LDA( A_ABSY ); CLK( 4 );
+}
+
+// TSX
+static void Op_BA() {
+	TraceInstruction("TSX", NULL, 0);	
+	X = SP; TEST( X ); CLK( 2 );
+}
+
+// LDY Abs,X
+static void Op_BC() {
+	TraceInstruction("LDY", "$%04x,x", AA_ABS);
+	LDY( A_ABSX ); CLK( 4 );
+}
+
+// LDA Abs,X
+static void Op_BD() {
+	TraceInstruction("LDA", "$%04x,x", AA_ABS);
+	LDA( A_ABSX ); CLK( 4 );
+}
+
+// LDX Abs,Y
+static void Op_BE() {
+	TraceInstruction("LDX", "$%04x,x", AA_ABS);	
+	LDX( A_ABSY ); CLK( 4 );
+}
+
+// CPY #Oper
+static void Op_C0() {
+	TraceInstruction("CPY", "#$%02x", *pPC);	
+	CPY( A_IMM ); CLK( 2 );
+}
+
+// CMP (Zpg,X)
+static void Op_C1() {
+	TraceInstruction("CMP", "($%04x,x)", A_IX);	
+	CMP( A_IX ); ++pPC; CLK( 6 );
+}
+
+// CPY Zpg
+static void Op_C4() {
+	TraceInstruction("CPY", "$%02x", *pPC);	
+	CPY( A_ZP ); CLK( 3 );
+}
+
+// CMP Zpg
+static void Op_C5() {
+	TraceInstruction("CMP", "$%02x", *pPC);	
+	CMP( A_ZP ); CLK( 3 );
+}
+
+// DEC Zpg
+static void Op_C6() {
+	TraceInstruction("DEC", "$%02x", *pPC);	
+	DEC( AA_ZP ); CLK( 5 );
+}
+
+// INY
+static void Op_C8() {
+	TraceInstruction("INY", NULL, 0);	
+	++Y; TEST( Y ); CLK( 2 );	
+}
+
+// CMP #Oper
+static void Op_C9() {
+	TraceInstruction("CMP", "#$%02x", *pPC);
+	CMP( A_IMM ); CLK( 2 );
+}
+
+// DEX
+static void Op_CA() {
+	TraceInstruction("DEX", NULL, 0);	
+	--X; TEST( X ); CLK( 2 );
+}
+
+// AXS
+static void Op_CB() {
+	TraceInstruction("AXS", "$%02x", *pPC);	
+	X = (A & X) - (*pPC++); TEST( X ); CLK( 2 );	
+}
+
+// CPY Abs
+static void Op_CC() {
+	TraceInstruction("CPY", "$%04x", AA_ABS);	
+	CPY( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// CMP Abs
+static void Op_CD() {
+	TraceInstruction("CMP", "$%04x", AA_ABS);	
+	CMP( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// DEC Abs
+static void Op_CE() {
+	TraceInstruction("DEC", "$%04x", AA_ABS);	
+	DEC( AA_ABS ); pPC += 2;CLK( 6 );
+}
+
+// BNE
+static void Op_D0() {
+	TraceInstruction("BNE", "$%04x", ((pPC - pPC_Offset) + (char)(*pPC) + 1));		
+	BRA( !( F & FLAG_Z ) );
+}
+
+// CMP (Zpg),Y
+static void Op_D1() {
+	TraceInstruction("CMP", "($%04x),y", AA_ABS);		
+	CMP( A_IY ); CLK( 5 );
+}
+
+// CMP Zpg,X
+static void Op_D5 () {
+	TraceInstruction("CMP", "$%02x,x", *pPC);		
+	CMP( A_ZPX ); CLK( 4 );
+}
+        
+// DEC Zpg,X
+static void Op_D6() {
+	TraceInstruction("DEC", "$%02x,x", *pPC);		
+	DEC( AA_ZPX ); CLK( 6 );
+}
+
+// CLD
+static void Op_D8() {
+	TraceInstruction("CLD", NULL, 0);	
+	RSTF( FLAG_D ); CLK( 2 );
+}
+
+// CMP Abs,Y
+static void Op_D9() {
+	TraceInstruction("CMP", "$%04x,y", AA_ABS);		
+	CMP( A_ABSY ); CLK( 4 );
+}
+
+// CMP Abs,X
+static void Op_DD() {
+	TraceInstruction("CMP", "$%04x,x", AA_ABS);	
+	CMP( A_ABSX ); CLK( 4 );
+}
+
+// DEC Abs,X
+static void Op_DE() {
+	TraceInstruction("DEC", "$%04x,x", AA_ABS);	
+	DEC( AA_ABSX ); pPC += 2; CLK( 7 );
+}
+
+// CPX #Oper
+static void Op_E0() {
+	TraceInstruction("CPX", "#$%02x", *pPC);	
+	CPX( A_IMM ); CLK( 2 );
+}
+
+// SBC (Zpg,X)
+static void Op_E1() {
+	TraceInstruction("SBC", "($%04x,x)", AA_ABS);	
+	SBC( A_IX ); ++pPC; CLK( 6 );
+}
+
+// CPX Zpg
+static void Op_E4() {
+	TraceInstruction("CPX", "$%02x", *pPC);	
+	CPX( A_ZP ); CLK( 3 );
+}
+
+// SBC Zpg
+static void Op_E5() {
+	TraceInstruction("SBC", "$%02x", *pPC);	
+	SBC( A_ZP ); CLK( 3 );
+}
+
+// INC Zpg
+static void Op_E6() {
+	TraceInstruction("INC", "$%02x", *pPC);	
+	INC( AA_ZP ); CLK( 5 );
+}
+
+// INX 
+static void Op_E8() {
+	TraceInstruction("INX", NULL, 0);
+	++X; TEST( X ); CLK( 2 );
+}
+
+// SBC #Oper
+static void Op_E9() {
+	TraceInstruction("SBC", "#$%02x", *pPC);
+	SBC( A_IMM ); CLK( 2 );
+}
+
+// NOP
+static void Op_EA() {
+	TraceInstruction("NOP", NULL, 0);	
+	CLK( 2 );
+}
+
+// CPX Abs
+static void Op_EC() {
+	TraceInstruction("CPX", "$%04x", AA_ABS);
+	CPX( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// SBC Abs
+static void Op_ED() {
+	TraceInstruction("SBC", "$%04x", AA_ABS);	
+	SBC( A_ABS ); pPC += 2; CLK( 4 );
+}
+
+// INC Abs
+static void Op_EE() {
+	TraceInstruction("INC", "$%04x", AA_ABS);	
+	INC( AA_ABS ); pPC += 2; CLK( 6 );
+}
+
+// BEQ
+static void Op_F0() {
+	TraceInstruction("BEQ", "$%02x", *pPC);		
+	BRA( F & FLAG_Z );
+}
+
+// SBC (Zpg),Y
+static void Op_F1() {
+	TraceInstruction("SBC", "($%04x),y", AA_ABS);		
+	SBC( A_IY ); CLK( 5 );
+}
+
+// SBC Zpg,X
+static void Op_F5() {
+	TraceInstruction("SBC", "$%02x,x", *pPC);		
+	SBC( A_ZPX ); CLK( 4 );
+}
+
+// INC Zpg,X
+static void Op_F6() {
+	TraceInstruction("INC", "$%02x,x", *pPC);		
+	INC( AA_ZPX ); CLK( 6 );
+}
+
+// SED
+static void Op_F8() {
+	TraceInstruction("SED", NULL, 0);	
+	SETF( FLAG_D ); CLK( 2 );
+}
+
+// SBC Abs,Y
+static void Op_F9() {
+	TraceInstruction("SBC", "$%04x,y", AA_ABS);		
+	SBC( A_ABSY ); CLK( 4 );
+}
+
+// SBC Abs,X
+static void Op_FD() {
+	TraceInstruction("SBC", "$%04x,x", AA_ABS);	
+	SBC( A_ABSX ); CLK( 4 );
+}
+
+// INC Abs,X
+static void Op_FE() {
+	TraceInstruction("INC", "$%04x,x", AA_ABS);	
+	INC( AA_ABSX ); pPC += 2; CLK( 7 );
+}
+
 // Unknown Instruction
-void Op_XX() {
+static void Op_XX() {
 	TraceInstruction("HACF", NULL, 0);
 	printf("WARNING: RUNNING UNDOCUMENTED INSTRUCTION - HALTING\n");
 	PrintRegisters();
@@ -329,6 +1264,29 @@ void Op_XX() {
 	HALT = 1;
 	CLK( 2 );
 }
+
+struct OpcodeTable_t {
+	void (*opcode)();
+};
+
+struct OpcodeTable_t OpcodeTable[256] = {
+	{Op_00}, {Op_01}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_05}, {Op_06}, {Op_XX}, {Op_08}, {Op_09}, {Op_0A}, {Op_XX}, {Op_XX}, {Op_0D}, {Op_0E}, {Op_XX},
+	{Op_10}, {Op_11}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_15}, {Op_16}, {Op_XX}, {Op_18}, {Op_19}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_1D}, {Op_1E}, {Op_XX},
+	{Op_20}, {Op_21}, {Op_XX}, {Op_XX}, {Op_24}, {Op_25}, {Op_26}, {Op_XX}, {Op_28}, {Op_29}, {Op_2A}, {Op_XX}, {Op_2C}, {Op_2D}, {Op_2E}, {Op_XX},
+	{Op_30}, {Op_31}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_35}, {Op_36}, {Op_XX}, {Op_38}, {Op_39}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_3D}, {Op_3E}, {Op_XX},
+	{Op_40}, {Op_41}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_45}, {Op_46}, {Op_XX}, {Op_48}, {Op_49}, {Op_4A}, {Op_XX}, {Op_4C}, {Op_4D}, {Op_4E}, {Op_XX},
+	{Op_50}, {Op_51}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_55}, {Op_56}, {Op_XX}, {Op_58}, {Op_59}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_5D}, {Op_5E}, {Op_XX},
+	{Op_60}, {Op_61}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_65}, {Op_66}, {Op_XX}, {Op_68}, {Op_69}, {Op_6A}, {Op_XX}, {Op_6C}, {Op_6D}, {Op_6E}, {Op_XX},
+	{Op_70}, {Op_71}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_75}, {Op_76}, {Op_XX}, {Op_78}, {Op_79}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_7D}, {Op_7E}, {Op_XX},
+	{Op_XX}, {Op_81}, {Op_XX}, {Op_XX}, {Op_84}, {Op_85}, {Op_86}, {Op_XX}, {Op_88}, {Op_89}, {Op_8A}, {Op_XX}, {Op_8C}, {Op_8D}, {Op_8E}, {Op_XX},
+	{Op_90}, {Op_91}, {Op_XX}, {Op_XX}, {Op_94}, {Op_95}, {Op_96}, {Op_XX}, {Op_98}, {Op_99}, {Op_9A}, {Op_XX}, {Op_XX}, {Op_9D}, {Op_XX}, {Op_XX},
+	{Op_A0}, {Op_A1}, {Op_A2}, {Op_XX}, {Op_A4}, {Op_A5}, {Op_A6}, {Op_XX}, {Op_A8}, {Op_A9}, {Op_AA}, {Op_XX}, {Op_AC}, {Op_AD}, {Op_AE}, {Op_XX},
+	{Op_B0}, {Op_B1}, {Op_XX}, {Op_XX}, {Op_B4}, {Op_B5}, {Op_B6}, {Op_XX}, {Op_B8}, {Op_B9}, {Op_BA}, {Op_XX}, {Op_BC}, {Op_BD}, {Op_BE}, {Op_XX},
+	{Op_C0}, {Op_C1}, {Op_XX}, {Op_XX}, {Op_C4}, {Op_C5}, {Op_C6}, {Op_XX}, {Op_C8}, {Op_C9}, {Op_CA}, {Op_CB}, {Op_CC}, {Op_CD}, {Op_CE}, {Op_XX},
+	{Op_D0}, {Op_D1}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_D5}, {Op_D6}, {Op_XX}, {Op_D8}, {Op_D9}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_DD}, {Op_DE}, {Op_XX},
+	{Op_E0}, {Op_E1}, {Op_XX}, {Op_XX}, {Op_E4}, {Op_E5}, {Op_E6}, {Op_XX}, {Op_E8}, {Op_E9}, {Op_EA}, {Op_XX}, {Op_EC}, {Op_ED}, {Op_EE}, {Op_XX},
+	{Op_F0}, {Op_F1}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_F5}, {Op_F6}, {Op_XX}, {Op_F8}, {Op_F9}, {Op_XX}, {Op_XX}, {Op_XX}, {Op_FD}, {Op_FE}, {Op_XX}
+};
 
 /*===================================================================*/
 /*                                                                   */
@@ -541,6 +1499,7 @@ __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 		K6502_DoNMI();
 		K6502_DoIRQ();
 
+/*
 		// Read an instruction
 		opcode = *(pPC++);
 
@@ -1332,6 +2291,9 @@ __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 				Op_XX();
 				break;
 		}
+*/
+
+		((OpcodeTable[*(pPC++)]).opcode)();
 
 		// We crossed a bank boundary, make sure we end up in the right PRG bank
 		if (pPC - pPC_Offset > 0x1FFF) {
