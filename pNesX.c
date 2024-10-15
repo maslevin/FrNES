@@ -33,9 +33,6 @@
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
 
-/* RAM */
-unsigned char RAM[ RAM_SIZE ];
-
 /* ROM BANK ( 8Kb * 4 ) */
 unsigned char *ROMBANK_WRAM; // 0x6000
 unsigned char *ROMBANK0;
@@ -43,54 +40,9 @@ unsigned char *ROMBANK1;
 unsigned char *ROMBANK2;
 unsigned char *ROMBANK3;
 
-/*-------------------------------------------------------------------*/
-/*  PPU resources                                                    */
-/*-------------------------------------------------------------------*/
 #define __ALIGN32__		__attribute__ ((aligned (32)))
 
-/* PPU RAM */
-unsigned char PPURAM[ PPURAM_SIZE ];
-
 extern unsigned char HALT;
-
-/* PPU BANK ( 1Kb * 16 ) */
-unsigned char *PPUBANK[ 16 ];
-
-/* Sprite RAM */
-unsigned char SPRRAM[ SPRRAM_SIZE ];
-
-/* PPU Info Struct */
-PPU_Info_t ppuinfo;
-
-/* PPU Register */
-unsigned char PPU_R1;
-unsigned char PPU_R2;
-unsigned char PPU_R3;
-unsigned char PPU_R7;
-
-/* Flag for PPU Address and Scroll Latch */
-unsigned char PPU_Latch_Flag;
-
-/* PPU Address */
-uint16 PPU_Temp;
-
-/* The increase value of the PPU Address */
-uint16 PPU_Increment;
-
-/* Current Scanline */
-uint16 PPU_Scanline;
-
-//32 - byte aligned sound output buffer
-#define SAMPLE_BUFFER_LENGTH 2940
-__ALIGN32__ uint16 sample_buffer[SAMPLE_BUFFER_LENGTH];
-
-#define SAMPLES_PER_FRAME 736
-
-/* Sprite #0 Scanline Hit Position */
-int SpriteJustHit;
-
-/* Flag every odd cycle */
-bool odd_cycle;
 
 /*-------------------------------------------------------------------*/
 /*  Display and Others resouces                                      */
@@ -123,13 +75,18 @@ unsigned char PPU_MirrorTable[][ 4 ] = {
 /*  APU and Pad resources                                            */
 /*-------------------------------------------------------------------*/
 
+//32 - byte aligned sound output buffer
+#define SAMPLE_BUFFER_LENGTH 2940
+__ALIGN32__ uint16 sample_buffer[SAMPLE_BUFFER_LENGTH];
+
+#define SAMPLES_PER_FRAME 736
+
 /* APU Register */
 unsigned char APU_Reg[ 0x18 ];
 
 uint32 num_bytes = 5880;
 uint32 firmware_size = 3292;
 
-//void* sample_buffer = 0x7C002000;
 static volatile unsigned long *position  = (volatile unsigned long*)(0x10014 + 0xa0800000);
 static volatile unsigned long *start  = (volatile unsigned long*)(0x10000 + 0xa0800000);
 
@@ -309,14 +266,8 @@ int pNesX_Reset() {
 	/*  Initialize resources                                             */
 	/*-------------------------------------------------------------------*/
 
-	// Clear RAM
-	memset( RAM, 0, sizeof RAM );
+	// reset CPU and PPU
 
-	// Clear PPU RAM
-	memset( PPURAM, 0, PPURAM_SIZE );
-
-	// Clear SPR RAM
-	memset( SPRRAM, 0, SPRRAM_SIZE );
 
 	// Setup WRAM if present
 	if (num_8k_WRAM_pages) {
