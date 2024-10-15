@@ -46,7 +46,7 @@
 #include <stdlib.h> //DCR
 #include "nes_apu.h"
 #include "nes_exsound.h"
-#include "K6502.h"
+// #include "K6502.h"
 
 /* included for nes_irq() and nes_clearframeirq() */
 #ifndef NSF_PLAYER

@@ -296,9 +296,19 @@ uint8 cartridge_cpu_read(uint16 addr) {
 }
 
 uint8 cartridge_cpu_write(uint16 addr, uint8 value) {
+//	printf("STARTING CARTRIDGE WRITE\n");
 	switch (addr) {
 		case 0x6000 ... 0x7FFF:
-			CPU_BANK_WRITE[3][addr & 0x1FFF] = value;
+			if (CPU_BANK_WRITE[3]) {
+//				printf("CART WRITE [$%04X]: [$%02X]\n", addr, value);
+				CPU_BANK_WRITE[3][addr & 0x1FFF] = value;
+
+				if (value == 0) {
+					printf("TEST MESSAGE: [%s]\n", &(CPU_BANK_READ[3][0x6004]));
+				}
+			} break;
+		default:
+//			printf("OUT OF RANGE [$%04X]\n", addr);
 			break;
 	}
 	mapper -> write(addr, value);

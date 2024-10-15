@@ -83,6 +83,11 @@ void Mapper_1_Init() {
 
     Mapper_1_Set_CPU_Banks();
 
+    if (num_8k_WRAM_pages) {
+        CPU_BANK_READ[3] = WRAM_pages[0];
+        CPU_BANK_WRITE[3] = WRAM_pages[0];
+    }
+
     if (num_1k_VROM_pages) {
         set_ppu_banks_low_to_vrom_pages(0, 1, 2, 3);
         set_ppu_banks_high_to_vrom_pages(4, 5, 6, 7);

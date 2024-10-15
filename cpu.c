@@ -51,6 +51,7 @@ uint8 read_access(uint16 addr) {
     return 0;
 }
 uint8 write_access(uint16 addr, uint8 value) {
+    //printf("write_access [$%04X]: [$%02X]\n", addr, value);
     uint8* r;
     switch (addr) {
         case 0x0000 ... 0x1FFF:  r = &RAM[addr % 0x800]; *r = value; return *r;  // RAM.
@@ -62,10 +63,12 @@ uint8 write_access(uint16 addr, uint8 value) {
         case            0x4017:  // if (wr) return APU::access<wr>(elapsed(), addr, v);
                                  // else return Joypad::read_state(1);                  // Joypad 1.
 
-        case            0x4014:  // if (wr) dma_oam(v); break;                          // OAM DMA.
+        case            0x4014:  dma_oam(value); break;                          // OAM DMA.
         case            0x4016:  // if (wr) { Joypad::write_strobe(v & 1); break; }     // Joypad strobe.
                                  // else return Joypad::read_state(0);                  // Joypad 0.
-        case 0x4018 ... 0xFFFF:  return cartridge_cpu_write(addr, value);              // Cartridge.
+        case 0x4018 ... 0xFFFF:  {
+            return cartridge_cpu_write(addr, value);              // Cartridge.
+        }
     }
     return 0;    
 }

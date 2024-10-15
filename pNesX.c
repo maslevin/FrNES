@@ -239,14 +239,16 @@ int pNesX_Reset() {
 	WorkFrameIdx = 0;
 	WorkFrame = WorkFrames[0];
 
-	// reset CPU and PPU
-	ppu_reset();
 	// TODO: figure out when to set up four screen from ROM header smartly
 	if (NesHeader.byInfo1 & 0x01) {
 		ppu_set_mirroring(PPU_MIRRORING_VERTICAL);
 	} else {
 		ppu_set_mirroring(PPU_MIRRORING_HORIZONTAL);
 	}
+
+	// reset CPU and PPU
+	ppu_reset();
+
 	mapper -> init();
 	power();
 
@@ -285,6 +287,9 @@ __attribute__ ((hot)) void pNesX_Main() {
 		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	}
 
+	maple_device_t* my_controller;
+	cont_state_t* my_state = NULL;		
+
 	// Main loop
 	while ( 1 ) {
 		if ( ExitCount > MAX_EXIT_COUNT )
@@ -310,6 +315,15 @@ __attribute__ ((hot)) void pNesX_Main() {
 				}
 				frames_per_second = averageFramesPerSecond / (float)NUM_FPS_SAMPLES;
 				last_frames_per_second_index = 0;
+			}
+		}
+
+		//Grab data from controller 0
+		my_controller = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
+		if (my_controller != NULL) {
+			my_state = (cont_state_t*)maple_dev_status(my_controller);
+			if (my_state -> buttons & CONT_START) {
+				break;
 			}
 		}
 

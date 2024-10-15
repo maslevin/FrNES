@@ -38,7 +38,8 @@ bool atLatchL, atLatchH;
 int scanline, dot;
 bool frameOdd;
 
-inline bool rendering() { return mask.bg || mask.spr; }
+//inline bool rendering() { return mask.bg || mask.spr; }
+inline bool rendering() { return true; }
 inline int spr_height() { return ctrl.sprSz ? 16 : 8; }
 
 #define __ALIGN32__		__attribute__ ((aligned (32)))
@@ -69,17 +70,16 @@ inline uint8 ppu_memory_read(uint16 addr) {
         default: return 0;
     }
 }
-inline void ppu_memory_write(uint16 addr, uint8 v)
-{
-    switch (addr)
-    {
-        case 0x0000 ... 0x1FFF:  cartridge_ppu_write(addr, v); break;  // CHR-ROM/RAM.
+inline void ppu_memory_write(uint16 addr, uint8 value) {
+//    printf("PPU WRITE [$%04X]: [$%02X]\n", addr, value);
+    switch (addr) {
+        case 0x0000 ... 0x1FFF:  cartridge_ppu_write(addr, value); break;  // CHR-ROM/RAM.
         case 0x2000 ... 0x3EFF:  {
-            ciRam[nt_mirror(addr)] = v; 
+            ciRam[nt_mirror(addr)] = value; 
         } break;    // Nametables.
         case 0x3F00 ... 0x3FFF:  // Palettes:
             if ((addr & 0x13) == 0x10) addr &= ~0x10;
-            cgRam[addr & 0x1F] = v; break;
+            cgRam[addr & 0x1F] = value; break;
     }
 }
 
@@ -339,6 +339,9 @@ void ppu_reset() {
     frameOdd = false;
     scanline = dot = 0;
     ctrl.r = mask.r = status.r = 0;
+    ppu_result = 0;
+    ppu_buffer = 0;
+    ppu_latch = 0;
 
     memset(scanlineBuffer, 0x00, 256);
     memset(ciRam,  0xFF, sizeof(ciRam));

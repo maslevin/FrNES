@@ -18,7 +18,6 @@
 #include "pNesX_System.h"
 
 #include "pNesX_System_DC.h"
-#include "K6502.h"
 
 #include "Mapper_0.h"
 #include "Mapper_1.h"
