@@ -22,6 +22,7 @@
 
 #include "Mapper_0.h"
 #include "Mapper_1.h"
+/*
 #include "Mapper_2.h"
 #include "Mapper_3.h"
 #include "Mapper_4.h"
@@ -47,6 +48,7 @@
 #include "Mapper_85.h"
 #include "Mapper_111.h"
 #include "Mapper_119.h"
+*/
 
 Mapper_t* mapper;
 uint8 MapperNo;
@@ -66,7 +68,7 @@ MapperTable_t Mappers[] = {
 			.hsync = Mapper_0_HSync
 		}
 	},
-	{ 
+    { 
 		1, &(Mapper_t) {
 			.init = Mapper_1_Init, 
 			.write = Mapper_1_Write,
@@ -75,7 +77,7 @@ MapperTable_t Mappers[] = {
 			.hsync = Mapper_0_HSync
 		} 
 	},
-	{ 
+/*	{ 
 		2, &(Mapper_t) { 
 			.init = Mapper_2_Init, 
 			.write = Mapper_2_Write,
@@ -393,10 +395,11 @@ MapperTable_t Mappers[] = {
 			.hsync = Mapper_119_HSync		
 		}
 	},
-	{ 120, NULL },			
+	{ 120, NULL }, */
 	{ -1, NULL }
 };
 
+/*
 void debugRomPages() {
 	printf("ROMBANK0: ");
     for (uint32 i = 0; i < 32; i++) {
@@ -418,4 +421,65 @@ void debugRomPages() {
         printf("$%02X ", ROMBANK3[i]);
     }
     printf("\n");  
+}
+*/
+
+// PPU Bank Pointers 0-7 should be set with 1kB VROM/VRAM page pointers from cartridge and map into PPU memory space 0x0000 ... 0x1FFF
+uint8* PPU_BANK_WRITE[16];
+uint8* PPU_BANK_READ[16];
+
+// CPU Bank Pointers 3-7 should be set with 8kB ROM/WRAM page pointers from cartridge and map into CPU memory space 0x6000 ... 0xFFFF
+uint8* CPU_BANK_WRITE[8];
+uint8* CPU_BANK_READ[8];
+
+void set_cpu_banks_to_rom_pages(uint32 page4, uint32 page5, uint32 page6, uint32 page7) {
+	CPU_BANK_READ[4] = ROM_pages[page4];
+	CPU_BANK_READ[5] = ROM_pages[page5];
+	CPU_BANK_READ[6] = ROM_pages[page6];
+	CPU_BANK_READ[7] = ROM_pages[page7];
+	CPU_BANK_WRITE[4] = CPU_BANK_WRITE[5] = CPU_BANK_WRITE[6] = CPU_BANK_WRITE[7] = NULL;
+}
+
+void set_ppu_banks_low_to_vrom_pages(uint32 page0, uint32 page1, uint32 page2, uint32 page3) {
+	PPU_BANK_READ[0] = VROM_pages[page0];
+	PPU_BANK_READ[1] = VROM_pages[page1];
+	PPU_BANK_READ[2] = VROM_pages[page2];
+	PPU_BANK_READ[3] = VROM_pages[page3];
+	PPU_BANK_WRITE[0] = PPU_BANK_WRITE[1] = PPU_BANK_WRITE[2] = PPU_BANK_WRITE[3] = NULL;
+}
+
+void set_ppu_banks_high_to_vrom_pages(uint32 page4, uint32 page5, uint32 page6, uint32 page7) {
+	PPU_BANK_READ[4] = VROM_pages[page4];
+	PPU_BANK_READ[5] = VROM_pages[page5];
+	PPU_BANK_READ[6] = VROM_pages[page6];
+	PPU_BANK_READ[7] = VROM_pages[page7];
+	PPU_BANK_WRITE[4] = PPU_BANK_WRITE[5] = PPU_BANK_WRITE[6] = PPU_BANK_WRITE[7] = NULL;
+}
+
+void set_ppu_banks_low_to_vram_pages(uint32 page0, uint32 page1, uint32 page2, uint32 page3) {
+	if (!num_1k_VROM_pages && num_1k_VRAM_pages) {
+		PPU_BANK_READ[0] = PPU_BANK_WRITE[0] = VROM_pages[page0];
+		PPU_BANK_READ[1] = PPU_BANK_WRITE[1] = VROM_pages[page1];
+		PPU_BANK_READ[2] = PPU_BANK_WRITE[2] = VROM_pages[page2];
+		PPU_BANK_READ[3] = PPU_BANK_WRITE[3] = VROM_pages[page3];
+	} else if (num_1k_VROM_pages) {
+		PPU_BANK_READ[0] = PPU_BANK_WRITE[0] = VRAM_pages[page0];
+		PPU_BANK_READ[1] = PPU_BANK_WRITE[1] = VRAM_pages[page1];
+		PPU_BANK_READ[2] = PPU_BANK_WRITE[2] = VRAM_pages[page2];
+		PPU_BANK_READ[3] = PPU_BANK_WRITE[3] = VRAM_pages[page3];
+	}
+}
+
+void set_ppu_banks_high_to_vram_pages(uint32 page4, uint32 page5, uint32 page6, uint32 page7) {
+	if (!num_1k_VROM_pages && num_1k_VRAM_pages) {
+		PPU_BANK_READ[4] = PPU_BANK_WRITE[4] = VROM_pages[page4];
+		PPU_BANK_READ[5] = PPU_BANK_WRITE[5] = VROM_pages[page5];
+		PPU_BANK_READ[6] = PPU_BANK_WRITE[6] = VROM_pages[page6];
+		PPU_BANK_READ[7] = PPU_BANK_WRITE[7] = VROM_pages[page7];
+	} else if (num_1k_VROM_pages) {
+		PPU_BANK_READ[4] = PPU_BANK_WRITE[4] = VRAM_pages[page4];
+		PPU_BANK_READ[5] = PPU_BANK_WRITE[5] = VRAM_pages[page5];
+		PPU_BANK_READ[6] = PPU_BANK_WRITE[6] = VRAM_pages[page6];
+		PPU_BANK_READ[7] = PPU_BANK_WRITE[7] = VRAM_pages[page7];
+	}
 }

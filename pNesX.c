@@ -16,6 +16,9 @@
 #include "macros.h"
 
 #include "cartridge.h"
+#include "cpu.h"
+#include "ppu.h"
+
 #include "input_recorder.h"
 
 #include "pNesX.h"
@@ -24,21 +27,12 @@
 #include "profile.h"
 #include "pNesX_System_DC.h"
 #include "pNesX_Sound_APU.h"
-#include "pNesX_PPU_DC.h"
 #include "GUI_SystemPage.h"
-#include "K6502.h"
 #include "aica_fw.h"
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
-
-/* ROM BANK ( 8Kb * 4 ) */
-unsigned char *ROMBANK_WRAM; // 0x6000
-unsigned char *ROMBANK0;
-unsigned char *ROMBANK1;
-unsigned char *ROMBANK2;
-unsigned char *ROMBANK3;
 
 #define __ALIGN32__		__attribute__ ((aligned (32)))
 
@@ -61,15 +55,6 @@ VQ_Texture* WorkFrame;
 uint16 WorkFrameIdx;
 VQ_Texture* WorkFrames[];
 __ALIGN32__ uint8 codebook[CODEBOOK_SIZE];
-
-/* Table for Mirroring */
-unsigned char PPU_MirrorTable[][ 4 ] = {
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
-  { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 }
-};
 
 /*-------------------------------------------------------------------*/
 /*  APU and Pad resources                                            */
@@ -106,9 +91,6 @@ uint32 PAD2_Latch;
 uint32 ExitCount;
 uint32 PAD1_Bit;
 uint32 PAD2_Bit;
-
-uint32 PollCount;
-uint32 PollSkip;
 
 void DC_SoundInit() {
 	sound_address = 0;
@@ -161,26 +143,16 @@ void pNesX_DoSpu() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Init() {
-	// Initialize 6502
-	K6502_Init();
-
 	// Initialize Sound AICA program and ring buffers, and apu emulator
 	// Initialize pNesX
+	/*
 	if (options.opt_SoundEnabled) {
 		// Start Sound Emu
 		DC_SoundInit();
 		timer_spin_sleep(40);
 		*start = 0xFFFFFFFF;
 	}
-
-	K6502_Set_Int_Wiring( 1, 1 ); 
-
-	// Call mapper initialization function - important that this comes before mapper
-	// init, for expansion audio
-	mapper -> init();
-
-	// Reset CPU and prepare to run program
-	K6502_Reset();
+	*/
 
 	// Calculate how the output screen should appear based on clipping and stretching parameters
 	calculateOutputScreenGeometry();
@@ -246,42 +218,13 @@ int pNesX_Load( const char *filepath, uint32 filesize ) {
 /*                                                                   */
 /*===================================================================*/
 int pNesX_Reset() {
-	// TODO : make ROM loading and resetting separated
-	int nIdx;
-
-	// Get information on the ROM
-	if (NesHeader.byInfo1 & 0x08) {
-		ROM_Mirroring = MIRRORING_FOUR_SCREEN;
-	} else if (NesHeader.byInfo1 & 0x01) {
-		ROM_Mirroring = MIRRORING_VERTICAL;
-	} else {
-		ROM_Mirroring = MIRRORING_HORIZONTAL;
-	}
-
-	ROM_SRAM = NesHeader.byInfo1 & 2;
-	ROM_Trainer = NesHeader.byInfo1 & 4;
-	ROM_FourScr = NesHeader.byInfo1 & 8;
 
 	/*-------------------------------------------------------------------*/
 	/*  Initialize resources                                             */
 	/*-------------------------------------------------------------------*/
-
-	// reset CPU and PPU
-
-
-	// Setup WRAM if present
-	if (num_8k_WRAM_pages) {
-		ROMBANK_WRAM = WRAM_pages[0];
-	} else {
-		ROMBANK_WRAM = NULL;
-	}
-
 	// Reset frame skip and frame count
 	FrameSkip = options.opt_FrameSkip;
 	FrameCnt = 0;
-
-	PollSkip = 6;
-	PollCount = 0;
 
 	// Reset APU register
 	memset( APU_Reg, 0, sizeof APU_Reg );
@@ -293,114 +236,25 @@ int pNesX_Reset() {
 	/*-------------------------------------------------------------------*/
 	/*  Initialize PPU                                                   */
 	/*-------------------------------------------------------------------*/
-	pNesX_SetupPPU();
 	WorkFrameIdx = 0;
 	WorkFrame = WorkFrames[0];
 
-	/*-------------------------------------------------------------------*/
-	/*  Initialize Mapper                                                */
-	/*-------------------------------------------------------------------*/
-
-	// Get Mapper Table Index
-	printf("Looking for Support for Mapper [%i]\n", MapperNo);
-	for ( nIdx = 0; Mappers[ nIdx ].nMapperNo != -1; ++nIdx ) {
-		if ( Mappers[ nIdx ].nMapperNo == MapperNo )
-			break;
-	}
-
-	if (( Mappers[ nIdx ].nMapperNo == -1 ) || (Mappers[nIdx].mapper == NULL)) {
-		// Non support mapper
-		return -1;
+	// reset CPU and PPU
+	ppu_reset();
+	// TODO: figure out when to set up four screen from ROM header smartly
+	if (NesHeader.byInfo1 & 0x01) {
+		ppu_set_mirroring(PPU_MIRRORING_VERTICAL);
 	} else {
-		printf("Mapper [%i] Supported\n", Mappers[ nIdx ].nMapperNo);
-		mapper = Mappers[nIdx].mapper;
+		ppu_set_mirroring(PPU_MIRRORING_HORIZONTAL);
 	}
+	mapper -> init();
+	power();
 
 	// Successful
 	return 0;
 }
 
-/*===================================================================*/
-/*                                                                   */
-/*                pNesX_SetupPPU() : Initialize PPU                  */
-/*                                                                   */
-/*===================================================================*/
-void pNesX_SetupPPU() {
-	int nPage;
-
-	// Clear PPU and Sprite Memory
-	memset( PPURAM, 0, sizeof PPURAM );
-	memset( SPRRAM, 0, sizeof SPRRAM );
-
-	// Reset PPU Register
-	ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
-
-	// Reset latch flag
-	PPU_Latch_Flag = 0;
-
-	// Reset PPU address
-	ppuinfo.PPU_Addr = 0;
-	PPU_Temp = 0;
-
-	// Reset scanline
-	ppuinfo.PPU_Scanline = 0;
-
-	// Reset hit position of sprite #0 
-	// SpriteHitPos = -1;
-
-	// Reset information on PPU_R0
-	PPU_Increment = 1;
-	ppuinfo.PPU_SP_Height = 8;
-
-	// Reset PPU banks
-	// This isn't accurate because the NES doesn't actually have 16kB of PPU memory
-	// I will refactor this to be more accurate with a more accurate memory map
-	for ( nPage = 0; nPage < 8; ++nPage )
-		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
-	PPUBANK[ 8 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 9 ] = &PPURAM[ 9 * 0x400 ];
-	PPUBANK[ 10 ] = &PPURAM[ 10 * 0x400 ];
-	PPUBANK[ 11 ] = &PPURAM[ 11 * 0x400 ];
-	PPUBANK[ 12 ] = &PPURAM[ 12 * 0x400 ];
-	PPUBANK[ 13 ] = &PPURAM[ 13 * 0x400 ];
-	PPUBANK[ 14 ] = &PPURAM[ 14 * 0x400 ];
-	PPUBANK[ 15 ] = &PPURAM[ 15 * 0x400 ];
-
-	/* Mirroring of Name Table */
-	pNesX_Mirroring( ROM_Mirroring );
-}
-
-/*===================================================================*/
-/*                                                                   */
-/*       pNesX_Mirroring() : Set up a Mirroring of Name Table        */
-/*                                                                   */
-/*                                                                   */
-/*  Parameters                                                       */
-/*    int nType          (Read)                                      */
-/*      Mirroring Type                                               */
-/*        0 : Horizontal                                             */
-/*        1 : Vertical                                               */
-/*        2 : Four Screen                                            */
-/*        3 : One Screen 0x2000                                      */
-/*        4 : One Screen 0x2400                                      */
-/*                                                                   */
-/*===================================================================*/
-void pNesX_Mirroring( int nType ) {
-	PPUBANK[ NAME_TABLE0 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 0 ] * 0x400 ];
-	PPUBANK[ NAME_TABLE1 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 1 ] * 0x400 ];
-	PPUBANK[ NAME_TABLE2 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 2 ] * 0x400 ];
-	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ PPU_MirrorTable[ nType ][ 3 ] * 0x400 ];
-}
-
-void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
-	PPUBANK[ NAME_TABLE0 ] = &PPURAM[ (NAME_TABLE0 + bank1) * 0x400 ];
-	PPUBANK[ NAME_TABLE1 ] = &PPURAM[ (NAME_TABLE0 + bank2) * 0x400 ];
-	PPUBANK[ NAME_TABLE2 ] = &PPURAM[ (NAME_TABLE0 + bank3) * 0x400 ];
-	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ (NAME_TABLE0 + bank4) * 0x400 ];
-}
-
 #define NUM_FPS_SAMPLES 60
-
 #define MAX_PROFILING_FUNCTIONS 6
 
 /*===================================================================*/
@@ -431,8 +285,6 @@ __attribute__ ((hot)) void pNesX_Main() {
 		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	}
 
-	odd_cycle = false;
-
 	// Main loop
 	while ( 1 ) {
 		if ( ExitCount > MAX_EXIT_COUNT )
@@ -440,9 +292,10 @@ __attribute__ ((hot)) void pNesX_Main() {
 
 		last_frame_timestamp = frame_timestamp;
 
-		pNesX_Cycle();
-		odd_cycle = !odd_cycle;
+		run_frame();
 		numEmulationFrames++;
+
+		printf("Ran Frame [%li]\n", numEmulationFrames);
 
 		if (options.opt_ShowFrameRate) {
 			clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -460,10 +313,12 @@ __attribute__ ((hot)) void pNesX_Main() {
 			}
 		}
 
+/*
 		if (HALT) {
 			printf ("ERROR: System Halt - exiting emulation\n");
 			break;
 		}
+*/
 /*
 		if ( *opt_AutoFrameSkip ) {
 			if ( Auto_Frames > 0) {
@@ -492,121 +347,11 @@ __attribute__ ((hot)) void handle_dmc_synchronization(uint32 cycles) {
 	endProfiling(1);
 }
 
-/*===================================================================*/
-/*                                                                   */
-/*              pNesX_Cycle() : The loop of emulation                */
-/*                                                                   */
-/*===================================================================*/
-__attribute__ ((hot)) void pNesX_Cycle() {
-	SpriteJustHit = SPRITE_HIT_SENTINEL;
+void new_frame() {
+	pNesX_LoadFrame();
 
-	//Set the PPU adress to the buffered value
-	pNesX_StartFrame();
-
-	// Dummy scanline -1 or 261;
-	K6502_Step(1);
-	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
-	if (odd_cycle) {	
-		K6502_Step(CYCLES_PER_LINE);	
-		handle_dmc_synchronization(CYCLES_PER_LINE + 1);
-	} else {
-		K6502_Step(CYCLES_PER_LINE - 1);	
-		handle_dmc_synchronization(CYCLES_PER_LINE);
-	}
-
-	// Scanline 0-239
-	for (ppuinfo.PPU_Scanline = 0; ppuinfo.PPU_Scanline <= 260; ppuinfo.PPU_Scanline++) {
-		uint16 cpu_cycles_to_emulate = CYCLES_PER_LINE;
-		uint16 hsync_cycles = HSYNC_CYCLES;
-		if ((ppuinfo.PPU_Scanline + 1) % 3 == 0) {
-			cpu_cycles_to_emulate += 2;
-			hsync_cycles += 1;
-		}
-
-		switch (ppuinfo.PPU_Scanline) {
-			case 0 ... 239: {
-				pNesX_DrawLine();
-
-				if (SpriteJustHit == ppuinfo.PPU_Scanline) {
-					// Set the sprite hit flag
-					PPU_R2 |= R2_HIT_SP;
-
-					// NMI is required if there is necessity
-					if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-						NMI_REQ;
-				}
-
-				K6502_Step(hsync_cycles);
-				mapper -> hsync();				
-				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
-
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
-
-				if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
-					ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
-
-					if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) {  /* is subtile y offset == 7? */
-						ppuinfo.PPU_Addr &= 0x8FFF; /* subtile y offset = 0 */
-
-						if ((ppuinfo.PPU_Addr & 0x03E0) == 0x03A0) { /* name_tab line == 29? */
-							ppuinfo.PPU_Addr ^= 0x0800;  /* switch v nametables (bit 11) */
-							ppuinfo.PPU_Addr &= 0xFC1F;  /* name_tab line = 0 */
-						} else {
-							if ((ppuinfo.PPU_Addr & 0x03E0) == 0x03E0) { /* line == 31? */
-								ppuinfo.PPU_Addr &= 0xFC1F;  /* name_tab line = 0 */
-							} else {
-								ppuinfo.PPU_Addr += 0x0020;
-							}
-						}
-					} else {
-						ppuinfo.PPU_Addr += 0x1000; /* next subtile y offset */
-					}
-				}
-			} break;
-
-			case 240: {
-				pNesX_LoadFrame();
-
-				// Switching of the buffer
-				WorkFrameIdx++;
-				WorkFrameIdx%=NUM_PVR_FRAMES;
-				WorkFrame = WorkFrames[WorkFrameIdx];
-
-				K6502_Step(cpu_cycles_to_emulate);
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
-			} break;
-
-			case 241: {
-				K6502_Step(5);
-				pNesX_VSync();
-				mapper -> vsync();
-				K6502_Step(cpu_cycles_to_emulate - 5);
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
-			} break;
-
-			case 242 ... 260 : {
-				K6502_Step(cpu_cycles_to_emulate);
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
-			} break;
-		}
-	}
-
-	if (options.opt_SoundEnabled) {
-		pNesX_DoSpu();
-	}
-	audio_sync_apu_registers();
-}
-
-__attribute__ ((hot)) void pNesX_VSync() {
-	// Set a V-Blank flag
-	PPU_R2 |= R2_IN_VBLANK;
-
-	pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
-
-	// NMI on V-Blank
-	if ( ppuinfo.PPU_R0 & R0_NMI_VB )
-		NMI_REQ;
+	// Switching of the buffer
+	WorkFrameIdx++;
+	WorkFrameIdx%=NUM_PVR_FRAMES;
+	WorkFrame = WorkFrames[WorkFrameIdx];
 }

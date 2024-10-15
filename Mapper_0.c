@@ -10,29 +10,18 @@
 /*  Initialize Mapper 0                                              */
 /*-------------------------------------------------------------------*/
 void Mapper_0_Init() {
-	int nPage;
-
 	/* Set ROM Banks */
 	if (num_8k_ROM_pages > 3) {
-		ROMBANK0 = ROM_pages[0];
-		ROMBANK1 = ROM_pages[1];
-		ROMBANK2 = ROM_pages[2];
-		ROMBANK3 = ROM_pages[3];
+		set_cpu_banks_to_rom_pages(0, 1, 2, 3);
 	} else if (num_8k_ROM_pages > 1) {
-		ROMBANK0 = ROM_pages[0];
-		ROMBANK1 = ROM_pages[1];
-		ROMBANK2 = ROM_pages[0];
-		ROMBANK3 = ROM_pages[1];
+		set_cpu_banks_to_rom_pages(0, 1, 0, 1);
 	} else {
-		ROMBANK0 = ROM_pages[0];
-		ROMBANK1 = ROM_pages[0];
-		ROMBANK2 = ROM_pages[0];
-		ROMBANK3 = ROM_pages[0];
+		set_cpu_banks_to_rom_pages(0, 0, 0, 0);
 	}
 
 	/* Set PPU Banks */
-	for ( nPage = 0; nPage < 8; ++nPage )
-		PPUBANK[ nPage ] = VROM_pages[nPage];
+	set_ppu_banks_low_to_vrom_pages(0, 1, 2, 3);
+	set_ppu_banks_high_to_vrom_pages(4, 5, 6, 7);
 }
 
 /*-------------------------------------------------------------------*/

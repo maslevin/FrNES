@@ -24,11 +24,6 @@ uint8* WRAM_pages[MAXIMUM_WRAM_PAGES];
 uint32 SRAM_Enabled;
 uint32 currentCRC32;
 
-uint8 ROM_Mirroring;
-uint8 ROM_SRAM;
-uint8 ROM_Trainer;
-uint8 ROM_FourScr;
-
 NesHeader_t NesHeader;
 
 bool ReadRom (const char *filepath, uint32 filesize) {
@@ -152,7 +147,7 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 				}
 			}
 
-			// Handle VRAM - sometimes we will just use the VROM variable for itgit 
+			// Handle VRAM - sometimes we will just use the VROM variable for it 
 			// but other times we'll need somewhere else to store aux. bank switched VRAM
 			if (NesHeader.byVRomSize == 0) {
 				switch (MapperNo) {
@@ -273,5 +268,51 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 
 	free(ROM_Buffer);
 
+	// Get Mapper Table Index
+	printf("ReadRom: Looking for Support for Mapper [%i]\n", MapperNo);
+	bool foundMapper = false;
+	for (int nIdx = 0; Mappers[ nIdx ].nMapperNo != -1; ++nIdx ) {
+		if ((Mappers[ nIdx ].nMapperNo == MapperNo) && (Mappers[nIdx].mapper != NULL)) {
+			printf("ReadRom: Mapper [%i] Supported\n", Mappers[ nIdx ].nMapperNo);
+			mapper = Mappers[nIdx].mapper;
+			foundMapper = true;
+			break;
+		}
+	}
+
+	if (!foundMapper)
+		loaded = false;
+
 	return loaded;
+}
+
+uint8 cartridge_cpu_read(uint16 addr) {
+	uint8* bankPtr = CPU_BANK_READ[addr >> 13];
+	if (bankPtr) {
+		return bankPtr[addr & 0x1FFF];
+	} else {
+		return addr >> 8;
+	}
+}
+
+uint8 cartridge_cpu_write(uint16 addr, uint8 value) {
+	switch (addr) {
+		case 0x6000 ... 0x7FFF:
+			CPU_BANK_WRITE[3][addr & 0x1FFF] = value;
+			break;
+	}
+	mapper -> write(addr, value);
+	return value;
+}
+
+uint8 cartridge_ppu_read(uint16 addr) {
+	return PPU_BANK_READ[addr >> 10][addr & 0x3FF];
+}
+
+uint8 cartridge_ppu_write(uint16 addr, uint8 value) {
+	uint8* bankPtr = PPU_BANK_WRITE[addr >> 10];
+	if (bankPtr) {
+		bankPtr[addr & 0x03FF] = value;
+	}
+	return value;
 }

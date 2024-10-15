@@ -54,12 +54,11 @@ extern uint32 SRAM_Enabled;
 //The crc32 of the currently selected rom
 extern uint32 currentCRC32;
 
-/* Other */
-extern uint8 ROM_Mirroring;
-extern uint8 ROM_SRAM;
-extern uint8 ROM_Trainer;
-extern uint8 ROM_FourScr;
-
 bool ReadRom(const char* filepath, uint32 filesize);
+
+uint8 cartridge_cpu_read(uint16 addr);
+uint8 cartridge_cpu_write(uint16 addr, uint8 value);
+uint8 cartridge_ppu_read(uint16 addr);
+uint8 cartridge_ppu_write(uint16 addr, uint8 value);
 
 #endif

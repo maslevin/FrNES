@@ -10,9 +10,12 @@
 #define SCANLINE_NMI     2
 #define SCANLINE_PRE     3
 
-#define PPU_MIRRORING_VERTICAL     0
-#define PPU_MIRRORING_HORIZONTAL   1
-
+#define PPU_MIRRORING_VERTICAL        0
+#define PPU_MIRRORING_HORIZONTAL      1
+#define PPU_MIRRORING_ONE_SCREEN_LOW  2
+#define PPU_MIRRORING_ONE_SCREEN_HIGH 3
+#define PPU_MIRRORING_FOUR_SCREEN     4
+ 
 /* Sprite buffer */
 typedef struct __attribute__ ((packed, aligned(4))) Sprite_s {
     uint8 id;     // Index in OAM.

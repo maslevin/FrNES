@@ -2,9 +2,15 @@
 
 #include <kos.h>
 
+#include "pNesX.h"
+#include "cpu.h"
+#include "Mapper.h"
+#include "cartridge.h"
+
 uint32 mirroring;       // Mirroring mode.
 
-#define CIRAM_SIZE 0x800
+//#define CIRAM_SIZE 0x800
+#define CIRAM_SIZE 0x1000 // Be dumb and just make ciram 2x as big, so that 4 screen mirroring will work out of the box
 #define CGRAM_SIZE 0x20
 #define OAMRAM_SIZE 0x100
 
@@ -12,7 +18,6 @@ uint8 ciRam[CIRAM_SIZE];           // VRAM for nametables.
 uint8 cgRam[CGRAM_SIZE];            // VRAM for palettes.
 uint8 oamMem[OAMRAM_SIZE];          // VRAM for sprite properties.
 Sprite_t oam[8], secOam[8];  // Sprite buffers.
-uint32 pixels[256 * 240];     // Video buffer.
 
 LOOPY_t vAddr, tAddr;  // Loopy V, T.
 uint8 fX;              // Fine X.
@@ -36,23 +41,27 @@ bool frameOdd;
 inline bool rendering() { return mask.bg || mask.spr; }
 inline int spr_height() { return ctrl.sprSz ? 16 : 8; }
 
+#define __ALIGN32__		__attribute__ ((aligned (32)))
+__ALIGN32__ unsigned char scanlineBuffer[256];
+void* textureAddress;
+
 /* Get CIRAM address according to mirroring */
 uint16 nt_mirror(uint16 addr) {
     switch (mirroring) {
-        case PPU_MIRRORING_VERTICAL:    return addr % 0x800;
-        case PPU_MIRRORING_HORIZONTAL:  return ((addr / 2) & 0x400) + (addr % 0x400);
-        default:                        return addr - 0x2000;
+        case PPU_MIRRORING_VERTICAL:        return addr & 0x07FF;
+        case PPU_MIRRORING_HORIZONTAL:      return ((addr >> 1) & 0x400) + (addr % 0x03FF);
+        case PPU_MIRRORING_ONE_SCREEN_LOW:  return addr & 0x03FF;
+        case PPU_MIRRORING_ONE_SCREEN_HIGH: return 0x0400 + (addr & 0x03FF);
+        case PPU_MIRRORING_FOUR_SCREEN:     return addr & 0x0FFF;
+        default:                            return addr - 0x2000;
     }
 }
 void ppu_set_mirroring(uint32 mode) { mirroring = mode; }
 
 /* Access PPU memory */
-// MS - inline these?
-uint8 ppu_memory_read(uint16 addr)
-{
-    switch (addr)
-    {
-        case 0x0000 ... 0x1FFF:  return Cartridge::chr_access<0>(addr);  // CHR-ROM/RAM.
+inline uint8 ppu_memory_read(uint16 addr) {
+    switch (addr) {
+        case 0x0000 ... 0x1FFF:  return cartridge_ppu_read(addr);        // CHR-ROM/RAM.
         case 0x2000 ... 0x3EFF:  return ciRam[nt_mirror(addr)];          // Nametables.
         case 0x3F00 ... 0x3FFF:  // Palettes:
             if ((addr & 0x13) == 0x10) addr &= ~0x10;
@@ -60,12 +69,14 @@ uint8 ppu_memory_read(uint16 addr)
         default: return 0;
     }
 }
-void ppu_memory_write(uint16 addr, uint8 v)
+inline void ppu_memory_write(uint16 addr, uint8 v)
 {
     switch (addr)
     {
-        case 0x0000 ... 0x1FFF:  Cartridge::chr_access<1>(addr, v); break;  // CHR-ROM/RAM.
-        case 0x2000 ... 0x3EFF:  ciRam[nt_mirror(addr)] = v; break;         // Nametables.
+        case 0x0000 ... 0x1FFF:  cartridge_ppu_write(addr, v); break;  // CHR-ROM/RAM.
+        case 0x2000 ... 0x3EFF:  {
+            ciRam[nt_mirror(addr)] = v; 
+        } break;    // Nametables.
         case 0x3F00 ... 0x3FFF:  // Palettes:
             if ((addr & 0x13) == 0x10) addr &= ~0x10;
             cgRam[addr & 0x1F] = v; break;
@@ -171,8 +182,7 @@ void eval_sprites() {
             secOam[n].attr = oamMem[i*4 + 2];
             secOam[n].x    = oamMem[i*4 + 3];
 
-            if (++n >= 8)
-            {
+            if (++n >= 8) {
                 status.sprOvf = true;
                 break;
             }
@@ -236,7 +246,7 @@ void pixel() {
         // Evaluate priority:
         if (objPalette && (palette == 0 || objPriority == 0)) palette = objPalette;
 
-        pixels[scanline*256 + x] = ppu_memory_read(0x3F00 + (rendering() ? palette : 0));
+        scanlineBuffer[x] = ppu_memory_read(0x3F00 + (rendering() ? palette : 0));
     }
     // Perform background shifts:
     bgShiftL <<= 1; bgShiftH <<= 1;
@@ -248,8 +258,10 @@ void pixel() {
 void scanline_cycle(uint32 s) {
     static uint16 addr;
 
-    if ((s == SCANLINE_NMI) && (dot == 1)) { status.vBlank = true; if (ctrl.nmi) CPU::set_nmi(); }
-    else if ((s == SCANLINE_POST) && (dot == 0)) { GUI::new_frame(pixels); }
+    if ((s == SCANLINE_NMI) && (dot == 1)) { status.vBlank = true; if (ctrl.nmi) set_nmi(true); }
+    else if ((s == SCANLINE_POST) && (dot == 0)) { 
+        new_frame(); 
+    }
     else if ((s == SCANLINE_VISIBLE) || (s == SCANLINE_PRE)) {
         // Sprites:
         switch (dot) {
@@ -294,14 +306,20 @@ void scanline_cycle(uint32 s) {
             case           340:  nt = ppu_memory_read(addr); if (s == SCANLINE_PRE && rendering() && frameOdd) dot++;
         }
         // Signal scanline to mapper:
-        if (dot == 260 && rendering()) Cartridge::signal_scanline();
+        if (dot == 260) {
+            if (rendering()) {
+                mapper -> hsync();
+            }
+            if (s == SCANLINE_VISIBLE) {
+                pvr_txr_load(scanlineBuffer, &(WorkFrame -> texture[scanline * 256]), 256);
+            }
+        }
     }
 }
 
 /* Execute a PPU cycle. */
-void step() {
-    switch (scanline)
-    {
+void ppu_step() {
+    switch (scanline) {
         case 0 ... 239:  scanline_cycle(SCANLINE_VISIBLE); break;
         case       240:  scanline_cycle(SCANLINE_POST);    break;
         case       241:  scanline_cycle(SCANLINE_NMI);     break;
@@ -317,12 +335,12 @@ void step() {
     }
 }
 
-void reset() {
+void ppu_reset() {
     frameOdd = false;
     scanline = dot = 0;
     ctrl.r = mask.r = status.r = 0;
 
-    memset(pixels, 0x00, sizeof(pixels));
+    memset(scanlineBuffer, 0x00, 256);
     memset(ciRam,  0xFF, sizeof(ciRam));
     memset(oamMem, 0x00, sizeof(oamMem));
 }

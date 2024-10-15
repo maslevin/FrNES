@@ -1,11 +1,13 @@
 #include <kos.h>
 
 #include "ppu.h"
+#include "cartridge.h"
 
 #define RAM_SIZE 0x800
 uint8 RAM[RAM_SIZE];
 
-uint8 A, X, Y, SP, PC;
+uint16 PC;
+uint8 A, X, Y, SP;
 bool C, Z, I, D, V, N;
 bool nmi, irq;
 
@@ -21,7 +23,7 @@ inline int elapsed() { return TOTAL_CYCLES - remainingCycles; }
 
 /* Cycle emulation */
 #define T   tick()
-inline void tick() { ppu_step(); ppu_step(); ppu_step(); remainingCycles--; }
+void tick() { ppu_step(); ppu_step(); ppu_step(); remainingCycles--; }
 
 /* Flags updating */
 inline void upd_cv(uint8 x, uint8 y, int16 r) { C = (r>0xFF); V = ~(x^y) & (x^r) & 0x80; }
@@ -32,7 +34,7 @@ inline bool cross(uint16 a, uint8 i) { return ((a+i) & 0xFF00) != ((a & 0xFF00))
 /* Memory access */
 void dma_oam(uint8 bank);
 
-inline uint8 read_access(uint16 addr) {
+uint8 read_access(uint16 addr) {
     uint8* r;
     switch (addr) {
         case 0x0000 ... 0x1FFF:  r = &RAM[addr % 0x800]; return *r;                  // RAM.
@@ -44,11 +46,11 @@ inline uint8 read_access(uint16 addr) {
         case            0x4017:  // return Joypad::read_state(1);                  // Joypad 1.
 
         case            0x4016:  // return Joypad::read_state(0);                  // Joypad 0.
-        case 0x4018 ... 0xFFFF:  // return Cartridge::access<wr>(addr, v);              // Cartridge.
+        case 0x4018 ... 0xFFFF:  return cartridge_cpu_read(addr);              // Cartridge.
     }
     return 0;
 }
-inline uint8 write_access(uint16 addr, uint8 value) {
+uint8 write_access(uint16 addr, uint8 value) {
     uint8* r;
     switch (addr) {
         case 0x0000 ... 0x1FFF:  r = &RAM[addr % 0x800]; *r = value; return *r;  // RAM.
@@ -63,7 +65,7 @@ inline uint8 write_access(uint16 addr, uint8 value) {
         case            0x4014:  // if (wr) dma_oam(v); break;                          // OAM DMA.
         case            0x4016:  // if (wr) { Joypad::write_strobe(v & 1); break; }     // Joypad strobe.
                                  // else return Joypad::read_state(0);                  // Joypad 0.
-        case 0x4018 ... 0xFFFF:  // return Cartridge::access<wr>(addr, v);              // Cartridge.
+        case 0x4018 ... 0xFFFF:  return cartridge_cpu_write(addr, value);              // Cartridge.
     }
     return 0;    
 }

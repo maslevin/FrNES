@@ -717,8 +717,6 @@ int main() {
 }
 
 __attribute__ ((hot)) void pNesX_LoadFrame() {
-	startProfiling(3);
-
 	pvr_poly_hdr_t my_pheader;
 	pvr_poly_cxt_t my_cxt;
 	pvr_vertex_t my_vertex;
@@ -792,7 +790,6 @@ __attribute__ ((hot)) void pNesX_LoadFrame() {
 	}		
 
 	pvr_scene_finish();
-	endProfiling(3);
 }
 
 __attribute__ ((hot)) void handleButton(uint32* controllerBitflags, 

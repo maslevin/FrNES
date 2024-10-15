@@ -1,5 +1,7 @@
 #include "Mapper_1.h"
 
+#include "ppu.h"
+
 /*===================================================================*/
 /*                                                                   */
 /*                            Mapper 1                               */
@@ -30,10 +32,12 @@ uint32 Mapper_1_HI1;
 uint32 Mapper_1_HI2;
 
 inline void Mapper_1_Set_CPU_Banks() {
-    ROMBANK0 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank1 & 0x1f)];
-    ROMBANK1 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank2 & 0x1f)];
-    ROMBANK2 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank3 & 0x1f)];
-    ROMBANK3 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank4 & 0x1f)];
+    set_cpu_banks_to_rom_pages(
+        (Mapper_1_256K_base << 5) + (Mapper_1_bank1 & 0x1f),
+        (Mapper_1_256K_base << 5) + (Mapper_1_bank2 & 0x1f),
+        (Mapper_1_256K_base << 5) + (Mapper_1_bank3 & 0x1f),
+        (Mapper_1_256K_base << 5) + (Mapper_1_bank4 & 0x1f)
+    );
 }
 
 /*-------------------------------------------------------------------*/
@@ -79,8 +83,13 @@ void Mapper_1_Init() {
 
     Mapper_1_Set_CPU_Banks();
 
-    for ( int nPage = 0; nPage < 8; ++nPage )
-        PPUBANK[ nPage ] = VROM_pages[nPage];
+    if (num_1k_VROM_pages) {
+        set_ppu_banks_low_to_vrom_pages(0, 1, 2, 3);
+        set_ppu_banks_high_to_vrom_pages(4, 5, 6, 7);
+    } else if (num_1k_VRAM_pages) {
+        set_ppu_banks_low_to_vram_pages(0, 1, 2, 3);
+        set_ppu_banks_high_to_vram_pages(4, 5, 6, 7);        
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -117,16 +126,16 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
             // set mirroring
             if (Mapper_1_regs[0] & 0x02) {
                 if (Mapper_1_regs[0] & 0x01) {
-                    pNesX_Mirroring(MIRRORING_HORIZONTAL);
+                    ppu_set_mirroring(PPU_MIRRORING_HORIZONTAL);
                 } else {
-                    pNesX_Mirroring(MIRRORING_VERTICAL);                    
+                    ppu_set_mirroring(PPU_MIRRORING_VERTICAL);                
                 }
             } else {
                 // one-screen mirroring
                 if (Mapper_1_regs[0] & 0x01) {
-                    pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_HIGH);
+                    ppu_set_mirroring(PPU_MIRRORING_ONE_SCREEN_HIGH);
                 } else {
-                    pNesX_Mirroring(MIRRORING_SINGLE_SCREEN_LOW);
+                    ppu_set_mirroring(PPU_MIRRORING_ONE_SCREEN_LOW);
                 }
             }
         } break;
@@ -159,21 +168,21 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                 if (Mapper_1_regs[0] & 0x10) {
                     // swap 4K
                     bank_num <<= 2;
-                    PPUBANK[0] = VROM_pages[bank_num];
-                    PPUBANK[1] = VROM_pages[bank_num + 1];
-                    PPUBANK[2] = VROM_pages[bank_num + 2];
-                    PPUBANK[3] = VROM_pages[bank_num + 3];
+                    if (num_1k_VROM_pages) {
+                        set_ppu_banks_low_to_vrom_pages(bank_num, bank_num+1, bank_num+2, bank_num+3);
+                    } else if (num_1k_VRAM_pages) {
+                        set_ppu_banks_low_to_vram_pages(bank_num, bank_num+1, bank_num+2, bank_num+3);
+                    }
                 } else {
                     // swap 8K
                     bank_num <<= 2;
-                    PPUBANK[0] = VROM_pages[bank_num];
-                    PPUBANK[1] = VROM_pages[bank_num + 1];
-                    PPUBANK[2] = VROM_pages[bank_num + 2];
-                    PPUBANK[3] = VROM_pages[bank_num + 3];
-                    PPUBANK[4] = VROM_pages[bank_num + 4];
-                    PPUBANK[5] = VROM_pages[bank_num + 5];
-                    PPUBANK[6] = VROM_pages[bank_num + 6];
-                    PPUBANK[7] = VROM_pages[bank_num + 7];
+                    if (num_1k_VROM_pages) {
+                        set_ppu_banks_low_to_vrom_pages(bank_num, bank_num+1, bank_num+2, bank_num+3);
+                        set_ppu_banks_high_to_vrom_pages(bank_num+4, bank_num+5, bank_num+6, bank_num+7);
+                    } else if (num_1k_VRAM_pages) {
+                        set_ppu_banks_low_to_vram_pages(bank_num, bank_num+1, bank_num+2, bank_num+3);
+                        set_ppu_banks_high_to_vram_pages(bank_num+4, bank_num+5, bank_num+6, bank_num+7);
+                    }
                 }
             }
         } break;
@@ -196,10 +205,11 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
             if (Mapper_1_regs[0] & 0x10) {
                 // swap 4K
                 bank_num <<= 2;
-                PPUBANK[4] = VROM_pages[bank_num];
-                PPUBANK[5] = VROM_pages[bank_num + 1];
-                PPUBANK[6] = VROM_pages[bank_num + 2];
-                PPUBANK[7] = VROM_pages[bank_num + 3];
+                if (num_1k_VROM_pages) {
+                    set_ppu_banks_high_to_vrom_pages(bank_num, bank_num+1, bank_num+2, bank_num+3);
+                } else if (num_1k_VRAM_pages) {
+                    set_ppu_banks_high_to_vram_pages(bank_num, bank_num+1, bank_num+2, bank_num+3);
+                }
             }
         } break;
 
