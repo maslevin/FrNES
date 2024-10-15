@@ -95,7 +95,7 @@ uint8 ppu_read(uint32 index) {
     return ppu_result;
 }
 
-void ppu_write(uint32 index, uint8 value) {
+uint8 ppu_write(uint32 index, uint8 value) {
     ppu_result = value;
 
     switch (index) {
@@ -113,6 +113,7 @@ void ppu_write(uint32 index, uint8 value) {
             ppu_latch = !ppu_latch; break;
         case 7:  ppu_memory_write(vAddr.addr, value); vAddr.addr += ctrl.incr ? 32 : 1;  // PPUDATA ($2007).
     }
+    return ppu_result;
 }
 
 /* Calculate graphics addresses */

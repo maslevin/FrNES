@@ -81,7 +81,7 @@ typedef union LOOPY_u {
 } LOOPY_t;
 
 uint8 ppu_read(uint32 index);
-void ppu_write(uint32 index, uint8 value);
+uint8 ppu_write(uint32 index, uint8 value);
 void ppu_set_mirroring(uint32 mode);
 void ppu_step();
 void ppu_reset();
