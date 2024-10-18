@@ -974,7 +974,8 @@ __attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint
 
 			// Increment Exit Counter if Required
 			if ((my_state != NULL) && (numControllers > 0)) {
-				if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) {
+				if (((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) || 
+				    ((my_state -> buttons & CONT_C) && (my_state -> buttons & CONT_Z))) {
 					(*ExitCount)++;
 				} else {
 					*ExitCount = 0;

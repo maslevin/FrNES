@@ -229,7 +229,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 	}
 	
 	//Page Down
-	if ((my_state -> rtrig > 240) && (disable_trigs == 0)) {
+	if (((my_state -> rtrig > 240) && (disable_trigs == 0)) || (my_state -> buttons & CONT_C)) {
 		if ((mydata.Highlighted_Index + mystyle.Max_Items) < (mydata.Num_Strings - 1)) {
 			mydata.Highlighted_Index += mystyle.Max_Items;
 			mydata.Top_Index += mystyle.Max_Items;
@@ -242,13 +242,13 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 	}
 
 	//Page Up
-	if (((my_state -> ltrig > 240) && (mydata.Highlighted_Index > (mystyle.Max_Items))) && (disable_trigs == 0)) {
+	if ((((my_state -> ltrig > 240) || (my_state -> buttons & CONT_Z)) && (mydata.Highlighted_Index > (mystyle.Max_Items))) && (disable_trigs == 0)) {
 		mydata.Highlighted_Index -= mystyle.Max_Items;
 		if (mydata.Top_Index - mystyle.Max_Items >= 0)
 			mydata.Top_Index -= mystyle.Max_Items;
 		else
 			mydata.Top_Index = 0;
-	} else if (((my_state -> ltrig > 240) && (mydata.Highlighted_Index <= (mystyle.Max_Items))) && (disable_trigs == 0)) {
+	} else if ((((my_state -> ltrig > 240) || (my_state -> buttons & CONT_Z)) && (mydata.Highlighted_Index <= (mystyle.Max_Items))) && (disable_trigs == 0)) {
 		mydata.Highlighted_Index = 0;
 		mydata.Top_Index = 0;
 	};
