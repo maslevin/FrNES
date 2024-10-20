@@ -570,8 +570,10 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 						set_nmi(true);
 				}
 
+				//TODO: HSYNC MAPPER ONLY IF RENDERING IS ENABLED ....
+
 				run_cycles(hsync_cycles);
-				mapper -> hsync();				
+				mapper -> hsync();
 				run_cycles(cpu_cycles_to_emulate - hsync_cycles);
 
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
@@ -608,7 +610,7 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 
 				run_cycles(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
+//				mapper -> hsync();
 			} break;
 
 			case 241: {
@@ -617,13 +619,13 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 				mapper -> vsync();
 				run_cycles(cpu_cycles_to_emulate - 5);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
+//				mapper -> hsync();
 			} break;
 
 			case 242 ... 260 : {
 				run_cycles(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
+//				mapper -> hsync();
 			} break;
 		}
 	}

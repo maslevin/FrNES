@@ -73,7 +73,7 @@ uint8 write_access(uint16 addr, uint8 value) {
 }
 */
 
-inline uint8  wr(uint16 a, uint8 v)   { T; K6502_Write(a, v);   }
+inline uint8  wr(uint16 a, uint8 v)   { T; return K6502_Write(a, v); }
 inline uint8  rd(uint16 a)            { T; return K6502_Read(a);      }
 inline uint16 rd16_d(uint16 a, uint16 b) { return rd(a) | (rd(b) << 8); }  // Read from A and B and merge.
 inline uint16 rd16(uint16 a)          { return rd16_d(a, a+1);       }
@@ -174,6 +174,7 @@ uint16 VECTORS[] = { 0xFFFA, 0xFFFC, 0xFFFE, 0xFFFE };
 
 /* Execute a CPU instruction */
 void exec() {
+    //printf("$%04X: $%02X\n", PC, rd(PC));
     switch (rd(PC++)) {
         case 0x00: INT(BRK); return;
         case 0x01: ORA(izx); return;
@@ -347,7 +348,6 @@ void power() {
     INT(RESET);
 }
 
-/* Run the CPU for roughly a frame */
 void run_cycles(uint32 cycles) {
     remainingCycles += cycles;
 
