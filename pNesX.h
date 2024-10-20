@@ -22,6 +22,8 @@
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
 
+extern bool odd_cycle;
+
 #define RAM_SIZE     0x2000
 #define PPURAM_SIZE  0x4000
 #define SPRRAM_SIZE  256

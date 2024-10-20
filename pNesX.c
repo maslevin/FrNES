@@ -585,13 +585,11 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 						NMI_REQ;
 				}
 
-				K6502_Step(hsync_cycles);
-				mapper -> hsync();				
-				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+				if (PPU_R1 & 0x18) {
+					K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+					mapper -> hsync();
+					K6502_Step(hsync_cycles);
 
-				handle_dmc_synchronization(cpu_cycles_to_emulate);
-
-				if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08)) {
 					ppuinfo.PPU_Addr = (ppuinfo.PPU_Addr & 0xFBE0) | (PPU_Temp & 0x041F);
 
 					if ((ppuinfo.PPU_Addr & 0x7000) == 0x7000) {  /* is subtile y offset == 7? */
@@ -610,7 +608,11 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 					} else {
 						ppuinfo.PPU_Addr += 0x1000; /* next subtile y offset */
 					}
+				} else {
+					K6502_Step(cpu_cycles_to_emulate);
 				}
+
+				handle_dmc_synchronization(cpu_cycles_to_emulate);
 			} break;
 
 			case 240: {
@@ -623,7 +625,6 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 
 				K6502_Step(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
 			} break;
 
 			case 241: {
@@ -632,13 +633,11 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 				mapper -> vsync();
 				K6502_Step(cpu_cycles_to_emulate - 5);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
 			} break;
 
 			case 242 ... 260 : {
 				K6502_Step(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
-				mapper -> hsync();
 			} break;
 		}
 	}

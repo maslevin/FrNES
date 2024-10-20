@@ -313,7 +313,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
-                    //K6502_Burn(odd_cycle ? 514 : 513);
+                    K6502_Burn(odd_cycle ? 514 : 513);
                 } break;
 
                 case 0x16: { /* 0x4016 */

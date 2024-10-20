@@ -143,13 +143,6 @@ void Mapper_4_Init() {
 
 	Mapper_4_Write( 0x8000, 0 );
 	Mapper_4_Write( 0x8001, 0 );
-
-	/* Set up wiring of the interrupt pin */
-	K6502_Set_Int_Wiring( 1, 1 ); 
-
-	Map4_IRQ_Enable = 0;
-	Map4_IRQ_Set = 0;
-	Map4_IRQ_Cnt = 0;
 }
 
 /*-------------------------------------------------------------------*/

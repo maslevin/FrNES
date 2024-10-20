@@ -712,7 +712,7 @@ static int32 apu_dmc(dmc_t *chan) {
                 chan->cur_byte = K6502_Read(chan -> address);
                 
                 /* steal a cycle from CPU*/
-                K6502_Burn(1);
+                // K6502_Burn(1);
                 
                 if (0xFFFF == chan->address) {
                     chan->address = 0x8000;
