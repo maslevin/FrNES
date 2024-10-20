@@ -1,10 +1,10 @@
 #include "Mapper_22.h"
 
 void Mapper_22_Init() {
-    ROMBANK0 = ROM_pages[0];
-    ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+    BankTable[4] = ROM_pages[0];
+    BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = VROM_pages[nPage];
@@ -13,7 +13,7 @@ void Mapper_22_Init() {
 void Mapper_22_Write(uint16 addr, uint8 data) {
     switch (addr) {
         case 0x8000: {
-            ROMBANK0 = ROM_pages[data % num_8k_ROM_pages];
+            BankTable[4] = ROM_pages[data % num_8k_ROM_pages];
         } break;
 
         case 0x9000: {
@@ -30,7 +30,7 @@ void Mapper_22_Write(uint16 addr, uint8 data) {
         } break;
 
         case 0xA000: {
-            ROMBANK1 = ROM_pages[data % num_8k_ROM_pages];
+            BankTable[5] = ROM_pages[data % num_8k_ROM_pages];
         } break;
 
         case 0xB000: {

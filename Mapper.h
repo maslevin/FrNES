@@ -18,8 +18,9 @@
 #include <kos.h>
 
 #include "cartridge.h"
+#include "K6502_rw.h"
 #include "pNesX.h"
-#include "K6502.h"
+#include "cpu.h"
 #include "pNesX_System_DC.h"
 
 /*-------------------------------------------------------------------*/

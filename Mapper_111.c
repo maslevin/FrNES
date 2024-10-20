@@ -4,10 +4,10 @@
 
 void set_gtrom_bank(uint8 prg) {
     uint8 base = prg << 2;
-    ROMBANK0 = ROM_pages[base];
-    ROMBANK1 = ROM_pages[base + 1];
-    ROMBANK2 = ROM_pages[base + 2];
-    ROMBANK3 = ROM_pages[base + 3];
+    BankTable[4] = ROM_pages[base];
+    BankTable[5] = ROM_pages[base + 1];
+    BankTable[6] = ROM_pages[base + 2];
+    BankTable[7] = ROM_pages[base + 3];
 }
 
 void Mapper_111_Init() {

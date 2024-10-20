@@ -9,10 +9,10 @@ unsigned char Mapper_85_irq_latch;
 void Mapper_85_Init() {
     apu_set_exsound(NES_APU_EXSOUND_VRC7);
 
-	ROMBANK0 = ROM_pages[0];
-	ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+	BankTable[4] = ROM_pages[0];
+	BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = VROM_pages[ nPage ];
@@ -25,16 +25,16 @@ void Mapper_85_Init() {
 void Mapper_85_Write(uint16 addr, uint8 data) {
     switch(addr & 0xF038) {
         case 0x8000: {
-            ROMBANK0 = ROM_pages[data];
+            BankTable[4] = ROM_pages[data];
         } break;
 
         case 0x8008:
         case 0x8010: {
-            ROMBANK1 = ROM_pages[data];
+            BankTable[5] = ROM_pages[data];
         } break;
 
         case 0x9000: {
-            ROMBANK2 = ROM_pages[data];
+            BankTable[6] = ROM_pages[data];
         }
         break;
 
@@ -114,7 +114,7 @@ void Mapper_85_Write(uint16 addr, uint8 data) {
 void Mapper_85_HSync() {
     if (Mapper_85_irq_enabled & 0x02) {
         if (Mapper_85_irq_counter == 0xFF) {
-            IRQ_REQ;
+            set_irq(true);
             Mapper_85_irq_counter = Mapper_85_irq_latch;
         } else {
             Mapper_85_irq_counter++;

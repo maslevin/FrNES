@@ -40,16 +40,16 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 		pNesX_DebugPrint("Setting ROM Bank [%u] to WRAM Bank [%u]\n", page, bank);
         switch (page) {
             case 4:
-                ROMBANK0 = WRAM_pages[bank];
+                BankTable[4] = WRAM_pages[bank];
                 break;
             case 5:
-                ROMBANK1 = WRAM_pages[bank];
+                BankTable[5] = WRAM_pages[bank];
                 break;            
             case 6:
-                ROMBANK2 = WRAM_pages[bank];
+                BankTable[6] = WRAM_pages[bank];
                 break;            
             case 7:
-                ROMBANK3 = WRAM_pages[bank];
+                BankTable[7] = WRAM_pages[bank];
                 break;
         }
 	}
@@ -62,63 +62,63 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 			case 0:
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANKS 0-3 to [%u-%u]\n",(bank & 0x7C) % num_8k_ROM_banks,((bank & 0x7C)+3) % num_8k_ROM_banks);
-					ROMBANK0 = ROM_pages[(bank & 0x7C)];
-					ROMBANK1 = ROM_pages[(bank & 0x7C) + 1];
-					ROMBANK2 = ROM_pages[(bank & 0x7C) + 2];
-					ROMBANK3 = ROM_pages[(bank & 0x7C) + 3];
+					BankTable[4] = ROM_pages[(bank & 0x7C)];
+					BankTable[5] = ROM_pages[(bank & 0x7C) + 1];
+					BankTable[6] = ROM_pages[(bank & 0x7C) + 2];
+					BankTable[7] = ROM_pages[(bank & 0x7C) + 3];
 					Mapper_5_wb[4] = Mapper_5_wb[5] = Mapper_5_wb[6] = 8;
 				}
 				break;
 			case 1:
 				if (page == 5) {
 					pNesX_DebugPrint("Setting ROMBANKS 0-1 to [%u-%u]\n",(bank & 0x7E) % num_8k_ROM_banks,((bank & 0x7E)+1) % num_8k_ROM_banks);
-					ROMBANK0 = ROM_pages[(bank & 0x7E)];
-					ROMBANK1 = ROM_pages[(bank & 0x7E) + 1];
+					BankTable[4] = ROM_pages[(bank & 0x7E)];
+					BankTable[5] = ROM_pages[(bank & 0x7E) + 1];
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANKS 2-3 to [%u-%u]\n",(bank & 0x7E) % num_8k_ROM_banks,((bank & 0x7E)+1) % num_8k_ROM_banks);					
-					ROMBANK0 = ROM_pages[(bank & 0x7E)];
-					ROMBANK1 = ROM_pages[(bank & 0x7E) + 1];
+					BankTable[4] = ROM_pages[(bank & 0x7E)];
+					BankTable[5] = ROM_pages[(bank & 0x7E) + 1];
 					Mapper_5_wb[6] = 8;
 				}			
 				break;
 			case 2:
 				if (page == 5) {
 					pNesX_DebugPrint("Setting ROMBANKS 0-1 to [%u-%u]\n",(bank & 0x7F) % num_8k_ROM_banks,((bank & 0x7F) + 1)% num_8k_ROM_banks);
-					ROMBANK0 = ROM_pages[(bank & 0x7E)];
-					ROMBANK1 = ROM_pages[(bank & 0x7E) + 1];
+					BankTable[4] = ROM_pages[(bank & 0x7E)];
+					BankTable[5] = ROM_pages[(bank & 0x7E) + 1];
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
 					pNesX_DebugPrint("Setting ROMBANK 2 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);
-					ROMBANK2 = ROM_pages[(bank & 0x7F)];
+					BankTable[6] = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANK 3 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK3 = ROM_pages[(bank & 0x7F)];
+					BankTable[7] = ROM_pages[(bank & 0x7F)];
 				}			
 				break;
 			case 3:
 				if (page == 4) {
 					pNesX_DebugPrint("Setting ROMBANK 0 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);
-					ROMBANK0 = ROM_pages[(bank & 0x7F)];
+					BankTable[4] = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[4] = 8;
 				}
 				if (page == 5) {
 					pNesX_DebugPrint("Setting ROMBANK 1 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK1 = ROM_pages[(bank & 0x7F)];
+					BankTable[5] = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
 					pNesX_DebugPrint("Setting ROMBANK 2 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK2 = ROM_pages[(bank & 0x7F)];
+					BankTable[6] = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANK 3 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK3 = ROM_pages[(bank & 0x7F)];
+					BankTable[7] = ROM_pages[(bank & 0x7F)];
 				}			
 				break;
 		}
@@ -268,10 +268,10 @@ void Mapper_5_Init() {
 	apu_set_exsound(NES_APU_EXSOUND_MMC5);
 
 	// set CPU bank pointers
-	ROMBANK0 = ROM_pages[num_8k_ROM_pages - 4];
-	ROMBANK1 = ROM_pages[num_8k_ROM_pages - 3];
-	ROMBANK2 = ROM_pages[num_8k_ROM_pages - 2];
-	ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
+	BankTable[4] = ROM_pages[num_8k_ROM_pages - 4];
+	BankTable[5] = ROM_pages[num_8k_ROM_pages - 3];
+	BankTable[6] = ROM_pages[num_8k_ROM_pages - 2];
+	BankTable[7] = ROM_pages[num_8k_ROM_pages - 1];
 
 	// set PPU bank pointers
 	PPUBANK[ 0 ] = VROM_pages[0];
@@ -502,7 +502,7 @@ void Mapper_5_HSync() {
 			}
 		}
 		if ((Mapper_5_irq_status & 0x80) && (Mapper_5_irq_enabled & 0x80)) {
-			IRQ_REQ;
+			set_irq(true);
 		}
 	} else {
 		Mapper_5_irq_status &= ~0x40;

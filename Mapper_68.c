@@ -3,10 +3,10 @@
 uint8 Mapper_68_regs[4];
 
 void Mapper_68_Init() {
-	ROMBANK0 = ROM_pages[0];
-	ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+	BankTable[4] = ROM_pages[0];
+	BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     Mapper_68_regs[0] = 0;
     Mapper_68_regs[1] = 0;
@@ -89,8 +89,8 @@ void Mapper_68_Write( uint16 wAddr, unsigned char byData ) {
         } break;
 
         case 0xF000: {
-            ROMBANK0 = ROM_pages[ (byData << 1) ];
-            ROMBANK1 = ROM_pages[ (byData << 1) + 1 ];
+            BankTable[4] = ROM_pages[ (byData << 1) ];
+            BankTable[5] = ROM_pages[ (byData << 1) + 1 ];
         } break;
     }
 }

@@ -9,10 +9,10 @@ unsigned char Mapper_26_irq_latch;
 void Mapper_26_Init() {
     apu_set_exsound(NES_APU_EXSOUND_VRC6);
 
-    ROMBANK0 = ROM_pages[0];
-    ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+    BankTable[4] = ROM_pages[0];
+    BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = VROM_pages[ nPage ];
@@ -24,8 +24,8 @@ void Mapper_26_Init() {
 void Mapper_26_Write(uint16 addr, unsigned char data) {
     switch(addr) {
         case 0x8000: {
-            ROMBANK0 = ROM_pages[data << 1];
-            ROMBANK1 = ROM_pages[(data << 1) + 1];
+            BankTable[4] = ROM_pages[data << 1];
+            BankTable[5] = ROM_pages[(data << 1) + 1];
         } break;
 
         case 0xB003: {
@@ -42,7 +42,7 @@ void Mapper_26_Write(uint16 addr, unsigned char data) {
         } break;
 
         case 0xC000: {
-            ROMBANK2 = ROM_pages[data];
+            BankTable[6] = ROM_pages[data];
         } break;
 
         case 0xD000: {
@@ -100,7 +100,7 @@ void Mapper_26_Write(uint16 addr, unsigned char data) {
 void Mapper_26_HSync() {
     if (Mapper_26_irq_enabled & 0x03) {
         if(Mapper_26_irq_counter >= 0xFE) {
-            IRQ_REQ;
+            set_irq(true);
             Mapper_26_irq_counter = Mapper_26_irq_latch;
             Mapper_26_irq_enabled = 0;
         } else {

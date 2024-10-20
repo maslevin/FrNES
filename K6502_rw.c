@@ -8,12 +8,29 @@
 /*===================================================================*/
 
 #include "K6502_rw.h"
+
 #include "Mapper.h"
 #include "pNesX_Sound_APU.h"
 #include "macros.h"
 #include "options.h"
 
 extern Mapper_t* mapper;
+
+extern uint8 RAM[];
+
+unsigned char* BankTable[8];
+
+// puts the default memory map into the bank tables (alterable by mappers)
+void initialize_banktables() {
+    BankTable[0] = RAM;
+    BankTable[1] = NULL;
+    BankTable[2] = NULL;
+    BankTable[3] = NULL;
+    BankTable[4] = NULL;
+    BankTable[5] = NULL;
+    BankTable[6] = NULL;
+    BankTable[7] = NULL;
+}
 
 // TODO: More optimizations possible here
 uint32* memcpy_offset( uint32* dest, uint32* src, int count, uint32 offset) {
@@ -76,14 +93,11 @@ inline unsigned char K6502_ReadZp( unsigned char byAddr ) {
 /*                                                                   */
 /*                                                                   */
 /*===================================================================*/
-unsigned char K6502_Read( uint16 wAddr ) {
+uint8 K6502_Read( uint16 wAddr ) {
     static unsigned char ppuOpenBus = 0;
     unsigned char byRet;
 
     switch ( wAddr & 0xE000 ) {
-        case 0x0000:  /* RAM */
-          return RAM[ wAddr & 0x7ff ];
-
         case 0x2000: {
             switch (wAddr & 0xF) {
                 /* PPU Status $2002*/              
@@ -153,20 +167,13 @@ unsigned char K6502_Read( uint16 wAddr ) {
             }
         } break;
 
+        case 0x0000:  /* RAM */
         case 0x6000:  /* SRAM */
-            return ROMBANK_WRAM[ wAddr & 0x1fff ];
-
         case 0x8000:  /* ROM BANK 0 */
-            return ROMBANK0[ wAddr & 0x1fff ];
-
         case 0xa000:  /* ROM BANK 1 */
-            return ROMBANK1[ wAddr & 0x1fff ];
-
-        case 0xc000:  /* ROM BANK 2 */
-            return ROMBANK2[ wAddr & 0x1fff ];
-
-        case 0xe000:  /* ROM BANK 3 */
-            return ROMBANK3[ wAddr & 0x1fff ];
+        case 0xc000:  /* ROM BANK 1 */
+        case 0xe000:  /* ROM BANK 1 */                
+            return BankTable[wAddr >> 13][wAddr & 0x1fff];
     }
 
     // when a register is not readable the upper half address is returned.
@@ -196,11 +203,11 @@ unsigned char K6502_Read( uint16 wAddr ) {
 /*                                                                   */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Write( uint16 wAddr, unsigned char byData ) {
+uint8 K6502_Write( uint16 wAddr, unsigned char byData ) {
     switch ( wAddr & 0xe000 ) {
         case 0x0000: { /* RAM */
             RAM[ wAddr & 0x7ff ] = byData;
-        } break;
+        }
 
         case 0x2000: { /* PPU */
             switch ( wAddr & 0x7 ) {
@@ -274,7 +281,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             } else if (addr & 0x3) {
                                 PPURAM[ addr ] = byData;
                             }
-                            return;
+                            return byData; //maybe this should be the unfiltered value?
                         }
                         addr &= 0xEFFF;
                     }
@@ -288,31 +295,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
             switch ( wAddr & 0x1f ) {
                 case 0x14: { /* 0x4014 */
                     // Sprite DMA
-                    switch ( byData >> 5 ) {
-                        case 0x0:  /* RAM */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
-                            break;
-
-                        case 0x3:  /* SRAM */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK_WRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
-                            break;
-
-                        case 0x4:  /* ROM BANK 0 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
-                            break;
-
-                        case 0x5:  /* ROM BANK 1 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
-                            break;
-
-                        case 0x6:  /* ROM BANK 2 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
-                            break;
-
-                        case 0x7:  /* ROM BANK 3 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
-                            break;
-                    }
+                    memcpy_offset( (uint32*) SPRRAM, &BankTable[byData >> 5][((uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                     //K6502_Burn(odd_cycle ? 514 : 513);
                 } break;
 
@@ -325,16 +308,8 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                 } break;
 
                 default: {               
-                    if (wAddr >= 0x4017) {
+                    if (wAddr >= 0x4018) {
                         mapper -> write (wAddr, byData);
-
-                        // Set Bank Table
-                        VIRPC;
-                        BankTable[ 4 ] = ROMBANK0;
-                        BankTable[ 5 ] = ROMBANK1;
-                        BankTable[ 6 ] = ROMBANK2;
-                        BankTable[ 7 ] = ROMBANK3;
-                        REALPC;
                     } else {
                         APU_Reg[ wAddr & 0x1f ] = byData;
                         if (options.opt_SoundEnabled) {
@@ -346,8 +321,8 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
         } break;
 
         case 0x6000: { /* WRAM */
-            if (ROMBANK_WRAM != NULL) {
-                ROMBANK_WRAM[ wAddr & 0x1fff ] = byData;
+            if (BankTable[3] != NULL) {
+                BankTable[3][ wAddr & 0x1fff ] = byData;
             }
         } break;
 
@@ -357,16 +332,10 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
         case 0xe000:  /* ROM BANK 3 */ {
             // Write to Mapper
             mapper -> write( wAddr, byData );
-
-            // Set Bank Table
-            VIRPC;
-            BankTable[ 4 ] = ROMBANK0;
-            BankTable[ 5 ] = ROMBANK1;
-            BankTable[ 6 ] = ROMBANK2;
-            BankTable[ 7 ] = ROMBANK3;
-            REALPC;
         } break;
     }
+
+    return byData;
 }
 
 // Reading/Writing operation (uint16 version)

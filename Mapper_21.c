@@ -6,10 +6,10 @@ uint8 Mapper_21_irq_counter;
 uint8 Mapper_21_irq_latch;
 
 void Mapper_21_Init() {
-    ROMBANK0 = ROM_pages[0];
-    ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+    BankTable[4] = ROM_pages[0];
+    BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     Mapper_21_regs[0] = 0;
     Mapper_21_regs[1] = 1;
@@ -30,14 +30,14 @@ void Mapper_21_Write(uint16 addr, uint8 data) {
     switch (addr & 0xF0CF) {
         case 0x8000: {
             if (Mapper_21_regs[8] & 0x02) {
-                ROMBANK2 = ROM_pages[data];
+                BankTable[6] = ROM_pages[data];
             } else {
-                ROMBANK0 = ROM_pages[data];
+                BankTable[4] = ROM_pages[data];
             }
         } break;
 
         case 0xA000: {
-            ROMBANK1 = ROM_pages[data];
+            BankTable[5] = ROM_pages[data];
         } break;
 
         case 0x9000: {
@@ -187,7 +187,7 @@ void Mapper_21_HSync() {
         if (Mapper_21_irq_counter == 0xFF) {
             Mapper_21_irq_counter = Mapper_21_irq_latch;
             Mapper_21_irq_enabled = (Mapper_21_irq_enabled & 0x01) * 3;
-            IRQ_REQ;
+            set_irq(true);
         } else {
             Mapper_21_irq_counter++;
         }

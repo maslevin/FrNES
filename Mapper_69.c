@@ -12,10 +12,10 @@ void Mapper_69_Init() {
     // Init ExSound
     apu_set_exsound(NES_APU_EXSOUND_FME7);
 
-	ROMBANK0 = ROM_pages[0];
-	ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+	BankTable[4] = ROM_pages[0];
+	BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = VROM_pages[ nPage ];
@@ -76,23 +76,23 @@ void Mapper_69_Write(uint16 addr, uint8 data) {
                 case 0x08: {
                     if(!(data & 0x40)) {
                         //printf("Map69: Set 0x6000-0x7FFF to Rom Page [%u]\n", data & 0x1f);
-                        BankTable[3] = ROMBANK_WRAM = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
+                        BankTable[3] = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                     }
                 } break;
 
                 case 0x09: {                
-                    pNesX_DebugPrint("Map69: Set ROMBANK0 to Rom Page [%u]\n", data & 0x1f);
-                    ROMBANK0 = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
+                    pNesX_DebugPrint("Map69: Set BankTable[4] to Rom Page [%u]\n", data & 0x1f);
+                    BankTable[4] = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                 } break;
 
                 case 0x0A: {
-                    pNesX_DebugPrint("Map69: Set ROMBANK1 to Rom Page [%u]\n", data & 0x1f);                    
-                    ROMBANK1 = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
+                    pNesX_DebugPrint("Map69: Set BankTable[5] to Rom Page [%u]\n", data & 0x1f);                    
+                    BankTable[5] = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                 } break;
 
                 case 0x0B: {
-                    pNesX_DebugPrint("Map69: Set ROMBANK2 to Rom Page [%u]\n", data & 0x1f);                    
-                    ROMBANK2 = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
+                    pNesX_DebugPrint("Map69: Set BankTable[6] to Rom Page [%u]\n", data & 0x1f);                    
+                    BankTable[6] = ROM_pages[(data & 0x1f) % num_8k_ROM_pages];
                 } break;
 
                 case 0x0C: {
@@ -139,7 +139,7 @@ void Mapper_69_Write(uint16 addr, uint8 data) {
 void Mapper_69_HSync() {
     if (Mapper_69_irq_enabled) {
         if (Mapper_69_irq_counter < 113) {
-            IRQ_REQ;
+            set_irq(true);
             Mapper_69_irq_counter = 0;
         } else {
             Mapper_69_irq_counter -= 113;

@@ -18,7 +18,6 @@
 #include "pNesX_System.h"
 
 #include "pNesX_System_DC.h"
-#include "K6502.h"
 
 #include "Mapper_0.h"
 #include "Mapper_1.h"
@@ -398,24 +397,24 @@ MapperTable_t Mappers[] = {
 };
 
 void debugRomPages() {
-	printf("ROMBANK0: ");
+	printf("BankTable[4]: ");
     for (uint32 i = 0; i < 32; i++) {
-        printf("$%02X ", ROMBANK0[i]);
+        printf("$%02X ", BankTable[4][i]);
     }
     printf("\n");
-    printf("ROMBANK1: ");
+    printf("BankTable[5]: ");
     for (uint32 i = 0; i < 32; i++) {
-        printf("$%02X ", ROMBANK1[i]);
+        printf("$%02X ", BankTable[5][i]);
     }
     printf("\n");
-    printf("ROMBANK2: ");
+    printf("BankTable[6]: ");
     for (uint32 i = 0; i < 32; i++) {
-        printf("$%02X ", ROMBANK2[i]);
+        printf("$%02X ", BankTable[6][i]);
     }
     printf("\n");
-    printf("ROMBANK3: ");
+    printf("BankTable[7]: ");
     for (uint32 i = 0; i < 32; i++) {
-        printf("$%02X ", ROMBANK3[i]);
+        printf("$%02X ", BankTable[7][i]);
     }
     printf("\n");  
 }

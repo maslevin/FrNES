@@ -38,15 +38,15 @@ void Mapper_4_Set_PPU_banks() {
 
 void Mapper_4_Set_CPU_banks() {
 	if ( Map4_ROM_Base ) {
-		ROMBANK0 = ROM_pages[num_8k_ROM_pages - 2];
-		ROMBANK1 = ROM_pages[Map4_Banks_Reg[ 7 ]];
-		ROMBANK2 = ROM_pages[Map4_Banks_Reg[ 6 ]];
-		ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
+		BankTable[4] = ROM_pages[num_8k_ROM_pages - 2];
+		BankTable[5] = ROM_pages[Map4_Banks_Reg[ 7 ]];
+		BankTable[6] = ROM_pages[Map4_Banks_Reg[ 6 ]];
+		BankTable[7] = ROM_pages[num_8k_ROM_pages - 1];
 	} else {
-		ROMBANK0 = ROM_pages[Map4_Banks_Reg[ 6 ]];
-		ROMBANK1 = ROM_pages[Map4_Banks_Reg[ 7 ]];
-		ROMBANK2 = ROM_pages[num_8k_ROM_pages - 2];
-		ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
+		BankTable[4] = ROM_pages[Map4_Banks_Reg[ 6 ]];
+		BankTable[5] = ROM_pages[Map4_Banks_Reg[ 7 ]];
+		BankTable[6] = ROM_pages[num_8k_ROM_pages - 2];
+		BankTable[7] = ROM_pages[num_8k_ROM_pages - 1];
 	}
 }
 
@@ -143,13 +143,6 @@ void Mapper_4_Init() {
 
 	Mapper_4_Write( 0x8000, 0 );
 	Mapper_4_Write( 0x8001, 0 );
-
-	/* Set up wiring of the interrupt pin */
-	K6502_Set_Int_Wiring( 1, 1 ); 
-
-	Map4_IRQ_Enable = 0;
-	Map4_IRQ_Set = 0;
-	Map4_IRQ_Cnt = 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -169,7 +162,7 @@ void Mapper_4_HSync() {
 				Map4_IRQ_Cnt--;				
 				if (Map4_IRQ_Cnt == 0) {
 					Map4_IRQ_Cnt = Map4_IRQ_Set;
-					IRQ_REQ;
+					set_irq(true);
 				}
 			}
 		}

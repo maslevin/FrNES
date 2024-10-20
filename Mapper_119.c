@@ -15,16 +15,16 @@ uint8 Mapper_119_irq_latch;   // IRQ scanline counter latch
 void Mapper_119_MMC3_set_CPU_banks() {
     if (prg_swap()) {
         //printf("Setting Prg Bank1 to page [%u] and Bank2 to page [%u]\n",Mapper_119_prg1,Mapper_119_prg0);
-        ROMBANK0 = ROM_pages[ num_8k_ROM_pages - 2];
-        ROMBANK1 = ROM_pages[ Mapper_119_prg1 % num_8k_ROM_pages];
-        ROMBANK2 = ROM_pages[ Mapper_119_prg0 % num_8k_ROM_pages];
-        ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+        BankTable[4] = ROM_pages[ num_8k_ROM_pages - 2];
+        BankTable[5] = ROM_pages[ Mapper_119_prg1 % num_8k_ROM_pages];
+        BankTable[6] = ROM_pages[ Mapper_119_prg0 % num_8k_ROM_pages];
+        BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
     } else {
         //printf("Setting Prg Bank0 to page [%u] and Bank1 to page [%u]\n",Mapper_119_prg0,Mapper_119_prg1);
-        ROMBANK0 = ROM_pages[ Mapper_119_prg0 % num_8k_ROM_pages];
-        ROMBANK1 = ROM_pages[ Mapper_119_prg1 % num_8k_ROM_pages];
-        ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-        ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];     
+        BankTable[4] = ROM_pages[ Mapper_119_prg0 % num_8k_ROM_pages];
+        BankTable[5] = ROM_pages[ Mapper_119_prg1 % num_8k_ROM_pages];
+        BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+        BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];     
     }
 }
 
@@ -238,7 +238,7 @@ void Mapper_119_HSync() {
             if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
                 if (Mapper_119_irq_counter == 0) {
                     Mapper_119_irq_counter = Mapper_119_irq_latch;
-                    IRQ_REQ;
+                    set_irq(true);
                 }
                 Mapper_119_irq_counter--;
             }

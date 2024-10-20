@@ -30,10 +30,13 @@ uint32 Mapper_1_HI1;
 uint32 Mapper_1_HI2;
 
 inline void Mapper_1_Set_CPU_Banks() {
-    ROMBANK0 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank1 & 0x1f)];
-    ROMBANK1 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank2 & 0x1f)];
-    ROMBANK2 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank3 & 0x1f)];
-    ROMBANK3 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank4 & 0x1f)];
+    if (num_8k_WRAM_pages) {
+        BankTable[3] = WRAM_pages[0];
+    }
+    BankTable[4] = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank1 & 0x1f)];
+    BankTable[5] = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank2 & 0x1f)];
+    BankTable[6] = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank3 & 0x1f)];
+    BankTable[7] = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank4 & 0x1f)];
 }
 
 /*-------------------------------------------------------------------*/

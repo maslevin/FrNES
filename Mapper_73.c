@@ -4,10 +4,10 @@ uint8 Mapper_73_irq_enabled;
 uint32 Mapper_73_irq_counter;
 
 void Mapper_73_Init() {
-	ROMBANK0 = ROM_pages[0];
-	ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+	BankTable[4] = ROM_pages[0];
+	BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     Mapper_73_irq_counter = 0;
     Mapper_73_irq_enabled = 0;
@@ -36,8 +36,8 @@ void Mapper_73_Write( uint16 wAddr, unsigned char byData ) {
         } break;
 
         case 0xF000: {
-            ROMBANK0 = ROM_pages[(byData << 1) % num_8k_ROM_pages];
-            ROMBANK1 = ROM_pages[((byData << 1) +1) % num_8k_ROM_pages];
+            BankTable[4] = ROM_pages[(byData << 1) % num_8k_ROM_pages];
+            BankTable[5] = ROM_pages[((byData << 1) +1) % num_8k_ROM_pages];
         } break;
     }
 }
@@ -45,7 +45,7 @@ void Mapper_73_Write( uint16 wAddr, unsigned char byData ) {
 void Mapper_73_HSync() {
     if (Mapper_73_irq_enabled & 0x02) {
         if (Mapper_73_irq_counter > 0xFFFF - 114) {
-            IRQ_REQ;
+            set_irq(true);
             Mapper_73_irq_enabled = 0;
         } else {
             Mapper_73_irq_counter += 114;

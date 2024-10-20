@@ -19,10 +19,10 @@ void Mapper_23_Init() {
         Mapper_23_patch = 0xFFFF;
     }
 
-    ROMBANK0 = ROM_pages[0];
-    ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+    BankTable[4] = ROM_pages[0];
+    BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     Mapper_23_regs[0] = 0;
     Mapper_23_regs[1] = 1;
@@ -46,9 +46,9 @@ void Mapper_23_Write(uint16 addr, uint8 data) {
         case 0x8008:
         case 0x800C: {             
             if (Mapper_23_regs[8]) {
-                ROMBANK2 = ROM_pages[data % num_8k_ROM_pages];
+                BankTable[6] = ROM_pages[data % num_8k_ROM_pages];
             } else {
-                ROMBANK0 = ROM_pages[data % num_8k_ROM_pages];
+                BankTable[4] = ROM_pages[data % num_8k_ROM_pages];
             }
         } break;
 
@@ -75,7 +75,7 @@ void Mapper_23_Write(uint16 addr, uint8 data) {
         case 0xA004:
         case 0xA008:
         case 0xA00C: {            
-            ROMBANK1 = ROM_pages[data % num_8k_ROM_pages];
+            BankTable[5] = ROM_pages[data % num_8k_ROM_pages];
         } break;
 
         case 0xB000: {
@@ -196,7 +196,7 @@ void Mapper_23_HSync() {
         if (Mapper_23_irq_counter == 0xFF) {
             Mapper_23_irq_counter = Mapper_23_irq_latch;
             Mapper_23_irq_enabled = (Mapper_23_irq_enabled & 0x01) * 3;
-            IRQ_REQ;
+            set_irq(true);
         } else {
             Mapper_23_irq_counter++;
         }

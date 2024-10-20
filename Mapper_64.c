@@ -7,10 +7,10 @@ uint8 Mapper_64_irq_enabled;
 
 void Mapper_64_Init() {
 
-    ROMBANK0 = ROM_pages[num_8k_ROM_pages - 1];
-	ROMBANK1 = ROM_pages[num_8k_ROM_pages - 1];
-	ROMBANK2 = ROM_pages[num_8k_ROM_pages - 1];
-	ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
+    BankTable[4] = ROM_pages[num_8k_ROM_pages - 1];
+	BankTable[5] = ROM_pages[num_8k_ROM_pages - 1];
+	BankTable[6] = ROM_pages[num_8k_ROM_pages - 1];
+	BankTable[7] = ROM_pages[num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
@@ -92,18 +92,18 @@ void Mapper_64_Write( uint16 wAddr, unsigned char byData ) {
 
                 case 0x06: {
                     if(Mapper_64_regs[1]) {
-                        ROMBANK1 = ROM_pages[byData % num_8k_ROM_pages];
+                        BankTable[5] = ROM_pages[byData % num_8k_ROM_pages];
                     } else {
-                        ROMBANK0 = ROM_pages[byData % num_8k_ROM_pages];
+                        BankTable[4] = ROM_pages[byData % num_8k_ROM_pages];
                     }
                 }
                 break;
 
                 case 0x07: {
                     if(Mapper_64_regs[1]) {
-                        ROMBANK2 = ROM_pages[byData % num_8k_ROM_pages];
+                        BankTable[6] = ROM_pages[byData % num_8k_ROM_pages];
                     } else {
-                        ROMBANK1 = ROM_pages[byData % num_8k_ROM_pages];
+                        BankTable[5] = ROM_pages[byData % num_8k_ROM_pages];
                     }
                 } break;
 
@@ -117,9 +117,9 @@ void Mapper_64_Write( uint16 wAddr, unsigned char byData ) {
 
                 case 0x0F: {
                     if(Mapper_64_regs[1]) {
-                        ROMBANK0 = ROM_pages[byData % num_8k_ROM_pages];
+                        BankTable[4] = ROM_pages[byData % num_8k_ROM_pages];
                     } else {
-                        ROMBANK2 = ROM_pages[byData % num_8k_ROM_pages];
+                        BankTable[6] = ROM_pages[byData % num_8k_ROM_pages];
                     }
                 } break;
             }
@@ -161,7 +161,7 @@ void Mapper_64_HSync() {
 			if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
 				if (!(--Mapper_64_irq_counter)) {
 					Mapper_64_irq_counter = Mapper_64_irq_latch;
-					IRQ_REQ;
+					set_irq(true);
 				}
 			}
 		}

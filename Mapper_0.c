@@ -14,20 +14,20 @@ void Mapper_0_Init() {
 
 	/* Set ROM Banks */
 	if (num_8k_ROM_pages > 3) {
-		ROMBANK0 = ROM_pages[0];
-		ROMBANK1 = ROM_pages[1];
-		ROMBANK2 = ROM_pages[2];
-		ROMBANK3 = ROM_pages[3];
+		BankTable[4] = ROM_pages[0];
+		BankTable[5] = ROM_pages[1];
+		BankTable[6] = ROM_pages[2];
+		BankTable[7] = ROM_pages[3];
 	} else if (num_8k_ROM_pages > 1) {
-		ROMBANK0 = ROM_pages[0];
-		ROMBANK1 = ROM_pages[1];
-		ROMBANK2 = ROM_pages[0];
-		ROMBANK3 = ROM_pages[1];
+		BankTable[4] = ROM_pages[0];
+		BankTable[5] = ROM_pages[1];
+		BankTable[6] = ROM_pages[0];
+		BankTable[7] = ROM_pages[1];
 	} else {
-		ROMBANK0 = ROM_pages[0];
-		ROMBANK1 = ROM_pages[0];
-		ROMBANK2 = ROM_pages[0];
-		ROMBANK3 = ROM_pages[0];
+		BankTable[4] = ROM_pages[0];
+		BankTable[5] = ROM_pages[0];
+		BankTable[6] = ROM_pages[0];
+		BankTable[7] = ROM_pages[0];
 	}
 
 	/* Set PPU Banks */

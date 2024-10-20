@@ -46,7 +46,7 @@
 #include <stdlib.h> //DCR
 #include "nes_apu.h"
 #include "nes_exsound.h"
-#include "K6502.h"
+//#include "K6502.h"
 
 /* included for nes_irq() and nes_clearframeirq() */
 #ifndef NSF_PLAYER
@@ -709,10 +709,11 @@ static int32 apu_dmc(dmc_t *chan) {
             chan->phaseacc += chan->freq;
           
             if (0 == (chan->dma_length & 7)) {
-                chan->cur_byte = K6502_Read(chan -> address);
+                //chan->cur_byte = K6502_Read(chan -> address);
                 
                 /* steal a cycle from CPU*/
-                K6502_Burn(1);
+                //MS - maybe this was what was throwing off CPU timing the whole time?
+                //K6502_Burn(1);
                 
                 if (0xFFFF == chan->address) {
                     chan->address = 0x8000;
@@ -1029,7 +1030,7 @@ uint8 ex_read(uint32 address) {
         // MS - this was commented out in Nester source... should it still be?
         //return N106SoundReadData (address);
         apudata_t d;
-        d.timestamp = K6502_GetCycles();
+        //d.timestamp = K6502_GetCycles();
         d.address = address + 0x10000;
         ex_enqueue(&d);
         return 0x00;
@@ -1052,7 +1053,7 @@ void apu_write(uint32 address, uint8 value) {
         case 0x400C: case 0x400D: case 0x400E: case 0x400F:
         case 0x4010: case 0x4011: case 0x4012: case 0x4013:
         case 0x4017:
-            d.timestamp = K6502_GetCycles();
+            //d.timestamp = K6502_GetCycles();
             d.address = address;
             d.value = value;
             apu_enqueue(&d);
@@ -1143,7 +1144,7 @@ void apu_write_cur(uint32 address, uint8 value) {
 
 void ex_write(uint32 address, uint8 value) {
     apudata_t d;
-    d.timestamp = K6502_GetCycles();
+    //d.timestamp = K6502_GetCycles();
     d.address = address;
     d.value = value;
     ex_enqueue(&d);
@@ -1258,7 +1259,7 @@ void apu_process(void *buffer, int num_samples) {
     }
     
     /* resync cycle counter */
-    apu->elapsed_cycles = K6502_GetCycles();
+    //apu->elapsed_cycles = K6502_GetCycles();
 }
 
 // apu_reset_apus() added by T.Yano

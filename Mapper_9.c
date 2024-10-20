@@ -65,10 +65,10 @@ void Mapper_9_PPU_Latch_FDFE(uint16 wAddr) {
 /*-------------------------------------------------------------------*/
 void Mapper_9_Init() {
 	// set ROM bank pointers
-	ROMBANK0 = ROM_pages[0];
-	ROMBANK1 = ROM_pages[ num_8k_ROM_pages - 3];
-	ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-	ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+	BankTable[4] = ROM_pages[0];
+	BankTable[5] = ROM_pages[ num_8k_ROM_pages - 3];
+	BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+	BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
 	// clean out the registers
 	Map9_Regs[0] = 0;
@@ -90,8 +90,8 @@ void Mapper_9_Write(uint16 wAddr, unsigned char byData) {
 		case 0xA000: {
 			// 8K ROM bank at $8000
 			Map9_Regs[0] = byData & 0x0F;
-			ROMBANK0 = ROM_pages[Map9_Regs[0]];
-			pNesX_DebugPrint("Map9: Setting ROMBANK0 to Page [%u]\n", Map9_Regs[0]);
+			BankTable[4] = ROM_pages[Map9_Regs[0]];
+			pNesX_DebugPrint("Map9: Setting BankTable[4] to Page [%u]\n", Map9_Regs[0]);
 		} break;
 
 		case 0xB000: {

@@ -26,22 +26,12 @@
 #include "pNesX_Sound_APU.h"
 #include "pNesX_PPU_DC.h"
 #include "GUI_SystemPage.h"
-#include "K6502.h"
+#include "K6502_rw.h"
 #include "aica_fw.h"
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
-
-/* RAM */
-unsigned char RAM[ RAM_SIZE ];
-
-/* ROM BANK ( 8Kb * 4 ) */
-unsigned char *ROMBANK_WRAM; // 0x6000
-unsigned char *ROMBANK0;
-unsigned char *ROMBANK1;
-unsigned char *ROMBANK2;
-unsigned char *ROMBANK3;
 
 /*-------------------------------------------------------------------*/
 /*  PPU resources                                                    */
@@ -51,7 +41,7 @@ unsigned char *ROMBANK3;
 /* PPU RAM */
 unsigned char PPURAM[ PPURAM_SIZE ];
 
-extern unsigned char HALT;
+// extern unsigned char HALT;
 
 /* PPU BANK ( 1Kb * 16 ) */
 unsigned char *PPUBANK[ 16 ];
@@ -204,26 +194,13 @@ void pNesX_DoSpu() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Init() {
-	// Initialize 6502
-	K6502_Init();
-
 	// Initialize Sound AICA program and ring buffers, and apu emulator
-	// Initialize pNesX
 	if (options.opt_SoundEnabled) {
 		// Start Sound Emu
 		DC_SoundInit();
 		timer_spin_sleep(40);
 		*start = 0xFFFFFFFF;
 	}
-
-	K6502_Set_Int_Wiring( 1, 1 ); 
-
-	// Call mapper initialization function - important that this comes before mapper
-	// init, for expansion audio
-	mapper -> init();
-
-	// Reset CPU and prepare to run program
-	K6502_Reset();
 
 	// Calculate how the output screen should appear based on clipping and stretching parameters
 	calculateOutputScreenGeometry();
@@ -309,20 +286,19 @@ int pNesX_Reset() {
 	/*  Initialize resources                                             */
 	/*-------------------------------------------------------------------*/
 
-	// Clear RAM
-	memset( RAM, 0, sizeof RAM );
-
 	// Clear PPU RAM
 	memset( PPURAM, 0, PPURAM_SIZE );
 
 	// Clear SPR RAM
 	memset( SPRRAM, 0, SPRRAM_SIZE );
 
+	initialize_banktables();
+
 	// Setup WRAM if present
 	if (num_8k_WRAM_pages) {
-		ROMBANK_WRAM = WRAM_pages[0];
+		BankTable[3] = WRAM_pages[0];
 	} else {
-		ROMBANK_WRAM = NULL;
+		BankTable[3] = NULL;
 	}
 
 	// Reset frame skip and frame count
@@ -364,6 +340,12 @@ int pNesX_Reset() {
 		printf("Mapper [%i] Supported\n", Mappers[ nIdx ].nMapperNo);
 		mapper = Mappers[nIdx].mapper;
 	}
+
+	// Call mapper initialization function - important that this comes before mapper
+	// init, for expansion audio
+	mapper -> init();
+
+	power();
 
 	// Successful
 	return 0;
@@ -509,10 +491,12 @@ __attribute__ ((hot)) void pNesX_Main() {
 			}
 		}
 
+/*
 		if (HALT) {
 			printf ("ERROR: System Halt - exiting emulation\n");
 			break;
 		}
+*/
 /*
 		if ( *opt_AutoFrameSkip ) {
 			if ( Auto_Frames > 0) {
@@ -536,7 +520,8 @@ __attribute__ ((hot)) void pNesX_Main() {
 __attribute__ ((hot)) void handle_dmc_synchronization(uint32 cycles) {
 	startProfiling(1);
 	if (audio_sync_dmc_registers(cycles)) {
-		K6502_DoIRQ();
+		set_irq(true);
+//		K6502_DoIRQ();
 	}
 	endProfiling(1);
 }
@@ -553,13 +538,13 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 	pNesX_StartFrame();
 
 	// Dummy scanline -1 or 261;
-	K6502_Step(1);
+	run_cycles(1);
 	PPU_R2 &= ~(R2_IN_VBLANK | R2_HIT_SP);
 	if (odd_cycle) {	
-		K6502_Step(CYCLES_PER_LINE);	
+		run_cycles(CYCLES_PER_LINE);	
 		handle_dmc_synchronization(CYCLES_PER_LINE + 1);
 	} else {
-		K6502_Step(CYCLES_PER_LINE - 1);	
+		run_cycles(CYCLES_PER_LINE - 1);	
 		handle_dmc_synchronization(CYCLES_PER_LINE);
 	}
 
@@ -582,12 +567,12 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 
 					// NMI is required if there is necessity
 					if ( ( ppuinfo.PPU_R0 & R0_NMI_SP ) && ( PPU_R1 & R1_SHOW_SP ) )
-						NMI_REQ;
+						set_nmi(true);
 				}
 
-				K6502_Step(hsync_cycles);
+				run_cycles(hsync_cycles);
 				mapper -> hsync();				
-				K6502_Step(cpu_cycles_to_emulate - hsync_cycles);
+				run_cycles(cpu_cycles_to_emulate - hsync_cycles);
 
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 
@@ -621,22 +606,22 @@ __attribute__ ((hot)) void pNesX_Cycle() {
 				WorkFrameIdx%=NUM_PVR_FRAMES;
 				WorkFrame = WorkFrames[WorkFrameIdx];
 
-				K6502_Step(cpu_cycles_to_emulate);
+				run_cycles(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
 			} break;
 
 			case 241: {
-				K6502_Step(5);
+				run_cycles(5);
 				pNesX_VSync();
 				mapper -> vsync();
-				K6502_Step(cpu_cycles_to_emulate - 5);
+				run_cycles(cpu_cycles_to_emulate - 5);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
 			} break;
 
 			case 242 ... 260 : {
-				K6502_Step(cpu_cycles_to_emulate);
+				run_cycles(cpu_cycles_to_emulate);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
 			} break;
@@ -657,5 +642,5 @@ __attribute__ ((hot)) void pNesX_VSync() {
 
 	// NMI on V-Blank
 	if ( ppuinfo.PPU_R0 & R0_NMI_VB )
-		NMI_REQ;
+		set_nmi(true);
 }

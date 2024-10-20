@@ -9,10 +9,10 @@ uint8 Mapper_25_irq_counter;
 uint8 Mapper_25_irq_latch;
 
 void Mapper_25_Init() {
-    ROMBANK0 = ROM_pages[0];
-    ROMBANK1 = ROM_pages[1];
-    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
-    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
+    BankTable[4] = ROM_pages[0];
+    BankTable[5] = ROM_pages[1];
+    BankTable[6] = ROM_pages[ num_8k_ROM_pages - 2];
+    BankTable[7] = ROM_pages[ num_8k_ROM_pages - 1];
 
     for ( int nPage = 0; nPage < 8; ++nPage )
         PPUBANK[ nPage ] = VROM_pages[ nPage ];
@@ -34,15 +34,15 @@ void Mapper_25_Write(uint16 addr, uint8 data) {
         case 0x8000: {
             if (Mapper_25_regs[10] & 0x02) {
                 Mapper_25_regs[9] = data;
-                ROMBANK2 = ROM_pages[data % num_8k_ROM_pages];
+                BankTable[6] = ROM_pages[data % num_8k_ROM_pages];
             } else {
                 Mapper_25_regs[8] = data;
-                ROMBANK0 = ROM_pages[data % num_8k_ROM_pages];
+                BankTable[4] = ROM_pages[data % num_8k_ROM_pages];
             }
         } break;
 
         case 0xA000: {
-            ROMBANK1 = ROM_pages[data % num_8k_ROM_pages];
+            BankTable[5] = ROM_pages[data % num_8k_ROM_pages];
         } break;
     }
 
@@ -66,8 +66,8 @@ void Mapper_25_Write(uint16 addr, uint8 data) {
                 uint8 swap = Mapper_25_regs[8];
                 Mapper_25_regs[8] = Mapper_25_regs[9];
                 Mapper_25_regs[9] = swap;
-                ROMBANK0 = ROM_pages[Mapper_25_regs[8] % num_8k_ROM_pages];
-                ROMBANK2 = ROM_pages[Mapper_25_regs[9] % num_8k_ROM_pages];
+                BankTable[4] = ROM_pages[Mapper_25_regs[8] % num_8k_ROM_pages];
+                BankTable[6] = ROM_pages[Mapper_25_regs[9] % num_8k_ROM_pages];
             }
             Mapper_25_regs[10] = data;
         }
@@ -193,10 +193,10 @@ void Mapper_25_HSync() {
     if (Mapper_25_irq_enabled & 0x02) {
         if(!Mapper_25_patch && Mapper_25_irq_counter == 0xFF) {
             Mapper_25_irq_counter = Mapper_25_irq_latch;
-            IRQ_REQ;
+            set_irq(true);
         } else if(Mapper_25_patch && Mapper_25_irq_counter == 0x00) {
             Mapper_25_irq_counter = Mapper_25_irq_latch;
-            IRQ_REQ;
+            set_irq(true);
         } else {
             Mapper_25_irq_counter++;
         }
