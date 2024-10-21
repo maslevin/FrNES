@@ -12,6 +12,8 @@
 void Mapper_0_Init() {
 	int nPage;
 
+	BankTable[3] = WRAM_pages[0];
+
 	/* Set ROM Banks */
 	if (num_8k_ROM_pages > 3) {
 		BankTable[4] = ROM_pages[0];

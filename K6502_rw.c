@@ -321,6 +321,20 @@ uint8 K6502_Write( uint16 wAddr, unsigned char byData ) {
         } break;
 
         case 0x6000: { /* WRAM */
+            if (wAddr == 0x6000) {
+                switch (byData) {
+                    case 0x80:
+                        printf("Test is running\n");
+                        break;
+                    case 0x81:
+                        printf("Test requires reset\n");
+                        break;
+                    case 0x00 ... 0x7F:
+                        printf("Test returned response code [$%02X]\n", byData);
+                        printf("Test Message: [%s]\n", &BankTable[3][0x0004]);
+                        break;
+                }
+            }
             if (BankTable[3] != NULL) {
                 BankTable[3][ wAddr & 0x1fff ] = byData;
             }

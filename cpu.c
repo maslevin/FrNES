@@ -2,8 +2,6 @@
 
 #include "K6502_rw.h"
 
-//#include "cartridge.h"
-
 #define RAM_SIZE 0x800
 uint8 RAM[RAM_SIZE];
 
@@ -11,11 +9,12 @@ uint16 PC;
 uint8 A, X, Y, SP;
 bool C, Z, I, D, V, N;
 bool nmi, irq;
+bool HALT;
 
 #define NTH_BIT(x, n) (((x) >> (n)) & 1)
 
-#define get_flags() (C | (Z << 1) | (I << 2) | (D << 3) | (1 << 5) | (V << 6) | (N << 7))
-#define set_flags(p) C = NTH_BIT(p, 0); Z = NTH_BIT(p, 1); I = NTH_BIT(p, 2); D = NTH_BIT(p, 3); V = NTH_BIT(p, 6); N = NTH_BIT(p, 7);
+inline uint8 get_flags() { return (C | (Z << 1) | (I << 2) | (D << 3) | (1 << 5) | (V << 6) | (N << 7)); }
+inline void set_flags(uint8 p) { C = NTH_BIT(p, 0); Z = NTH_BIT(p, 1); I = NTH_BIT(p, 2); D = NTH_BIT(p, 3); V = NTH_BIT(p, 6); N = NTH_BIT(p, 7); }
 
 // Remaining clocks to end frame:
 const int TOTAL_CYCLES = 29781;
@@ -172,9 +171,733 @@ uint16 VECTORS[] = { 0xFFFA, 0xFFFC, 0xFFFE, 0xFFFE };
 }
 #define NOP() { T; }
 
+#ifdef DEBUG
+extern uint32 currentCRC32;
+file_t traceFile;
+bool traceEnabled = false;
+char* pTraceBuffer;
+#define TRACE_BUFFER_LENGTH 1048576
+char traceBuffer[TRACE_BUFFER_LENGTH];
+
+void UploadTraceBuffer() {
+	fs_write(traceFile, traceBuffer, (pTraceBuffer - traceBuffer));
+	pTraceBuffer = traceBuffer;
+}
+
+void TraceInstruction(char* mnemonic, char* fmt, uint16 value) {
+	if (traceEnabled) {
+		char p[32];
+		char trace[80];
+		if (fmt) {
+			snprintf(p, 32, fmt, value);
+		} else {
+			p[0] = '\0';
+		}
+		snprintf(trace, 80, "A:%02X X:%02X Y:%02X S:%02X    $%04X: %s %s\n", A, X, Y, SP, PC, mnemonic, p);
+		uint32 traceLength = strlen(trace);
+		if ((TRACE_BUFFER_LENGTH - (pTraceBuffer - traceBuffer)) < traceLength) {
+			UploadTraceBuffer();
+		}
+		strcpy(pTraceBuffer, trace);
+		pTraceBuffer += traceLength;
+	}
+}
+
+void TraceInstruction2(char* mnemonic, char* fmt, uint16 value, uint16 value2) {
+	if (traceEnabled) {
+		char p[32];
+		char trace[64];
+		if (fmt) {
+			snprintf(p, 32, fmt, value, value2);
+		} else {
+			p[0] = '\0';
+		}
+		snprintf(trace, 80, "A:%02X X:%02X Y:%02X S:%02X    $%04X: %s %s\n", A, X, Y, SP, PC, mnemonic, p);
+		uint32 traceLength = strlen(trace);
+		if ((TRACE_BUFFER_LENGTH - (pTraceBuffer - traceBuffer)) < traceLength) {
+			UploadTraceBuffer();
+		}
+		strcpy(pTraceBuffer, trace);
+		pTraceBuffer += traceLength;
+	}
+}
+
+void TraceInstruction3(char* mnemonic, char* fmt, uint16 value, uint16 value2, uint16 value3) {
+	if (traceEnabled) {
+		char p[32];
+		char trace[64];
+		if (fmt) {
+			snprintf(p, 32, fmt, value, value2, value3);
+		} else {
+			p[0] = '\0';
+		}
+		snprintf(trace, 80, "A:%02X X:%02X Y:%02X S:%02X    $%04X: %s %s\n", A, X, Y, SP, PC, mnemonic, p);
+		uint32 traceLength = strlen(trace);
+		if ((TRACE_BUFFER_LENGTH - (pTraceBuffer - traceBuffer)) < traceLength) {
+			UploadTraceBuffer();
+		}
+		strcpy(pTraceBuffer, trace);
+		pTraceBuffer += traceLength;
+	}
+}
+
+void EndTracing() {
+	printf("Closing tracing with PC Host\n");
+	UploadTraceBuffer();
+	fs_close(traceFile);
+}
+
+void StartTracing() {
+	printf("Connecting to PC Host for Tracing\n");
+	char PCPath[256];
+	// TODO: use a log time or something like that in the filename here
+	snprintf(PCPath, 256, "/pc/Users/maslevin/Documents/Projects/numechanix/frnes/trace_%08lX.txt", currentCRC32);
+	traceFile = fs_open(PCPath, O_WRONLY);
+	if (traceFile != -1) {
+		printf("Opened Trace File [%s] on PC host\n", PCPath);
+		traceEnabled = true;
+		pTraceBuffer = traceBuffer;
+	} else {
+		printf("Error: Unable to start tracing with PC host, disabling trace\n");
+		traceEnabled = false;
+	}
+}
+
+void trace() {
+    switch (rd(PC)) {
+        case 0x00:
+            TraceInstruction("BRK", NULL, 0);
+            break;
+
+        case 0x01:
+            TraceInstruction("ORA", "($%04x,x)", rd16(PC+1));
+            break;
+
+        case 0x05:
+            TraceInstruction("ORA", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x06:
+            TraceInstruction("ASL", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x08:
+            TraceInstruction("PHP", NULL, 0);
+            break;
+
+        case 0x09:
+            TraceInstruction("ORA", "#$%02x", rd(PC + 1));
+            break;
+
+        case 0x0A:
+            TraceInstruction("ASL", NULL, 0);
+            break;
+
+        case 0x0D:
+            TraceInstruction("ORA", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x0E:
+            TraceInstruction("ASL", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x10:
+            TraceInstruction("BPL", "$%04x", (PC + 2) + (char)rd(PC+1));
+            break;
+
+        case 0x11:
+            TraceInstruction("ORA", "($%04x),y", rd16(PC+1));
+            break;
+        
+        case 0x15:
+            TraceInstruction("ORA", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x16:
+            TraceInstruction("ASL", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x18:
+            TraceInstruction("CLC", NULL, 0);
+            break;
+
+        case 0x19:
+            TraceInstruction("ORA", "$%04x,y", rd16(PC+1));	
+            break;
+
+        case 0x1D:
+            TraceInstruction("ORA", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0x1E:
+            TraceInstruction("ASL", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0x20:
+            TraceInstruction("JSR", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x21:
+            TraceInstruction("AND", "($%02x,x)", rd(PC + 1));
+            break;
+
+        case 0x24:
+            TraceInstruction("BIT", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x25:
+            TraceInstruction("AND", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x26:
+            TraceInstruction("ROL", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x28:
+            TraceInstruction("PLP", NULL, 0);
+            break;
+
+        case 0x29:
+            TraceInstruction("AND", "#$%02x", rd(PC + 1));	
+            break;
+
+        case 0x2A:
+            TraceInstruction("ROL", NULL, 0);	
+            break;
+
+        case 0x2C:
+            TraceInstruction2("BIT", "$%04x = #$%02x", rd16(PC+1), rd(rd16(PC+1)));	
+            break;
+
+        case 0x2D:
+            TraceInstruction("AND", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x2E:
+            TraceInstruction("ROL", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x30:
+            TraceInstruction("BMI", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0x31:
+            TraceInstruction("AND", "($%02x),y", rd(PC + 1));
+            break;
+
+        case 0x35:
+            TraceInstruction("AND", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x36:
+            TraceInstruction("ROL", "$%02x,x", rd(PC + 1));	
+            break;				
+
+        case 0x38:
+            TraceInstruction("SEC", NULL, 0);
+            break;
+
+        case 0x39:
+            TraceInstruction("AND", "$%04x,y", rd16(PC+1));
+            break;
+
+        case 0x3D:
+            TraceInstruction("AND", "$%04x,x", rd16(PC+1));	
+            break;
+
+        case 0x3E:
+            TraceInstruction("ROL", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0x40:
+            TraceInstruction("RTI", NULL, 0);
+            break;
+
+        case 0x41:
+            TraceInstruction("EOR", "($%02x,x)", rd(PC + 1));	
+            break;
+
+        case 0x45:
+            TraceInstruction("EOR", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0x46:
+            TraceInstruction("LSR", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x48:
+            TraceInstruction("PHA", NULL, 0);
+            break;
+
+        case 0x49:
+            TraceInstruction("EOR", "#$%02x", rd(PC + 1));
+            break;				
+
+        case 0x4A:
+            TraceInstruction("LSR", NULL, 0);	
+            break;
+
+        case 0x4C:
+            TraceInstruction("JMP", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0x4D:
+            TraceInstruction("EOR", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0x4E:
+            TraceInstruction("LSR", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0x50:
+            TraceInstruction("BVC", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x51:
+            TraceInstruction("EOR", "($%02x),y", rd(PC + 1));
+            break;				
+
+        case 0x55:
+            TraceInstruction("EOR", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x56:
+            TraceInstruction("LSR", "$%02x,x", rd(PC + 1));	
+            break;						
+
+        case 0x58:
+            TraceInstruction("CLI", NULL, 0);	
+            break;
+
+        case 0x59:
+            TraceInstruction("EOR", "$%04x,y", rd16(PC+1));	
+            break;
+
+        case 0x5D:
+            TraceInstruction("EOR", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0x5E:
+            TraceInstruction("LSR", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0x60:
+            TraceInstruction("RTS", NULL, 0);	
+            break;
+
+        case 0x61:
+            TraceInstruction("ADC", "($%02x,x)", rd(PC + 1));
+            break;
+
+        case 0x65:
+            TraceInstruction("ADC", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0x66:
+            TraceInstruction("ROR", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x68:
+            TraceInstruction("PLA", NULL, 0);	
+            break;
+
+        case 0x69:
+            TraceInstruction("ADC", "#$%02x", rd(PC + 1));
+            break;
+
+        case 0x6A:
+            TraceInstruction("ROR", NULL, 0);	
+            break;
+
+        case 0x6C:
+            TraceInstruction2("JMP", "($%04x) = $%04x", rd16(PC+1), K6502_ReadW(rd16(PC+1)));
+            break;
+    
+        case 0x6D:
+            TraceInstruction("ADC", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x6E:
+            TraceInstruction("ROR", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0x70:
+            TraceInstruction("BVS", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x71:
+            TraceInstruction("ADC", "($%04x),y", rd16(PC+1));
+            break;				
+
+        case 0x75:
+            TraceInstruction("ADC", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x76:
+            TraceInstruction("ROR", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x78:
+            TraceInstruction("SEI", NULL, 0);	
+            break;
+
+        case 0x79:
+            TraceInstruction("ADC", "$%04x,y", rd16(PC+1));
+            break;				
+
+        case 0x7D:
+            TraceInstruction("ADC", "$%04x,x", rd16(PC+1));	
+            break;				
+
+        case 0x7E:
+            TraceInstruction("ROR", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0x81:
+            TraceInstruction("STA", "($%02x,x)", rd(PC + 1));	
+            break;
+
+        case 0x84:
+            TraceInstruction("STY", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x85:
+            TraceInstruction("STA", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x86:
+            TraceInstruction("STX", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0x88:
+            TraceInstruction("DEY", NULL, 0);
+            break;
+
+        case 0x89:
+            TraceInstruction("BIT", "#$%02x", rd(PC + 1));
+            break;
+
+        case 0x8A:
+            TraceInstruction("TXA", NULL, 0);
+            break;
+
+        case 0x8C:
+            TraceInstruction("STY", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x8D:
+            TraceInstruction("STA", "$%04x", rd16(PC+1));
+            break;
+
+        case 0x8E:
+            TraceInstruction("STX", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0x90:
+            TraceInstruction("BCC", "$%02x", rd(PC + 1));
+            break;
+
+        case 0x91:
+            TraceInstruction("STA", "($%02x),y", rd(PC+1));	
+            break;			
+
+        case 0x94:
+            TraceInstruction("STY", "$%02x,x", rd(PC + 1));
+            break;
+
+        case 0x95:
+            TraceInstruction("STA", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x96:
+            TraceInstruction("STX", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0x98:
+            TraceInstruction("TYA", NULL, 0);	
+            break;
+
+        case 0x99:
+            TraceInstruction("STA", "$%04x,y", rd16(PC+1));
+            break;
+
+        case 0x9A:
+            TraceInstruction("TXS", NULL, 0);	
+            break;
+
+        case 0x9D:
+            TraceInstruction("STA", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xA0:
+            TraceInstruction("LDY", "#$%02x", rd(PC + 1));	
+            break;
+
+        case 0xA1:
+            TraceInstruction("LDA", "($%04x,x)", rd16(PC+1));	
+            break;
+
+        case 0xA2:
+            TraceInstruction("LDX", "#$%02x", rd(PC + 1));	
+            break;
+
+        case 0xA4:
+            TraceInstruction("LDY", "$%02x", rd(PC + 1));
+            break;
+
+        case 0xA5:
+            TraceInstruction("LDA", "$%02x", rd(PC + 1));
+            break;
+
+        case 0xA6:
+            TraceInstruction("LDX", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0xA8:
+            TraceInstruction("TAY", NULL, 0);	
+            break;
+
+        case 0xA9:
+            TraceInstruction("LDA", "#$%02x", rd(PC + 1));	
+            break;
+
+        case 0xAA:
+            TraceInstruction("TAX", NULL, 0);	
+            break;
+
+        case 0xAC:
+            TraceInstruction("LDY", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xAD:
+            TraceInstruction("LDA", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xAE:
+            TraceInstruction("LDX", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xB0:
+            TraceInstruction("BCS", "$%04x", (PC + 2) + (char)rd(PC + 1));	
+            break;
+
+        case 0xB1:
+            TraceInstruction("LDA", "($%04x),y", rd16(PC+1));	
+            break;
+
+        case 0xB4:
+            TraceInstruction("LDY", "$%02x,x", rd(PC + 1));
+            break;
+
+        case 0xB5:
+            TraceInstruction("LDA", "$%02x,x", rd(PC + 1));
+            break;
+
+        case 0xB6:
+            TraceInstruction("LDX", "$%02x,x", rd(PC + 1));
+            break;
+
+        case 0xB8:
+            TraceInstruction("CLV", NULL, 0);	
+            break;
+
+        case 0xB9:
+            TraceInstruction3("LDA", "$%04x,y @ $%04x = #$%02x", rd16(PC+1), rd16(PC+1) | Y, RAM[rd16(PC+1) | Y]);
+            break;																
+
+        case 0xBA:
+            TraceInstruction("TSX", NULL, 0);
+            break;
+
+        case 0xBC:
+            TraceInstruction("LDY", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xBD:
+            TraceInstruction("LDA", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xBE:
+            TraceInstruction("LDX", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xC0:
+            TraceInstruction("CPY", "#$%02x", rd(PC + 1));	
+            break;
+
+        case 0xC1:
+            TraceInstruction("CMP", "($%04x,x)", rd16(PC+1));	
+            break;
+
+        case 0xC4:
+            TraceInstruction("CPY", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0xC5:
+            TraceInstruction("CMP", "$%02x", rd(PC + 1));	
+            break;
+
+        case 0xC6:
+            TraceInstruction("DEC", "$%02x", rd(PC + 1));
+            break;
+
+        case 0xC8:
+            TraceInstruction("INY", NULL, 0);	
+            break;
+
+        case 0xC9:
+            TraceInstruction("CMP", "#$%02x", rd(PC + 1));
+            break;
+
+        case 0xCA:
+            TraceInstruction("DEX", NULL, 0);	
+            break;
+
+        case 0xCB:
+            TraceInstruction("AXS", "$%02x", rd(PC + 1));	
+            break;				
+
+        case 0xCC:
+            TraceInstruction("CPY", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xCD:
+            TraceInstruction("CMP", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xCE:
+            TraceInstruction("DEC", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xD0:
+            TraceInstruction("BNE", "$%04x", (PC + 1) + (char)rd(PC + 1));
+            break;																																					
+
+        case 0xD1:
+            TraceInstruction("CMP", "($%04x),y", rd16(PC+1));	
+            break;
+
+        case 0xD5:
+            TraceInstruction("CMP", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0xD6:
+            TraceInstruction("DEC", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0xD8:
+            TraceInstruction("CLD", NULL, 0);	
+            break;
+
+        case 0xD9:
+            TraceInstruction("CMP", "$%04x,y", rd16(PC+1));
+            break;
+
+        case 0xDD:
+            TraceInstruction("CMP", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xDE:
+            TraceInstruction("DEC", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xE0:
+            TraceInstruction("CPX", "#$%02x", rd(PC + 1));
+            break;
+
+        case 0xE1:
+            TraceInstruction("SBC", "($%04x,x)", rd16(PC+1));	
+            break;
+
+        case 0xE4:
+            TraceInstruction("CPX", "$%02x", rd(PC + 1));
+            break;
+
+        case 0xE5:
+            TraceInstruction("SBC", "$%02x", rd(PC + 1));
+            break;
+
+        case 0xE6:
+            TraceInstruction("INC", "$%02x", rd(PC + 1));
+            break;
+
+        case 0xE8:
+            TraceInstruction("INX", NULL, 0);
+            break;
+
+        case 0xE9:
+            TraceInstruction("SBC", "#$%02x", rd(PC + 1));
+            break;
+
+        case 0xEA:
+            TraceInstruction("NOP", NULL, 0);	
+            break;
+
+        case 0xEC:
+            TraceInstruction("CPX", "$%04x", rd16(PC+1));
+            break;
+
+        case 0xED:
+            TraceInstruction("SBC", "$%04x", rd16(PC+1));	
+            break;
+            
+        case 0xEE:
+            TraceInstruction("INC", "$%04x", rd16(PC+1));	
+            break;
+
+        case 0xF0:
+            TraceInstruction("BEQ", "$%04x", PC + rd(PC + 1));	
+            break;
+
+        case 0xF1:
+            TraceInstruction("SBC", "($%04x),y", rd16(PC+1));	
+            break;
+
+        case 0xF5:
+            TraceInstruction("SBC", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0xF6:
+            TraceInstruction("INC", "$%02x,x", rd(PC + 1));	
+            break;
+
+        case 0xF8:
+            TraceInstruction("SED", NULL, 0);	
+            break;
+
+        case 0xF9:
+            TraceInstruction("SBC", "$%04x,y", rd16(PC+1));
+            break;
+
+        case 0xFD:
+            TraceInstruction("SBC", "$%04x,x", rd16(PC+1));
+            break;
+
+        case 0xFE:
+            TraceInstruction("INC", "$%04x,x", rd16(PC+1));
+            break; 
+    } 
+}
+
+#else
+#define StartTracing() (0)
+#define EndTracing() (0)
+#define TraceInstruction(...) (0)
+#define TraceInstruction2(...) (0)
+#define TraceInstruction3(...) (0)
+#define trace() (0)
+#endif
+
+void PrintRegisters() {
+	printf("PC: [$%04x] A: [$%02x] X: [$%02x] Y: [$%02x] SP: [$%04x]\n", PC - 1, A, X, Y, 0x100 + SP);
+	printf("Stack: \n");
+	for (int SP_Index = SP + 1; SP_Index <= 0xFF; SP_Index++) {
+		printf("$%04x: %02x\n", 0x100 + SP_Index, RAM[0x100 + SP_Index]);
+	}
+}
+
 /* Execute a CPU instruction */
 void exec() {
-    //printf("$%04X: $%02X\n", PC, rd(PC));
     switch (rd(PC++)) {
         case 0x00: INT(BRK); return;
         case 0x01: ORA(izx); return;
@@ -226,7 +949,7 @@ void exec() {
         case 0x51: EOR(izy); return;
         case 0x55: EOR(zpx); return;
         case 0x56: LSR(zpx); return;
-        case 0x58: flag(I,0); return;
+        case 0x58: flag(I,0); printf("Interrupts Enabled\n");return;
         case 0x59: EOR(aby); return;
         case 0x5D: EOR(abx); return;
         case 0x5E: LSR(_abx); return;
@@ -244,7 +967,7 @@ void exec() {
         case 0x71: ADC(izy); return;
         case 0x75: ADC(zpx); return;
         case 0x76: ROR(zpx); return;
-        case 0x78: flag(I,1); return;
+        case 0x78: flag(I,1); printf("Interrupts Disabled\n"); return;
         case 0x79: ADC(aby); return;
         case 0x7D: ADC(abx); return;
         case 0x7E: ROR(_abx); return;
@@ -328,8 +1051,10 @@ void exec() {
         case 0xFD: SBC(abx); return;
         case 0xFE: INC(_abx); return;
         default:
+            HALT = true;
+            PrintRegisters();
 //            std::cout << "Invalid Opcode! PC: " << PC << " Opcode: 0x" << std::hex << (int)(rd(PC - 1)) << "\n";
-            NOP(); return;
+            return;
     }
 }
 
@@ -351,12 +1076,14 @@ void power() {
 void run_cycles(uint32 cycles) {
     remainingCycles += cycles;
 
-    while (remainingCycles > 0) {
+    while ((remainingCycles > 0) && !HALT) {
         if (nmi) {
             INT(NMI);
         } else if (irq && !I) {
+            printf("Running Interrupt\n");
             INT(IRQ);
         }
+        trace();
         exec();
     }
 }

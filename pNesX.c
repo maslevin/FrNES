@@ -204,6 +204,10 @@ void pNesX_Init() {
 
 	// Calculate how the output screen should appear based on clipping and stretching parameters
 	calculateOutputScreenGeometry();
+
+#ifdef DEBUG
+	StartTracing();
+#endif
 }
 
 /*===================================================================*/
@@ -491,12 +495,10 @@ __attribute__ ((hot)) void pNesX_Main() {
 			}
 		}
 
-/*
 		if (HALT) {
 			printf ("ERROR: System Halt - exiting emulation\n");
 			break;
 		}
-*/
 /*
 		if ( *opt_AutoFrameSkip ) {
 			if ( Auto_Frames > 0) {
@@ -520,7 +522,7 @@ __attribute__ ((hot)) void pNesX_Main() {
 __attribute__ ((hot)) void handle_dmc_synchronization(uint32 cycles) {
 	startProfiling(1);
 	if (audio_sync_dmc_registers(cycles)) {
-		set_irq(true);
+//		set_irq(true);
 //		K6502_DoIRQ();
 	}
 	endProfiling(1);
