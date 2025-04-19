@@ -529,6 +529,7 @@ bool checkForAutoROM() {
 }
 
 void launchEmulator() {
+	dcache_enable_ocram();	
 	printf("launchEmulator: loading rom [%s]\n", szRomPath);
 	numEmulationFrames = 0;
 
@@ -567,7 +568,8 @@ void launchEmulator() {
 		}
 	} else {
 		printf("main: error failed to start emulator!!!!\n");
-	}	
+	}
+	dcache_disable_ocram();	
 }
 
 /*===================================================================*/

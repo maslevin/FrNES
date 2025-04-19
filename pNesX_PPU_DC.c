@@ -19,8 +19,8 @@
 #include "profile.h"
 #include "Mapper.h"
 
-uint8* scanline_buffer = (uint8*)(void*)0x7dfff000;
-uint8* sprite_buffer = (uint8*)(void*)0x7e000f00;
+uint8* scanline_buffer = (uint8*)(void*)0x7c000900;
+uint8* sprite_buffer = (uint8*)(void*)0x7c000a00;
 
 extern uint16 PPU_Temp;
 
@@ -35,7 +35,6 @@ __attribute__ ((hot)) void pNesX_StartFrame() {
 /*                                                                   */
 /*===================================================================*/
 __attribute__ ((hot)) void pNesX_DrawLine() {
-	dcache_enable_ocram();
 	void* texture_address;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in
@@ -55,5 +54,4 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 
 	//Move the scanline buffer to the PVR texture
 	pvr_txr_load(scanline_buffer, texture_address, 256);
-	dcache_disable_ocram();
 }
