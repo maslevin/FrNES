@@ -25,6 +25,7 @@ unsigned char SpritesToDraw[MAX_SPRITES_ON_A_LINE] = {0};
 bool OverflowedSprites = false;
 
 void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
+	startProfiling(3);
 	unsigned char spriteBuffer[256];
 
 	int nX;
@@ -179,4 +180,5 @@ void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer) {
 			}
 		}		
 	}
+	endProfiling(3);	
 }
