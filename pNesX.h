@@ -22,13 +22,14 @@
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
 
-#define RAM_SIZE     0x2000
+#define RAM_SIZE     0x0800
 #define SRAM_SIZE    0x2000
-#define PPURAM_SIZE  0x4000
-#define SPRRAM_SIZE  256
+#define PPURAM_SIZE  0x2000
+#define PPUPALRAM_SIZE   32
+#define SPRRAM_SIZE     256
 
 /* RAM */
-extern unsigned char RAM[];
+extern uint8 RAM[RAM_SIZE];
 
 /* SRAM */
 extern unsigned char SRAM[];
@@ -53,7 +54,13 @@ typedef struct __attribute__ ((packed, aligned(4))) PPU_Info_s {
 extern PPU_Info_t ppuinfo;
 
 /* PPU RAM */
-extern unsigned char PPURAM[];
+extern uint8 PPURAM[PPURAM_SIZE];
+
+/* PPU PAL RAM */
+extern uint8 PPUPALRAM[PPUPALRAM_SIZE];
+
+/* Sprite RAM */
+extern uint8 SPRRAM[SPRRAM_SIZE];
 
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
@@ -87,9 +94,6 @@ extern uint8 codebook[CODEBOOK_SIZE];
 
 #define NAME_TABLE_V_MASK 2
 #define NAME_TABLE_H_MASK 1
-
-/* Sprite RAM */
-extern unsigned char SPRRAM[];
 
 #define SPR_Y    0
 #define SPR_CHR  1

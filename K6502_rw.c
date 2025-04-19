@@ -269,10 +269,10 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             // came from a background pixel - this will be important later when we merge background tiles with sprites
                             // during rendering, as these pixels will be transparent vs. sprites
                             if (!(addr & 0xf)) {
-                                PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
+                                PPUPALRAM[ 0x10 ] = PPUPALRAM[ 0x14 ] = PPUPALRAM[ 0x18 ] = PPUPALRAM[ 0x1c ] = 
+                                PPUPALRAM[ 0x00 ] = PPUPALRAM[ 0x04 ] = PPUPALRAM[ 0x08 ] = PPUPALRAM[ 0x0c ] = 0x40 | byData;
                             } else if (addr & 0x3) {
-                                PPURAM[ addr ] = byData;
+                                PPUPALRAM[ addr & 0x3 ] = byData;
                             }
                             return;
                         }

@@ -20,7 +20,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	uint16 nNameTable;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
-	unsigned char* paletteRegisters = &PPURAM[0x3f00];
+	unsigned char* paletteRegisters = PPUPALRAM;
 
 	nNameTable = ((ppuinfo.PPU_Addr & 0x0C00) >> 10) + 8;
 	nX = (ppuinfo.PPU_Addr & 0x001F);

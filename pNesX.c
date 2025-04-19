@@ -34,7 +34,8 @@
 /*-------------------------------------------------------------------*/
 
 /* RAM */
-unsigned char RAM[ RAM_SIZE ];
+uint8 RAM[ RAM_SIZE ];
+//uint8 RAM[RAM_SIZE] = (uint8*)(void*)0x7c000000;
 
 /* SRAM */
 unsigned char SRAM[ SRAM_SIZE ];
@@ -52,7 +53,11 @@ unsigned char *ROMBANK3;
 #define __ALIGN32__		__attribute__ ((aligned (32)))
 
 /* PPU RAM */
-unsigned char PPURAM[ PPURAM_SIZE ];
+//unsigned char PPURAM[ PPURAM_SIZE ];
+uint8 PPURAM[PPURAM_SIZE];
+//uint8* PPURAM = (uint8*)(void*)0x7c002000;
+uint8 PPUPALRAM[PPUPALRAM_SIZE];
+//uint8* PPUPALRAM = (uint8*)(void*)0x7c000b00;
 
 extern unsigned char HALT;
 
@@ -60,7 +65,8 @@ extern unsigned char HALT;
 unsigned char *PPUBANK[ 16 ];
 
 /* Sprite RAM */
-unsigned char SPRRAM[ SPRRAM_SIZE ];
+uint8 SPRRAM[SPRRAM_SIZE];
+//uint8* SPRRAM = (uint8*)(void*)0x7c000800;
 
 /* PPU Info Struct */
 PPU_Info_t ppuinfo;
@@ -312,7 +318,7 @@ int pNesX_Reset() {
 	/*-------------------------------------------------------------------*/
 
 	// Clear RAM
-	memset( RAM, 0, sizeof RAM );
+	memset( RAM, 0, RAM_SIZE );
 
 	// Clear PPU RAM
 	memset( PPURAM, 0, PPURAM_SIZE );
@@ -376,8 +382,9 @@ void pNesX_SetupPPU() {
 	int nPage;
 
 	// Clear PPU and Sprite Memory
-	memset( PPURAM, 0, sizeof PPURAM );
-	memset( SPRRAM, 0, sizeof SPRRAM );
+	memset( PPURAM, 0, PPURAM_SIZE );
+	memset( SPRRAM, 0, SPRRAM_SIZE );
+	memset( PPUPALRAM, 0, PPUPALRAM_SIZE );
 
 	// Reset PPU Register
 	ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
