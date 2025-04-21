@@ -25,7 +25,7 @@ unsigned char SpritesToDraw[MAX_SPRITES_ON_A_LINE] = {0};
 // Whether we overflowed sprites this scanline
 bool OverflowedSprites = false;
 
-__attribute__ ((hot)) void pNesX_DrawLine_Spr_C(volatile unsigned char* scanline_buffer, volatile unsigned char* sprite_buffer) {
+__attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer, unsigned char* sprite_buffer) {
 	startProfiling(3);
 
 	int nX;
@@ -36,7 +36,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(volatile unsigned char* scanline
 	uint16 bySprCol;
 	unsigned char patternData[8];
 	unsigned char* pbyBGData;
-	volatile unsigned char* pPalTbl;
+	unsigned char* pPalTbl;
 	unsigned char byData1;
 	unsigned char byData2;
 
@@ -95,7 +95,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(volatile unsigned char* scanline
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-		memset_to_volatile(sprite_buffer, 0, 256);
+		memset(sprite_buffer, 0, 256);
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);

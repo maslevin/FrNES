@@ -10,17 +10,17 @@
 
 extern uint8 MapperNo;
 
-__attribute__ ((hot)) void pNesX_DrawLine_BG_C(volatile unsigned char* pPoint) {
+__attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	startProfiling(2);
 	uint16 nX;
 	uint16 nY;
 	uint16 nY4;
 	uint16 nYBit;
-	volatile unsigned char* pPalTbl;
+	unsigned char* pPalTbl;
 	uint16 nNameTable;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
-	volatile unsigned char* paletteRegisters = PALETTERAM;
+	unsigned char* paletteRegisters = PALETTERAM;
 
 	nNameTable = ((ppuinfo.PPU_Addr & 0x0C00) >> 10) + 8;
 	nX = (ppuinfo.PPU_Addr & 0x001F);
@@ -167,7 +167,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(volatile unsigned char* pPoint) {
 
 	if (!(PPU_R1 & 0x02)) {
 		pPoint -= 256;
-		memset_to_volatile(pPoint, pPalTbl[0], 8);
+		memset(pPoint, pPalTbl[0], 8);
 	}
 	endProfiling(2);
 }

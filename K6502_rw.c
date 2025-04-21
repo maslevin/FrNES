@@ -16,10 +16,10 @@
 extern Mapper_t* mapper;
 
 // TODO: More optimizations possible here
-void memcpy_offset( volatile unsigned char* dest, unsigned char* src, int count, uint32 offset) {
+void memcpy_offset( unsigned char* dest, unsigned char* src, int count, uint32 offset) {
 	//printf("memcpy_offset: [%u] [%u]\n", count, offset);
 	if (offset == 0) {
-		memcpy_to_volatile(dest, src, count);		
+		memcpy(dest, src, count);		
 	} else {
 	// wrapping behaviour for sprite DMA operations
 		volatile unsigned char* u8dest = (unsigned char*)dest;

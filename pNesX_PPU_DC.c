@@ -19,8 +19,10 @@
 #include "profile.h"
 #include "Mapper.h"
 
-volatile uint8* scanline_buffer = (volatile uint8*)(void*)0x7c000900;
-volatile uint8* sprite_buffer = (volatile uint8*)(void*)0x7c000a00;
+//volatile uint8* scanline_buffer = (volatile uint8*)(void*)0x7c000900;
+uint8 scanline_buffer[256];
+//volatile uint8* sprite_buffer = (volatile uint8*)(void*)0x7c000a00;
+uint8 sprite_buffer[256];
 
 extern uint16 PPU_Temp;
 
@@ -41,7 +43,7 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 
 	if ( !(PPU_R1 & 0x18) ) {
-		memset_to_volatile(scanline_buffer, PALETTERAM[0] << 24 | PALETTERAM[0] << 16 | PALETTERAM[0] << 8 | PALETTERAM[0], 256);
+		memset(scanline_buffer, PALETTERAM[0] << 24 | PALETTERAM[0] << 16 | PALETTERAM[0] << 8 | PALETTERAM[0], 256);
 	} else {
 		if (MapperNo == 9) {
 			pNesX_Map9DrawLine_BG_C(scanline_buffer);

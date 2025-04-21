@@ -29,7 +29,7 @@
 #define SPRRAM_SIZE     256
 
 /* RAM */
-extern volatile unsigned char* RAM;
+extern unsigned char RAM[];
 
 /* SRAM */
 extern unsigned char SRAM[];
@@ -57,10 +57,10 @@ extern PPU_Info_t ppuinfo;
 extern unsigned char PPURAM[];
 
 /* Sprite RAM */
-extern volatile unsigned char* SPRRAM;
+extern unsigned char SPRRAM[];
 
 /* PPU PALETTE RAM */
-extern volatile unsigned char* PALETTERAM;
+extern unsigned char PALETTERAM[];
 
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
@@ -230,8 +230,5 @@ int pNesX_HSync();
 void pNesX_VSync();
 
 void pNesX_DoSpu();
-
-void memcpy_to_volatile(volatile unsigned char* dest, unsigned char *src, uint32_t num_bytes);
-void memset_to_volatile(volatile unsigned char* dest, unsigned char value, uint32_t num_bytes);
 
 #endif
