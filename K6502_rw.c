@@ -16,21 +16,20 @@
 extern Mapper_t* mapper;
 
 // TODO: More optimizations possible here
-uint32* memcpy_offset( uint32* dest, uint32* src, int count, uint32 offset) {
+void memcpy_offset( volatile unsigned char* dest, unsigned char* src, int count, uint32 offset) {
 	//printf("memcpy_offset: [%u] [%u]\n", count, offset);
 	if (offset == 0) {
-		return memcpy4(dest, src, count);		
+		memcpy_to_volatile(dest, src, count);		
 	} else {
 	// wrapping behaviour for sprite DMA operations
-		unsigned char* u8dest = (unsigned char*)dest;
-		unsigned char* u8src = (unsigned char*) src;		
+		volatile unsigned char* u8dest = (unsigned char*)dest;
+		volatile unsigned char* u8src = (unsigned char*) src;		
 		for (int i = 0; i < (count - offset); i++) {
 			u8dest[i + offset] = u8src[i];
 		}
 		for (int i = 0; i < offset; i++) {
 			u8dest[i] = u8src[i + (count - offset)];
 		}
-		return dest;
 	}
 }
 
@@ -313,27 +312,27 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     // Sprite DMA
                     switch ( byData >> 5 ) {
                         case 0x0:  /* RAM */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( SPRRAM, &RAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x3:  /* SRAM */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( SPRRAM, &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x4:  /* ROM BANK 0 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( SPRRAM, &ROMBANK0[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x5:  /* ROM BANK 1 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( SPRRAM, &ROMBANK1[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x6:  /* ROM BANK 2 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( SPRRAM, &ROMBANK2[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x7:  /* ROM BANK 3 */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( SPRRAM, &ROMBANK3[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
                     }
                     //K6502_Burn(odd_cycle ? 514 : 513);

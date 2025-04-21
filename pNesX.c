@@ -35,7 +35,7 @@
 
 /* RAM */
 //unsigned char RAM[ RAM_SIZE ];
-unsigned char* RAM = ((unsigned char*)(0x7c000000));
+volatile unsigned char* RAM = ((volatile unsigned char*)(0x7c000000));
 
 /* SRAM */
 unsigned char SRAM[ SRAM_SIZE ];
@@ -54,7 +54,7 @@ unsigned char *ROMBANK3;
 
 /* PPU RAM */
 unsigned char PPURAM[PPURAM_SIZE];
-unsigned char* PALETTERAM = ((unsigned char*)0x7c000b00);
+volatile unsigned char* PALETTERAM = ((volatile unsigned char*)0x7c000b00);
 
 extern unsigned char HALT;
 
@@ -62,7 +62,7 @@ extern unsigned char HALT;
 unsigned char *PPUBANK[ 16 ];
 
 /* Sprite RAM */
-unsigned char* SPRRAM = ((unsigned char*)0x7c002000);
+volatile unsigned char* SPRRAM = ((volatile unsigned char*)0x7c002000);
 
 /* PPU Info Struct */
 PPU_Info_t ppuinfo;
@@ -314,13 +314,16 @@ int pNesX_Reset() {
 	/*-------------------------------------------------------------------*/
 
 	// Clear RAM
-	memset( RAM, 0, RAM_SIZE );
+	memset_to_volatile( RAM, 0, RAM_SIZE );
 
 	// Clear PPU RAM
 	memset( PPURAM, 0, PPURAM_SIZE );
 
 	// Clear SPR RAM
-	memset( SPRRAM, 0, SPRRAM_SIZE );
+	memset_to_volatile( SPRRAM, 0, SPRRAM_SIZE );
+
+	// Clear Palette RAM
+	memset_to_volatile( PALETTERAM, 0, PALLETERAM_SIZE );
 
 	// Clear SRAM
 	memset( SRAM, 0, sizeof SRAM );
@@ -379,8 +382,8 @@ void pNesX_SetupPPU() {
 
 	// Clear PPU and Sprite Memory
 	memset( PPURAM, 0, PPURAM_SIZE );
-	memset( PALETTERAM, 0, PALLETERAM_SIZE );
-	memset( SPRRAM, 0, SPRRAM_SIZE );
+	memset_to_volatile( PALETTERAM, 0, PALLETERAM_SIZE );
+	memset_to_volatile( SPRRAM, 0, SPRRAM_SIZE );
 
 	// Reset PPU Register
 	ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
@@ -659,4 +662,16 @@ __attribute__ ((hot)) void pNesX_VSync() {
 	// NMI on V-Blank
 	if ( ppuinfo.PPU_R0 & R0_NMI_VB )
 		NMI_REQ;
+}
+
+void memcpy_to_volatile(volatile unsigned char* dest, unsigned char* src, uint32_t num_bytes) {
+    for (uint32_t i = 0; i < num_bytes; i++) {
+        dest[i] = src[i];
+    }
+}
+
+void memset_to_volatile(volatile unsigned char* dest, unsigned char value, uint32_t num_bytes) {
+    for (uint32_t i = 0; i < num_bytes; i++) {
+        dest[i] = value;
+    }
 }

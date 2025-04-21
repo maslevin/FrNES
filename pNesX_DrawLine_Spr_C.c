@@ -25,18 +25,18 @@ unsigned char SpritesToDraw[MAX_SPRITES_ON_A_LINE] = {0};
 // Whether we overflowed sprites this scanline
 bool OverflowedSprites = false;
 
-__attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer, unsigned char* sprite_buffer) {
+__attribute__ ((hot)) void pNesX_DrawLine_Spr_C(volatile unsigned char* scanline_buffer, volatile unsigned char* sprite_buffer) {
 	startProfiling(3);
 
 	int nX;
 	int nY;
 	int nYBit;
-	unsigned char *pSPRRAM;
+	volatile unsigned char *pSPRRAM;
 	int nAttr;
 	uint16 bySprCol;
 	unsigned char patternData[8];
 	unsigned char* pbyBGData;
-	unsigned char* pPalTbl;
+	volatile unsigned char* pPalTbl;
 	unsigned char byData1;
 	unsigned char byData2;
 
@@ -48,15 +48,15 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer, 
 	// Reset buffers and counts on scanline 0
 	if (ppuinfo.PPU_Scanline == 0) {
 		NumSpritesToDrawNextScanline = 0;
-		memset4(SpritesToDrawNextScanline, 0, 8);
+		memset(SpritesToDrawNextScanline, 0, 8);
 		NumSpritesToDraw = 0;
-		memset4(SpritesToDraw, 0, 8);
+		memset(SpritesToDraw, 0, 8);
 		OverflowSpritesOnNextScanline = false;
 		OverflowedSprites = false;
 	} else {
 	// Otherwise move the SpritesToDrawNextScanline to this scanline
 		NumSpritesToDraw = NumSpritesToDrawNextScanline;
-		memcpy4(SpritesToDraw, SpritesToDrawNextScanline, 8);
+		memcpy(SpritesToDraw, SpritesToDrawNextScanline, 8);
 		NumSpritesToDrawNextScanline = 0;
 
 		// More than 8 sprites were requested to be drawn on this scanline, so set the PPU flag for overflow
@@ -95,7 +95,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer, 
 	if ((ppuinfo.PPU_Scanline > 0) && 
 		(NumSpritesToDraw > 0) && 
 		(PPU_R1 & R1_SHOW_SP)) {
-		memset4(sprite_buffer, 0, 256);
+		memset_to_volatile(sprite_buffer, 0, 256);
 		for (int spriteIndex = (NumSpritesToDraw - 1); spriteIndex >= 0; spriteIndex--) {
 			//Calculate sprite address by taking index and multiplying by 4, since each entry is 4 bytes
 			pSPRRAM = SPRRAM + (SpritesToDraw[spriteIndex] << 2);
