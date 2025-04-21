@@ -22,13 +22,14 @@
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
 
-#define RAM_SIZE     0x2000
+#define RAM_SIZE     0x0800
 #define SRAM_SIZE    0x2000
 #define PPURAM_SIZE  0x4000
-#define SPRRAM_SIZE  256
+#define PALLETERAM_SIZE  32
+#define SPRRAM_SIZE     256
 
 /* RAM */
-extern unsigned char RAM[];
+extern unsigned char* RAM;
 
 /* SRAM */
 extern unsigned char SRAM[];
@@ -54,6 +55,12 @@ extern PPU_Info_t ppuinfo;
 
 /* PPU RAM */
 extern unsigned char PPURAM[];
+
+/* Sprite RAM */
+extern unsigned char* SPRRAM;
+
+/* PPU PALETTE RAM */
+extern unsigned char* PALETTERAM;
 
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
@@ -87,9 +94,6 @@ extern uint8 codebook[CODEBOOK_SIZE];
 
 #define NAME_TABLE_V_MASK 2
 #define NAME_TABLE_H_MASK 1
-
-/* Sprite RAM */
-extern unsigned char SPRRAM[];
 
 #define SPR_Y    0
 #define SPR_CHR  1

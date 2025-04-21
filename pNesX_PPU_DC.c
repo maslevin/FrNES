@@ -41,7 +41,7 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 	texture_address = &(WorkFrame -> texture[ppuinfo.PPU_Scanline * 256]);
 
 	if ( !(PPU_R1 & 0x18) ) {
-		memset4(scanline_buffer, PPURAM[0x3F00] << 24 | PPURAM[0x3F00] << 16 | PPURAM[0x3F00] << 8 | PPURAM[0x3F00], 256);
+		memset4(scanline_buffer, PALETTERAM[0] << 24 | PALETTERAM[0] << 16 | PALETTERAM[0] << 8 | PALETTERAM[0], 256);
 	} else {
 		if (MapperNo == 9) {
 			pNesX_Map9DrawLine_BG_C(scanline_buffer);

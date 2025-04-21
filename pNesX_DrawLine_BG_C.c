@@ -20,7 +20,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	uint16 nNameTable;
 	unsigned char* pbyNameTable;
 	unsigned char* pAlBase;
-	unsigned char* paletteRegisters = &PPURAM[0x3f00];
+	unsigned char* paletteRegisters = PALETTERAM;
 
 	nNameTable = ((ppuinfo.PPU_Addr & 0x0C00) >> 10) + 8;
 	nX = (ppuinfo.PPU_Addr & 0x001F);
@@ -30,7 +30,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 
 	pbyNameTable = PPUBANK[nNameTable] + (nY << 5) + nX;
 	pAlBase = PPUBANK[nNameTable] + 0x03C0 + ((nY >> 2) << 3);
-	pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
+	pPalTbl = &paletteRegisters[((( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 ) & 0x1f)];
 
 	if (MapperNo == 5) {
 		Mapper_5_PPU_Latch_RenderScreen(1, 0);
@@ -88,7 +88,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-		pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
+		pPalTbl = &paletteRegisters[((( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 ) & 0x1f)];
 
 		*(pPoint++) = pPalTbl[( byData1 >> 6 ) & 0x3];
 		*(pPoint++) = pPalTbl[( byData2 >> 6 ) & 0x3];
@@ -118,7 +118,7 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
 	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-	pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
+	pPalTbl = &paletteRegisters[((( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 ) & 0x1f)];
 	
 	switch (ppuinfo.PPU_Scr_H_Bit) {
 		case 1:

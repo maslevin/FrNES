@@ -137,7 +137,7 @@ __attribute__ ((hot)) void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buff
 			pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit % 8);
 			byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 			byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
-			pPalTbl = &PPURAM[0x3F10 + ((nAttr & SPR_ATTR_COLOR) << 2)];
+			pPalTbl = &PALETTERAM[((nAttr & SPR_ATTR_COLOR) << 2)];
 
 			unsigned char offset = 0;
 			unsigned char pixelsToDraw = 8;

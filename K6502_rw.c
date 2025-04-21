@@ -119,8 +119,8 @@ unsigned char K6502_Read( uint16 wAddr ) {
                         if (addr >= 0x3f00) {
                             PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
 //                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
-                            ppuOpenBus = PPURAM[0x3F00 | (addr & 0x1F)];
-                            return PPURAM[0x3F00 | (addr & 0x1F)];
+                            ppuOpenBus = PALETTERAM[(addr & 0x1F)];
+                            return PALETTERAM[(addr & 0x1F)];
                         }
 
                         // handle mirroring
@@ -268,12 +268,35 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
                             // came from a background pixel - this will be important later when we merge background tiles with sprites
                             // during rendering, as these pixels will be transparent vs. sprites
-                            if (!(addr & 0xf)) {
-                                PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
+                            if (!(addr & 0xf)) {                
+                                PALETTERAM[ 0x10 ] = PALETTERAM[ 0x14 ] = PALETTERAM[ 0x18 ] = PALETTERAM[ 0x1c ] = 
+                                PALETTERAM[ 0x00 ] = PALETTERAM[ 0x04 ] = PALETTERAM[ 0x08 ] = PALETTERAM[ 0x0c ] = 0x40 | byData;
                             } else if (addr & 0x3) {
-                                PPURAM[ addr ] = byData;
+                                PALETTERAM[ addr & 0x1f ] = byData;
                             }
+/*                            
+                            switch (addr & 0x1f) {
+                                case 0x00:
+                                case 0x10:
+                                    PALETTERAM[0x00] = PALETTERAM[0x10] = 0x40 | byData;                                
+                                    break;
+                                case 0x04:
+                                case 0x14:
+                                    PALETTERAM[0x04] = PALETTERAM[0x14] = 0x40 | byData;
+                                    break;
+                                case 0x08:
+                                case 0x18:
+                                    PALETTERAM[0x08] = PALETTERAM[0x18] = 0x40 | byData;
+                                    break;
+                                case 0x0c:
+                                case 0x1c:
+                                    PALETTERAM[0x0c] = PALETTERAM[0x1c] = 0x40 | byData;
+                                    break;
+                                default:
+                                    PALETTERAM[ addr & 0x1f ] = byData;
+                                    break;
+                            }
+*/                                    
                             return;
                         }
                         addr &= 0xEFFF;
