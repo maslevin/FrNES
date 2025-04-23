@@ -35,7 +35,7 @@
 
 /* RAM */
 //unsigned char RAM[ RAM_SIZE ];
-volatile unsigned char* RAM = ((volatile unsigned char*)(0x7c000000));
+unsigned char* RAM = ((unsigned char*)(0x7c000000));
 
 /* SRAM */
 unsigned char SRAM[ SRAM_SIZE ];
@@ -53,8 +53,9 @@ unsigned char *ROMBANK3;
 #define __ALIGN32__		__attribute__ ((aligned (32)))
 
 /* PPU RAM */
-unsigned char PPURAM[PPURAM_SIZE];
-volatile unsigned char* PALETTERAM = ((volatile unsigned char*)0x7c000b00);
+unsigned char* PPURAM = ((unsigned char*)0x7c002000);
+//unsigned char PPURAM[PPURAM_SIZE];
+unsigned char* PALETTERAM = ((unsigned char*)0x7c000b00);
 
 extern unsigned char HALT;
 
@@ -62,7 +63,7 @@ extern unsigned char HALT;
 unsigned char *PPUBANK[ 16 ];
 
 /* Sprite RAM */
-volatile unsigned char* SPRRAM = ((volatile unsigned char*)0x7c002000);
+unsigned char* SPRRAM = ((unsigned char*)0x7c000800);
 
 /* PPU Info Struct */
 PPU_Info_t ppuinfo;
@@ -117,11 +118,11 @@ __ALIGN32__ uint8 codebook[CODEBOOK_SIZE];
 
 /* Table for Mirroring */
 unsigned char PPU_MirrorTable[][ 4 ] = {
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE1, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE0, NAME_TABLE1 },
-  { NAME_TABLE0, NAME_TABLE1, NAME_TABLE2, NAME_TABLE3 },
-  { NAME_TABLE0, NAME_TABLE0, NAME_TABLE0, NAME_TABLE0 },
-  { NAME_TABLE1, NAME_TABLE1, NAME_TABLE1, NAME_TABLE1 }
+  { 0, 0, 1, 1 },
+  { 0, 1, 0, 1 },
+  { 0, 1, 2, 3 },
+  { 0, 0, 0, 0 },
+  { 1, 1, 1, 1 }
 };
 
 /*-------------------------------------------------------------------*/
@@ -314,16 +315,16 @@ int pNesX_Reset() {
 	/*-------------------------------------------------------------------*/
 
 	// Clear RAM
-	memset_to_volatile( RAM, 0, RAM_SIZE );
+	memset( RAM, 0, RAM_SIZE );
 
 	// Clear PPU RAM
 	memset( PPURAM, 0, PPURAM_SIZE );
 
 	// Clear SPR RAM
-	memset_to_volatile( SPRRAM, 0, SPRRAM_SIZE );
+	memset( SPRRAM, 0, SPRRAM_SIZE );
 
 	// Clear Palette RAM
-	memset_to_volatile( PALETTERAM, 0, PALLETERAM_SIZE );
+	memset( PALETTERAM, 0, PALLETERAM_SIZE );
 
 	// Clear SRAM
 	memset( SRAM, 0, sizeof SRAM );
@@ -382,8 +383,8 @@ void pNesX_SetupPPU() {
 
 	// Clear PPU and Sprite Memory
 	memset( PPURAM, 0, PPURAM_SIZE );
-	memset_to_volatile( PALETTERAM, 0, PALLETERAM_SIZE );
-	memset_to_volatile( SPRRAM, 0, SPRRAM_SIZE );
+	memset( PALETTERAM, 0, PALLETERAM_SIZE );
+	memset( SPRRAM, 0, SPRRAM_SIZE );
 
 	// Reset PPU Register
 	ppuinfo.PPU_R0 = PPU_R1 = PPU_R2 = PPU_R3 = PPU_R7 = 0;
@@ -398,26 +399,9 @@ void pNesX_SetupPPU() {
 	// Reset scanline
 	ppuinfo.PPU_Scanline = 0;
 
-	// Reset hit position of sprite #0 
-	// SpriteHitPos = -1;
-
 	// Reset information on PPU_R0
 	PPU_Increment = 1;
 	ppuinfo.PPU_SP_Height = 8;
-
-	// Reset PPU banks
-	// This isn't accurate because the NES doesn't actually have 16kB of PPU memory
-	// I will refactor this to be more accurate with a more accurate memory map
-	for ( nPage = 0; nPage < 8; ++nPage )
-		PPUBANK[ nPage ] = &PPURAM[ nPage * 0x400 ];
-	PPUBANK[ 8 ] = &PPURAM[ 8 * 0x400 ];
-	PPUBANK[ 9 ] = &PPURAM[ 9 * 0x400 ];
-	PPUBANK[ 10 ] = &PPURAM[ 10 * 0x400 ];
-	PPUBANK[ 11 ] = &PPURAM[ 11 * 0x400 ];
-	PPUBANK[ 12 ] = &PPURAM[ 12 * 0x400 ];
-	PPUBANK[ 13 ] = &PPURAM[ 13 * 0x400 ];
-	PPUBANK[ 14 ] = &PPURAM[ 14 * 0x400 ];
-	PPUBANK[ 15 ] = &PPURAM[ 15 * 0x400 ];
 
 	/* Mirroring of Name Table */
 	pNesX_Mirroring( ROM_Mirroring );
@@ -446,10 +430,10 @@ void pNesX_Mirroring( int nType ) {
 }
 
 void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
-	PPUBANK[ NAME_TABLE0 ] = &PPURAM[ (NAME_TABLE0 + bank1) * 0x400 ];
-	PPUBANK[ NAME_TABLE1 ] = &PPURAM[ (NAME_TABLE0 + bank2) * 0x400 ];
-	PPUBANK[ NAME_TABLE2 ] = &PPURAM[ (NAME_TABLE0 + bank3) * 0x400 ];
-	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ (NAME_TABLE0 + bank4) * 0x400 ];
+	PPUBANK[ NAME_TABLE0 ] = &PPURAM[ bank1 * 0x400 ];
+	PPUBANK[ NAME_TABLE1 ] = &PPURAM[ bank2 * 0x400 ];
+	PPUBANK[ NAME_TABLE2 ] = &PPURAM[ bank3 * 0x400 ];
+	PPUBANK[ NAME_TABLE3 ] = &PPURAM[ bank4 * 0x400 ];
 }
 
 #define NUM_FPS_SAMPLES 60
@@ -464,7 +448,7 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 __attribute__ ((hot)) void pNesX_Main() {
 	pNesX_Init();
 
-	resetProfiling(PMCR_PIPELINE_FREEZE_BY_ICACHE_MISS_MODE, MAX_PROFILING_FUNCTIONS);
+	resetProfiling(PMCR_PIPELINE_FREEZE_BY_DCACHE_MISS_MODE, MAX_PROFILING_FUNCTIONS);
 	setProfilingFunctionName(0, "K6502_Step");
 	setProfilingFunctionName(1, "handle_dmc_synchronization");
 	setProfilingFunctionName(2, "pNesX_DrawLine_BG_C");
@@ -662,16 +646,4 @@ __attribute__ ((hot)) void pNesX_VSync() {
 	// NMI on V-Blank
 	if ( ppuinfo.PPU_R0 & R0_NMI_VB )
 		NMI_REQ;
-}
-
-void memcpy_to_volatile(volatile unsigned char* dest, unsigned char* src, uint32_t num_bytes) {
-    for (uint32_t i = 0; i < num_bytes; i++) {
-        dest[i] = src[i];
-    }
-}
-
-void memset_to_volatile(volatile unsigned char* dest, unsigned char value, uint32_t num_bytes) {
-    for (uint32_t i = 0; i < num_bytes; i++) {
-        dest[i] = value;
-    }
 }

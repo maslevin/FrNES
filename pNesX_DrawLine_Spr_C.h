@@ -11,6 +11,6 @@
 
 #include <kos.h>
 
-void pNesX_DrawLine_Spr_C(volatile unsigned char* scanline_buffer, volatile unsigned char* sprite_buffer);
+void pNesX_DrawLine_Spr_C(unsigned char* scanline_buffer, unsigned char* sprite_buffer);
 
 #endif
