@@ -529,10 +529,9 @@ bool checkForAutoROM() {
 }
 
 void launchEmulator() {
-	dcache_enable_ocram();	
-	printf("launchEmulator: loading rom [%s]\n", szRomPath);
 	numEmulationFrames = 0;
 
+	printf("launchEmulator: loading rom [%s]\n", szRomPath);	
 	if (pNesX_Load(szRomPath, RomSize) == 0) {
 		//Load Its SaveRAM
 		if (SRAM_Enabled) {
@@ -563,13 +562,12 @@ void launchEmulator() {
 		}
 
 		if (recordingMode == RECORDING_MODE_ENABLED) {
-			printf("Uploading Recording\n");
+			printf("Uploading Input Recording to PC Host\n");
 			uploadRecording();
 		}
 	} else {
-		printf("main: error failed to start emulator!!!!\n");
+		printf("launchEmulator: error failed to start emulator!!!!\n");
 	}
-	dcache_disable_ocram();	
 }
 
 /*===================================================================*/

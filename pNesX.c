@@ -135,8 +135,8 @@ unsigned char APU_Reg[ 0x18 ];
 uint32 num_bytes = 5880;
 uint32 firmware_size = 3292;
 
-static volatile unsigned long *position  = (volatile unsigned long*)(0x10014 + 0xa0800000);
-static volatile unsigned long *start  = (volatile unsigned long*)(0x10000 + 0xa0800000);
+static unsigned long *position  = (unsigned long*)(0x10014 + 0xa0800000);
+static unsigned long *start  = (unsigned long*)(0x10000 + 0xa0800000);
 
 uint16 num_writes;
 uint16 on_frame;
@@ -209,28 +209,37 @@ void pNesX_DoSpu() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Init() {
+	printf("Init: initializing OCRAM mode for dcache\n");
+	dcache_enable_ocram();
+
 	// Initialize 6502
+	printf("Init: initializing 6502\n");
 	K6502_Init();
 
 	// Initialize Sound AICA program and ring buffers, and apu emulator
 	// Initialize pNesX
 	if (options.opt_SoundEnabled) {
+		printf("Init: initializing Sound\n");
 		// Start Sound Emu
 		DC_SoundInit();
 		timer_spin_sleep(40);
 		*start = 0xFFFFFFFF;
 	}
 
+	printf("Init: initializing Interrupts\n");	
 	K6502_Set_Int_Wiring( 1, 1 ); 
 
 	// Call mapper initialization function - important that this comes before mapper
 	// init, for expansion audio
+	printf("Init: initializing Mapper\n");		
 	mapper -> init();
 
 	// Reset CPU and prepare to run program
+	printf("Init: resetting CPU\n");		
 	K6502_Reset();
 
 	// Calculate how the output screen should appear based on clipping and stretching parameters
+	printf("Init: calculating screen output geometry\n");		
 	calculateOutputScreenGeometry();
 }
 
@@ -240,6 +249,9 @@ void pNesX_Init() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Fin() {
+	printf("Fin: disabling OCRAM mode for dcache\n");	
+	dcache_disable_ocram();	
+
 	if (options.opt_SoundEnabled) {
 		spu_shutdown();
 	}
@@ -448,6 +460,9 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 __attribute__ ((hot)) void pNesX_Main() {
 	pNesX_Init();
 
+	#ifdef PROFILE
+	printf("Main: Configuring Current Profiling Mode\n");
+	#endif
 	resetProfiling(PMCR_PIPELINE_FREEZE_BY_DCACHE_MISS_MODE, MAX_PROFILING_FUNCTIONS);
 	setProfilingFunctionName(0, "K6502_Step");
 	setProfilingFunctionName(1, "handle_dmc_synchronization");
