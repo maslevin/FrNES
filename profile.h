@@ -5,7 +5,7 @@
 
 extern uint32 numEmulationFrames;
 
-// #define PROFILE
+ #define PROFILE
 
 #ifdef PROFILE
 void resetProfiling(uint16 newProfilingMode, uint32 numFunctions);
