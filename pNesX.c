@@ -26,6 +26,7 @@
 #include "pNesX_Sound_APU.h"
 #include "pNesX_PPU_DC.h"
 #include "GUI_SystemPage.h"
+#include "6502.h"
 #include "K6502.h"
 #include "aica_fw.h"
 
@@ -204,6 +205,8 @@ void pNesX_DoSpu() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Init() {
+	init_6502();
+
 	// Initialize 6502
 	K6502_Init();
 
