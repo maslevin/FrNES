@@ -206,6 +206,7 @@ void pNesX_DoSpu() {
 /*===================================================================*/
 void pNesX_Init() {
 	init_6502();
+	print_6502_registers();
 
 	// Initialize 6502
 	K6502_Init();
@@ -461,6 +462,7 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 /*                                                                   */
 /*===================================================================*/
 __attribute__ ((hot)) void pNesX_Main() {
+	dcache_enable_ocram();
 	pNesX_Init();
 
 	resetProfiling(PMCR_PIPELINE_FREEZE_BY_DCACHE_MISS_MODE, MAX_PROFILING_FUNCTIONS);
@@ -531,6 +533,7 @@ __attribute__ ((hot)) void pNesX_Main() {
 
 	pNesX_Fin();
 	printProfilingReport();
+	dcache_disable_ocram();
 }
 
 #define CYCLES_PER_LINE 113
