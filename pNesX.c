@@ -205,7 +205,7 @@ void pNesX_DoSpu() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Init() {
-	init_6502();
+	reset_6502();
 	print_6502_registers();
 
 	// Initialize 6502
