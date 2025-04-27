@@ -112,10 +112,10 @@ _read_byte_6502:
     mov.l PPUOPENBUS_addr, r7       ! put the address of the open bus variable into r7
 
     cmp/eq r0, r2                   ! test if the address is reading PPU Register 2007
-    mov #4, r2                      ! put 4 into r2 
-
-    mov.b @r7, r8                   ! put the value of the open bus into r8
     mov.l PPUADDR_addr, r9          ! speculatively put the addresss of PPUADDR into r9
+
+    mov #4, r2                      ! put 4 into r2 
+    mov.b @r7, r8                   ! put the value of the open bus into r8
 
     bt/s read_PPUDATA               ! branch to read 2007 if true
     mov.b @r9, r3                   ! speculatively load PPUADDR's value into r3
@@ -126,21 +126,20 @@ _read_byte_6502:
     and #2, r0                      ! mask if the 2 bit is set on r0 
     mov.l SPRRAM_addr, r10          ! speculatively put the addresss of SPRRAM into r10
 
-    bt/s read_OAMDATA               ! branch to read 2004 if true
+    bt/s read_OAMDATA               ! branch to read 2004 if true    
     mov.b @r9, r3                   ! speculatively load OAMADDR's value into r3
 
     mov.l PPUSTATUS_addr, r9        ! speculatively put the address of PPUSTATUS into r9
     cmp/eq #2, r0                   ! test if the address has the 2 bit set post masking
 
-    bt/s read_PPUSTATUS             ! branch to read 2002 if true
+    shlr8 r4                        ! if we got here, r4 still has the read address here, so shift it right by 8 bits because it's likely to be the return value at this point
+    nop
+
     mov.b @r9, r3                   ! speculatively move the value of PPUSTATUS into r3
-
-    shlr8 r4                        ! if we got here, r4 still has the read address here, so shift it right by 8 bits because it's the return value
-    nop
-
+    bt/s read_PPUSTATUS             ! branch to read 2002 if true
     mov r4, r0                      ! move the address to the return slot
-    nop
 
+    nop
     rts                             ! then return
 
 ! r3 - contains PPUSTATUS
