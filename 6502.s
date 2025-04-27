@@ -70,6 +70,7 @@ _read_byte_6502:
     bt/s read_ROMBANK0              ! if true, jump to read from ROMBANK0
     add r6, r3                      ! add the index offset into r3
 
+    ! we know we won't need r4, r5, r6 values from here on so reuse the registers
     mov.l ROMBANK2_addr, r4         ! speculatively put ROMBANK2 address into r4
     cmp/eq r5, r1                   ! compare bank and 0xa000
 
@@ -93,17 +94,6 @@ _read_byte_6502:
     mov.b @r0, r0
     rts
 
-.align 4
-address_bank_mask: .short 0xe000
-address_index_mask: .short 0x1fff
-ram_local_index_mask: .short 0x07ff
-RAM_addr: .long 0x7c000000
-wram_addr: .long _ROMBANK_WRAM
-ROMBANK0_addr: .long _ROMBANK0
-ROMBANK1_addr: .long _ROMBANK1
-ROMBANK2_addr: .long _ROMBANK2
-ROMBANK3_addr: .long _ROMBANK3
-
 ! r6 - index inside the bank
 ! r8 - local mask 0x07ff
 .align 4
@@ -112,11 +102,62 @@ ROMBANK3_addr: .long _ROMBANK3
     nop
     rts                             ! return to caller
 
-.align 4
-
-
+! r6 - index inside the bank
 .align 4
 .read_PPU_Registers:
+    mov r6, r0                      ! move a copy of the index into r0
+    mov #7, r2                      ! put 7 into r2 
+
+    and #15, r0                     ! and 0xf with r0 for further masking the index into PPU register range
+    mov.l PPUOPENBUS_addr, r7       ! put the address of the open bus variable into r7
+
+    cmp/eq r0, r2                   ! test if the address is reading PPU Register 2007
+    mov #4, r2                      ! put 4 into r2 
+
+    mov.b @r7, r8                   ! put the value of the open bus into r8
+    mov.l PPUADDR_addr, r9          ! speculatively put the addresss of PPUADDR into r9
+
+    bt/s read_PPUDATA               ! branch to read 2007 if true
+    mov.b @r9, r3                   ! speculatively load PPUADDR's value into r3
+
+    mov.l OAMADDR_addr, r9           ! speculatively put the address of OAMADDR into r9
+    cmp/eq r0, r2                   ! test if the address is reading PPU Register 2004
+
+    and #2, r0                      ! mask if the 2 bit is set on r0 
+    mov.l SPRRAM_addr, r10          ! speculatively put the addresss of SPRRAM into r10
+
+    bt/s read_OAMDATA               ! branch to read 2004 if true
+    mov.b @r9, r3                   ! speculatively load OAMADDR's value into r3
+
+    mov.l PPUSTATUS_addr, r9        ! speculatively put the address of PPUSTATUS into r9
+    cmp/eq #2, r0                   ! test if the address has the 2 bit set post masking
+
+    bt/s read_PPUSTATUS             ! branch to read 2002 if true
+    mov.b @r9, r3                   ! speculatively move the value of PPUSTATUS into r3
+
+    shlr8 r4                        ! if we got here, r4 still has the read address here, so shift it right by 8 bits because it's the return value
+    nop
+
+    mov r4, r0                      ! move the address to the return slot
+    nop
+
+    rts                             ! then return
+
+! r3 - contains PPUSTATUS
+.align 4
+.read_PPUSTATUS
+
+! r3 - contains SPRRAM
+.align 4
+.read_OAMDATA:
+
+! r3 - contains PPUADDR
+.align 4
+.read_PPUDATA:
+    mov.b PPUCTRL_addr, r4          ! we will need to get the PPU increment so for that we'll need PPUCTRL
+
+
+    
 
 ! r0 - wram pointer
 .align 4
@@ -126,10 +167,6 @@ ROMBANK3_addr: .long _ROMBANK3
     mov.b @r0, r0
     nop
     rts
-
-
-
-
 
 .align 4
 .read_ROMBANK0:
@@ -143,8 +180,16 @@ ROMBANK3_addr: .long _ROMBANK3
     rts
     mov #0, 0
 
-
-
+.align 4
+address_bank_mask: .short 0xe000
+address_index_mask: .short 0x1fff
+ram_local_index_mask: .short 0x07ff
+RAM_addr: .long 0x7c000000
+wram_addr: .long _ROMBANK_WRAM
+ROMBANK0_addr: .long _ROMBANK0
+ROMBANK1_addr: .long _ROMBANK1
+ROMBANK2_addr: .long _ROMBANK2
+ROMBANK3_addr: .long _ROMBANK3
 
 .global _reset_6502
 .align 2
@@ -189,5 +234,20 @@ Y_addr: .long 0x7c000b26
 IRQ_REQ_addr: .long 0x7c000b27 ! when nonzero, an IRQ has been requested
 NMI_REQ_addr: .long 0x7c000b28 ! when nonzero, an NMI has been requested
 
-! clocks stored after 
-CLOCKS_addr: .long 0x7c000b30
+CLOCKS_addr: .long 0x7c000b30  ! clocks stored after 
+
+! PPU register locations
+PPUCTRL_addr: .long 0x7c000b40
+PPUMASK_addr: .long 0x7c000b41
+PPUSTATUS_addr: .long 0x7c000b42
+OAMADDR_addr: .long 0x7c000b43
+OAMDATA_addr: .long 0x7c000b44
+OAMDMA_addr: .long 0x7c000b45
+PPUDATA_addr: .long 0x7c000b46
+PPUOPENBUS_addr: .long 0x7c000b47
+PPUSCROLL_addr: .long 0x7c000b48  ! word
+PPUADDR_addr: .long 0x7c000b4a    ! word
+PPU_V_addr: .long 0x7c000b4c
+PPU_T_addr: .long 0x7c000b4d
+PPU_X_addr: .long 0x7c000b4e
+PPU_W_addr: .long 0x7c000b4f
