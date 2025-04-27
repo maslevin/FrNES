@@ -143,8 +143,28 @@ _read_byte_6502:
     rts                             ! then return
 
 ! r3 - contains PPUSTATUS
+! r7 - addr of open bus value
+! r8 - contains value of open bus
+! r9 - contains address of PPUSTATUS
 .align 4
 .read_PPUSTATUS
+    mov.l PPU_W_addr, r2            ! move the internal W register address into r2
+    xor r4, r4                      ! clear r4 out
+
+    mov #31, r5                     ! move 0x1f into r5 to mask the value in r8
+    mov r3, r0                      ! copy PPUSTATUS value into r0 
+
+    mov.b @r2, r4                   ! set the W register value to 0
+    and r5, r8                      ! and Open Bus value with 0x1f
+
+    and #224, r0                    ! and PPUSTATUS value with 0xe0
+    mov #127, r2                    ! put the vblank off mask into r2
+
+    and r2, r3                      ! and PPUSTATUS value (to be stored) with 0x7f, turning off vblank flag
+    or r8, r0                       ! or r0 with masked open bus value from r8
+
+    mov.b @r7, r0                   ! store the return value as the open bus value
+    rts
 
 ! r3 - contains SPRRAM
 .align 4
