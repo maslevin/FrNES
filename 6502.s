@@ -157,13 +157,21 @@ _read_byte_6502:
     mov.b @r2, r4                   ! set the W register value to 0
     and r5, r8                      ! and Open Bus value with 0x1f
 
-    and #224, r0                    ! and PPUSTATUS value with 0xe0
     mov #127, r2                    ! put the vblank off mask into r2
+    nop
+
+    and #224, r0                    ! and PPUSTATUS value with 0xe0
+    nop
 
     and r2, r3                      ! and PPUSTATUS value (to be stored) with 0x7f, turning off vblank flag
+    nop
+
     or r8, r0                       ! or r0 with masked open bus value from r8
+    mov.b @r9, r3                   ! store PPUSTATUS value back to memory
 
     mov.b @r7, r0                   ! store the return value as the open bus value
+    nop
+
     rts
 
 ! r3 - contains SPRRAM
