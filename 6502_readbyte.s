@@ -3,10 +3,10 @@
 .align 2
 _read_byte_6502:
     ! 6502 read address is in r4
-    mov.w address_bank_mask, r0    ! put 0xe000 into r0
+    mov.w address_bank_mask, r0     ! put 0xe000 into r0
     mov #32, r1                     ! put 0x2000 into r1 
 
-    mov.w address_index_mask, r2   ! put 0x1fff into r2
+    mov.w address_index_mask, r2    ! put 0x1fff into r2
     xor r7, r7                      ! clear r7
 
     mov r4, r5                      ! put a copy of the address into r5
@@ -21,7 +21,7 @@ _read_byte_6502:
     and r2, r6                      ! and r6 with the index mask to get the index inside the bank we are interested in 
     cmp/eq r5, r7                   ! compare bank and 0x0000
 
-    mov.w RAM_addr, r0             ! put 6502 main memory pointer into r0
+    mov.w RAM_addr, r0              ! put 6502 main memory pointer into r0
 
     bt/s .read_MEM                  ! if true, jump to read from 6502 memory routine
     and r8, r6                      ! and the index of the byte we're looking for
@@ -38,11 +38,11 @@ _read_byte_6502:
     bt/s .read_APU_IO_Region        ! if true, jump to read from APU or IO registers (but also potentially mapper read)
     add r7, r1                      ! put another 0x4000 into r1 (0x6000)
 
-    mov.l wram_addr, r0            ! speculatively put Work RAM address into r0 
+    mov.l wram_addr, r0             ! speculatively put Work RAM address into r0 
     cmp/eq r5, r1                   ! compare bank and 0x6000
 
     add r8, r1                      ! put another 0x2000 into r1 (0x8000)
-    mov.l ROMBANK0_addr, r2        ! speculatively put ROMBANK0 address into r2
+    mov.l ROMBANK0_addr, r2         ! speculatively put ROMBANK0 address into r2
 
     bt/s .read_WRAM_Region          ! if true, jump to read from Work RAM, if present
     add r6, r0                      ! add the index offset into r0    
@@ -50,20 +50,20 @@ _read_byte_6502:
     cmp/eq r5, r1                   ! compare bank and 0x8000
     add r6, r2                      ! add the index offset into r2
 
-    mov.l ROMBANK1_addr, r3        ! speculatively put ROMBANK1 address into r3
+    mov.l ROMBANK1_addr, r3         ! speculatively put ROMBANK1 address into r3
     add r8, r1                      ! put another 0x2000 into r1 (0xa000)
 
     bt/s .read_ROMBANK0             ! if true, jump to read from ROMBANK0
     add r6, r3                      ! add the index offset into r3
 
     ! we know we won't need r4, r5, r6 values from here on so reuse the registers
-    mov.l ROMBANK2_addr, r4        ! speculatively put ROMBANK2 address into r4
+    mov.l ROMBANK2_addr, r4         ! speculatively put ROMBANK2 address into r4
     cmp/eq r5, r1                   ! compare bank and 0xa000
 
     bt/s .read_ROMBANK1             ! if true, jump to read from ROMBANK1
     add r6, r4                      ! add the index offset into r4
 
-    mov.l ROMBANK3_addr, r0        ! speculatively load ROMBANK3 pointer into r0
+    mov.l ROMBANK3_addr, r0         ! speculatively load ROMBANK3 pointer into r0
     nop
 
     add r8, r1                      ! put another 0x2000 into r1 (0xc000)
@@ -109,10 +109,10 @@ ROMBANK3_addr: .long _ROMBANK3
     mov #7, r2                      ! put 7 into r2 
 
     and #15, r0                     ! and 0xf with r0 for further masking the index into PPU register range
-    mov.l PPUOPENBUS_addr, r7      ! put the address of the open bus variable into r7
+    mov.l PPUOPENBUS_addr, r7       ! put the address of the open bus variable into r7
 
     cmp/eq r0, r2                   ! test if the address is reading PPU Register 2007
-    mov.l PPUADDR_addr, r9         ! speculatively put the addresss of PPUADDR into r9
+    mov.l PPUADDR_addr, r9          ! speculatively put the addresss of PPUADDR into r9
 
     mov #4, r2                      ! put 4 into r2 
     mov.b @r7, r8                   ! put the value of the open bus into r8
@@ -120,16 +120,16 @@ ROMBANK3_addr: .long _ROMBANK3
     bt/s .read_PPUDATA              ! branch to read 2007 if true
     mov.b @r9, r3                   ! speculatively load PPUADDR's value into r3
 
-    mov.l OAMADDR_addr, r9         ! speculatively put the address of OAMADDR into r9
+    mov.l OAMADDR_addr, r9          ! speculatively put the address of OAMADDR into r9
     cmp/eq r0, r2                   ! test if the address is reading PPU Register 2004
 
     and #2, r0                      ! mask if the 2 bit is set on r0 
-    mov.l SPRRAM_addr, r10         ! speculatively put the addresss of SPRRAM into r10
+    mov.l SPRRAM_addr, r10          ! speculatively put the addresss of SPRRAM into r10
 
     bt/s .read_OAMDATA              ! branch to read 2004 if true    
     mov.b @r9, r3                   ! speculatively load OAMADDR's value into r3
 
-    mov.l PPUSTATUS_addr, r9       ! speculatively put the address of PPUSTATUS into r9
+    mov.l PPUSTATUS_addr, r9        ! speculatively put the address of PPUSTATUS into r9
     cmp/eq #2, r0                   ! test if the address has the 2 bit set post masking
 
     shlr8 r4                        ! if we got here, r4 still has the read address here, so shift it right by 8 bits because it's likely to be the return value at this point
@@ -151,7 +151,7 @@ SPRRAM_addr: .long 0x7c000a00
 ! r9 - contains address of PPUSTATUS
 .align 4
 .read_PPUSTATUS:
-    mov.l PPU_W_addr, r2           ! move the internal W register address into r2
+    mov.l PPU_W_addr, r2            ! move the internal W register address into r2
     xor r4, r4                      ! clear r4 out
 
     mov #31, r5                     ! move 0x1f into r5 to mask the value in r8
@@ -177,9 +177,21 @@ SPRRAM_addr: .long 0x7c000a00
 
     rts
 
-! r3 - contains SPRRAM
+! r3 - contains OAMADDR
+! r7 - addr of the open bus value
+! r8 - contains value of open bus
+! r9 - contains address of OAMADDR
+! r10 - contains address of SPRRAM
 .align 4
 .read_OAMDATA:
+    add r3, r10                     ! increment the SPRRAM pointer by the offset of OAMADDR
+    nop
+
+    mov.b @r10, r0                  ! get the byte at the SPRRAM pointer to r0
+    nop
+
+    mov.b r0, @r7                   ! store this value in the open bus
+    rts                             ! return 
 
 ! r3 - contains PPUADDR
 .align 4
