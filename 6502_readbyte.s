@@ -118,7 +118,7 @@ ROMBANK3_addr: .long _ROMBANK3
     mov.b @r7, r8                   ! put the value of the open bus into r8
 
     bt/s .read_PPUDATA              ! branch to read 2007 if true
-    mov.b @r9, r3                   ! speculatively load PPUADDR's value into r3
+    mov.w @r9, r3                   ! speculatively load PPUADDR's value into r3
 
     mov.l OAMADDR_addr, r9          ! speculatively put the address of OAMADDR into r9
     cmp/eq r0, r2                   ! test if the address is reading PPU Register 2004
@@ -193,10 +193,49 @@ SPRRAM_addr: .long 0x7c000a00
     mov.b r0, @r7                   ! store this value in the open bus
     rts                             ! return 
 
-! r3 - contains PPUADDR
+! r3 - contains value of PPUADDR
+! r6 - index inside the bank
+! r7 - addr of the open bus value
+! r8 - contains value of open bus
+! r9 - contains address of PPUADDR
 .align 4
 .read_PPUDATA:
-    mov.l PPUCTRL_addr, r4         ! we will need to get the PPU increment so for that we'll need PPUCTRL
+    mov.l PPUCTRL_addr, r5          ! we will need to get the PPU increment so for that we'll need PPUCTRL
+    mov.b @r5, r0                   ! load the PPUCTRL register value into r0 
+    mov.w @
+    and #4, r0                      ! if zero, PPU increment is 1, if 1 PPU increment is 32
+    cmp/eq #0, r0                   ! compare r0 to 0
+    bf .increment_32                ! if r0 isn't zero, that means that we need to incrmeent PPUADDR by 32
+    add #1, r3                      ! otherwise just increment PPUADDR by 1
+    bra .post_increment
+
+.align 4
+.increment_32:
+    add #32, r3 
+!purposefull fallthrough to post_increment
+
+.align 4
+.post_increment:
+    mov.l PPUDATA_addr, r4           ! move the address of PPUDATA into r4
+    mov.b @r4, r0                    ! move the value of PPUDATA into r0
+    mov r0, @r7                      ! set the open bus value to the return value
+
+    mov r3, r10                      ! copy value of PPUADDR to r10 
+    mov #3, r11                      ! start building the PPU bank mask (0x3ff) in r11
+    shll8 r11                        ! shift r11 left by 8 bits
+    or #255, r11                     ! finish the PPU bank mask
+    and r11, r10                     ! and the mask into r10, to get the index of the byte in the bank we want
+
+    shlr8 r3                         ! shift r3 right by 10 bits as an 8 and then a 2 to get the index of the bank we want
+    shlr2 r3                         ! (continued) 
+
+
+.align 4
+
+.align 4
+
+.align 2
+.short 
 
 .align 4
 .read_APU_IO_Region:
