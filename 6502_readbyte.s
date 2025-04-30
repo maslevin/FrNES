@@ -30,13 +30,11 @@ _read_byte_6502:
     mov r4, r7                      ! put another copy of the address into r7
     cmp/eq #0, r0                   ! compare r0 to 0 - if true we are reading from the 6502 RAM
 
-    and r2, r6                      ! and the 0x1fff mask with the address to get the bank index
-    mov.w ppu_local_index_mask, r8  ! put 0x03ff into r8 
-
     mov.l @r5, r9                   ! put the ROMBANKS[0] into r9
+    and r2, r6                      ! and the 0x1fff mask with the address to get the bank index
+
     and r3, r7                      ! mask r7 with 0x7ff
 
-    nop
     bt/s .read_MEM                  ! branch to read_MEM if we are on page 0
     add r9, r7                      ! add RAM_addr to r7
 
