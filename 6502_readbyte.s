@@ -11,34 +11,32 @@ _read_byte_6502:
     mov.l r12, @-r15 
 
     ! 6502 read address is in r4
-    mov.w address_bank_mask, r1     ! put 0xe000 into r1
-    mov r4, r0                      ! put a copy of the address into r0
-
+    ! MS - the 0xe000 AND mask is not necessary, just shift 13 right 
+    mov r4, r0                      ! put a copy of the address into r0 then shift right 13 bits to get page index 0-7 in r0
     nop
 
     mov r4, r6                      ! put another copy of the address into r6
-    and r1, r0                      ! and r1 into r0, then shift right 13 bits to get page index 0-7 in r0
+    shlr8 r0                        !  (shift 8)
 
     mov.w address_index_mask, r2    ! put 0x1fff into r2
-    shlr8 r0                        !  (shift 8)
+    shlr2 r0                        !  (shift 2)
 
     mov.w ram_local_index_mask, r3  ! put 0x07ff into r3
     shlr2 r0                        !  (shift 2)
 
     mov.l ROMBANKS_addr, r5         ! move address of RAM_addr (the below list of address pointers) into r5
-    shlr2 r0                        !  (shift 2)
-
-    mov r4, r7                      ! put another copy of the address into r7
     shlr r0                         !  (shift 1)
 
-    mov.w ppu_local_index_mask, r8  ! put 0x03ff into r8 
-    and r2, r6                      ! and the 0x1fff mask with the address to get the bank index
-
-    mov.l @r5, r9                   ! put the ROMBANKS[0] into r9
+    mov r4, r7                      ! put another copy of the address into r7
     cmp/eq #0, r0                   ! compare r0 to 0 - if true we are reading from the 6502 RAM
 
+    and r2, r6                      ! and the 0x1fff mask with the address to get the bank index
+    mov.w ppu_local_index_mask, r8  ! put 0x03ff into r8 
+
+    mov.l @r5, r9                   ! put the ROMBANKS[0] into r9
     and r3, r7                      ! mask r7 with 0x7ff
 
+    nop
     bt/s .read_MEM                  ! branch to read_MEM if we are on page 0
     add r9, r7                      ! add RAM_addr to r7
 
@@ -157,7 +155,7 @@ SPRRAM_addr: .long 0x7c000a00
     mov.b @r9, r3                   ! store PPUSTATUS value back to memory
 
     bra .return_to_caller
-    mov.b @r7, r0                   ! store the return value as the open bus value
+    mov.b r0, @r7                   ! store the return value as the open bus value
 
 ! r3 - contains OAMADDR
 ! r7 - addr of the open bus value
@@ -246,6 +244,7 @@ PPUBANK_addr: .long _PPUBANK
     mov.l @r15+, r8
 
     rts
+    nop
 
 ! PPU register locations
 .align 4
