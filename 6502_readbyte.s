@@ -215,7 +215,7 @@ SPRRAM_addr: .long 0x7c000a00
     mov.w r3, @r9                    ! store the value of PPUADDR back to its memory location
     mov.l PPUDATA_addr, r4           ! move the address of PPUDATA into r4
     mov.b @r4, r0                    ! move the value of PPUDATA into r0
-    mov r0, @r7                      ! set the open bus value to the return value
+    mov.b r0, @r7                    ! set the open bus value to the return value
 
     mov r3, r10                      ! copy value of PPUADDR to r10 
     mov #3, r11                      ! start building the PPU bank mask (0x3ff) in r11
