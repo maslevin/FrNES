@@ -2,6 +2,13 @@
 .global _read_byte_6502
 .align 2
 _read_byte_6502:
+    ! preserve registers - we could maybe use fewer registers and not have to preserve all of these
+    mov.l r8, @-r15
+    mov.l r9, @-r15
+    mov.l r10, @-r15
+    mov.l r11, @-r15
+    mov.l r12, @-r15 
+
     ! 6502 read address is in r4
     mov.w address_bank_mask, r0     ! put 0xe000 into r0
     mov #32, r1                     ! put 0x2000 into r1 
@@ -90,9 +97,8 @@ ROMBANK3_addr: .long _ROMBANK3
 ! r8 - local mask 0x07ff
 .align 4
 .read_MEM:
+    bra .return_to_caller
     mov.b @(r0, r6), r0             ! read the byte we're looking for to r0
-    nop
-    rts                             ! return to caller
 
 ! r6 - index inside the bank
 .align 4
@@ -131,8 +137,8 @@ ROMBANK3_addr: .long _ROMBANK3
     bt/s .read_PPUSTATUS            ! branch to read 2002 if true
     mov r4, r0                      ! move the address to the return slot
 
+    bra .return_to_caller
     nop
-    rts                             ! then return
 
 .align 4
 SPRRAM_addr: .long 0x7c000a00
@@ -164,10 +170,8 @@ SPRRAM_addr: .long 0x7c000a00
     or r8, r0                       ! or r0 with masked open bus value from r8
     mov.b @r9, r3                   ! store PPUSTATUS value back to memory
 
+    bra .return_to_caller
     mov.b @r7, r0                   ! store the return value as the open bus value
-    nop
-
-    rts
 
 ! r3 - contains OAMADDR
 ! r7 - addr of the open bus value
@@ -182,8 +186,8 @@ SPRRAM_addr: .long 0x7c000a00
     mov.b @r10, r0                  ! get the byte at the SPRRAM pointer to r0
     nop
 
+    bra .return_to_caller
     mov.b r0, @r7                   ! store this value in the open bus
-    rts                             ! return 
 
 ! r3 - contains value of PPUADDR
 ! r6 - index inside the bank
@@ -195,8 +199,7 @@ SPRRAM_addr: .long 0x7c000a00
 .read_PPUDATA:
     mov.l PPUCTRL_addr, r5          ! we will need to get the PPU increment so for that we'll need PPUCTRL
     mov.b @r5, r0                   ! load the PPUCTRL register value into r0 
-    mov.w @
-    and #4, r0                      ! if zero, PPU increment is 1, if 1 PPU increment is 32
+    and #4, r0                      ! and 0x4 to r0, if zero, PPU increment is 1, if 1 PPU increment is 32
     cmp/eq #0, r0                   ! compare r0 to 0
     bf .increment_32                ! if r0 isn't zero, that means that we need to incrmeent PPUADDR by 32
     add #1, r3                      ! otherwise just increment PPUADDR by 1
@@ -217,7 +220,8 @@ SPRRAM_addr: .long 0x7c000a00
     mov r3, r10                      ! copy value of PPUADDR to r10 
     mov #3, r11                      ! start building the PPU bank mask (0x3ff) in r11
     shll8 r11                        ! shift r11 left by 8 bits
-    or #255, r11                     ! finish the PPU bank mask
+    mov #255, r12                    ! put 0xFF into r12
+    or r12, r11                      ! finish the PPU bank mask
     and r11, r10                     ! and the mask into r10, to get the index of the byte in the bank we want
 
     shlr8 r3                         ! shift r3 right by 10 bits as an 8 and then a 2 to get the index of the bank we want
@@ -234,7 +238,8 @@ SPRRAM_addr: .long 0x7c000a00
     mov.b @r6, r2                    ! move the value from the final byte address to r2
     mov.b r2, @r4                    ! store the value of PPUDATA back to its memory location
 
-    rts                              ! return
+    bra .return_to_caller
+    nop
 
 .align 4
 PPUBANK_addr: .long _PPUBANK
@@ -248,45 +253,51 @@ PPUBANK_addr: .long _PPUBANK
 .read_WRAM_Region:
     pref @r0
     nop
-    mov.b @r0, r0
-    nop
-    rts
+    bra .return_to_caller
+    mov.b @r0, r0    
 
 ! r2 - ROMBANK0 pointer
 .align 4
 .read_ROMBANK0:
     pref @r2
     nop
+    bra .return_to_caller
     mov.b @r2, r0
-    nop
-    rts
 
 ! r3 - ROMBANK1 pointer 
 .align 4
 .read_ROMBANK1:
     pref @r3
     nop
+    bra .return_to_caller    
     mov.b @r3, r0
-    nop
-    rts
 
 ! r4 - ROMBANK 2 pointer
 .align 4
 .read_ROMBANK2:
     pref @r4
     nop
+    bra .return_to_caller    
     mov.b @r4, r0
-    nop
-    rts
 
 ! r0 - ROMBANK 3 pointer
 .align 4
 .read_ROMBANK3:                     
     pref @r0
     nop
+    bra .return_to_caller    
     mov.b @r0, r0
-    nop
-    rts    
+
+.align 4
+.return_to_caller:
+    ! restore registers
+    mov.l @r15+, r12
+    mov.l @r15+, r11
+    mov.l @r15+, r10
+    mov.l @r15+, r9
+    mov.l @r15+, r8
+
+    rts
 
 ! PPU register locations
 .align 4
