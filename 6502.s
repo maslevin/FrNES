@@ -38,6 +38,32 @@ _reset_6502:
     mov.l SP_addr, r1        ! put the target address of the SP variable into r1
     mov.b r0, @r1            ! init SP to 0
 
+    ! set ROMBANK addresses
+    mov.l ROMBANKS, r2       ! put rombanks array address into r2
+    mov.l RAM_Addr, r1       ! put RAM address into r1
+    mov.l r1, @r2            ! move RAM address into ROMBANKS[0]
+    mov #4, r3               ! put 4 into r3 
+    xor r1, r1               ! clear out r1
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l r1, @r2            ! put null into ROMBANKS[1]
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l r1, @r2            ! put null into ROMBANKS[2]
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK_WRAM_Addr, r1 ! put WRAM address into r1
+    mov.l r1, @r2            ! put WRAM address into ROMBANKS[3]
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK0_Addr, r1 ! put ROMBANK0 address into r1
+    mov.l r1, @r2            ! put ROMBANK0 address into ROMBANKS[4]
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK1_Addr, r1 ! put ROMBANK1 address into r1
+    mov.l r1, @r2            ! put ROMBANK1 address into ROMBANKS[5]
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK2_Addr, r1 ! put ROMBANK2 address into r1
+    mov.l r1, @r2            ! put ROMBANK2 address into ROMBANKS[6]
+    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK3_Addr, r1 ! put ROMBANK3 address into r1
+    mov.l r1, @r2            ! put ROMBANK3 address into ROMBANKS[7]
+
     ! returning to caller
     rts
     mov #0, r0
@@ -55,8 +81,16 @@ S_addr: .long 0x7c000b23
 A_addr: .long 0x7c000b24
 X_addr: .long 0x7c000b25
 Y_addr: .long 0x7c000b26
+RAM_Addr: .long 0x7c000000
+ROMBANK_WRAM_Addr: .long _ROMBANK_WRAM
+ROMBANK0_Addr: .long _ROMBANK0
+ROMBANK1_Addr: .long _ROMBANK1
+ROMBANK2_Addr: .long _ROMBANK2
+ROMBANK3_Addr: .long _ROMBANK3
 
 IRQ_REQ_addr: .long 0x7c000b27 ! when nonzero, an IRQ has been requested
 NMI_REQ_addr: .long 0x7c000b28 ! when nonzero, an NMI has been requested
 
 CLOCKS_addr: .long 0x7c000b30  ! clocks stored after 
+
+ROMBANKS: .long 0x7c000b50     ! address of 8 * 32-bit pointers for ROM banks 

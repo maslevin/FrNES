@@ -1,4 +1,5 @@
 ! read from 6502 address space
+! r4 - unsigned short int address in 6502 space to read
 .global _read_byte_6502
 .align 2
 _read_byte_6502:
@@ -10,95 +11,80 @@ _read_byte_6502:
     mov.l r12, @-r15 
 
     ! 6502 read address is in r4
-    mov.w address_bank_mask, r0     ! put 0xe000 into r0
-    mov #32, r1                     ! put 0x2000 into r1 
+    mov.w address_bank_mask, r1     ! put 0xe000 into r1
+    mov r4, r0                      ! put a copy of the address into r0
 
-    mov.w address_index_mask, r2    ! put 0x1fff into r2
-    xor r7, r7                      ! clear r7
-
-    mov r4, r5                      ! put a copy of the address into r5
-    shll8 r1                        ! shift left to complete r1
-
-    mov r4, r5                      ! put a copy of the address into r5
-    mov r4, r6                      ! put a copy of the address into r6
-
-    and r0, r5                      ! and r5 with the address mask to get the bank to switch options    
-    mov.w ram_local_index_mask, r8  ! put the ram local mask into r8 just in case we need it
-
-    and r2, r6                      ! and r6 with the index mask to get the index inside the bank we are interested in 
-    cmp/eq r5, r7                   ! compare bank and 0x0000
-
-    mov.w RAM_addr, r0              ! put 6502 main memory pointer into r0
-
-    bt/s .read_MEM                  ! if true, jump to read from 6502 memory routine
-    and r8, r6                      ! and the index of the byte we're looking for
-
-    mov r1, r7                      ! copy 0x2000 into r7
-    mov r1, r8                      ! copy 0x2000 into r8 - if we got here then we didn't need the ram local mask we loaded above
-
-    cmp/eq r5, r1                   ! compare bank and 0x2000
-    add r1, r7                      ! put another 0x2000 into r7 (0x4000)
-
-    bt/s .read_PPU_Registers        ! if true, jump to read from PPU registers
-    cmp/eq r5, r7                   ! compare bank and 0x4000
-
-    bt/s .read_APU_IO_Region        ! if true, jump to read from APU or IO registers (but also potentially mapper read)
-    add r7, r1                      ! put another 0x4000 into r1 (0x6000)
-
-    mov.l wram_addr, r0             ! speculatively put Work RAM address into r0 
-    cmp/eq r5, r1                   ! compare bank and 0x6000
-
-    add r8, r1                      ! put another 0x2000 into r1 (0x8000)
-    mov.l ROMBANK0_addr, r2         ! speculatively put ROMBANK0 address into r2
-
-    bt/s .read_WRAM_Region          ! if true, jump to read from Work RAM, if present
-    add r6, r0                      ! add the index offset into r0    
-
-    cmp/eq r5, r1                   ! compare bank and 0x8000
-    add r6, r2                      ! add the index offset into r2
-
-    mov.l ROMBANK1_addr, r3         ! speculatively put ROMBANK1 address into r3
-    add r8, r1                      ! put another 0x2000 into r1 (0xa000)
-
-    bt/s .read_ROMBANK0             ! if true, jump to read from ROMBANK0
-    add r6, r3                      ! add the index offset into r3
-
-    ! we know we won't need r4, r5, r6 values from here on so reuse the registers
-    mov.l ROMBANK2_addr, r4         ! speculatively put ROMBANK2 address into r4
-    cmp/eq r5, r1                   ! compare bank and 0xa000
-
-    bt/s .read_ROMBANK1             ! if true, jump to read from ROMBANK1
-    add r6, r4                      ! add the index offset into r4
-
-    mov.l ROMBANK3_addr, r0         ! speculatively load ROMBANK3 pointer into r0
     nop
 
-    add r8, r1                      ! put another 0x2000 into r1 (0xc000)
-    add r6, r0                      ! add the index offset into r0
+    mov r4, r6                      ! put another copy of the address into r6
+    and r1, r0                      ! and r1 into r0, then shift right 13 bits to get page index 0-7 in r0
 
-    cmp/eq r5, r1                   ! compare bank and 0xc000
-    bt .read_ROMBANK2               ! if false, jump to read from ROMBANK2
-    bf .read_ROMBANK3
+    mov.w address_index_mask, r2    ! put 0x1fff into r2
+    shlr8 r0                        !  (shift 8)
+
+    mov.w ram_local_index_mask, r3  ! put 0x07ff into r3
+    shlr2 r0                        !  (shift 2)
+
+    mov.l ROMBANKS_addr, r5         ! move address of RAM_addr (the below list of address pointers) into r5
+    shlr2 r0                        !  (shift 2)
+
+    mov r4, r7                      ! put another copy of the address into r7
+    shlr r0                         !  (shift 1)
+
+    mov.w ppu_local_index_mask, r8  ! put 0x03ff into r8 
+    and r2, r6                      ! and the 0x1fff mask with the address to get the bank index
+
+    mov.l @r5, r9                   ! put the ROMBANKS[0] into r9
+    cmp/eq #0, r0                   ! compare r0 to 0 - if true we are reading from the 6502 RAM
+
+    and r3, r7                      ! mask r7 with 0x7ff
+
+    bt/s .read_MEM                  ! branch to read_MEM if we are on page 0
+    add r9, r7                      ! add RAM_addr to r7
+
+    cmp/eq #1, r0                   ! compare r0 to 1 - if true we are reading from the PPU registers
+
+    bt/s .read_PPU_Registers        ! branch to read_PPU_Registers if we are on page 1
+
+    cmp/eq #2, r0                   ! compare r0 to 2 - if true we are reading from the APU and IO registers
+
+    bt/s .read_APU_IO_Region        ! branch to read_APU_IO_Region if we are on page 2 
+
+    shll2 r0                        ! multiply this index by 4 by shifting left twice - this is the number of bytes from the RAM_addr address of the next memory read_WRAM_Region
+    nop
+
+    add r0, r5                      ! increment the bank pointer by r0, this becomes the bank pointer we are reading from 
+    nop
+
+    mov.l @r5, r2                   ! load the bank pointer value into r2
+    nop
+    nop
+    nop
+
+    add r6, r2                      ! add the bank index into r2
+    nop
+
+    pref @r2                        ! prefetch the byte address we are trying to read
+    nop
+
+    bra .return_to_caller           ! return to caller 
+    mov.b @r2, r0                   ! move the value at r2 into r0 
 
 .align 4
 address_bank_mask: .short 0xe000
 address_index_mask: .short 0x1fff
 ram_local_index_mask: .short 0x07ff
+ppu_local_index_mask: .short 0x03ff
 
+! the arrangement of these labels matters because we load RAM_addr to calculate which buffer we are going to read from
 .align 4
-RAM_addr: .long 0x7c000000
-wram_addr: .long _ROMBANK_WRAM
-ROMBANK0_addr: .long _ROMBANK0
-ROMBANK1_addr: .long _ROMBANK1
-ROMBANK2_addr: .long _ROMBANK2
-ROMBANK3_addr: .long _ROMBANK3
+ROMBANKS_addr: .long 0x7c000b50
 
-! r6 - index inside the bank
-! r8 - local mask 0x07ff
+! r7 - address of byte in 6502 memory we are going to read
 .align 4
 .read_MEM:
     bra .return_to_caller
-    mov.b @(r0, r6), r0             ! read the byte we're looking for to r0
+    mov.b @r7, r0             ! read the byte we're looking for to r0
 
 ! r6 - index inside the bank
 .align 4
@@ -203,15 +189,15 @@ SPRRAM_addr: .long 0x7c000a00
     cmp/eq #0, r0                   ! compare r0 to 0
     bf .increment_32                ! if r0 isn't zero, that means that we need to incrmeent PPUADDR by 32
     add #1, r3                      ! otherwise just increment PPUADDR by 1
-    bra .post_increment
+    bra .post_PPUADDR_increment
 
 .align 4
 .increment_32:
     add #32, r3 
-!purposeful fallthrough to post_increment
+!purposeful fallthrough to post_PPUADDR_increment
 
 .align 4
-.post_increment:
+.post_PPUADDR_increment:
     mov.w r3, @r9                    ! store the value of PPUADDR back to its memory location
     mov.l PPUDATA_addr, r4           ! move the address of PPUDATA into r4
     mov.b @r4, r0                    ! move the value of PPUDATA into r0
@@ -244,49 +230,11 @@ SPRRAM_addr: .long 0x7c000a00
 .align 4
 PPUBANK_addr: .long _PPUBANK
 
+! TODO - implement this
 .align 4
 .read_APU_IO_Region:
-
-! TODO: we could probably optimize all of these bank reading conditions so that we bank select the correct pointer, prefetch it, read it and return
-! r0 - wram pointer
-.align 4
-.read_WRAM_Region:
-    pref @r0
-    nop
     bra .return_to_caller
-    mov.b @r0, r0    
-
-! r2 - ROMBANK0 pointer
-.align 4
-.read_ROMBANK0:
-    pref @r2
     nop
-    bra .return_to_caller
-    mov.b @r2, r0
-
-! r3 - ROMBANK1 pointer 
-.align 4
-.read_ROMBANK1:
-    pref @r3
-    nop
-    bra .return_to_caller    
-    mov.b @r3, r0
-
-! r4 - ROMBANK 2 pointer
-.align 4
-.read_ROMBANK2:
-    pref @r4
-    nop
-    bra .return_to_caller    
-    mov.b @r4, r0
-
-! r0 - ROMBANK 3 pointer
-.align 4
-.read_ROMBANK3:                     
-    pref @r0
-    nop
-    bra .return_to_caller    
-    mov.b @r0, r0
 
 .align 4
 .return_to_caller:
