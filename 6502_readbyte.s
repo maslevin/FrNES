@@ -86,14 +86,6 @@ ROMBANK1_addr: .long _ROMBANK1
 ROMBANK2_addr: .long _ROMBANK2
 ROMBANK3_addr: .long _ROMBANK3
 
-! r0 - byte address
-.align 4
-.read_ROMBANK3:                     ! otherwise, we are definitively in ROMBANK3
-    pref @r0
-    nop
-    mov.b @r0, r0
-    rts
-
 ! r6 - index inside the bank
 ! r8 - local mask 0x07ff
 .align 4
@@ -198,6 +190,7 @@ SPRRAM_addr: .long 0x7c000a00
 ! r7 - addr of the open bus value
 ! r8 - contains value of open bus
 ! r9 - contains address of PPUADDR
+! TODO: this branch is not pipeline unoptimized yet
 .align 4
 .read_PPUDATA:
     mov.l PPUCTRL_addr, r5          ! we will need to get the PPU increment so for that we'll need PPUCTRL
@@ -212,10 +205,11 @@ SPRRAM_addr: .long 0x7c000a00
 .align 4
 .increment_32:
     add #32, r3 
-!purposefull fallthrough to post_increment
+!purposeful fallthrough to post_increment
 
 .align 4
 .post_increment:
+    mov.w r3, @r9                    ! store the value of PPUADDR back to its memory location
     mov.l PPUDATA_addr, r4           ! move the address of PPUDATA into r4
     mov.b @r4, r0                    ! move the value of PPUDATA into r0
     mov r0, @r7                      ! set the open bus value to the return value
@@ -229,17 +223,26 @@ SPRRAM_addr: .long 0x7c000a00
     shlr8 r3                         ! shift r3 right by 10 bits as an 8 and then a 2 to get the index of the bank we want
     shlr2 r3                         ! (continued) 
 
+    mov.l PPUBANK_addr, r5           ! move the address of PPUBANK into r5 
+    shll2 r3                         ! multiply r3 by 4 by shifting left twice, to equal the number of bytes from PPUBANK to move forward to get the address of bank pointer we want
+    add r3, r5                       ! add the number of bytes from PPUBANK to get the bank pointer we want
+    pref @r5                         ! prefetch the values of the PPUBANK array - this would be unnecessary if we put the PPUBANK into on-die cache... TODO
+    mov.l @r5, r6                    ! move the value of the bank pointer to r6
+
+    add r10, r6                      ! add the index of the byte we want to the bank pointer to get the address of the byte we want
+    pref @r6                         ! prefetch the area with the byte we want
+    mov.b @r6, r2                    ! move the value from the final byte address to r2
+    mov.b r2, @r4                    ! store the value of PPUDATA back to its memory location
+
+    rts                              ! return
 
 .align 4
-
-.align 4
-
-.align 2
-.short 
+PPUBANK_addr: .long _PPUBANK
 
 .align 4
 .read_APU_IO_Region:
 
+! TODO: we could probably optimize all of these bank reading conditions so that we bank select the correct pointer, prefetch it, read it and return
 ! r0 - wram pointer
 .align 4
 .read_WRAM_Region:
@@ -249,16 +252,41 @@ SPRRAM_addr: .long 0x7c000a00
     nop
     rts
 
+! r2 - ROMBANK0 pointer
 .align 4
 .read_ROMBANK0:
+    pref @r2
+    nop
+    mov.b @r2, r0
+    nop
+    rts
 
+! r3 - ROMBANK1 pointer 
 .align 4
 .read_ROMBANK1:
+    pref @r3
+    nop
+    mov.b @r3, r0
+    nop
+    rts
 
+! r4 - ROMBANK 2 pointer
 .align 4
 .read_ROMBANK2:
+    pref @r4
+    nop
+    mov.b @r4, r0
+    nop
     rts
-    mov #0, r0
+
+! r0 - ROMBANK 3 pointer
+.align 4
+.read_ROMBANK3:                     
+    pref @r0
+    nop
+    mov.b @r0, r0
+    nop
+    rts    
 
 ! PPU register locations
 .align 4
