@@ -320,7 +320,7 @@ PAD2Bit_addr: .long 0x7c000b73   ! bit shifter for the 2st controller port
     mov.l @r15+, r8
 
     rts
-    nop
+    and #255, r0
 
 ! PPU register locations
 .align 4

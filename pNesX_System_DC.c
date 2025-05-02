@@ -46,6 +46,8 @@
 
 #include "K6502.h"
 
+#include "6502_tests.h"
+
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_VMU);
 
@@ -570,12 +572,22 @@ void launchEmulator() {
 	}	
 }
 
+void run_tests() {
+	dcache_enable_ocram();
+	test_read_byte();
+	dcache_disable_ocram();
+}
+
 /*===================================================================*/
 /*                                                                   */
 /*                dc_main() : Application main                       */
 /*                                                                   */
 /*===================================================================*/
 int main() {
+	printf("Running Tests\n");
+	run_tests();
+	return -1;
+
 	printf("Starting Main\n");
 	cont_state_t* my_state;
 	log_enabled = false;

@@ -49,30 +49,35 @@ _reset_6502:
     mov.b r0, @r1            ! init SP to 0
 
     ! set ROMBANK addresses
-    mov.l ROMBANKS, r2       ! put rombanks array address into r2
-    mov.l RAM_Addr, r1       ! put RAM address into r1
-    mov.l r1, @r2            ! move RAM address into ROMBANKS[0]
-    mov #4, r3               ! put 4 into r3 
-    xor r1, r1               ! clear out r1
-    add r3, r2               ! move rombanks array pointer ahead one entry
-    mov.l r1, @r2            ! put null into ROMBANKS[1]
-    add r3, r2               ! move rombanks array pointer ahead one entry
-    mov.l r1, @r2            ! put null into ROMBANKS[2]
-    add r3, r2               ! move rombanks array pointer ahead one entry
+    mov.l ROMBANKS, r2          ! put rombanks array address into r2
+    mov.l RAM_Addr, r1          ! put RAM address into r1
+    mov.l r1, @r2               ! move RAM address into ROMBANKS[0]
+    mov #4, r3                  ! put 4 into r3 
+    xor r1, r1                  ! clear out r1
+    add r3, r2                  ! move rombanks array pointer ahead one entry
+    mov.l r1, @r2               ! put null into ROMBANKS[1]
+    add r3, r2                  ! move rombanks array pointer ahead one entry
+    mov.l r1, @r2               ! put null into ROMBANKS[2]
+    add r3, r2                  ! move rombanks array pointer ahead one entry
     mov.l ROMBANK_WRAM_Addr, r1 ! put WRAM address into r1
-    mov.l r1, @r2            ! put WRAM address into ROMBANKS[3]
-    add r3, r2               ! move rombanks array pointer ahead one entry
-    mov.l ROMBANK0_Addr, r1 ! put ROMBANK0 address into r1
-    mov.l r1, @r2            ! put ROMBANK0 address into ROMBANKS[4]
-    add r3, r2               ! move rombanks array pointer ahead one entry
-    mov.l ROMBANK1_Addr, r1 ! put ROMBANK1 address into r1
-    mov.l r1, @r2            ! put ROMBANK1 address into ROMBANKS[5]
-    add r3, r2               ! move rombanks array pointer ahead one entry
-    mov.l ROMBANK2_Addr, r1 ! put ROMBANK2 address into r1
-    mov.l r1, @r2            ! put ROMBANK2 address into ROMBANKS[6]
-    add r3, r2               ! move rombanks array pointer ahead one entry
-    mov.l ROMBANK3_Addr, r1 ! put ROMBANK3 address into r1
-    mov.l r1, @r2            ! put ROMBANK3 address into ROMBANKS[7]
+    mov.l @r1, r4               ! get buffer address into r4
+    mov.l r4, @r2               ! put buffer address into ROMBANKS[3]
+    add r3, r2                  ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK0_Addr, r1     ! put ROMBANK0 address into r1
+    mov.l @r1, r4               ! get buffer address into r4
+    mov.l r4, @r2               ! put buffer address into ROMBANKS[4]
+    add r3, r2                  ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK1_Addr, r1     ! put ROMBANK1 address into r1
+    mov.l @r1, r4               ! get buffer address into r4
+    mov.l r4, @r2               ! put buffer address into ROMBANKS[5]
+    add r3, r2                  ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK2_Addr, r1     ! put ROMBANK2 address into r1
+    mov.l @r1, r4               ! get buffer address into r4
+    mov.l r4, @r2               ! put buffer address into ROMBANKS[6]
+    add r3, r2                  ! move rombanks array pointer ahead one entry
+    mov.l ROMBANK3_Addr, r1     ! put ROMBANK3 address into r1
+    mov.l @r1, r4               ! get buffer address into r4
+    mov.l r4, @r2               ! put buffer address into ROMBANKS[7]
 
     ! returning to caller
     rts
