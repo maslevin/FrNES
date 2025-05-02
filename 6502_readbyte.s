@@ -167,6 +167,7 @@ SPRRAM_addr: .long 0x7c000a00
 
     mov.b @r10, r0                  ! get the byte at the SPRRAM pointer to r0
     nop
+    nop
 
     bra .return_to_caller
     mov.b r0, @r7                   ! store this value in the open bus
@@ -177,6 +178,7 @@ SPRRAM_addr: .long 0x7c000a00
 ! r8 - contains value of open bus
 ! r9 - contains address of PPUADDR
 ! TODO: this branch is not pipeline unoptimized yet
+!   essentially, I think to optimize PPUDATA reading here, we need to integrate or intersperse the two parts of this algorithm
 .align 4
 .read_PPUDATA:
     mov.l PPUCTRL_addr, r5          ! we will need to get the PPU increment so for that we'll need PPUCTRL
@@ -226,9 +228,85 @@ SPRRAM_addr: .long 0x7c000a00
 .align 4
 PPUBANK_addr: .long _PPUBANK
 
-! TODO - implement this
+! TODO: this branch is not pipeline unoptimized yet
 .align 4
 .read_APU_IO_Region:
+    mov r4, r0                  ! move copy of the requested address into r0
+    and #255, r0                ! mask out the least significant bit of the address
+    cmp/eq #22, r0              ! check to see if the address is 0x4016 
+    mov #21, r1                 ! move 0x15 into r1, to compare later if r0 is an audio register (0x4000 - 0x4015)
+    bt/s .read_joypad_1         ! if the address was 0x4016, branch to the joypad 1 read routine 
+    cmp/eq #23, r0              ! check to see if the address is 0x4017
+    bt/s .read_joypad_2         ! if the address was 0x4017, branch to the joypad 2 read routine
+    cmp/hs r0, r1               ! check to see if the address is less than or equal to 0x4015
+    bt/s .read_audio            ! if the address was less than 0x4015, go to the audio read routine 
+    nop 
+
+    bra .read_mapper            ! otherwise, branch to the mapper read routine
+    nop 
+
+.align 4
+.read_joypad_1:
+    mov.l PAD1Latch_addr, r0    ! move the address of the PAD1 Latch variable into r0
+    bra .read_joypad_routine
+    mov.l PAD1Bit_addr, r1      ! move the address of the PAD1 Bit variable into r1
+
+.align 4
+.read_joypad_2:
+    mov.l PAD2Latch_addr, r0    ! move the address of the PAD2 Latch variable into r0
+    mov.l PAD2Bit_addr, r1      ! move the address of the PAD2 Bit variable into r1
+    ! intentional fallthrough to read_joypad_routine
+
+.align 4
+.read_joypad_routine:
+    mov.b @r0, r0               ! move the value of Latch into r0
+    mov #1, r6                  ! move 1 into r6
+
+    mov.b @r1, r2               ! move the value of Bit into r2 
+    neg r1, r3                  ! convert the value of Bit into a negative shift value in r3
+
+    shld r3, r0                 ! shift r0 to the right by Bit bits in r3
+    nop
+
+    and r6, r0                  ! mask out the 1's place of r0 
+    nop
+
+    mov #23, r3                 ! move 23 into r3 so that we can compare it with Bit later
+    nop
+
+    or #64, r0                  ! or r0 with 0x40
+    cmp/eq r3, r2               ! compare if Bit's value is 23
+
+    xor r5, r5                  ! clear out r5
+
+    bt/s .reset_pad_bit         ! if Bit's value is 23 go to the reset pad bit routine
+    add r6, r2                  ! add 1 more into Bit
+
+    bra .return_to_caller
+    mov.b r2, @r1               ! move the updated Bit value back into it's memory location 
+
+.align 4
+.reset_pad_bit:
+    bra .return_to_caller
+    mov.b r5, @r1               ! move the updated Bit value back into it's memory location     
+
+.align 4
+PAD1Latch_addr: .long 0x7c000b70 ! latch for the 1st controller port
+PAD1Bit_addr: .long 0x7c000b71   ! bit shifter for the 1st controller port  
+PAD2Latch_addr: .long 0x7c000b72 ! latch for the 2st controller port
+PAD2Bit_addr: .long 0x7c000b73   ! bit shifter for the 2st controller port    
+
+.align 4
+.read_audio:
+    ! TODO: call global audio_read(wAddr)
+
+    bra .return_to_caller
+    nop
+
+.align 4
+.read_mapper:
+    ! TODO: call global read_mapper(wAddr)
+
     bra .return_to_caller
     nop
 
@@ -260,3 +338,5 @@ PPU_V_addr: .long 0x7c000b4c
 PPU_T_addr: .long 0x7c000b4d
 PPU_X_addr: .long 0x7c000b4e
 PPU_W_addr: .long 0x7c000b4f
+
+! APU register locations 

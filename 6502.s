@@ -30,6 +30,16 @@ _reset_6502:
     mov.l Y_addr, r1         ! put the target address of the Y variable into r1
     mov.b r0, @r1            ! init Y to 0
 
+    ! set controller pad latch and bit fields
+    mov.l PAD1Latch_addr, r1 ! put the target address of the PAD1Latch variable into r1
+    mov.b r0, @r1            ! init PAD1Latch to 0
+    mov.l PAD1Bit_addr, r1   ! put the target address of the PAD1Bit variable into r1
+    mov.b r0, @r1            ! init PAD1Bit to 0
+    mov.l PAD2Latch_addr, r1 ! put the target address of the PAD2Latch variable into r1
+    mov.b r0, @r1            ! init PAD2Latch to 0
+    mov.l PAD2Bit_addr, r1   ! put the target address of the PAD2Bit variable into r1
+    mov.b r0, @r1            ! init PAD2Bit to 0
+
     mov #(FLAG_Z | FLAG_R), r0 ! set the initial status register state of Z and R flags set
     mov.l S_addr, r1         ! put the target address of the S variable into r1
     mov.b r0, @r1            ! init S to Z + R flags set
@@ -94,3 +104,8 @@ NMI_REQ_addr: .long 0x7c000b28 ! when nonzero, an NMI has been requested
 CLOCKS_addr: .long 0x7c000b30  ! clocks stored after 
 
 ROMBANKS: .long 0x7c000b50     ! address of 8 * 32-bit pointers for ROM banks 
+
+PAD1Latch_addr: .long 0x7c000b70 ! latch for the 1st controller port
+PAD1Bit_addr: .long 0x7c000b71   ! bit shifter for the 1st controller port  
+PAD2Latch_addr: .long 0x7c000b72 ! latch for the 2st controller port
+PAD2Bit_addr: .long 0x7c000b73   ! bit shifter for the 2st controller port  
