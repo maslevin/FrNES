@@ -78,99 +78,82 @@ inline unsigned char K6502_ReadZp( unsigned char byAddr ) {
 /*===================================================================*/
 unsigned char K6502_Read( uint16 wAddr ) {
     static unsigned char ppuOpenBus = 0;
-    unsigned char byRet;
+    unsigned char bankIndex = wAddr >> 13;
+    uint16 arrayIndex = wAddr & ((bankIndex == 0) ? 0x07ff : 0x1fff);
+    unsigned char* bank = BankTable[bankIndex];
+    if (bank != NULL) {
+        return bank[arrayIndex];
+    } else {
+        switch (bankIndex) {
+            case 1:
+                unsigned char byRet;
+                switch (wAddr & 0xF) {
+                    /* PPU Status $2002*/              
+                    case 0x2: 
+                    case 0xA: {
+                        // Set return value
+                        byRet = ((PPU_R2 & 0xe0) | (ppuOpenBus & 0x1f));
 
-    switch ( wAddr & 0xE000 ) {
-        case 0x0000:  /* RAM */
-          return RAM[ wAddr & 0x7ff ];
+                        // Reset the V-Blank flag
+                        PPU_R2 &= ~R2_IN_VBLANK;
 
-        case 0x2000: {
-            switch (wAddr & 0xF) {
-                /* PPU Status $2002*/              
-                case 0x2: 
-                case 0xA: {
-                    // Set return value
-                    byRet = ((PPU_R2 & 0xe0) | (ppuOpenBus & 0x1f));
+                        // Reset address latch
+                        PPU_Latch_Flag = 0;
 
-                    // Reset the V-Blank flag
-                    PPU_R2 &= ~R2_IN_VBLANK;
-
-                    // Reset address latch
-                    PPU_Latch_Flag = 0;
-
-                    ppuOpenBus = byRet;
-                    return byRet;
-                }
-
-                case 0x4: {
-                    /* PPU Sprite RAM $2004 */
-                    ppuOpenBus = SPRRAM[PPU_R3];
-                    return SPRRAM[PPU_R3];
-                }
-
-                case 0x7: {
-                    uint16 addr;
-                    addr = ppuinfo.PPU_Addr;
-                    // Increment PPU Address
-                    ppuinfo.PPU_Addr += PPU_Increment;
-                    addr &= 0x3fff;
-
-                    if (addr >= 0x3000) {
-                        if (addr >= 0x3f00) {
-                            PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
-//                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
-                            ppuOpenBus = PPURAM[0x3F00 | (addr & 0x1F)];
-                            return PPURAM[0x3F00 | (addr & 0x1F)];
-                        }
-
-                        // handle mirroring
-                        addr &= 0xefff;
+                        ppuOpenBus = byRet;
+                        return byRet;
                     }
 
-                    byRet = PPU_R7;
-                    ppuOpenBus = byRet;
-                    PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+                    case 0x4: {
+                        /* PPU Sprite RAM $2004 */
+                        ppuOpenBus = SPRRAM[PPU_R3];
+                        return SPRRAM[PPU_R3];
+                    }
+
+                    case 0x7: {
+                        uint16 addr;
+                        addr = ppuinfo.PPU_Addr;
+                        // Increment PPU Address
+                        ppuinfo.PPU_Addr += PPU_Increment;
+                        addr &= 0x3fff;
+
+                        if (addr >= 0x3000) {
+                            if (addr >= 0x3f00) {
+                                PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
+    //                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
+                                ppuOpenBus = PPURAM[0x3F00 | (addr & 0x1F)];
+                                return PPURAM[0x3F00 | (addr & 0x1F)];
+                            }
+
+                            // handle mirroring
+                            addr &= 0xefff;
+                        }
+
+                        byRet = PPU_R7;
+                        ppuOpenBus = byRet;
+                        PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
+                        return byRet;
+                    }
+                } break;
+            case 2: 
+                if ( wAddr == 0x4016 ) {
+                    // Set Joypad1 data
+                    byRet = (unsigned char)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
+                    PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
                     return byRet;
+                } else if ( wAddr == 0x4017 ) {
+                    // Set Joypad2 data
+                    byRet = (unsigned char)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
+                    PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
+                    return byRet;
+                } else if ( wAddr <= 0x4017) {
+                    return audio_read(wAddr);
+                } else {
+                    return mapper -> read(wAddr);
                 }
-            }
-        } break;
-
-        case 0x4000: {  /* Sound */
-            if ( wAddr == 0x4016 ) {
-                // Set Joypad1 data
-                byRet = (unsigned char)( ( PAD1_Latch >> PAD1_Bit ) & 1 ) | 0x40;
-                PAD1_Bit = ( PAD1_Bit == 23 ) ? 0 : ( PAD1_Bit + 1 );
-                return byRet;
-            } else if ( wAddr == 0x4017 ) {
-                // Set Joypad2 data
-                byRet = (unsigned char)( ( PAD2_Latch >> PAD2_Bit ) & 1 ) | 0x40;
-                PAD2_Bit = ( PAD2_Bit == 23 ) ? 0 : ( PAD2_Bit + 1 );
-                return byRet;
-            } else if ( wAddr <= 0x4017) {
-                return audio_read(wAddr);
-            } else {
-                return mapper -> read(wAddr);
-            }
-        } break;
-
-        case 0x6000:  /* SRAM */
-            return ROMBANK_WRAM[ wAddr & 0x1fff ];
-
-        case 0x8000:  /* ROM BANK 0 */
-            return ROMBANK0[ wAddr & 0x1fff ];
-
-        case 0xa000:  /* ROM BANK 1 */
-            return ROMBANK1[ wAddr & 0x1fff ];
-
-        case 0xc000:  /* ROM BANK 2 */
-            return ROMBANK2[ wAddr & 0x1fff ];
-
-        case 0xe000:  /* ROM BANK 3 */
-            return ROMBANK3[ wAddr & 0x1fff ];
+        }
+        return ( wAddr >> 8 );        
     }
-
-    // when a register is not readable the upper half address is returned.
-    return ( wAddr >> 8 );
 }
 
 /*===================================================================*/

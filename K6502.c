@@ -439,8 +439,8 @@ void K6502_Reset() {
 
 	// Reset Bank Table
 	BankTable[ 0 ] = RAM;
-	BankTable[ 1 ] = RAM;
-	BankTable[ 2 ] = RAM;
+	BankTable[ 1 ] = NULL;
+	BankTable[ 2 ] = NULL;
 	BankTable[ 3 ] = ROMBANK_WRAM;
 	BankTable[ 4 ] = ROMBANK0;
 	BankTable[ 5 ] = ROMBANK1;
