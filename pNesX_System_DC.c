@@ -573,9 +573,7 @@ void launchEmulator() {
 }
 
 void run_tests() {
-	dcache_enable_ocram();
-	test_read_byte();
-	dcache_disable_ocram();
+	run_multitest_test_read_byte();	
 }
 
 /*===================================================================*/
