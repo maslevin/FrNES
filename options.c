@@ -34,7 +34,7 @@ bool load_options_from_VMU() {
         int readBufferSize;
         if (vmufs_read(vmu, OPTIONS_FILENAME, (void**)&readBuffer, &readBufferSize) == 0) {
             vmu_pkg_t package;
-            if (vmu_pkg_parse(readBuffer, &package) == 0) {
+            if (vmu_pkg_parse(readBuffer, readBufferSize, &package) == 0) {
                 printf("VMU: Found FrNES Options File from VMU [%i]\n", vmuIndex);
                 printf("Copying %i Bytes into options struct\n", sizeof(Options_t));
                 memcpy(&options, package.data, sizeof(Options_t));
