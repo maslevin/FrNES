@@ -39,7 +39,7 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 	uintptr_t texture_address = (((uintptr_t)&WorkFrame -> texture & 0xffffff) | PVR_TA_TEX_MEM) + (ppuinfo.PPU_Scanline << 8);	
 
 	if ( !( PPU_R1 & R1_SHOW_SCR ) ) {
-		sq_set(Scanline_Buffer, PPURAM[0x3F00], 256);
+		sq_set(texture_address, PPURAM[0x3F00], 256);
 //		memset4(Scanline_Buffer, (PPURAM[0x3F00] << 24) | (PPURAM[0x3F00] << 16) | (PPURAM[0x3F00] << 8) | PPURAM[0x3F00], 256);
 	} else {
 		if (MapperNo == 9) {
@@ -49,9 +49,10 @@ __attribute__ ((hot)) void pNesX_DrawLine() {
 			pNesX_DrawLine_BG_C(Scanline_Buffer);
 			pNesX_DrawLine_Spr_C(Scanline_Buffer);
 		}
+		sq_cpy(texture_address, Scanline_Buffer, 256);
 	}
 
 	//Move the scanline buffer to the PVR texture
-	sq_cpy(texture_address, Scanline_Buffer, 256);
+	//sq_cpy(texture_address, Scanline_Buffer, 256);
 //	pvr_txr_load(Scanline_Buffer, texture_address, 256);
 }
