@@ -325,7 +325,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                 } break;
 
                 default: {               
-                    if (wAddr >= 0x4017) {
+                    if (wAddr > 0x4017) {
                         mapper -> write (wAddr, byData);
 
                         // Set Bank Table
