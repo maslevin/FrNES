@@ -452,9 +452,9 @@ void K6502_Reset() {
 	printf("Setting PC to Reset Vector [$%04x]\n", PC);
 	PredPC = 0;
 	REALPC;
-	SP = 0xFF;
+	SP = 0xFD;
 	A = X = Y = 0;
-	F = FLAG_Z | FLAG_R;
+	F = FLAG_I;
 
 	// Set up the state of the Interrupt pin.
 	NMI_State = NMI_Wiring;
