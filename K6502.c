@@ -194,11 +194,6 @@ value_table_tag g_ROLTable[ 2 ][ 256 ];
 // A table for ROR
 value_table_tag g_RORTable[ 2 ][ 256 ];
 
-uint16 wA0;
-unsigned char byD0;
-unsigned char byD1;
-uint16 wD0;
-
 #ifdef DEBUG
 extern uint32 currentCRC32;
 file_t traceFile;
@@ -529,10 +524,10 @@ bool writeOnce = true;
 /*===================================================================*/
 __attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 	startProfiling(0);
-	wA0 = 0;
-	byD0 = 0;
-	byD1 = 0;
-	wD0 = 0;
+	uint32 wA0 = 0;
+	unsigned char byD0 = 0;
+	unsigned char byD1 = 0;
+	uint32 wD0 = 0;
 
 	unsigned char opcode;
 
