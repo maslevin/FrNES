@@ -301,7 +301,7 @@ int LoadSRAM() {
 			int readBufferSize;
 			if (vmufs_read(vmu, sramFilename, (void**)&readBuffer, &readBufferSize) == 0) {
 				vmu_pkg_t package;
-				if (vmu_pkg_parse(readBuffer, &package) == 0) {
+				if (vmu_pkg_parse(readBuffer, readBufferSize, &package) == 0) {
 					printf("VMU: Found SRAM Save File from VMU [%i]\n", i);
 
 					unsigned int destLength = 0x2000;
