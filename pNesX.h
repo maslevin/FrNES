@@ -54,6 +54,7 @@ extern unsigned char PPURAM[];
 
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
+extern unsigned char PPUBANK_WRITE_PROTECT;
 
 #define FRAMEBUFFER_WIDTH 256
 #define FRAMEBUFFER_HEIGHT 256

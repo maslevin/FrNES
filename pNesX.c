@@ -55,6 +55,9 @@ extern unsigned char HALT;
 
 /* PPU BANK ( 1Kb * 16 ) */
 unsigned char *PPUBANK[ 16 ];
+// For banks 0-7, bits 0-7 will be set by mapper to indicate if that bank is write protected or not
+// If CHR ROM is in use, this should be 0xFF by default
+unsigned char PPUBANK_WRITE_PROTECT;
 
 /* Sprite RAM */
 unsigned char SPRRAM[ SPRRAM_SIZE ];
@@ -414,6 +417,14 @@ void pNesX_SetupPPU() {
 	PPUBANK[ 13 ] = &PPURAM[ 13 * 0x400 ];
 	PPUBANK[ 14 ] = &PPURAM[ 14 * 0x400 ];
 	PPUBANK[ 15 ] = &PPURAM[ 15 * 0x400 ];
+	// We could set this in a fine grained way for mappers that support VRAM/CHR ROM swapping, and we should, but this
+	// will do for now
+	if (num_1k_VRAM_pages > 0) {
+		PPUBANK_WRITE_PROTECT = 0x00;
+	} else {
+		// Set write protection for banks 0-8 to on by default (only unflag if you want to emulate VRAM)
+		PPUBANK_WRITE_PROTECT = 0xFF;
+	}
 
 	/* Mirroring of Name Table */
 	pNesX_Mirroring( ROM_Mirroring );

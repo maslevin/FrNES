@@ -260,11 +260,12 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     addr = ppuinfo.PPU_Addr;
                     ppuinfo.PPU_Addr += PPU_Increment;
 
-                    addr &= 0x3FFF;
+                    addr &= 0x3fff;
 
                     if (addr >= 0x3000) {
-                        if (addr >= 0x3F00) {
-                            byData &= 0x3F;
+                        if (addr >= 0x3f00) {
+                            byData &= 0x3f;
+                            addr &= 0x3f1f;
                             // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
                             // came from a background pixel - this will be important later when we merge background tiles with sprites
                             // during rendering, as these pixels will be transparent vs. sprites
@@ -276,10 +277,13 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             }
                             return;
                         }
-                        addr &= 0xEFFF;
-                    }
-
-                    PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                    } else {
+                        uint32_t bank = addr >> 10;
+                        // check for write protection of banks 0-8 to prevent accidental writes from corrupting VROM
+                        if ((bank >= 8) || !(PPUBANK_WRITE_PROTECT & (0x1 << bank))) {
+                            PPUBANK[bank][addr & 0x3FF] = byData;
+                        }
+                    }                  
                 } break;
             }
         } break;
