@@ -268,18 +268,57 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
                             // came from a background pixel - this will be important later when we merge background tiles with sprites
                             // during rendering, as these pixels will be transparent vs. sprites
+                            switch (addr & 0x1f) {
+                                case 0x00:
+                                case 0x10:
+//                                    PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = 0x40 | byData;
+                                    PPURAM[ 0x3f00 ] = PPURAM[ 0x3f10 ] = byData;
+                                    break;
+
+                                case 0x04:
+                                case 0x14:
+//                                    PPURAM[ 0x3f04 ] = PPURAM[ 0x3f14 ] = 0x40 | byData;
+                                    PPURAM[ 0x3f04 ] = PPURAM[ 0x3f14 ] = byData;
+                                    break;
+
+                                case 0x08:
+                                case 0x18:
+//                                    PPURAM[ 0x3f08 ] = PPURAM[ 0x3f18 ] = 0x40 | byData;
+                                    PPURAM[ 0x3f08 ] = PPURAM[ 0x3f18 ] = byData;
+                                    break;
+
+                                case 0x0c:
+                                case 0x1c:
+//                                    PPURAM[ 0x3f0c ] = PPURAM[ 0x3f1c ] = 0x40 | byData;
+                                    PPURAM[ 0x3f0c ] = PPURAM[ 0x3f1c ] = byData;
+                                    break;
+
+                                default:
+                                    PPURAM[ 0x3f00 + (addr & 0x1f) ] = byData;
+                                    break;
+                            }
+
+/*                            
+                            printf("PRAM: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+                                PPURAM[0x3f00], PPURAM[0x3f01], PPURAM[0x3f02], PPURAM[0x3f03], 
+                                PPURAM[0x3f04], PPURAM[0x3f05], PPURAM[0x3f06], PPURAM[0x3f07],
+                                PPURAM[0x3f08], PPURAM[0x3f09], PPURAM[0x3f0A], PPURAM[0x3f0B],
+                                PPURAM[0x3f0C], PPURAM[0x3f0D], PPURAM[0x3f0E], PPURAM[0x3f0F]);
+*/                                
+/*                            
                             if (!(addr & 0xf)) {
                                 PPURAM[ 0x3f10 ] = PPURAM[ 0x3f14 ] = PPURAM[ 0x3f18 ] = PPURAM[ 0x3f1c ] = 
-                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 0x40 | byData;
+                                PPURAM[ 0x3f00 ] = PPURAM[ 0x3f04 ] = PPURAM[ 0x3f08 ] = PPURAM[ 0x3f0c ] = 
                             } else if (addr & 0x3) {
                                 PPURAM[ addr ] = byData;
                             }
+*/                                
                             return;
                         }
                         addr &= 0xEFFF;
+                    } else {
+                        PPUBANK[addr >> 10][addr & 0x3FF] = byData;
                     }
-
-                    PPUBANK[addr >> 10][addr & 0x3FF] = byData;
                 } break;
             }
         } break;
