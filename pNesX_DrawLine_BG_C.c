@@ -40,8 +40,20 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	unsigned char characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	unsigned char characterIndex = (nameTableValue & 0x3F);
 	unsigned char* pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+
+	if (PPUBANK[0] == VROM) {
+		if (characterIndex == 0) {
+			pbyBGData[0] = 0xFF;
+			pbyBGData[8] = 0xFF;
+		} else if (characterIndex == 1) {
+			pbyBGData[0] = 0xFF;
+			pbyBGData[8] = 0x00;
+		}
+	}
+
 	unsigned char byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
     unsigned char byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
+
 
 	switch (ppuinfo.PPU_Scr_H_Bit) {
 		case 0:
@@ -86,6 +98,17 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 		characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 		characterIndex = (nameTableValue & 0x3F);
 		pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+
+		if (PPUBANK[0] == VROM) {
+			if (characterIndex == 0) {
+				pbyBGData[0] = 0xFF;
+				pbyBGData[8] = 0xFF;
+			} else if (characterIndex == 1) {
+				pbyBGData[0] = 0xFF;
+				pbyBGData[8] = 0x00;
+			}
+		}
+		
 		byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 		byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 		pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];
@@ -116,6 +139,17 @@ __attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	characterBank = ((ppuinfo.PPU_R0 & R0_BG_ADDR) ? 4 : 0) + (nameTableValue >> 6);
 	characterIndex = (nameTableValue & 0x3F);
 	pbyBGData = PPUBANK[characterBank] + (characterIndex << 4) + (nYBit);
+
+	if (PPUBANK[0] == VROM) {
+		if (characterIndex == 0) {
+			pbyBGData[0] = 0xFF;
+			pbyBGData[8] = 0xFF;
+		} else if (characterIndex == 1) {
+			pbyBGData[0] = 0xFF;
+			pbyBGData[8] = 0x00;
+		}
+	}
+
 	byData1 = ( ( pbyBGData[ 0 ] >> 1 ) & 0x55 ) | ( pbyBGData[ 8 ] & 0xAA );
 	byData2 = ( pbyBGData[ 0 ] & 0x55 ) | ( ( pbyBGData[ 8 ] << 1 ) & 0xAA );
 	pPalTbl = &paletteRegisters[(( (pAlBase[nX >> 2] >> ( ( nX & 2 ) + nY4 ) ) & 0x3 ) << 2 )];

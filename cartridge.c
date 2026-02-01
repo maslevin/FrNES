@@ -266,6 +266,12 @@ bool ReadRom (const char *filepath, uint32 filesize) {
 			WRAM_pages[i] = &WRAM[i * 0x2000];
 		}
 
+		printf("VROM: ");
+		for (uint32_t i = 0; i < 32; i++) {
+			printf("%02x ", VROM[i]);
+		}
+		printf("\n");
+
 		loaded = true;
 	} else {
 		printf("ReadRom: NOT AN NES FILE - exiting");
