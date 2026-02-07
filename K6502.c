@@ -151,8 +151,6 @@ unsigned char Y;
 
 unsigned char *pPC;
 unsigned char *pPC_Offset;
-uint16 PredPC;
-unsigned char *pPredPC;
 
 unsigned char *BankTable[ 8 ];
 uint16 BankMask[ 8 ] = { 0xf800, 0xf800, 0xf800, 0xe000, 0xe000, 0xe000, 0xe000, 0xe000 };
@@ -445,7 +443,6 @@ void K6502_Reset() {
 	// Reset Registers
 	PC = K6502_ReadW( VECTOR_RESET );
 	printf("Setting PC to Reset Vector [$%04x]\n", PC);
-	PredPC = 0;
 	REALPC;
 	SP = 0xFD;
 	A = X = Y = 0;
