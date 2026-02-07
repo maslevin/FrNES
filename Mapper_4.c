@@ -163,15 +163,19 @@ void Mapper_4_VSync() {
 /*  Mapper 4 H-Sync Function                                         */
 /*-------------------------------------------------------------------*/
 void Mapper_4_HSync() {
-	if (Map4_IRQ_Enable) {
-		if ((ppuinfo.PPU_Scanline >= 0) && (ppuinfo.PPU_Scanline <= 239)) {
-			if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
-				Map4_IRQ_Cnt--;				
-				if (Map4_IRQ_Cnt == 0) {
-					Map4_IRQ_Cnt = Map4_IRQ_Set;
-					IRQ_REQ;
-				}
-			}
+	// only count scanlines while rendering is enabled
+	if (PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) {
+		if ((ppuinfo.PPU_Scanline >= 240) && (ppuinfo.PPU_Scanline != 261))
+			return;
+
+		if (Map4_IRQ_Cnt == 0) {
+			Map4_IRQ_Cnt = Map4_IRQ_Set;
+		} else {
+			Map4_IRQ_Cnt--;
+		}
+
+		if (Map4_IRQ_Enable && !Map4_IRQ_Cnt) {
+			IRQ_REQ;
 		}
 	}
 }
