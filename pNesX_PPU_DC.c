@@ -24,7 +24,7 @@ __ALIGN32__ unsigned char Scanline_Buffer[256];
 
 extern uint16 PPU_Temp;
 
-void pNesX_StartFrame() {
+__attribute__ ((hot)) void pNesX_StartFrame() {
 	if ((PPU_R1 & 0x10) || (PPU_R1 & 0x08))
 		ppuinfo.PPU_Addr = PPU_Temp;
 }
@@ -34,7 +34,7 @@ void pNesX_StartFrame() {
 /*              pNesX_NewDrawLine() : Render a scanline              */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_DrawLine() {
+__attribute__ ((hot)) void pNesX_DrawLine() {
 	void* texture_address;
 
 	//texture_address is the Texture the frame currently being rendered will be displayed in

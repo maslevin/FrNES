@@ -1069,7 +1069,7 @@ for(((el)=(head)), ((tmp)=DECLTYPE(el)((head!=NULL)?(head)->hh.next:NULL));     
 #define HASH_COUNT(head) HASH_CNT(hh,head)
 #define HASH_CNT(hh,head) ((head != NULL)?((head)->hh.tbl->num_items):0U)
 
-typedef struct UT_hash_bucket {
+typedef struct __attribute__ ((packed, aligned(4))) UT_hash_bucket {
    struct UT_hash_handle *hh_head;
    unsigned count;
 
@@ -1093,7 +1093,7 @@ typedef struct UT_hash_bucket {
 #define HASH_SIGNATURE 0xa0111fe1u
 #define HASH_BLOOM_SIGNATURE 0xb12220f2u
 
-typedef struct UT_hash_table {
+typedef struct __attribute__ ((packed, aligned(4))) UT_hash_table {
    UT_hash_bucket *buckets;
    unsigned num_buckets, log2_num_buckets;
    unsigned num_items;
@@ -1126,7 +1126,7 @@ typedef struct UT_hash_table {
 
 } UT_hash_table;
 
-typedef struct UT_hash_handle {
+typedef struct __attribute__ ((packed, aligned(4))) UT_hash_handle {
    struct UT_hash_table *tbl;
    void *prev;                       /* prev element in app order      */
    void *next;                       /* next element in app order      */

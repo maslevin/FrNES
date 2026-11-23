@@ -8,7 +8,9 @@
 
 #include "profile.h"
 
-void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
+extern uint8 MapperNo;
+
+__attribute__ ((hot)) void pNesX_DrawLine_BG_C(unsigned char* pPoint) {
 	startProfiling(2);
 	uint16 nX;
 	uint16 nY;

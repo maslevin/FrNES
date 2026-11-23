@@ -12,6 +12,7 @@ Description: Bitmap Font Library that is compatible with angelcode's BMF compile
 
 #pragma pack(push)
 #pragma pack(1)
+#pragma align(4)
 typedef struct InfoBlock {
     uint16 fontSize;
     uint8 reserved:4;
@@ -35,8 +36,8 @@ typedef struct InfoBlock {
 
 #pragma pack(push)
 #pragma pack(1)
-typedef struct CommonBlock
-{
+#pragma align(4)
+typedef struct CommonBlock {
     uint16 lineHeight;
     uint16 base;
     uint16 scaleW;
@@ -53,8 +54,8 @@ typedef struct CommonBlock
 
 #pragma pack(push)
 #pragma pack(1)
-typedef struct CharInfo
-{
+#pragma align(4)
+typedef struct CharInfo {
     uint32 id;
     uint16  x;
     uint16  y;

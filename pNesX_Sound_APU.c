@@ -43,13 +43,13 @@ void audio_do_frame(uint16* sample_buffer, uint32 num_samples) {
    apu_process(sample_buffer, num_samples);
 }
 
-int audio_sync_dmc_registers(uint32 cycles) {
+__attribute__ ((hot)) int audio_sync_dmc_registers(uint32 cycles) {
    startProfiling(5);
    int result = sync_dmc_register(cycles);
    endProfiling(5);
    return result;
 }
 
-void audio_sync_apu_registers() {
+__attribute__ ((hot)) void audio_sync_apu_registers() {
    sync_apu_register();
 }

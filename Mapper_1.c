@@ -29,11 +29,11 @@ uint32 Mapper_1_bank4;
 uint32 Mapper_1_HI1;
 uint32 Mapper_1_HI2;
 
-void Mapper_1_Set_CPU_Banks() {
-    ROMBANK0 = ROMPAGE((Mapper_1_256K_base << 5) + (Mapper_1_bank1 & ((256/8)-1)));
-    ROMBANK1 = ROMPAGE((Mapper_1_256K_base << 5) + (Mapper_1_bank2 & ((256/8)-1)));
-    ROMBANK2 = ROMPAGE((Mapper_1_256K_base << 5) + (Mapper_1_bank3 & ((256/8)-1)));
-    ROMBANK3 = ROMPAGE((Mapper_1_256K_base << 5) + (Mapper_1_bank4 & ((256/8)-1)));
+inline void Mapper_1_Set_CPU_Banks() {
+    ROMBANK0 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank1 & 0x1f)];
+    ROMBANK1 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank2 & 0x1f)];
+    ROMBANK2 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank3 & 0x1f)];
+    ROMBANK3 = ROM_pages[(Mapper_1_256K_base << 5) + (Mapper_1_bank4 & 0x1f)];
 }
 
 /*-------------------------------------------------------------------*/
@@ -48,8 +48,7 @@ void Mapper_1_Init() {
     Mapper_1_regs[2] = 0x00;
     Mapper_1_regs[3] = 0x00;
 
-    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2; 
-    uint32 size_in_K = num_8k_ROM_banks * 8;
+    uint32 size_in_K = num_8k_ROM_pages * 8;
 
     if (size_in_K == 1024) {
         Mapper_1_Size = MMC1_1024K;
@@ -64,8 +63,8 @@ void Mapper_1_Init() {
 
     if (Mapper_1_Size == MMC1_SMALL) {
         // set two high pages to last two banks
-        Mapper_1_HI1 = num_8k_ROM_banks - 2;
-        Mapper_1_HI2 = num_8k_ROM_banks - 1;
+        Mapper_1_HI1 = num_8k_ROM_pages - 2;
+        Mapper_1_HI2 = num_8k_ROM_pages - 1;
     } else {
         // set two high pages to last two banks of current 256K region
         Mapper_1_HI1 = (256/8) - 2;
@@ -80,14 +79,8 @@ void Mapper_1_Init() {
 
     Mapper_1_Set_CPU_Banks();
 
-    /* Set PPU VROM Banks */
-    if ( NesHeader.byVRomSize > 0 ) {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-    }
-
-    /* Set up wiring of the interrupt pin */
-    K6502_Set_Int_Wiring( 1, 1 );
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = VROM_pages[nPage];
 }
 
 /*-------------------------------------------------------------------*/
@@ -140,7 +133,6 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
 
         case 1: {
             uint8 bank_num = Mapper_1_regs[1];
-            uint32 num_1k_VROM_banks = NesHeader.byVRomSize * 8;
 
             if (Mapper_1_Size == MMC1_1024K) {
                 if (Mapper_1_regs[0] & 0x10) {
@@ -159,46 +151,35 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                     Mapper_1_256K_base = (Mapper_1_regs[1] & 0x10) ? 3 : 0;
                     Mapper_1_Set_CPU_Banks();
                 }
-            } else if((Mapper_1_Size == MMC1_512K) && (!num_1k_VROM_banks)) {
+            } else if((Mapper_1_Size == MMC1_512K) && (!num_1k_VROM_pages)) {
                 Mapper_1_256K_base = (Mapper_1_regs[1] & 0x10) >> 4;
                 Mapper_1_Set_CPU_Banks();
-            } else if (num_1k_VROM_banks) {
+            } else {
                 // set VROM bank at $0000
                 if (Mapper_1_regs[0] & 0x10) {
                     // swap 4K
                     bank_num <<= 2;
-                    PPUBANK[0] = &VROM[bank_num * 0x400];
-                    PPUBANK[1] = &VROM[(bank_num + 1) * 0x400];
-                    PPUBANK[2] = &VROM[(bank_num + 2) * 0x400];
-                    PPUBANK[3] = &VROM[(bank_num + 3) * 0x400];
+                    PPUBANK[0] = VROM_pages[bank_num];
+                    PPUBANK[1] = VROM_pages[bank_num + 1];
+                    PPUBANK[2] = VROM_pages[bank_num + 2];
+                    PPUBANK[3] = VROM_pages[bank_num + 3];
                 } else {
                     // swap 8K
                     bank_num <<= 2;
-                    PPUBANK[0] = &VROM[bank_num * 0x400];
-                    PPUBANK[1] = &VROM[(bank_num + 1) * 0x400];
-                    PPUBANK[2] = &VROM[(bank_num + 2) * 0x400];
-                    PPUBANK[3] = &VROM[(bank_num + 3) * 0x400];
-                    PPUBANK[4] = &VROM[(bank_num + 4) * 0x400];
-                    PPUBANK[5] = &VROM[(bank_num + 5) * 0x400];
-                    PPUBANK[6] = &VROM[(bank_num + 6) * 0x400];
-                    PPUBANK[7] = &VROM[(bank_num + 7) * 0x400];
-                }
-            } else {
-                if (Mapper_1_regs[0] & 0x10) {
-                    bank_num <<= 2;
-                    /* // TODO: How to handle VRAM ... 
-                    set_VRAM_bank0(0, bank_num+0);
-                    set_VRAM_bank0(1, bank_num+1);
-                    set_VRAM_bank0(2, bank_num+2);
-                    set_VRAM_bank0(3, bank_num+3);
-                    */
+                    PPUBANK[0] = VROM_pages[bank_num];
+                    PPUBANK[1] = VROM_pages[bank_num + 1];
+                    PPUBANK[2] = VROM_pages[bank_num + 2];
+                    PPUBANK[3] = VROM_pages[bank_num + 3];
+                    PPUBANK[4] = VROM_pages[bank_num + 4];
+                    PPUBANK[5] = VROM_pages[bank_num + 5];
+                    PPUBANK[6] = VROM_pages[bank_num + 6];
+                    PPUBANK[7] = VROM_pages[bank_num + 7];
                 }
             }
         } break;
 
         case 2: {
             uint8 bank_num = Mapper_1_regs[2];
-            uint32 num_1k_VROM_banks = NesHeader.byVRomSize * 8;
 
             if ((Mapper_1_Size == MMC1_1024K) && (Mapper_1_regs[0] & 0x08)) {
                 if (Mapper_1_swap) {
@@ -211,27 +192,14 @@ void Mapper_1_Write( uint16 wAddr, unsigned char byData ) {
                 }
             }
 
-            if (!num_1k_VROM_banks) {
-                if (Mapper_1_regs[0] & 0x10) {
-                    bank_num <<= 2;
-                    /* // TODO: How to handle VRAM ...
-                    set_VRAM_bank0(4, bank_num+0);
-                    set_VRAM_bank0(5, bank_num+1);
-                    set_VRAM_bank0(6, bank_num+2);
-                    set_VRAM_bank0(7, bank_num+3);
-                    */
-                    break;
-                }
-            }
-
             // set 4K VROM bank at $1000
             if (Mapper_1_regs[0] & 0x10) {
                 // swap 4K
                 bank_num <<= 2;
-                PPUBANK[4] = &VROM[bank_num * 0x400];
-                PPUBANK[5] = &VROM[(bank_num + 1) * 0x400];
-                PPUBANK[6] = &VROM[(bank_num + 2) * 0x400];
-                PPUBANK[7] = &VROM[(bank_num + 3) * 0x400];
+                PPUBANK[4] = VROM_pages[bank_num];
+                PPUBANK[5] = VROM_pages[bank_num + 1];
+                PPUBANK[6] = VROM_pages[bank_num + 2];
+                PPUBANK[7] = VROM_pages[bank_num + 3];
             }
         } break;
 

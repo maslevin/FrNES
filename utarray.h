@@ -50,14 +50,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef void (ctor_f)(void *dst, const void *src);
 typedef void (dtor_f)(void *elt);
 typedef void (init_f)(void *elt);
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) {
     size_t sz;
     init_f *init;
     ctor_f *copy;
     dtor_f *dtor;
 } UT_icd;
 
-typedef struct {
+typedef struct __attribute__ ((packed, aligned(4))) {
     unsigned i,n;/* i: index of next available slot, n: num slots */
     UT_icd icd;  /* initializer, copy and destructor functions */
     char *d;     /* n slots of size icd->sz*/

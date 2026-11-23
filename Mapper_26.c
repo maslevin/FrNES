@@ -9,16 +9,13 @@ unsigned char Mapper_26_irq_latch;
 void Mapper_26_Init() {
     apu_set_exsound(NES_APU_EXSOUND_VRC6);
 
-    // set CPU bank pointers
-    ROMBANK0 = ROMPAGE(0);
-    ROMBANK1 = ROMPAGE(1);
-    ROMBANK2 = ROMLASTPAGE(1);
-    ROMBANK3 = ROMLASTPAGE(0);
+    ROMBANK0 = ROM_pages[0];
+    ROMBANK1 = ROM_pages[1];
+    ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+    ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
-    if ( NesHeader.byVRomSize > 0 ) {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-    }
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = VROM_pages[ nPage ];
 
     Mapper_26_irq_enabled = 0;
     Mapper_26_irq_counter = 0;
@@ -27,8 +24,8 @@ void Mapper_26_Init() {
 void Mapper_26_Write(uint16 addr, unsigned char data) {
     switch(addr) {
         case 0x8000: {
-            ROMBANK0 = ROMPAGE(data << 1);
-            ROMBANK1 = ROMPAGE((data << 1) + 1);
+            ROMBANK0 = ROM_pages[data << 1];
+            ROMBANK1 = ROM_pages[(data << 1) + 1];
         } break;
 
         case 0xB003: {
@@ -45,39 +42,39 @@ void Mapper_26_Write(uint16 addr, unsigned char data) {
         } break;
 
         case 0xC000: {
-            ROMBANK2 = ROMPAGE(data);
+            ROMBANK2 = ROM_pages[data];
         } break;
 
         case 0xD000: {
-            PPUBANK[0] = VROMPAGE(data);
+            PPUBANK[0] = VROM_pages[data];
         } break;
 
         case 0xD001: {
-            PPUBANK[2] = VROMPAGE(data);
+            PPUBANK[2] = VROM_pages[data];
         } break;
 
         case 0xD002: {
-            PPUBANK[1] = VROMPAGE(data);
+            PPUBANK[1] = VROM_pages[data];
         } break;
 
         case 0xD003: {
-            PPUBANK[3] = VROMPAGE(data);
+            PPUBANK[3] = VROM_pages[data];
         } break;
 
         case 0xE000: {
-            PPUBANK[4] = VROMPAGE(data);
+            PPUBANK[4] = VROM_pages[data];
         } break;
 
         case 0xE001: {
-            PPUBANK[6] = VROMPAGE(data);
+            PPUBANK[6] = VROM_pages[data];
         } break;
 
         case 0xE002: {
-            PPUBANK[5] = VROMPAGE(data);            
+            PPUBANK[5] = VROM_pages[data];           
         } break;
 
         case 0xE003: {
-            PPUBANK[7] = VROMPAGE(data);            
+            PPUBANK[7] = VROM_pages[data];           
         } break;
 
         case 0xF000: {

@@ -15,6 +15,7 @@
 #include <kos.h>
 #include "macros.h"
 
+#include "cartridge.h"
 #include "input_recorder.h"
 
 #include "pNesX.h"
@@ -35,14 +36,8 @@
 /* RAM */
 unsigned char RAM[ RAM_SIZE ];
 
-/* SRAM */
-unsigned char SRAM[ SRAM_SIZE ];
-
-/* ROM */
-extern unsigned char *ROM;
-
 /* ROM BANK ( 8Kb * 4 ) */
-unsigned char *ROMBANK_LO; // 0x6000
+unsigned char *ROMBANK_WRAM; // 0x6000
 unsigned char *ROMBANK0;
 unsigned char *ROMBANK1;
 unsigned char *ROMBANK2;
@@ -58,19 +53,17 @@ unsigned char PPURAM[ PPURAM_SIZE ];
 
 extern unsigned char HALT;
 
-/* Cartridge VROM */
-extern unsigned char* VROM;
-/* Cartridge VRAM */
-extern unsigned char* VRAM;
-
 /* PPU BANK ( 1Kb * 16 ) */
 unsigned char *PPUBANK[ 16 ];
+// For banks 0-7, bits 0-7 will be set by mapper to indicate if that bank is write protected or not
+// If CHR ROM is in use, this should be 0xFF by default
+unsigned char PPUBANK_WRITE_PROTECT;
 
 /* Sprite RAM */
 unsigned char SPRRAM[ SPRRAM_SIZE ];
 
 /* PPU Info Struct */
-PPU_Info ppuinfo;
+PPU_Info_t ppuinfo;
 
 /* PPU Register */
 unsigned char PPU_R1;
@@ -163,26 +156,6 @@ uint32 PAD2_Bit;
 uint32 PollCount;
 uint32 PollSkip;
 
-/*-------------------------------------------------------------------*/
-/*  ROM information                                                  */
-/*-------------------------------------------------------------------*/
-
-/* .nes File Header */
-struct NesHeader_tag NesHeader;
-
-/* Mapper Number */
-unsigned char MapperNo;
-Mapper* mapper;
-
-/* Mirroring 0:Horizontal 1:Vertical */
-unsigned char ROM_Mirroring;
-/* It has SRAM */
-unsigned char ROM_SRAM;
-/* It has Trainer */
-unsigned char ROM_Trainer;
-/* Four screen VRAM  */
-unsigned char ROM_FourScr;
-
 void DC_SoundInit() {
 	sound_address = 0;
 	current_address = 0x11000;
@@ -239,12 +212,14 @@ void pNesX_Init() {
 
 	// Initialize Sound AICA program and ring buffers, and apu emulator
 	// Initialize pNesX
-	if (opt_SoundEnabled) {
+	if (options.opt_SoundEnabled) {
 		// Start Sound Emu
 		DC_SoundInit();
 		timer_spin_sleep(40);
 		*start = 0xFFFFFFFF;
 	}
+
+	K6502_Set_Int_Wiring( 1, 1 ); 
 
 	// Call mapper initialization function - important that this comes before mapper
 	// init, for expansion audio
@@ -263,7 +238,7 @@ void pNesX_Init() {
 /*                                                                   */
 /*===================================================================*/
 void pNesX_Fin() {
-	if (opt_SoundEnabled) {
+	if (options.opt_SoundEnabled) {
 		spu_shutdown();
 	}
 
@@ -292,7 +267,7 @@ void pNesX_Fin() {
 /*                                                                   */
 /*===================================================================*/
 int pNesX_Load( const char *filepath, uint32 filesize ) {
-	if ( pNesX_ReadRom( filepath, filesize ) < 0 )
+	if (!ReadRom( filepath, filesize ))
 		return -1;
 
 	if ( pNesX_Reset() < 0 )
@@ -346,11 +321,15 @@ int pNesX_Reset() {
 	// Clear SPR RAM
 	memset( SPRRAM, 0, SPRRAM_SIZE );
 
-	// Clear SRAM
-	memset( SRAM, 0, sizeof SRAM );
+	// Setup WRAM if present
+	if (num_8k_WRAM_pages) {
+		ROMBANK_WRAM = WRAM_pages[0];
+	} else {
+		ROMBANK_WRAM = NULL;
+	}
 
 	// Reset frame skip and frame count
-	FrameSkip = opt_FrameSkip;
+	FrameSkip = options.opt_FrameSkip;
 	FrameCnt = 0;
 
 	PollSkip = 6;
@@ -438,6 +417,14 @@ void pNesX_SetupPPU() {
 	PPUBANK[ 13 ] = &PPURAM[ 13 * 0x400 ];
 	PPUBANK[ 14 ] = &PPURAM[ 14 * 0x400 ];
 	PPUBANK[ 15 ] = &PPURAM[ 15 * 0x400 ];
+	// We could set this in a fine grained way for mappers that support VRAM/CHR ROM swapping, and we should, but this
+	// will do for now
+	if (num_1k_VRAM_pages > 0) {
+		PPUBANK_WRITE_PROTECT = 0x00;
+	} else {
+		// Set write protection for banks 0-8 to on by default (only unflag if you want to emulate VRAM)
+		PPUBANK_WRITE_PROTECT = 0xFF;
+	}
 
 	/* Mirroring of Name Table */
 	pNesX_Mirroring( ROM_Mirroring );
@@ -481,7 +468,7 @@ void pNesX_Mirroring_Manual (int bank1, int bank2, int bank3, int bank4) {
 /*              pNesX_Main() : The main loop of pNesX                */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Main() {
+__attribute__ ((hot)) void pNesX_Main() {
 	pNesX_Init();
 
 	resetProfiling(PMCR_PIPELINE_FREEZE_BY_DCACHE_MISS_MODE, MAX_PROFILING_FUNCTIONS);
@@ -499,7 +486,7 @@ void pNesX_Main() {
 	uint64 frame_timestamp = 0;
 	double last_frames_per_second[NUM_FPS_SAMPLES];
 	uint32 last_frames_per_second_index = 0;	
-	if (opt_ShowFrameRate) {
+	if (options.opt_ShowFrameRate) {
 		clock_gettime(CLOCK_MONOTONIC, &ts);		
 		frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	}
@@ -517,7 +504,7 @@ void pNesX_Main() {
 		odd_cycle = !odd_cycle;
 		numEmulationFrames++;
 
-		if (opt_ShowFrameRate) {
+		if (options.opt_ShowFrameRate) {
 			clock_gettime(CLOCK_MONOTONIC, &ts);
 			frame_timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 			last_frames_per_second[last_frames_per_second_index] = 1e9 / (double)(frame_timestamp - last_frame_timestamp);
@@ -557,7 +544,7 @@ void pNesX_Main() {
 #define CYCLES_PER_LINE 113
 #define HSYNC_CYCLES 28
 
-void handle_dmc_synchronization(uint32 cycles) {
+__attribute__ ((hot)) void handle_dmc_synchronization(uint32 cycles) {
 	startProfiling(1);
 	if (audio_sync_dmc_registers(cycles)) {
 		K6502_DoIRQ();
@@ -570,7 +557,7 @@ void handle_dmc_synchronization(uint32 cycles) {
 /*              pNesX_Cycle() : The loop of emulation                */
 /*                                                                   */
 /*===================================================================*/
-void pNesX_Cycle() {
+__attribute__ ((hot)) void pNesX_Cycle() {
 	SpriteJustHit = SPRITE_HIT_SENTINEL;
 
 	//Set the PPU adress to the buffered value
@@ -651,11 +638,10 @@ void pNesX_Cycle() {
 			} break;
 
 			case 241: {
-				K6502_Step(1);
+				K6502_Step(5);
 				pNesX_VSync();
 				mapper -> vsync();
-				K6502_DoNMI();
-				K6502_Step(cpu_cycles_to_emulate - 1);
+				K6502_Step(cpu_cycles_to_emulate - 5);
 				handle_dmc_synchronization(cpu_cycles_to_emulate);
 				mapper -> hsync();
 			} break;
@@ -668,18 +654,15 @@ void pNesX_Cycle() {
 		}
 	}
 
-	if (opt_SoundEnabled) {
+	if (options.opt_SoundEnabled) {
 		pNesX_DoSpu();
 	}
 	audio_sync_apu_registers();
 }
 
-void pNesX_VSync() {
+__attribute__ ((hot)) void pNesX_VSync() {
 	// Set a V-Blank flag
 	PPU_R2 |= R2_IN_VBLANK;
-
-	// Reset latch flag
-	//PPU_Latch_Flag = 0;
 
 	pNesX_PadState( &PAD1_Latch, &PAD2_Latch, &ExitCount );
 

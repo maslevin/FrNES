@@ -20,10 +20,10 @@ void Mapper_9_set_VROM_0000() {
 	bank_num <<= 2;
 	pNesX_DebugPrint("Map9: Setting Sprite PPU Banks to %u, %u, %u, %u\n", bank_num, bank_num + 1, bank_num + 2, bank_num + 3);
 
-	PPUBANK[0] = VROMPAGE( bank_num );
-	PPUBANK[1] = VROMPAGE( bank_num + 1 );
-	PPUBANK[2] = VROMPAGE( bank_num + 2 ); 
-	PPUBANK[3] = VROMPAGE( bank_num + 3 );
+	PPUBANK[0] = VROM_pages[bank_num];
+	PPUBANK[1] = VROM_pages[bank_num + 1];
+	PPUBANK[2] = VROM_pages[bank_num + 2];
+	PPUBANK[3] = VROM_pages[bank_num + 3];
 }
 
 void Mapper_9_set_VROM_1000() {
@@ -37,10 +37,10 @@ void Mapper_9_set_VROM_1000() {
 	bank_num <<= 2;
 	pNesX_DebugPrint("Map9: Setting Character PPU Banks to %u, %u, %u, %u\n", bank_num, bank_num + 1, bank_num + 2, bank_num + 3);	
 
-	PPUBANK[4] = VROMPAGE( bank_num );
-	PPUBANK[5] = VROMPAGE( bank_num + 1 );
-	PPUBANK[6] = VROMPAGE( bank_num + 2 ); 
-	PPUBANK[7] = VROMPAGE( bank_num + 3 );
+	PPUBANK[4] = VROM_pages[bank_num];
+	PPUBANK[5] = VROM_pages[bank_num + 1];
+	PPUBANK[6] = VROM_pages[bank_num + 2];
+	PPUBANK[7] = VROM_pages[bank_num + 3];
 }
 
 void Mapper_9_PPU_Latch_FDFE(uint16 wAddr) {
@@ -65,10 +65,10 @@ void Mapper_9_PPU_Latch_FDFE(uint16 wAddr) {
 /*-------------------------------------------------------------------*/
 void Mapper_9_Init() {
 	// set ROM bank pointers
-	ROMBANK0 = ROMPAGE(0);
-	ROMBANK1 = ROMLASTPAGE(2);
-	ROMBANK2 = ROMLASTPAGE(1);
-	ROMBANK3 = ROMLASTPAGE(0);
+	ROMBANK0 = ROM_pages[0];
+	ROMBANK1 = ROM_pages[ num_8k_ROM_pages - 3];
+	ROMBANK2 = ROM_pages[ num_8k_ROM_pages - 2];
+	ROMBANK3 = ROM_pages[ num_8k_ROM_pages - 1];
 
 	// clean out the registers
 	Map9_Regs[0] = 0;
@@ -83,9 +83,6 @@ void Mapper_9_Init() {
 
 	Mapper_9_set_VROM_0000();
 	Mapper_9_set_VROM_1000();
-
-	/* Set up wiring of the interrupt pin */
-	K6502_Set_Int_Wiring( 1, 1 ); 
 }
 
 void Mapper_9_Write(uint16 wAddr, unsigned char byData) {
@@ -93,7 +90,7 @@ void Mapper_9_Write(uint16 wAddr, unsigned char byData) {
 		case 0xA000: {
 			// 8K ROM bank at $8000
 			Map9_Regs[0] = byData & 0x0F;
-			ROMBANK0 = ROMPAGE(Map9_Regs[0]);
+			ROMBANK0 = ROM_pages[Map9_Regs[0]];
 			pNesX_DebugPrint("Map9: Setting ROMBANK0 to Page [%u]\n", Map9_Regs[0]);
 		} break;
 

@@ -151,8 +151,6 @@ unsigned char Y;
 
 unsigned char *pPC;
 unsigned char *pPC_Offset;
-uint16 PredPC;
-unsigned char *pPredPC;
 
 unsigned char *BankTable[ 8 ];
 uint16 BankMask[ 8 ] = { 0xf800, 0xf800, 0xf800, 0xe000, 0xe000, 0xe000, 0xe000, 0xe000 };
@@ -193,11 +191,6 @@ value_table_tag g_ROLTable[ 2 ][ 256 ];
 
 // A table for ROR
 value_table_tag g_RORTable[ 2 ][ 256 ];
-
-uint16 wA0;
-unsigned char byD0;
-unsigned char byD1;
-uint16 wD0;
 
 #ifdef DEBUG
 extern uint32 currentCRC32;
@@ -441,7 +434,7 @@ void K6502_Reset() {
 	BankTable[ 0 ] = RAM;
 	BankTable[ 1 ] = RAM;
 	BankTable[ 2 ] = RAM;
-	BankTable[ 3 ] = SRAM;
+	BankTable[ 3 ] = ROMBANK_WRAM;
 	BankTable[ 4 ] = ROMBANK0;
 	BankTable[ 5 ] = ROMBANK1;
 	BankTable[ 6 ] = ROMBANK2;
@@ -450,11 +443,10 @@ void K6502_Reset() {
 	// Reset Registers
 	PC = K6502_ReadW( VECTOR_RESET );
 	printf("Setting PC to Reset Vector [$%04x]\n", PC);
-	PredPC = 0;
 	REALPC;
-	SP = 0xFF;
+	SP = 0xFD;
 	A = X = Y = 0;
-	F = FLAG_Z | FLAG_R;
+	F = FLAG_I;
 
 	// Set up the state of the Interrupt pin.
 	NMI_State = NMI_Wiring;
@@ -479,7 +471,7 @@ void K6502_Set_Int_Wiring( unsigned char byNMI_Wiring, unsigned char byIRQ_Wirin
 	IRQ_Wiring = byIRQ_Wiring;
 }
 
-void K6502_DoNMI() {
+__attribute__ ((hot)) void K6502_DoNMI() {
 	if (NMI_State != NMI_Wiring) {
 		// NMI Interrupt
 		CLK( 7 );
@@ -497,7 +489,7 @@ void K6502_DoNMI() {
 	}
 }
 
-void K6502_DoIRQ() {
+__attribute__ ((hot)) void K6502_DoIRQ() {
 	if ( IRQ_State != IRQ_Wiring ) {
 		// IRQ Interrupt
 		// Execute IRQ if an I flag isn't being set
@@ -527,17 +519,18 @@ bool writeOnce = true;
 /*          Only the specified number of the clocks execute Op.      */
 /*                                                                   */
 /*===================================================================*/
-void K6502_Step( uint16 wClocks ) {
+__attribute__ ((hot)) void K6502_Step(uint16 wClocks) {
 	startProfiling(0);
-	wA0 = 0;
-	byD0 = 0;
-	byD1 = 0;
-	wD0 = 0;
+	uint32 wA0 = 0;
+	unsigned char byD0 = 0;
+	unsigned char byD1 = 0;
+	uint32 wD0 = 0;
 
 	unsigned char opcode;
 
 	// It has a loop until a constant clock passes
 	while ( g_wPassedClocks < wClocks ) {
+		K6502_DoNMI();
 		K6502_DoIRQ();
 
 		// Read an instruction
@@ -1360,11 +1353,11 @@ inline unsigned char K6502_ReadAbsY(){ uint16 wA0, wA1; wA0 = AA_ABS; pPC += 2; 
 inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = RAM[ *pPC ] | RAM[ (unsigned char)(*pPC + 1) ] << 8; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 //static inline unsigned char K6502_ReadIY(){ uint16 wA0, wA1; wA0 = *(uint16 *)&RAM[ *pPC ]; ++pPC; wA1 = wA0 + Y; CLK( ( wA0 & 0x0100 ) != ( wA1 & 0x0100 ) ); return K6502_Read( wA1 ); };
 
-void K6502_Burn(uint16 wClocks) {
+__attribute__ ((hot)) void K6502_Burn(uint16 wClocks) {
 	g_wPassedClocks += wClocks;
 	totalClocks += wClocks;
 }
 
-uint32 K6502_GetCycles() {
+__attribute__ ((hot)) uint32 K6502_GetCycles() {
 	return totalClocks;
 }

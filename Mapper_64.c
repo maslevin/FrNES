@@ -7,15 +7,13 @@ uint8 Mapper_64_irq_enabled;
 
 void Mapper_64_Init() {
 
-    ROMBANK0 = ROMLASTPAGE( 0 );
-	ROMBANK1 = ROMLASTPAGE( 0 );
-	ROMBANK2 = ROMLASTPAGE( 0 );
-	ROMBANK3 = ROMLASTPAGE( 0 );
+    ROMBANK0 = ROM_pages[num_8k_ROM_pages - 1];
+	ROMBANK1 = ROM_pages[num_8k_ROM_pages - 1];
+	ROMBANK2 = ROM_pages[num_8k_ROM_pages - 1];
+	ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
 
-    if ( NesHeader.byVRomSize > 0 ) {
-        for ( int nPage = 0; nPage < 8; ++nPage )
-            PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
-    }
+    for ( int nPage = 0; nPage < 8; ++nPage )
+        PPUBANK[ nPage ] = &VROM[ nPage * 0x400 ];
 
     Mapper_64_irq_latch = 0;
     Mapper_64_irq_counter = 0;
@@ -27,8 +25,6 @@ void Mapper_64_Init() {
 }
 
 void Mapper_64_Write( uint16 wAddr, unsigned char byData ) {
-    uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;   
-
     switch(wAddr & 0xF003) {
         case 0x8000: {
             Mapper_64_regs[0] = byData & 0x0F;
@@ -40,90 +36,90 @@ void Mapper_64_Write( uint16 wAddr, unsigned char byData ) {
             switch(Mapper_64_regs[0]) {
                 case 0x00: {
                     if(Mapper_64_regs[2]) {
-                        PPUBANK[4] = &VROM[ byData * 0x400 ];
-                        PPUBANK[5] = &VROM[ (byData + 1) * 0x400 ];
+                        PPUBANK[4] = VROM_pages[ byData ];
+                        PPUBANK[5] = VROM_pages[ byData + 1 ];
                     } else {
-                        PPUBANK[0] = &VROM[ byData * 0x400 ];
-                        PPUBANK[1] = &VROM[ (byData + 1) * 0x400 ];
+                        PPUBANK[0] = VROM_pages[ byData ];
+                        PPUBANK[1] = VROM_pages[ byData + 1 ];
                     }
                 } break;
 
                 case 0x01: {
                     if(Mapper_64_regs[2]) {
-                        PPUBANK[6] = &VROM[ byData * 0x400 ];
-                        PPUBANK[7] = &VROM[ (byData + 1) * 0x400 ];
+                        PPUBANK[6] = VROM_pages[ byData ];
+                        PPUBANK[7] = VROM_pages[ byData + 1 ];
                     } else {
-                        PPUBANK[2] = &VROM[ byData * 0x400 ];
-                        PPUBANK[3] = &VROM[ (byData + 1) * 0x400 ];
+                        PPUBANK[2] = VROM_pages[ byData ];
+                        PPUBANK[3] = VROM_pages[ byData + 1 ];
                     }
                 } break;
 
                 case 0x02: {
                     if(Mapper_64_regs[2]) {
-                        PPUBANK[0] = &VROM[ byData * 0x400 ];
+                        PPUBANK[0] = VROM_pages[ byData ];
                     } else {
-                        PPUBANK[4] = &VROM[ byData * 0x400 ];
+                        PPUBANK[4] = VROM_pages[ byData ];
                     }
                 }
                 break;
 
                 case 0x03: {
                     if(Mapper_64_regs[2]) {
-                        PPUBANK[1] = &VROM[ byData * 0x400 ];
+                        PPUBANK[1] = VROM_pages[ byData ];
                     } else {
-                        PPUBANK[5] = &VROM[ byData * 0x400 ];
+                        PPUBANK[5] = VROM_pages[ byData ];
                     }
                 }
                 break;
 
                 case 0x04: {
                     if(Mapper_64_regs[2]) {
-                        PPUBANK[2] = &VROM[ byData * 0x400 ];
+                        PPUBANK[2] = VROM_pages[ byData ];
                     } else {
-                        PPUBANK[6] = &VROM[ byData * 0x400 ];
+                        PPUBANK[6] = VROM_pages[ byData ];
                     }
                 }
                 break;
 
                 case 0x05: {
                     if(Mapper_64_regs[2]) {
-                        PPUBANK[3] = &VROM[ byData * 0x400 ];
+                        PPUBANK[3] = VROM_pages[ byData ];
                     } else {
-                        PPUBANK[7] = &VROM[ byData * 0x400 ];
+                        PPUBANK[7] = VROM_pages[ byData ];
                     }
                 }
                 break;
 
                 case 0x06: {
                     if(Mapper_64_regs[1]) {
-                        ROMBANK1 = ROMPAGE(byData % num_8k_ROM_banks);
+                        ROMBANK1 = ROM_pages[byData % num_8k_ROM_pages];
                     } else {
-                        ROMBANK0 = ROMPAGE(byData % num_8k_ROM_banks);
+                        ROMBANK0 = ROM_pages[byData % num_8k_ROM_pages];
                     }
                 }
                 break;
 
                 case 0x07: {
                     if(Mapper_64_regs[1]) {
-                        ROMBANK2 = ROMPAGE(byData % num_8k_ROM_banks);
+                        ROMBANK2 = ROM_pages[byData % num_8k_ROM_pages];
                     } else {
-                        ROMBANK1 = ROMPAGE(byData % num_8k_ROM_banks);
+                        ROMBANK1 = ROM_pages[byData % num_8k_ROM_pages];
                     }
                 } break;
 
                 case 0x08: {
-                    PPUBANK[1] = &VROM[ byData * 0x400 ];
+                    PPUBANK[1] = VROM_pages[ byData ];
                 } break;
 
                 case 0x09: {
-                    PPUBANK[3] = &VROM[ byData * 0x400 ];
+                    PPUBANK[3] = VROM_pages[ byData ];
                 } break;
 
                 case 0x0F: {
                     if(Mapper_64_regs[1]) {
-                        ROMBANK0 = ROMPAGE(byData % num_8k_ROM_banks);
+                        ROMBANK0 = ROM_pages[byData % num_8k_ROM_pages];
                     } else {
-                        ROMBANK2 = ROMPAGE(byData % num_8k_ROM_banks);
+                        ROMBANK2 = ROM_pages[byData % num_8k_ROM_pages];
                     }
                 } break;
             }

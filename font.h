@@ -31,13 +31,13 @@ typedef enum TextAlignmentMode {
 	RIGHT
 } TextAlignmentMode;
 
-typedef struct KerningPair {
+typedef struct  __attribute__ ((packed, aligned(4))) KerningPair {
     uint32 first;
     uint32 second;
     int16 amount;
 } KerningPair;
 
-typedef struct CharDescriptor {
+typedef struct  __attribute__ ((packed, aligned(4))) CharDescriptor {
 	uint32 id;
 	int16 srcX;
 	int16 srcY;
@@ -53,13 +53,13 @@ typedef struct CharDescriptor {
 	UT_hash_handle hh;
 } CharDescriptor;
 
-typedef struct FontPage {
+typedef struct  __attribute__ ((packed, aligned(4))) FontPage {
 	uint16 width;
 	uint16 height;	
 	pvr_ptr_t texture;
 } FontPage;
 
-typedef struct Font {
+typedef struct  __attribute__ ((packed, aligned(4))) Font {
 	uint16 fontHeight; // total height of the font
 	uint16 base;       // y of base line
 	uint16 scaleW;

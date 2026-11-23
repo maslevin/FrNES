@@ -11,9 +11,9 @@
 #include "Mapper.h"
 #include "pNesX_Sound_APU.h"
 #include "macros.h"
+#include "options.h"
 
-extern uint16 opt_SoundEnabled;
-extern Mapper* mapper;
+extern Mapper_t* mapper;
 
 // TODO: More optimizations possible here
 uint32* memcpy_offset( uint32* dest, uint32* src, int count, uint32 offset) {
@@ -77,6 +77,7 @@ inline unsigned char K6502_ReadZp( unsigned char byAddr ) {
 /*                                                                   */
 /*===================================================================*/
 unsigned char K6502_Read( uint16 wAddr ) {
+    static unsigned char ppuOpenBus = 0;
     unsigned char byRet;
 
     switch ( wAddr & 0xE000 ) {
@@ -84,24 +85,26 @@ unsigned char K6502_Read( uint16 wAddr ) {
           return RAM[ wAddr & 0x7ff ];
 
         case 0x2000: {
-            switch (wAddr & 0x10F) {
+            switch (wAddr & 0xF) {
                 /* PPU Status $2002*/              
                 case 0x2: 
                 case 0xA: {
                     // Set return value
-                    byRet = PPU_R2;
+                    byRet = ((PPU_R2 & 0xe0) | (ppuOpenBus & 0x1f));
 
-                    // Reset a V-Blank flag
+                    // Reset the V-Blank flag
                     PPU_R2 &= ~R2_IN_VBLANK;
 
                     // Reset address latch
                     PPU_Latch_Flag = 0;
 
+                    ppuOpenBus = byRet;
                     return byRet;
                 }
 
                 case 0x4: {
                     /* PPU Sprite RAM $2004 */
+                    ppuOpenBus = SPRRAM[PPU_R3];
                     return SPRRAM[PPU_R3];
                 }
 
@@ -116,6 +119,7 @@ unsigned char K6502_Read( uint16 wAddr ) {
                         if (addr >= 0x3f00) {
                             PPU_R7 = PPUBANK[ (addr - 0x1000) >> 10 ][ (addr - 0x1000) & 0x3ff ];
 //                            printf("Reading Palette Ram at [$%04X] Mirrored to [$%04X]\n", addr, 0x3F00 | (addr & 0x1F));
+                            ppuOpenBus = PPURAM[0x3F00 | (addr & 0x1F)];
                             return PPURAM[0x3F00 | (addr & 0x1F)];
                         }
 
@@ -124,6 +128,7 @@ unsigned char K6502_Read( uint16 wAddr ) {
                     }
 
                     byRet = PPU_R7;
+                    ppuOpenBus = byRet;
                     PPU_R7 = PPUBANK[ addr >> 10 ][ addr & 0x3ff ];
                     return byRet;
                 }
@@ -149,7 +154,7 @@ unsigned char K6502_Read( uint16 wAddr ) {
         } break;
 
         case 0x6000:  /* SRAM */
-            return SRAM[ wAddr & 0x1fff ];
+            return ROMBANK_WRAM[ wAddr & 0x1fff ];
 
         case 0x8000:  /* ROM BANK 0 */
             return ROMBANK0[ wAddr & 0x1fff ];
@@ -255,11 +260,12 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                     addr = ppuinfo.PPU_Addr;
                     ppuinfo.PPU_Addr += PPU_Increment;
 
-                    addr &= 0x3FFF;
+                    addr &= 0x3fff;
 
                     if (addr >= 0x3000) {
-                        if (addr >= 0x3F00) {
-                            byData &= 0x3F;
+                        if (addr >= 0x3f00) {
+                            byData &= 0x3f;
+                            addr &= 0x3f1f;
                             // For the universal background color, add the 0x40 bit to signify that rendered pixels using this value
                             // came from a background pixel - this will be important later when we merge background tiles with sprites
                             // during rendering, as these pixels will be transparent vs. sprites
@@ -271,10 +277,13 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             }
                             return;
                         }
-                        addr &= 0xEFFF;
-                    }
-
-                    PPUBANK[addr >> 10][addr & 0x3FF] = byData;
+                    } else {
+                        uint32_t bank = addr >> 10;
+                        // check for write protection of banks 0-8 to prevent accidental writes from corrupting VROM
+                        if ((bank >= 8) || !(PPUBANK_WRITE_PROTECT & (0x1 << bank))) {
+                            PPUBANK[bank][addr & 0x3FF] = byData;
+                        }
+                    }                  
                 } break;
             }
         } break;
@@ -289,7 +298,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                             break;
 
                         case 0x3:  /* SRAM */
-                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &SRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
+                            memcpy_offset( (uint32*) SPRRAM, (uint32*) &ROMBANK_WRAM[ ( (uint16)byData << 8 ) & 0x1fff ], SPRRAM_SIZE, PPU_R3 );
                             break;
 
                         case 0x4:  /* ROM BANK 0 */
@@ -320,7 +329,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                 } break;
 
                 default: {               
-                    if (wAddr >= 0x4017) {
+                    if (wAddr > 0x4017) {
                         mapper -> write (wAddr, byData);
 
                         // Set Bank Table
@@ -332,7 +341,7 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
                         REALPC;
                     } else {
                         APU_Reg[ wAddr & 0x1f ] = byData;
-                        if (opt_SoundEnabled) {
+                        if (options.opt_SoundEnabled) {
                             audio_write(wAddr, byData);
                         }
                     }
@@ -340,8 +349,10 @@ void K6502_Write( uint16 wAddr, unsigned char byData ) {
             }
         } break;
 
-        case 0x6000: { /* SRAM */
-            SRAM[ wAddr & 0x1fff ] = byData;
+        case 0x6000: { /* WRAM */
+            if (ROMBANK_WRAM != NULL) {
+                ROMBANK_WRAM[ wAddr & 0x1fff ] = byData;
+            }
         } break;
 
         case 0x8000:  /* ROM BANK 0 */

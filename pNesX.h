@@ -15,34 +15,26 @@
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 
-//#include "pNesX_Types.h"
 #include <kos.h>
-
-#include "Mapper.h"
+#include "kos_compat.h"
 
 /*-------------------------------------------------------------------*/
 /*  NES resources                                                    */
 /*-------------------------------------------------------------------*/
 
 #define RAM_SIZE     0x2000
-#define SRAM_SIZE    0x2000
 #define PPURAM_SIZE  0x4000
 #define SPRRAM_SIZE  256
 
 /* RAM */
 extern unsigned char RAM[];
 
-/* SRAM */
-extern unsigned char SRAM[];
-
-/* ROM */
-extern unsigned char *ROM;
-
 /* ROM BANK ( 8Kb * 4 ) */
-extern unsigned char *ROMBANK0;
-extern unsigned char *ROMBANK1;
-extern unsigned char *ROMBANK2;
-extern unsigned char *ROMBANK3;
+extern unsigned char* ROMBANK_WRAM;
+extern unsigned char* ROMBANK0;
+extern unsigned char* ROMBANK1;
+extern unsigned char* ROMBANK2;
+extern unsigned char* ROMBANK3;
 
 /*-------------------------------------------------------------------*/
 /*  PPU resources                                                    */
@@ -53,21 +45,16 @@ typedef struct __attribute__ ((packed, aligned(4))) PPU_Info_s {
 	uint32 PPU_Scanline;
 	uint32 PPU_SP_Height;
 	uint32 PPU_R0;
-} PPU_Info;
+} PPU_Info_t;
 
-extern PPU_Info ppuinfo;
+extern PPU_Info_t ppuinfo;
 
 /* PPU RAM */
 extern unsigned char PPURAM[];
 
-/* Cartridge VROM */
-extern unsigned char *VROM;
-
-/* Cartridge VRAM */
-extern unsigned char *VRAM;
-
 /* PPU BANK ( 1Kb * 16 ) */
 extern unsigned char *PPUBANK[];
+extern unsigned char PPUBANK_WRITE_PROTECT;
 
 #define FRAMEBUFFER_WIDTH 256
 #define FRAMEBUFFER_HEIGHT 256
@@ -202,41 +189,6 @@ extern uint32 PAD2_Bit;
 #define PAD_SYS_RIGHT  0x40
 
 #define PAD_PUSH(a,b)  ( ( (a) & (b) ) != 0 )
-
-/*-------------------------------------------------------------------*/
-/*  ROM information                                                  */
-/*-------------------------------------------------------------------*/
-
-/* .nes File Header */
-struct NesHeader_tag {
-  unsigned char byID[ 4 ];
-  unsigned char byRomSize;
-  unsigned char byVRomSize;
-  unsigned char byInfo1;
-  unsigned char byInfo2;
-  unsigned char byReserve[ 8 ];
-};
-
-/* .nes File Header */
-extern struct NesHeader_tag NesHeader;
-
-/* Mapper No. */
-struct Mapper;
-extern unsigned char MapperNo;
-
-/* Other */
-extern unsigned char ROM_Mirroring;
-extern unsigned char ROM_SRAM;
-extern unsigned char ROM_Trainer;
-extern unsigned char ROM_FourScr;
-
-struct Timestamp_tag {
-	unsigned char byData;
-	uint16 reg;
-	uint16 sample_write;
-};
-
-extern bool odd_cycle;
 
 /*-------------------------------------------------------------------*/
 /*  Function prototypes                                              */

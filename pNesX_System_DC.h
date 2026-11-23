@@ -6,14 +6,18 @@
 /*                                                                   */
 /*===================================================================*/
 
-#ifndef __PNESX_SYS_DC_H
-#define __PNESX_SYS_DC_H
+#ifndef __System_DC_H
+#define __System_DC_H
 
 #include <kos.h>
 
 #include "font.h"
 #include "TextWindow.h"
 #include "ROMLoad.h"
+#include "cartridge.h"
+
+#define APP_STRING "FrNES"
+#define APP_VERSION "0.7.1"
 
 //#define table for GUI
 #define PAGE_ROMSELECT          0
@@ -34,6 +38,25 @@
 #define MENUNUM_CREDITS         8
 #define MENUNUM_AUTOROM         99
 
+extern Font* font;
+
+extern Window_Style mystyle;
+extern Window_Data mydata;
+extern Window_Style helpstyle;
+extern Window_Data helpdata;
+
+extern int keyhit;
+extern int invalida;
+extern int xkeyhit;
+extern int disable_trigs;
+extern int menuscreen;
+extern int romselstatus;
+extern int disable_rom_interface;
+extern const int Max_Frameskip;
+
+extern char* Options_Keys[];
+extern const int Num_Options_Keys;
+
 #define RECORDING_MODE_DISABLED 0
 #define RECORDING_MODE_ENABLED 1
 #define RECORDING_MODE_PLAYBACK 2
@@ -45,8 +68,6 @@ extern bool log_enabled;
 extern char szRomPath[];
 extern uint32 RomSize;
 
-void Load_VMU_Options();
-void Save_VMU_Options();
 void initialize_controllers();
 void rescan_controllers();
 

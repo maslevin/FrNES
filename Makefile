@@ -4,12 +4,30 @@
 # (c)2000-2022 Matt Slevinsky
 #
 
-KOS_ROMDISK_DIR = romdisk
+ROMDISK_DIR = romdisk
 include $(KOS_BASE)/Makefile.rules
 
-SRCS = nes_apu.c nes_exsound.c aica_fw.c font.c input_recorder.c GUI_MainMenu.c GUI_Credits.c GUI_FileBrowser.c GUI_Help.c GUI_ControlPage.c GUI_GUIPage.c GUI_SystemPage.c GUI_VideoPage.c K6502_rw.c K6502.c pNesX_DrawLine_BG_C_Map9.c pNesX_DrawLine_BG_C.c pNesX_DrawLine_Spr_C_Map9.c pNesX_DrawLine_Spr_C.c Mapper.c Mapper_0.c Mapper_1.c Mapper_2.c Mapper_3.c Mapper_4.c Mapper_5.c Mapper_7.c Mapper_9.c Mapper_11.c Mapper_21.c Mapper_22.c Mapper_23.c Mapper_24.c Mapper_25.c Mapper_26.c Mapper_30.c Mapper_64.c Mapper_66.c Mapper_67.c Mapper_68.c Mapper_69.c Mapper_73.c Mapper_75.c Mapper_85.c Mapper_111.c Mapper_119.c pNesX_PPU_DC.c pNesX_Sound_APU.c pNesX_System_DC.c pNesX.c ROMLoad.c TextWindow.c profile.c
+# Own romdisk rules instead of KOS's (KOS_ROMDISK_DIR): its $(wildcard dir/*) dependency breaks on filenames with spaces
+# (the ROMs). The image is rebuilt whenever it's missing or any file under the dir is newer (find handles the spaces).
+romdisk.img: FORCE
+	@if [ ! -f $@ ] || [ -n "$$(find $(ROMDISK_DIR) -newer $@ -print -quit)" ]; then \
+		$(KOS_GENROMFS) -f romdisk.img -d $(ROMDISK_DIR) -v -x .gitignore -x .DS_Store -x Thumbs.db; \
+	fi
+
+romdisk.o: romdisk.img $(KOS_BASE)/utils/bin2c/bin2c
+	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk
+	kos-cc -o romdisk_tmp.o -c romdisk_tmp.c
+	$(KOS_CC) -o romdisk.o -r romdisk_tmp.o $(KOS_LIB_PATHS) -Wl,--whole-archive -lromdiskbase -nostdlib
+	rm -f romdisk_tmp.c romdisk_tmp.o
+
+FORCE:
+
+SRCS = cartridge.c nes_apu.c nes_exsound.c aica_fw.c font.c input_recorder.c options.c GUI_MainMenu.c GUI_Credits.c GUI_FileBrowser.c GUI_Help.c GUI_ControlPage.c GUI_GUIPage.c GUI_SystemPage.c GUI_VideoPage.c K6502_rw.c K6502.c pNesX_DrawLine_BG_C_Map9.c pNesX_DrawLine_BG_C.c pNesX_DrawLine_Spr_C_Map9.c pNesX_DrawLine_Spr_C.c Mapper.c Mapper_0.c Mapper_1.c Mapper_2.c Mapper_3.c Mapper_4.c Mapper_5.c Mapper_7.c Mapper_9.c Mapper_11.c Mapper_21.c Mapper_22.c Mapper_23.c Mapper_24.c Mapper_25.c Mapper_26.c Mapper_30.c Mapper_34.c Mapper_64.c Mapper_66.c Mapper_67.c Mapper_68.c Mapper_69.c Mapper_73.c Mapper_75.c Mapper_85.c Mapper_111.c Mapper_119.c pNesX_PPU_DC.c pNesX_Sound_APU.c pNesX_System_DC.c pNesX.c ROMLoad.c TextWindow.c profile.c
 
 ASMS = 
+
+# KOS no longer declares uint8/uint16/... or arch_real_exit; force-include the shim into every C file
+COMPATFLAGS = -include kos_compat.h
 OBJS = $(SRCS:.c=.o) $(ASMS:.s=.o) romdisk.o 
 PROJECTNAME = FrNES
 ELFFILE = $(PROJECTNAME).elf
@@ -53,7 +71,7 @@ $(DBGEXE): $(DBGOBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) $(KOS_START) -o $(DBGEXE) $^ -lpng -lz -lm -lbz2 -lkosfat $(KOS_LIBS)
 
 $(DBGDIR)/%.o: %.c | prepdbgdir
-	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
+	$(KOS_CC) -c $(COMPATFLAGS) $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
 $(DBGDIR)/%.o: %.s | prepdbgdir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(DBGCFLAGS) $(KOS_LDFLAGS) -o $@ $<
@@ -69,7 +87,7 @@ $(RELEXE): $(RELOBJS)
 	$(KOS_OBJCOPY) -R .stack -O binary $(RELEXE) $(RELBIN)
 
 $(RELDIR)/%.o: %.c | prepreldir
-	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
+	$(KOS_CC) -c $(COMPATFLAGS) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<
 
 $(RELDIR)/%.o: %.s | prepreldir
 	$(KOS_CC) -c $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $<

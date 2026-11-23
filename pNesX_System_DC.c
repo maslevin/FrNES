@@ -19,13 +19,15 @@
 /*                    - for Christmas                                */
 /*===================================================================*/
 
+#include <bzlib/bzlib.h>
+
 /*-------------------------------------------------------------------*/
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 #include "pNesX.h"
 #include "macros.h"
 
-#include <bzlib/bzlib.h>
+#include "options.h"
 
 #include "input_recorder.h"
 
@@ -57,7 +59,7 @@ int menuscreen;
 int invalida;
 int keyhit;
 int xkeyhit;
-int disable_trigs;
+int disable_trigs;   
 
 int romselstatus;
 int disable_rom_interface;
@@ -65,26 +67,10 @@ int disable_rom_interface;
 /*------------------------------------------------------------------*/
 /*  GUI Customization Variables                                     */
 /*------------------------------------------------------------------*/
-uint32 GUI_BGColor;
-uint32 GUI_TextColor;
-uint32 GUI_SelectedTextColor;
-uint32 GUI_InsideWindowColor;
-uint32 GUI_OutsideWindowColor;
-
 Window_Style mystyle;
 Window_Data mydata;
-
 Window_Style helpstyle;
 Window_Data helpdata;
-
-//Rom buffer area ... uses dynamic memory allocation
-unsigned char *ROM;
-unsigned char *VROM;
-unsigned char *VRAM;
-uint32 SRAM_Enabled;
-
-#define APP_STRING "FrNES"
-#define APP_VERSION "0.7.1"
 
 //Help for the Options screen
 char* Options_Keys[] = {
@@ -95,35 +81,13 @@ const int Num_Options_Keys = 2;
 
 const int Max_Frameskip = 5;
 
-const uint16 default_Sound = 1;
-const uint16 default_FrameSkip = 0;
-const bool default_Analog = false;
-const uint8 default_Select = DC_CONTROLLER_BUTTON_LTRIG;
-const uint8 default_AKey = DC_CONTROLLER_BUTTON_A;
-const uint8 default_BKey = DC_CONTROLLER_BUTTON_X;
-const uint16 default_Stretch = 1;
-const uint16 default_Filter = 1;
-const uint16 default_Profile = 1;
-const uint16 default_VMUPort = 0;
-const uint16 default_SRAM = 1;
-const uint16 default_AutoFrameSkip = 0;
-const uint16 default_ShowFrameRate = 0;
-const uint8 default_Clip_Left = 0;
-const uint8 default_Clip_Right = 0;
-const uint8 default_Clip_Top = 8;
-const uint8 default_Clip_Bottom = 8;
-
 Font* font;
-
-//The crc32 of the currently selected rom
-uint32 currentCRC32;
 
 /*-------------------------------------------------------------------*/
 /*  ROM image file information                                       */
 /*-------------------------------------------------------------------*/
 char szRomPath[ 256 ];
 char szSaveName[ 256 ];
-int nSRAM_SaveFlag;
 uint32 RomSize;
 bool AutoROM;
 
@@ -181,21 +145,21 @@ float texture_u2;
 float texture_v2;
 
 void calculateOutputScreenGeometry() {
-	polygon_x1 = 0.0f + (((float)opt_ClipVars[0] * 640.0f) / 256.0f);
-	polygon_y1 = 0.0f + (((float)opt_ClipVars[2] * 480.0f) / 240.0f);
-	polygon_x2 = 640.0f - (((float)opt_ClipVars[1] * 640.0f) / 256.0f);
-	polygon_y2 = 480.0f - (((float)opt_ClipVars[3] * 480.0f) / 240.0f);
-	texture_u1 = ((float)opt_ClipVars[0] * 4) / 1024.0f;
-	texture_v1 = (float)opt_ClipVars[2] / 256.0f;
-	texture_u2 = (float)(1024 - (opt_ClipVars[1] * 4)) / 1024.0f;
-	texture_v2 = (float)(240 - (opt_ClipVars[3])) / 256.0f;
+	polygon_x1 = 0.0f + (((float)options.opt_ClipVars[0] * 640.0f) / 256.0f);
+	polygon_y1 = 0.0f + (((float)options.opt_ClipVars[2] * 480.0f) / 240.0f);
+	polygon_x2 = 640.0f - (((float)options.opt_ClipVars[1] * 640.0f) / 256.0f);
+	polygon_y2 = 480.0f - (((float)options.opt_ClipVars[3] * 480.0f) / 240.0f);
+	texture_u1 = ((float)options.opt_ClipVars[0] * 4) / 1024.0f;
+	texture_v1 = (float)options.opt_ClipVars[2] / 256.0f;
+	texture_u2 = (float)(1024 - (options.opt_ClipVars[1] * 4)) / 1024.0f;
+	texture_v2 = (float)(240 - (options.opt_ClipVars[3])) / 256.0f;
 
-	if (!opt_Stretch) {
+	if (!options.opt_Stretch) {
 		// Multiply clipped pixels by two because the texture is 256x256 and we are displaying as 512x512 (roughly)
-		polygon_x1 = 64.0f + (float)(opt_ClipVars[0] * 2);
-		polygon_x2 = 576.0f - (float)(opt_ClipVars[1] * 2);
-		polygon_y1 = 0.0f + (float)(opt_ClipVars[2] * 2);
-		polygon_y2 = 480.0f - (float)(opt_ClipVars[3] * 2);
+		polygon_x1 = 64.0f + (float)(options.opt_ClipVars[0] * 2);
+		polygon_x2 = 576.0f - (float)(options.opt_ClipVars[1] * 2);
+		polygon_y1 = 0.0f + (float)(options.opt_ClipVars[2] * 2);
+		polygon_y2 = 480.0f - (float)(options.opt_ClipVars[3] * 2);
 	}	
 }
 
@@ -245,7 +209,7 @@ void draw_screen() {
 		my_c_vertex.x = 0.0f;
 		my_c_vertex.y = 480.0f;
 		my_c_vertex.z = 25.0f;
-		my_c_vertex.argb = GUI_BGColor;
+		my_c_vertex.argb = options.GUI_BGColor;
 		my_c_vertex.oargb = 0;
 		pvr_prim(&my_c_vertex, sizeof(my_c_vertex));
 
@@ -286,7 +250,7 @@ void draw_screen() {
 
 int LoadSRAM() {
 	int loadSRAM_success = -1;
-	if (opt_SRAM == 1) {
+	if (options.opt_SRAM == 1) {
 		printf("VMU: Attempting to Load SRAM from attached VMUs\n");
 		for (int i = 0; i < 8; i++) {
 			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -302,10 +266,10 @@ int LoadSRAM() {
 			if (vmufs_read(vmu, sramFilename, (void**)&readBuffer, &readBufferSize) == 0) {
 				vmu_pkg_t package;
 				if (vmu_pkg_parse(readBuffer, readBufferSize, &package) == 0) {
-					printf("VMU: Found SRAM Save File from VMU [%i]\n", i);
+					printf("VMU: Found SRAM Save File on VMU [%i]\n", i);
 
-					unsigned int destLength = 0x2000;
-					int result = BZ2_bzBuffToBuffDecompress((char*)SRAM, &destLength, (char*)package.data, readBufferSize - sizeof(vmu_pkg_t), 0, 0);
+					unsigned int destLength = num_8k_NVRAM_pages * 0x2000;
+					int result = BZ2_bzBuffToBuffDecompress((char*)WRAM, &destLength, (char*)package.data, readBufferSize - sizeof(vmu_pkg_t), 0, 0);
 					if (result != BZ_OK) {
 						printf("VMU: bz2 decompress error [%i]\n", result);
 					}
@@ -328,8 +292,11 @@ int LoadSRAM() {
 }
 
 int SaveSRAM() {
+	unsigned int compressedLength = (num_8k_NVRAM_pages * 0x2000) + 0x1200; // compressed length originally needs extra space for buffering
+	char* compressedBuffer = malloc(compressedLength);	
+
 	int saveSRAM_success = -1;
-	if (opt_SRAM == 1) {
+	if (options.opt_SRAM == 1) {
 		for (int i = 0; i < numVMUs; i++) {
 			printf("VMU: Attempting to Save SRAM to VMU [%i]\n", i);
 			maple_device_t* vmu = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -342,12 +309,10 @@ int SaveSRAM() {
 			snprintf(sramFilename, 13, "%08lx", currentCRC32);
 
 			printf("VMU: Compressing SRAM buffer\n");
-			unsigned int compressedLength = 0x2200 + 0x1000;
-			const unsigned char compressedBuffer[compressedLength];
-			int result = BZ2_bzBuffToBuffCompress((char*)compressedBuffer, &compressedLength, (char*)SRAM, 0x2000, 9, 0, 0);
+			int result = BZ2_bzBuffToBuffCompress(compressedBuffer, &compressedLength, (char*)WRAM, num_8k_NVRAM_pages * 0x2000, 5, 4, 30);
 
 			if (result != BZ_OK) {
-				printf("VMU: bz2 Compression Failed [%i]\n", result);
+				printf("VMU: bz2 Compression Failed With Error Code [%i]\n", result);
 				draw_VMU_icon(vmu, vmu_screen_error);
 				break;
 			} else {
@@ -391,7 +356,7 @@ int SaveSRAM() {
 			package.data_len = compressedLength;
 			package.icon_data = NULL;
 			package.eyecatch_data = NULL;
-			package.data = compressedBuffer;	
+			package.data = (uint8*)compressedBuffer;	
 
 			printf("VMU: Compiling Package\n");
 			unsigned char* packageBuffer;
@@ -414,42 +379,9 @@ int SaveSRAM() {
 			}
 		}
 	}
+
+	free(compressedBuffer);		
 	return saveSRAM_success;
-}
-
-void Save_VMU_Options()
-{
-	//Menu Screen = Save Options
-	/*	
-	if (*opt_VMUPort != -1)
-	{
-		vmu_icon_draw(vmu_screen_saving, VMUs[*opt_VMUPort]);
-		switch (save_user_settings(VMUs[*opt_VMUPort]))
-		{
-			case -1:
-				vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-				break;
-			default:
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-				break;
-		}
-	}
-	*/
-}
-
-void Load_VMU_Options()
-{
-	//Menu Screen = Load Options
-	/*
-	if (*opt_VMUPort != -1)
-	{
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		if (load_user_settings(VMUs[*opt_VMUPort]) == -1)
-			vmu_icon_draw(vmu_screen_error, VMUs[*opt_VMUPort]);
-		else
-			vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-	}
-	*/
 }
 
 pvr_init_params_t pvr_params =  {
@@ -487,6 +419,7 @@ void loadPalette(char* path) {
 		}
 
 /*
+		// Keep this commented out - this is just for creating another default palette though if you want to in the future
 		printf("const uint16 NesPalette[] = {\n");
 		for (uint i = 0; i < 64; i++) {
 			printf("0x%04X,", NesPalette[i]);
@@ -503,7 +436,7 @@ void loadPalette(char* path) {
 	}
 
 	if (errored_out) {
-		NesPalette = DEFAULT_NES_PALETTE;
+		NesPalette = (uint16*)DEFAULT_NES_PALETTE;
 	}
 }
 
@@ -526,6 +459,37 @@ void initVQTextures() {
 		printf("Allocated frame [%lu] at address [0x%8lX]\n", i, (uint32)WorkFrames[i]);
 		pvr_txr_load(codebook, WorkFrames[i] -> codebook, 2048);
 		printf("Updated texture with NES Palette\n");
+	}
+}
+
+void initializeUserOptions() {
+	// If we weren't able to load any FrNES Options from any of the connected VMUs set the application defaults
+	if (!load_options_from_VMU()) {
+		options.GUI_BGColor = 0xFF0080FF;
+		options.GUI_TextColor = 0xFF000000;
+		options.GUI_SelectedTextColor = 0xFF00FF00;
+		options.GUI_InsideWindowColor = 0xFF00803f;
+		options.GUI_OutsideWindowColor = 0xFFFFFFFF;
+
+		for (uint8 i = 0; i < 4; i++) {
+			options.controllerSettings[i].analogEnabled = DEFAULT_ANALOG;
+			options.controllerSettings[i].aKey = DEFAULT_AKEY;
+			options.controllerSettings[i].bKey = DEFAULT_BKEY;
+			options.controllerSettings[i].selectKey = DEFAULT_SELECT;
+		}
+
+		options.opt_Stretch = DEFAULT_STRETCH;
+		options.opt_Filter = DEFAULT_FILTER;
+		options.opt_ClipVars[0] = DEFAULT_CLIP_LEFT;
+		options.opt_ClipVars[1] = DEFAULT_CLIP_RIGHT;
+		options.opt_ClipVars[2] = DEFAULT_CLIP_TOP;
+		options.opt_ClipVars[3] = DEFAULT_CLIP_BOTTOM;
+		
+		options.opt_SoundEnabled = DEFAULT_SOUND;
+		options.opt_FrameSkip = DEFAULT_FRAMESKIP;
+		options.opt_AutoFrameSkip = DEFAULT_AUTOFRAMESKIP;
+		options.opt_ShowFrameRate = DEFAULT_SHOWFRAMERATE;
+		options.opt_SRAM = DEFAULT_SRAM;
 	}
 }
 
@@ -592,20 +556,6 @@ void launchEmulator() {
 		//Stay in Emulator During Operation
 		pNesX_Main();
 
-		//Clean Up Afterwards
-		free (ROM);
-		ROM = NULL;
-
-		//There are some games that don't have VROM
-		if (VROM != NULL) {
-			free (VROM);
-			VROM = NULL;
-		} 
-		if (VRAM != NULL) {
-			free (VRAM);
-			VRAM = NULL;
-		}
-
 		//Save Its SaveRAM
 		if (SRAM_Enabled) {
 			SaveSRAM();
@@ -649,74 +599,19 @@ int main() {
 	printf("Initializing Controllers and VMUs\n");	
 	initialize_controllers();
 
-	GUI_BGColor = 0xFF0080FF;
-	GUI_TextColor = 0xFF000000;
-	GUI_SelectedTextColor = 0xFF00FF00;
-	GUI_InsideWindowColor = 0xFF00803f;
-	GUI_OutsideWindowColor = 0xFFFFFFFF;
+	printf("Initializing VMUs\n");
+	for (uint8 i = 0; i < numVMUs; i++) {
+		draw_VMU_icon(VMUs[i], vmu_screen_normal);
+	}
+
+	printf("Initializing User Options\n");
+	initializeUserOptions();
 
 	romselstatus = 0;
 	invalida = 0;
 	xkeyhit = 0;
 	disable_trigs = 0;
 	disable_rom_interface = 0;
-
-	for (uint8 i = 0; i < 4; i++) {
-		controllerSettings[i].analogEnabled = default_Analog;
-		controllerSettings[i].aKey = default_AKey;
-		controllerSettings[i].bKey = default_BKey;
-		controllerSettings[i].selectKey = default_Select;
-	}
-
-	opt_Stretch = default_Stretch;
-	opt_Filter = default_Filter;
-	opt_ClipVars[0] = default_Clip_Left;
-	opt_ClipVars[1] = default_Clip_Right;
-	opt_ClipVars[2] = default_Clip_Top;
-	opt_ClipVars[3] = default_Clip_Bottom;
-	
-	opt_SoundEnabled = default_Sound;
-	opt_FrameSkip = default_FrameSkip;
-	opt_AutoFrameSkip = default_AutoFrameSkip;
-	opt_ShowFrameRate = default_ShowFrameRate;
-	opt_SRAM = default_SRAM;
-
-	printf("Initializing VMUs\n");
-	for (uint8 i = 0; i < numVMUs; i++) {
-		draw_VMU_icon(VMUs[i], vmu_screen_normal);
-	}
-
-	//If the default Memory card is present
-	/*
-	if (VMUs[default_VMUPort] != 0)
-	{
-		*opt_VMUPort = default_VMUPort;
-		//Try to load settings if possible
-		vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-		load_user_settings(VMUs[*opt_VMUPort]);
-		vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-	}
-	else
-	//Otherwise Search for a Memcard
-	{
-		//Choose the first one available
-		for (i = 0; i < 8; i++)
-		{
-			if (VMUs[i] != 0)
-			{
-				*opt_VMUPort = i;
-				//Try to load settings if possible
-				vmu_icon_draw(vmu_screen_loading, VMUs[*opt_VMUPort]);
-				load_user_settings(VMUs[*opt_VMUPort]);
-				vmu_icon_draw(vmu_screen_normal, VMUs[*opt_VMUPort]);
-				break;
-			}
-			else
-				//If one wasn't found, turn off memcard support
-				*opt_VMUPort = -1;
-		}
-	}
-	*/
 
 	printf("Checking for autoROM\n");
 	AutoROM = checkForAutoROM();
@@ -725,7 +620,6 @@ int main() {
 	} else {
 		menuscreen = MENUNUM_MAIN;
 	}
-
 
 	printf("Setting up main menu\n");
 	setup_main_menu_screen();
@@ -822,116 +716,7 @@ int main() {
 	return 0;
 }
 
-int pNesX_ReadRom (const char *filepath, uint32 filesize) {
-	unsigned char* ROM_Buffer;
-	int i;
-	int ROM_offset;
-	int VROM_offset;
-
-	ROM_Buffer = malloc(filesize);
-
-	//MS - checksum calculation loads the rom currently, we should decouple that
-	currentCRC32 = ReturnChecksum(filepath, filesize, ROM_Buffer);
-
-	//Attempt to read an iNES header
-	memcpy(&NesHeader, ROM_Buffer, sizeof(NesHeader));
-
-	//Check if bytes 0-3 are NES header bytes
-	int returnValue = -1;
-	if ((NesHeader.byID[0] == 0x4E) && (NesHeader.byID[1] == 0x45) && (NesHeader.byID[2] == 0x53) && (NesHeader.byID[3] == 0x1A)) {
-		if ((NesHeader.byInfo2 & 0x0C) == 0x08) {
-			printf("ReadRom: NES 2.0 Header Detected\n");
-		} else {
-			printf("ReadRom: iNES Header Detected\n");			
-		}
-
-		MapperNo = ((NesHeader.byInfo1 & 0xF0) >> 4) | (NesHeader.byInfo2 & 0xF0);
-		printf("ReadRom: Mapper Number [%i]\n", MapperNo);
-		printf("ReadRom: PRG ROM [%i] * 16kB banks\n", NesHeader.byRomSize);
-
-		// Handle VRAM - sometimes we will just use the VROM variable for itgit 
-		// but other times we'll need somewhere else to store aux. bank switched VRAM
-		if (NesHeader.byVRomSize == 0) {
-			switch (MapperNo) {
-				case 30: {
-					printf("ReadRom: Mapper 30 Defaulting to 4 * 8kB CHR RAM\n");
-					VROM = malloc(4 * 0x2000);	
-				} break;
-
-				case 111: {
-					printf("ReadRom: Mapper 111 Defaulting to 2 * 8kB CHR RAM\n");
-					VROM = malloc(2 * 0x2000);	
-				} break;
-
-				default: {
-					printf("ReadRom: Implied 8kB CHR RAM\n");
-					// Implied 8kB Chr Ram will be mapped into VROM since it usually won't be bankswapped by a mapper
-					VROM = malloc(0x2000);
-				} break;
-			}
-		} else {
-			switch (MapperNo) {
-				case 119: {
-					printf("ReadRom: Mapper 119 Allocating Auxilliary 8kB CHR RAM\n");
-					VRAM = malloc(0x2000);
-				} // Intentional Fallthrough - mapper 119 uses VROM and VRAM
-
-				default: {
-					printf("ReadRom: CHR ROM [%i] * 8kB banks\n", NesHeader.byVRomSize);					
-					VROM = malloc (NesHeader.byVRomSize * 0x2000);
-				} break;
-			}
-		}
-
-		printf("ReadRom: Nametable Arrangement [%s]\n", (NesHeader.byInfo1 & 1) ? "horizontal mirrored" : "vertically mirrored");			
-		printf("ReadRom: Battery Backed RAM [%s]\n", (NesHeader.byInfo1 & 2) ? "present" : "not present");
-		printf("ReadRom: Trainer Present [%s]\n", (NesHeader.byInfo1 & 4) ? "true" : "false");
-		printf("ReadRom: Alternative Nametable Layout [%s]\n", (NesHeader.byInfo1 & 8) ? "present" : "not present");
-		if (NesHeader.byInfo2 & 0x01) {
-			printf("ReadRom: VS Unisystem ROM detected");
-		}
-		if (NesHeader.byInfo2 & 0x02) {
-			printf("ReadRom: PlayChoice-10 ROM detected");
-		}
-		if (NesHeader.byReserve[0] != 0) {
-			printf("ReadRom: PRG RAM [%i] * 8kB banks\n", NesHeader.byReserve[0]);
-		}
-
-		if (NesHeader.byInfo1 & 2) {
-			SRAM_Enabled = 1;
-		} else {
-			SRAM_Enabled = 0;
-		}
-
-		i = 16;
-		//Read past the trainer
-		if (NesHeader.byInfo1 & 4) {
-			i += 512;
-		}
-
-		ROM_offset = i;
-		ROM = malloc (NesHeader.byRomSize * 0x4000);
-		for (; i < (ROM_offset + (NesHeader.byRomSize * 0x4000)); i++)
-			ROM[i - ROM_offset] = ROM_Buffer[i];
-
-		if (NesHeader.byVRomSize > 0) {
-			VROM_offset = i;
-			for (; i < (VROM_offset + (NesHeader.byVRomSize * 0x2000)); i++)
-				VROM[i - VROM_offset] = ROM_Buffer[i];
-		}
-
-		//Load success
-		returnValue = 0;
-	} else {
-		printf("ReadRom: NOT AN NES FILE - exiting");
-	}
-
-	free(ROM_Buffer);
-
-	return returnValue;
-}
-
-void pNesX_LoadFrame() {
+__attribute__ ((hot)) void pNesX_LoadFrame() {
 	startProfiling(3);
 
 	pvr_poly_hdr_t my_pheader;
@@ -945,7 +730,7 @@ void pNesX_LoadFrame() {
 	pvr_poly_cxt_col(&my_cxt, PVR_LIST_OP_POLY);
 
 	uint32 filter = PVR_FILTER_BILINEAR;
-	if (!opt_Filter) {
+	if (!options.opt_Filter) {
 		filter = PVR_FILTER_NONE;
 	}
 
@@ -980,7 +765,7 @@ void pNesX_LoadFrame() {
 
 	pvr_list_finish();
 
-	if (opt_ShowFrameRate) {
+	if (options.opt_ShowFrameRate) {
 		pvr_list_begin(PVR_LIST_TR_POLY);
 
 		char fps[10];
@@ -1010,7 +795,7 @@ void pNesX_LoadFrame() {
 	endProfiling(3);
 }
 
-void handleButton(uint32* controllerBitflags, 
+__attribute__ ((hot)) void handleButton(uint32* controllerBitflags, 
 	uint8 controllerBitflagIndex, 
 	uint8 controller, 
 	cont_state_t* controller_state,
@@ -1084,10 +869,10 @@ bool playbackRecording(uint32* controllerBitflags) {
 	return !((currentSample == numSamples) && (activityDone));
 }
 
-void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerIndex) {
+__attribute__ ((hot)) void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerIndex) {
 	//Start first
 	handleButton(bitflags, CONTROLLER_BUTTON_START, controllerIndex, state, MODE_BUTTONS, CONT_START);
-	switch (controllerSettings[controllerIndex].aKey) {
+	switch (options.controllerSettings[controllerIndex].aKey) {
 		case 0:
 			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_BUTTONS, CONT_A);
 			break;
@@ -1104,7 +889,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 			handleButton(bitflags, CONTROLLER_BUTTON_A, controllerIndex, state, MODE_LTRIGGER, 0);
 			break;
 	}
-	switch (controllerSettings[controllerIndex].bKey) {
+	switch (options.controllerSettings[controllerIndex].bKey) {
 		case 0:
 			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_BUTTONS, CONT_A);
 			break;
@@ -1121,7 +906,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 			handleButton(bitflags, CONTROLLER_BUTTON_B, controllerIndex, state, MODE_LTRIGGER, 0);
 			break;
 	}
-	switch (controllerSettings[controllerIndex].selectKey) {
+	switch (options.controllerSettings[controllerIndex].selectKey) {
 		case 0:
 			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_BUTTONS, CONT_A);
 			break;
@@ -1138,7 +923,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 			handleButton(bitflags, CONTROLLER_BUTTON_SELECT, controllerIndex, state, MODE_LTRIGGER, 0);
 			break;
 	}
-	if (controllerSettings[controllerIndex].analogEnabled) {
+	if (options.controllerSettings[controllerIndex].analogEnabled) {
 		handleButton(bitflags, CONTROLLER_BUTTON_UP, controllerIndex, state, MODE_ANALOG_Y_UP, 0);
 		handleButton(bitflags, CONTROLLER_BUTTON_DOWN, controllerIndex, state, MODE_ANALOG_Y_DOWN, 0);
 		handleButton(bitflags, CONTROLLER_BUTTON_LEFT, controllerIndex, state, MODE_ANALOG_X_LEFT, 0);
@@ -1151,7 +936,7 @@ void handleController(cont_state_t* state, uint32* bitflags, uint8 controllerInd
 	}
 }
 
-void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {	
+__attribute__ ((hot)) void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {	
 	maple_device_t* my_controller;
 	cont_state_t* my_state = NULL;
 
@@ -1189,7 +974,8 @@ void pNesX_PadState(uint32 *pdwPad1, uint32 *pdwPad2, uint32* ExitCount) {
 
 			// Increment Exit Counter if Required
 			if ((my_state != NULL) && (numControllers > 0)) {
-				if ((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) {
+				if (((my_state -> rtrig > 200) && (my_state -> ltrig != 0)) || 
+				    ((my_state -> buttons & CONT_C) && (my_state -> buttons & CONT_Z))) {
 					(*ExitCount)++;
 				} else {
 					*ExitCount = 0;

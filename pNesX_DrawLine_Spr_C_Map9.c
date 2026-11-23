@@ -21,7 +21,7 @@ extern unsigned char SpritesToDraw[8];
 // Whether we overflowed sprites this scanline
 extern bool OverflowedSprites;
 
-void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
+__attribute__ ((hot)) void pNesX_Map9DrawLine_Spr_C(unsigned char* scanline_buffer) {
 	unsigned char spriteBuffer[256];
 
 	int nX;

@@ -27,9 +27,9 @@ char* Rom_Keys[] = {
 const int Num_Rom_Keys = 6;
 
 //ROM data storage
-const int MAX_ROMS = 2048;
-RomInfo_t myRomInfos[2048];
-char* myRomStrings[2048];
+#define MAX_ROMS 1024
+RomInfo_t myRomInfos[MAX_ROMS];
+char* myRomStrings[MAX_ROMS];
 
 #define FILEBROWSER_ROOT_MENU 0
 #define FILEBROWSER_START_LISTING_DIRECTORY 1
@@ -140,15 +140,15 @@ void setup_file_browser_screen() {
 	mystyle.Header_Text_Scale = 1.0f;
 	mystyle.Text_Scale = 0.50f;
 	mystyle.Border_Thickness = 5.0f;
-	mystyle.Border_Color = GUI_OutsideWindowColor; 
-	mystyle.Inside_Color = GUI_InsideWindowColor;
+	mystyle.Border_Color = options.GUI_OutsideWindowColor; 
+	mystyle.Inside_Color = options.GUI_InsideWindowColor;
 	mystyle.Left_Margin = 15;
 	mystyle.Line_Spacing = 0.0f;	
-	mystyle.Header_Text_Color = GUI_TextColor;
-	mystyle.Text_Color = GUI_TextColor;
+	mystyle.Header_Text_Color = options.GUI_TextColor;
+	mystyle.Text_Color = options.GUI_TextColor;
 	mystyle.Max_Items = (mydata.height - (mydata.font -> fontHeight * mystyle.Header_Text_Scale) - (2 * CORNER_RADIUS)) / ((float)mydata.font -> fontHeight * mystyle.Text_Scale);
-	mystyle.Selected_Text_Color = GUI_SelectedTextColor;
-	mystyle.Selected_Background_Color = GUI_SelectedTextColor;
+	mystyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	mystyle.Selected_Background_Color = options.GUI_SelectedTextColor;
 
 	//Set Up Window Data Features
 	helpdata.x = 32.0f;
@@ -165,15 +165,15 @@ void setup_file_browser_screen() {
 	//Set Up Window Style Features
 	helpstyle.Header_Text_Scale = 0.75f;
 	helpstyle.Border_Thickness = 5.0f;
-	helpstyle.Border_Color = GUI_OutsideWindowColor;
-	helpstyle.Inside_Color = GUI_InsideWindowColor;
+	helpstyle.Border_Color = options.GUI_OutsideWindowColor;
+	helpstyle.Inside_Color = options.GUI_InsideWindowColor;
 	helpstyle.Left_Margin = 15;
 	helpstyle.Line_Spacing = 0.0f;	
-	helpstyle.Header_Text_Color = GUI_TextColor;
-	helpstyle.Text_Color = GUI_TextColor;
+	helpstyle.Header_Text_Color = options.GUI_TextColor;
+	helpstyle.Text_Color = options.GUI_TextColor;
 	helpstyle.Max_Items = 10;
-	helpstyle.Selected_Text_Color = GUI_SelectedTextColor;
-	helpstyle.Selected_Background_Color = GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
+	helpstyle.Selected_Text_Color = options.GUI_SelectedTextColor;
+	helpstyle.Selected_Background_Color = options.GUI_SelectedTextColor;//MakeRGB(31, 18, 8);
 }
 
 void Return_To_Main_Menu() {
@@ -229,7 +229,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 	}
 	
 	//Page Down
-	if ((my_state -> rtrig > 240) && (disable_trigs == 0)) {
+	if (((my_state -> rtrig > 240) && (disable_trigs == 0)) || (my_state -> buttons & CONT_C)) {
 		if ((mydata.Highlighted_Index + mystyle.Max_Items) < (mydata.Num_Strings - 1)) {
 			mydata.Highlighted_Index += mystyle.Max_Items;
 			mydata.Top_Index += mystyle.Max_Items;
@@ -242,13 +242,13 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 	}
 
 	//Page Up
-	if (((my_state -> ltrig > 240) && (mydata.Highlighted_Index > (mystyle.Max_Items))) && (disable_trigs == 0)) {
+	if ((((my_state -> ltrig > 240) || (my_state -> buttons & CONT_Z)) && (mydata.Highlighted_Index > (mystyle.Max_Items))) && (disable_trigs == 0)) {
 		mydata.Highlighted_Index -= mystyle.Max_Items;
 		if (mydata.Top_Index - mystyle.Max_Items >= 0)
 			mydata.Top_Index -= mystyle.Max_Items;
 		else
 			mydata.Top_Index = 0;
-	} else if (((my_state -> ltrig > 240) && (mydata.Highlighted_Index <= (mystyle.Max_Items))) && (disable_trigs == 0)) {
+	} else if ((((my_state -> ltrig > 240) || (my_state -> buttons & CONT_Z)) && (mydata.Highlighted_Index <= (mystyle.Max_Items))) && (disable_trigs == 0)) {
 		mydata.Highlighted_Index = 0;
 		mydata.Top_Index = 0;
 	};
@@ -341,7 +341,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 	switch (romselstatus) {
 		case FILEBROWSER_START_LISTING_DIRECTORY:
 			file_search_completed = false;
-			printf("starting search of path [%s]\n", current_directory_path);
+			// printf("starting search of path [%s]\n", current_directory_path);
 			InitializeFileInfos(myRomInfos, myRomStrings, MAX_ROMS);
 			mydata.Data_Strings = myRomStrings;
 			mydata.Num_Strings = ReturnCurrentNumRoms();
@@ -356,7 +356,7 @@ void Handle_File_Browser_Interface(cont_state_t* my_state) {
 			}			
 			break;
 		case FILEBROWSER_CONTINUE_LISTING_DIRECTORY:
-			if (LoadNextFileSimple(myRomInfos, current_directory_path) != 1) {
+			if ((ReturnCurrentNumRoms() >= MAX_ROMS) || LoadNextFileSimple(myRomInfos, current_directory_path) != 1) {
 				romselstatus = FILEBROWSER_DIRECTORY_LISTING_COMPLETE;
 			} else {
 				mydata.Num_Strings = ReturnCurrentNumRoms();

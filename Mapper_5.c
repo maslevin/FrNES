@@ -9,7 +9,6 @@
 /*===================================================================*/
 
 uint32 Mapper_5_wb[8];
-unsigned char Mapper_5_wram[8 * 0x2000];
 unsigned char Mapper_5_wram_size;
 unsigned char Mapper_5_chr_reg[8][2];
 unsigned char Mapper_5_irq_enabled;
@@ -41,16 +40,16 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 		pNesX_DebugPrint("Setting ROM Bank [%u] to WRAM Bank [%u]\n", page, bank);
         switch (page) {
             case 4:
-                ROMBANK0 = &Mapper_5_wram[(bank * 0x2000)]; 
+                ROMBANK0 = WRAM_pages[bank];
                 break;
             case 5:
-                ROMBANK1 = &Mapper_5_wram[(bank * 0x2000)]; 
+                ROMBANK1 = WRAM_pages[bank];
                 break;            
             case 6:
-                ROMBANK2 = &Mapper_5_wram[(bank * 0x2000)]; 
+                ROMBANK2 = WRAM_pages[bank];
                 break;            
             case 7:
-                ROMBANK3 = &Mapper_5_wram[(bank * 0x2000)]; 
+                ROMBANK3 = WRAM_pages[bank];
                 break;
         }
 	}
@@ -58,69 +57,68 @@ void Mapper_5_Set_WRAM_Bank(unsigned char page, unsigned char bank) {
 
 void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 	//printf("Map5_set_CPU_bank: %u, %u\n", page, bank);
-	uint32 num_8k_ROM_banks = NesHeader.byRomSize * 2;
 	if (bank & 0x80) {
 		switch (Mapper_5_prg_size) {
 			case 0:
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANKS 0-3 to [%u-%u]\n",(bank & 0x7C) % num_8k_ROM_banks,((bank & 0x7C)+3) % num_8k_ROM_banks);
-					ROMBANK0 = ROMPAGE((bank & 0x7C) % num_8k_ROM_banks);
-					ROMBANK1 = ROMPAGE(((bank & 0x7C)+1) % num_8k_ROM_banks);
-					ROMBANK2 = ROMPAGE(((bank & 0x7C)+2) % num_8k_ROM_banks);
-					ROMBANK3 = ROMPAGE(((bank & 0x7C)+3) % num_8k_ROM_banks);
+					ROMBANK0 = ROM_pages[(bank & 0x7C)];
+					ROMBANK1 = ROM_pages[(bank & 0x7C) + 1];
+					ROMBANK2 = ROM_pages[(bank & 0x7C) + 2];
+					ROMBANK3 = ROM_pages[(bank & 0x7C) + 3];
 					Mapper_5_wb[4] = Mapper_5_wb[5] = Mapper_5_wb[6] = 8;
 				}
 				break;
 			case 1:
 				if (page == 5) {
 					pNesX_DebugPrint("Setting ROMBANKS 0-1 to [%u-%u]\n",(bank & 0x7E) % num_8k_ROM_banks,((bank & 0x7E)+1) % num_8k_ROM_banks);
-					ROMBANK0 = ROMPAGE((bank & 0x7E) % num_8k_ROM_banks);
-					ROMBANK1 = ROMPAGE(((bank & 0x7E)+1) % num_8k_ROM_banks);
+					ROMBANK0 = ROM_pages[(bank & 0x7E)];
+					ROMBANK1 = ROM_pages[(bank & 0x7E) + 1];
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANKS 2-3 to [%u-%u]\n",(bank & 0x7E) % num_8k_ROM_banks,((bank & 0x7E)+1) % num_8k_ROM_banks);					
-					ROMBANK2 = ROMPAGE((bank & 0x7E) % num_8k_ROM_banks);
-					ROMBANK3 = ROMPAGE(((bank & 0x7E)+1) % num_8k_ROM_banks);
+					ROMBANK0 = ROM_pages[(bank & 0x7E)];
+					ROMBANK1 = ROM_pages[(bank & 0x7E) + 1];
 					Mapper_5_wb[6] = 8;
 				}			
 				break;
 			case 2:
 				if (page == 5) {
 					pNesX_DebugPrint("Setting ROMBANKS 0-1 to [%u-%u]\n",(bank & 0x7F) % num_8k_ROM_banks,((bank & 0x7F) + 1)% num_8k_ROM_banks);
-					ROMBANK0 = ROMPAGE((bank & 0x7E) % num_8k_ROM_banks);
-					ROMBANK1 = ROMPAGE(((bank & 0x7E)+1) % num_8k_ROM_banks);
+					ROMBANK0 = ROM_pages[(bank & 0x7E)];
+					ROMBANK1 = ROM_pages[(bank & 0x7E) + 1];
 					Mapper_5_wb[4] = Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
 					pNesX_DebugPrint("Setting ROMBANK 2 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);
-					ROMBANK2 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK2 = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANK 3 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK3 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK3 = ROM_pages[(bank & 0x7F)];
 				}			
 				break;
 			case 3:
 				if (page == 4) {
 					pNesX_DebugPrint("Setting ROMBANK 0 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);
-					ROMBANK0 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK0 = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[4] = 8;
 				}
 				if (page == 5) {
 					pNesX_DebugPrint("Setting ROMBANK 1 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK1 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK1 = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[5] = 8;
 				}
 				if (page == 6) {
 					pNesX_DebugPrint("Setting ROMBANK 2 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK2 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK2 = ROM_pages[(bank & 0x7F)];
 					Mapper_5_wb[6] = 8;
 				}
 				if (page == 7) {
 					pNesX_DebugPrint("Setting ROMBANK 3 to [%u]\n",(bank & 0x7F) % num_8k_ROM_banks);					
-					ROMBANK3 = ROMPAGE((bank & 0x7F) % num_8k_ROM_banks);
+					ROMBANK3 = ROM_pages[(bank & 0x7F)];
 				}			
 				break;
 		}
@@ -161,49 +159,56 @@ void Mapper_5_Set_CPU_Bank(unsigned char page, unsigned char bank) {
 void Mapper_5_Sync_Chr_Banks(unsigned char mode) {
 	pNesX_DebugPrint("Map5_Sync_Chr_Bank: %u\n", mode);    
 	switch (Mapper_5_chr_size) {
-		case 0:
-			PPUBANK[0] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8);
-			PPUBANK[1] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+1);
-			PPUBANK[2] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+2);
-			PPUBANK[3] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+3);
-			PPUBANK[4] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+4);
-			PPUBANK[5] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+5);
-			PPUBANK[6] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+6);
-			PPUBANK[7] = VROMPAGE(Mapper_5_chr_reg[7][mode]*8+7);		
-			break;
+		case 0: {
+			uint8 base = Mapper_5_chr_reg[7][mode] << 3;
+			PPUBANK[0] = VROM_pages[base];
+			PPUBANK[1] = VROM_pages[base + 1];
+			PPUBANK[2] = VROM_pages[base + 2];
+			PPUBANK[3] = VROM_pages[base + 3];
+			PPUBANK[4] = VROM_pages[base + 4];
+			PPUBANK[5] = VROM_pages[base + 5];
+			PPUBANK[6] = VROM_pages[base + 6];
+			PPUBANK[7] = VROM_pages[base + 7];
+		} break;
 
-		case 1:
-			PPUBANK[0] = VROMPAGE(Mapper_5_chr_reg[3][mode]*4);
-			PPUBANK[1] = VROMPAGE(Mapper_5_chr_reg[3][mode]*4+1);
-			PPUBANK[2] = VROMPAGE(Mapper_5_chr_reg[3][mode]*4+2);
-			PPUBANK[3] = VROMPAGE(Mapper_5_chr_reg[3][mode]*4+3);
-			PPUBANK[4] = VROMPAGE(Mapper_5_chr_reg[7][mode]*4);
-			PPUBANK[5] = VROMPAGE(Mapper_5_chr_reg[7][mode]*4+1);
-			PPUBANK[6] = VROMPAGE(Mapper_5_chr_reg[7][mode]*4+2);
-			PPUBANK[7] = VROMPAGE(Mapper_5_chr_reg[7][mode]*4+3);
-			break;
+		case 1: {
+			uint8 base = Mapper_5_chr_reg[3][mode] << 2;
+			PPUBANK[0] = VROM_pages[base];
+			PPUBANK[1] = VROM_pages[base + 1];
+			PPUBANK[2] = VROM_pages[base + 2];
+			PPUBANK[3] = VROM_pages[base + 3];
+			base = Mapper_5_chr_reg[7][mode] << 2;
+			PPUBANK[4] = VROM_pages[base];
+			PPUBANK[5] = VROM_pages[base + 1];
+			PPUBANK[6] = VROM_pages[base + 2];
+			PPUBANK[7] = VROM_pages[base + 3];
+		} break;
 
-		case 2:
-			PPUBANK[0] = VROMPAGE(Mapper_5_chr_reg[1][mode]*2);
-			PPUBANK[1] = VROMPAGE(Mapper_5_chr_reg[1][mode]*2+1);
-			PPUBANK[2] = VROMPAGE(Mapper_5_chr_reg[3][mode]*2);
-			PPUBANK[3] = VROMPAGE(Mapper_5_chr_reg[3][mode]*2+1);
-			PPUBANK[4] = VROMPAGE(Mapper_5_chr_reg[5][mode]*2);
-			PPUBANK[5] = VROMPAGE(Mapper_5_chr_reg[5][mode]*2+1);
-			PPUBANK[6] = VROMPAGE(Mapper_5_chr_reg[7][mode]*2);
-			PPUBANK[7] = VROMPAGE(Mapper_5_chr_reg[7][mode]*2+1);
-			break;
+		case 2: {
+			uint8 base = Mapper_5_chr_reg[1][mode] << 1;
+			PPUBANK[0] = VROM_pages[base];
+			PPUBANK[1] = VROM_pages[base + 1];
+			base = Mapper_5_chr_reg[3][mode] << 1;
+			PPUBANK[2] = VROM_pages[base];
+			PPUBANK[3] = VROM_pages[base + 1];
+			base = Mapper_5_chr_reg[5][mode] << 1;
+			PPUBANK[4] = VROM_pages[base];
+			PPUBANK[5] = VROM_pages[base + 1];
+			base = Mapper_5_chr_reg[7][mode] << 1;			
+			PPUBANK[6] = VROM_pages[base];
+			PPUBANK[7] = VROM_pages[base + 1];
+		} break;
 
-		default:
-			PPUBANK[0] = VROMPAGE(Mapper_5_chr_reg[0][mode]);
-			PPUBANK[1] = VROMPAGE(Mapper_5_chr_reg[1][mode]);
-			PPUBANK[2] = VROMPAGE(Mapper_5_chr_reg[2][mode]);
-			PPUBANK[3] = VROMPAGE(Mapper_5_chr_reg[3][mode]);
-			PPUBANK[4] = VROMPAGE(Mapper_5_chr_reg[4][mode]);
-			PPUBANK[5] = VROMPAGE(Mapper_5_chr_reg[5][mode]);
-			PPUBANK[6] = VROMPAGE(Mapper_5_chr_reg[6][mode]);
-			PPUBANK[7] = VROMPAGE(Mapper_5_chr_reg[7][mode]);	
-			break;
+		default: {
+			PPUBANK[0] = VROM_pages[Mapper_5_chr_reg[0][mode]];
+			PPUBANK[1] = VROM_pages[Mapper_5_chr_reg[1][mode]];
+			PPUBANK[2] = VROM_pages[Mapper_5_chr_reg[2][mode]];
+			PPUBANK[3] = VROM_pages[Mapper_5_chr_reg[3][mode]];
+			PPUBANK[4] = VROM_pages[Mapper_5_chr_reg[4][mode]];
+			PPUBANK[5] = VROM_pages[Mapper_5_chr_reg[5][mode]];
+			PPUBANK[6] = VROM_pages[Mapper_5_chr_reg[6][mode]];
+			PPUBANK[7] = VROM_pages[Mapper_5_chr_reg[7][mode]];
+		} break;
 	}
 }
 
@@ -214,14 +219,14 @@ unsigned char Mapper_5_PPU_Latch_RenderScreen(uint8 mode, uint32 addr) {
         // ex gfx mode
         unsigned char * nametable2 = PPUBANK[NAME_TABLE2];
         uint32 bank = (nametable2[addr] & 0x3F) << 2;
-        PPUBANK[0] = VROMPAGE(bank);
-        PPUBANK[1] = VROMPAGE(bank + 1);
-        PPUBANK[2] = VROMPAGE(bank + 2);
-        PPUBANK[3] = VROMPAGE(bank + 3);
-        PPUBANK[4] = VROMPAGE(bank);
-        PPUBANK[5] = VROMPAGE(bank + 1);
-        PPUBANK[6] = VROMPAGE(bank + 2);
-        PPUBANK[7] = VROMPAGE(bank + 3);	
+		PPUBANK[0] = VROM_pages[bank];
+		PPUBANK[1] = VROM_pages[bank + 1];
+		PPUBANK[2] = VROM_pages[bank + 2];
+		PPUBANK[3] = VROM_pages[bank + 3];
+        PPUBANK[4] = VROM_pages[bank];
+        PPUBANK[5] = VROM_pages[bank + 1];
+        PPUBANK[6] = VROM_pages[bank + 2];
+        PPUBANK[7] = VROM_pages[bank + 3];	
         ex_pal = ((nametable2[addr] & 0xC0) >> 4) | 0x01;
     } else {
         // normal
@@ -258,33 +263,27 @@ void Mapper_5_Init() {
 		Mapper_5_wram_size = 3;
 	}
 
-	uint32 i;
-	// set SaveRAM
-//	for(i = 0; i < 0x10000; i++) { // TODO- handle larger work RAM somehow
-	for(i = 0; i < 0x2000; i++) {
-		Mapper_5_wram[i] = SRAM[i];
-	}
 	Mapper_5_Set_WRAM_Bank(3,0);
 
 	apu_set_exsound(NES_APU_EXSOUND_MMC5);
 
 	// set CPU bank pointers
-	ROMBANK0 = ROMLASTPAGE(3);
-	ROMBANK1 = ROMLASTPAGE(2);
-	ROMBANK2 = ROMLASTPAGE(1);
-	ROMBANK3 = ROMLASTPAGE(0);
+	ROMBANK0 = ROM_pages[num_8k_ROM_pages - 4];
+	ROMBANK1 = ROM_pages[num_8k_ROM_pages - 3];
+	ROMBANK2 = ROM_pages[num_8k_ROM_pages - 2];
+	ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
 
 	// set PPU bank pointers
-	PPUBANK[ 0 ] = VROMPAGE( 0 );
-	PPUBANK[ 1 ] = VROMPAGE( 1 );
-	PPUBANK[ 2 ] = VROMPAGE( 2 );
-	PPUBANK[ 3 ] = VROMPAGE( 3 );
-	PPUBANK[ 4 ] = VROMPAGE( 4 );
-	PPUBANK[ 5 ] = VROMPAGE( 5 );
-	PPUBANK[ 6 ] = VROMPAGE( 6 );
-	PPUBANK[ 7 ] = VROMPAGE( 7 );	
+	PPUBANK[ 0 ] = VROM_pages[0];
+	PPUBANK[ 1 ] = VROM_pages[1];
+	PPUBANK[ 2 ] = VROM_pages[2];
+	PPUBANK[ 3 ] = VROM_pages[3];
+	PPUBANK[ 4 ] = VROM_pages[4];
+	PPUBANK[ 5 ] = VROM_pages[5];
+	PPUBANK[ 6 ] = VROM_pages[6];
+	PPUBANK[ 7 ] = VROM_pages[7];	
 
-	for(i = 0; i < 8; i++) {
+	for(uint8 i = 0; i < 8; i++) {
 		Mapper_5_chr_reg[i][0] = i;
 		Mapper_5_chr_reg[i][1] = (i & 0x03) + 4;
 	}
@@ -303,9 +302,6 @@ void Mapper_5_Init() {
 
 	Mapper_5_split_control = 0;
 	Mapper_5_split_bank = 0;
-
-    /* Set up wiring of the interrupt pin */
-    K6502_Set_Int_Wiring( 1, 1 );    
 }
 
 /*-------------------------------------------------------------------*/
@@ -446,18 +442,15 @@ void Mapper_5_Write(uint16 wAddr, unsigned char byData) {
 				}
 			} else if (wAddr >= 0x8000 && wAddr <= 0x9FFF) {
 				if (Mapper_5_wb[4] != 8) {
-					Mapper_5_wram[Mapper_5_wb[4]*0x2000+(wAddr&0x1FFF)] = byData;
-					SRAM[Mapper_5_wb[4]*0x2000+(wAddr&0x1FFF)] = byData;
+					WRAM[Mapper_5_wb[4]*0x2000+(wAddr&0x1FFF)] = byData;
 				}
 			} else if (wAddr >= 0xA000 && wAddr <= 0xBFFF) {
 				if (Mapper_5_wb[5] != 8) {
-					Mapper_5_wram[Mapper_5_wb[5]*0x2000+(wAddr&0x1FFF)] = byData;
-					SRAM[Mapper_5_wb[5]*0x2000+(wAddr&0x1FFF)] = byData;
+					WRAM[Mapper_5_wb[5]*0x2000+(wAddr&0x1FFF)] = byData;
 				}
 			} else if(wAddr >= 0xC000 && wAddr <= 0xDFFF) {
 				if (Mapper_5_wb[6] != 8) {
-					Mapper_5_wram[Mapper_5_wb[6]*0x2000+(wAddr&0x1FFF)] = byData;
-					SRAM[Mapper_5_wb[6]*0x2000+(wAddr&0x1FFF)] = byData;
+					WRAM[Mapper_5_wb[6]*0x2000+(wAddr&0x1FFF)] = byData;
 				}
 			}
 		} break;
@@ -503,9 +496,7 @@ unsigned char Mapper_5_Read( uint16 wAddr ) {
 void Mapper_5_HSync() {
 	if (ppuinfo.PPU_Scanline <= 240) {
 		Mapper_5_irq_status |= 0x40;
-		// MS - really this should fire on the same scanline as set, but janky frnes timing requires it to fire 1 scanline early
-		// HACK!
-		if (ppuinfo.PPU_Scanline == Mapper_5_irq_line - 1) {
+		if (ppuinfo.PPU_Scanline == Mapper_5_irq_line) {
 			if ((PPU_R1 & (R1_SHOW_SCR | R1_SHOW_SP )) == (R1_SHOW_SCR | R1_SHOW_SP)) {
 				Mapper_5_irq_status |= 0x80;
 			}

@@ -16,9 +16,12 @@
 /*  Include files                                                    */
 /*-------------------------------------------------------------------*/
 #include <kos.h>
+#include "kos_compat.h"
+
+#include "cartridge.h"
 #include "pNesX.h"
-#include "pNesX_System_DC.h"
 #include "K6502.h"
+#include "pNesX_System_DC.h"
 
 /*-------------------------------------------------------------------*/
 /*  Mapper Configuration                                             */
@@ -29,14 +32,19 @@ typedef struct __attribute__ ((packed, aligned(4))) Mapper_s {
 	unsigned char (*read)( uint16 wAddr );
 	void (*vsync)();
 	void (*hsync)();
-} Mapper;
+} Mapper_t;
 
 typedef struct __attribute__ ((packed, aligned(4))) MapperTable_s {
   int nMapperNo;
-  Mapper * mapper;
-} MapperTable;
+  Mapper_t * mapper;
+} MapperTable_t;
 
-extern MapperTable Mappers[];
+extern MapperTable_t Mappers[];
+extern Mapper_t* mapper;
+extern uint8 MapperNo;
+extern uint8 SubmapperNo;
+
+void debugRomPages();
 
 /*-------------------------------------------------------------------*/
 /*  Macros                                                           */

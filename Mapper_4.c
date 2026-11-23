@@ -15,41 +15,38 @@ unsigned char Map4_IRQ_Set;
 unsigned char Map4_IRQ_Enable;
 
 void Mapper_4_Set_PPU_banks() {
-	/* Set VROM Banks */
-	if ( NesHeader.byVRomSize > 0 ) {
-		if ( Map4_VROM_Base ) {
-			PPUBANK[ 0 ] = VROMPAGE( Map4_Banks_Reg[ 2 ] );
-			PPUBANK[ 1 ] = VROMPAGE( Map4_Banks_Reg[ 3 ] );
-			PPUBANK[ 2 ] = VROMPAGE( Map4_Banks_Reg[ 4 ] );
-			PPUBANK[ 3 ] = VROMPAGE( Map4_Banks_Reg[ 5 ] );
-			PPUBANK[ 4 ] = VROMPAGE( Map4_Banks_Reg[ 0 ] );
-			PPUBANK[ 5 ] = VROMPAGE( Map4_Banks_Reg[ 0 ] + 1 );
-			PPUBANK[ 6 ] = VROMPAGE( Map4_Banks_Reg[ 1 ] );
-			PPUBANK[ 7 ] = VROMPAGE( Map4_Banks_Reg[ 1 ] + 1 );
-		} else {
-			PPUBANK[ 0 ] = VROMPAGE( Map4_Banks_Reg[ 0 ] );
-			PPUBANK[ 1 ] = VROMPAGE( Map4_Banks_Reg[ 0 ] + 1 );
-			PPUBANK[ 2 ] = VROMPAGE( Map4_Banks_Reg[ 1 ] );
-			PPUBANK[ 3 ] = VROMPAGE( Map4_Banks_Reg[ 1 ] + 1 );
-			PPUBANK[ 4 ] = VROMPAGE( Map4_Banks_Reg[ 2 ] );
-			PPUBANK[ 5 ] = VROMPAGE( Map4_Banks_Reg[ 3 ] );
-			PPUBANK[ 6 ] = VROMPAGE( Map4_Banks_Reg[ 4 ] );
-			PPUBANK[ 7 ] = VROMPAGE( Map4_Banks_Reg[ 5 ] );
-		}
+	if ( Map4_VROM_Base ) {
+		PPUBANK[ 0 ] = VROM_pages[Map4_Banks_Reg[ 2 ]];
+		PPUBANK[ 1 ] = VROM_pages[Map4_Banks_Reg[ 3 ]];
+		PPUBANK[ 2 ] = VROM_pages[Map4_Banks_Reg[ 4 ]];
+		PPUBANK[ 3 ] = VROM_pages[Map4_Banks_Reg[ 5 ]];
+		PPUBANK[ 4 ] = VROM_pages[Map4_Banks_Reg[ 0 ]];
+		PPUBANK[ 5 ] = VROM_pages[Map4_Banks_Reg[ 0 ] + 1];
+		PPUBANK[ 6 ] = VROM_pages[Map4_Banks_Reg[ 1 ]];
+		PPUBANK[ 7 ] = VROM_pages[Map4_Banks_Reg[ 1 ] + 1];
+	} else {
+		PPUBANK[ 0 ] = VROM_pages[Map4_Banks_Reg[ 0 ]];
+		PPUBANK[ 1 ] = VROM_pages[Map4_Banks_Reg[ 0 ] + 1];
+		PPUBANK[ 2 ] = VROM_pages[Map4_Banks_Reg[ 1 ]];
+		PPUBANK[ 3 ] = VROM_pages[Map4_Banks_Reg[ 1 ] + 1];
+		PPUBANK[ 4 ] = VROM_pages[Map4_Banks_Reg[ 2 ]];
+		PPUBANK[ 5 ] = VROM_pages[Map4_Banks_Reg[ 3 ]];
+		PPUBANK[ 6 ] = VROM_pages[Map4_Banks_Reg[ 4 ]];
+		PPUBANK[ 7 ] = VROM_pages[Map4_Banks_Reg[ 5 ]];
 	}
 }
 
 void Mapper_4_Set_CPU_banks() {
 	if ( Map4_ROM_Base ) {
-		ROMBANK0 = ROMLASTPAGE( 1 );
-		ROMBANK1 = ROMPAGE( Map4_Banks_Reg[ 7 ] );
-		ROMBANK2 = ROMPAGE( Map4_Banks_Reg[ 6 ] );
-		ROMBANK3 = ROMLASTPAGE( 0 );
+		ROMBANK0 = ROM_pages[num_8k_ROM_pages - 2];
+		ROMBANK1 = ROM_pages[Map4_Banks_Reg[ 7 ]];
+		ROMBANK2 = ROM_pages[Map4_Banks_Reg[ 6 ]];
+		ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
 	} else {
-		ROMBANK0 = ROMPAGE( Map4_Banks_Reg[ 6 ] );
-		ROMBANK1 = ROMPAGE( Map4_Banks_Reg[ 7 ] );
-		ROMBANK2 = ROMLASTPAGE( 1 );
-		ROMBANK3 = ROMLASTPAGE( 0 );
+		ROMBANK0 = ROM_pages[Map4_Banks_Reg[ 6 ]];
+		ROMBANK1 = ROM_pages[Map4_Banks_Reg[ 7 ]];
+		ROMBANK2 = ROM_pages[num_8k_ROM_pages - 2];
+		ROMBANK3 = ROM_pages[num_8k_ROM_pages - 1];
 	}
 }
 

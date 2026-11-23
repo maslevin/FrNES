@@ -3,10 +3,11 @@
 // Mapper 111 support ported from NesterDC
 
 void set_gtrom_bank(uint8 prg) {
-    ROMBANK0 = ROMPAGE(prg * 4);
-    ROMBANK1 = ROMPAGE((prg * 4) + 1);
-    ROMBANK2 = ROMPAGE((prg * 4) + 2);
-    ROMBANK3 = ROMPAGE((prg * 4) + 3);
+    uint8 base = prg << 2;
+    ROMBANK0 = ROM_pages[base];
+    ROMBANK1 = ROM_pages[base + 1];
+    ROMBANK2 = ROM_pages[base + 2];
+    ROMBANK3 = ROM_pages[base + 3];
 }
 
 void Mapper_111_Init() {
@@ -41,7 +42,7 @@ void Mapper_111_Write(uint16 addr, uint8 data) {
     set_gtrom_bank(prg);
 
     for (int i = 0; i < 8; i++) {
-        PPUBANK[ i ] = &VROM[(i + chr) * 0x400];
+        PPUBANK[ i ] = VROM_pages[i + chr];
     }
 
     nametable <<= 3;

@@ -17,8 +17,7 @@ Description: A set of functions to draw a text window suitable for a GUI
 #define CORNER_TRIANGLES 16
 #define CORNER_RADIUS 16
 
-typedef struct
-{
+typedef struct __attribute__ ((packed, aligned(4))) Window_Style_s {
 	//Visual Style Options
 	float Border_Thickness;
 	float Header_Text_Scale;
@@ -44,8 +43,7 @@ typedef struct
 	int Animation_Mode;
 } Window_Style;
 
-typedef struct
-{
+typedef struct __attribute__ ((packed, aligned(4))) Window_Data_s {
 	//Physical Window Position Attributes
 	float x;
 	float y;

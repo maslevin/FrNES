@@ -4,7 +4,11 @@ uint32 numEmulationFrames = 0;
 
 #ifdef PROFILE
 uint32 numProfilingFunctions = 0;
+<<<<<<< HEAD
 uint32 profilingMode = PMCR_PIPELINE_FREEZE_BY_ICACHE_MISS_MODE;
+=======
+uint8 profilingMode = PMCR_PIPELINE_FREEZE_BY_ICACHE_MISS_MODE;
+>>>>>>> dfd094e10f5f4fc7bacb784091456e27b11d3011
 const char* PROFILING_MODE_STRINGS[] = {
     "No Mode (0x00)",
     "Operand Read Accesses", // 0x01
@@ -61,7 +65,11 @@ typedef struct __attribute__ ((packed, aligned(4))) {
 ProfilingInformation_t* profilingInformation;
 bool resetPerformanceCounter = false;
 
+<<<<<<< HEAD
 void resetProfiling(uint32 newProfilingMode, uint32 numFunctions) {
+=======
+void resetProfiling(uint16 newProfilingMode, uint32 numFunctions) {
+>>>>>>> dfd094e10f5f4fc7bacb784091456e27b11d3011
     profilingMode = newProfilingMode;
 
     if (profilingInformation) {
