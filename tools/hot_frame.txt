@@ -1,0 +1,39 @@
+# The per-frame slot's members (tools/hot_slots.py's "frame" slot, tools/hot_frame_check.py): the functions outside
+# the numbered hot groups that run every scanline or frame. Opt in: a function not listed here is cold, wherever its
+# name starts. One function name per line (LTO's .lto_priv / .constprop / .isra / .part copies of it come along); the
+# order inside the slot is this file's families (ppu_, apu_, quarter_frame, half_frame, mmc3_, map_nametables,
+# video_frame_, stream_callback, then any other), each sorted by name.
+#
+# These are the functions the old prefix patterns (.text.ppu_* .text.apu_* ...) placed there at perf-s4 ef0b3ef, so
+# the conversion moved nothing. Some are cold (mmc3_init, apu_synth_silence) and could leave; ppu_prerender_oam came
+# in through the prefix with ed02f02.
+ppu_data_increment
+ppu_dot_cpu_cycle
+ppu_evaluate_to
+ppu_prerender_oam
+ppu_render_line_switches
+ppu_rendering_dot
+ppu_replay_switches
+ppu_restore_line_start
+ppu_sync_lazy_write
+ppu_vram_page_fill
+apu_dmc_dma_done
+apu_length_apply
+apu_run_events
+apu_synth_frame
+apu_synth_log_write
+apu_synth_set_expansion
+apu_synth_silence
+apu_update_next_event
+quarter_frame
+half_frame
+mmc3_init
+mmc3_set_chr
+mmc3_txsrom_nametables
+mmc3_update_armed
+mmc3_write
+map_nametables
+video_frame_begin
+video_frame_end
+stream_callback
+chr_slot_map

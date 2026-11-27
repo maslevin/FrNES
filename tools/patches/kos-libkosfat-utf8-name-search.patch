@@ -1,0 +1,48 @@
+--- a/addons/libkosfat/directory.c
++++ b/addons/libkosfat/directory.c
+@@ -233,8 +233,14 @@
+         max2 = (int32_t)fs->sb.root_dir;
+     }
+ 
+-    fat_utf8_to_ucs2(longname_buf2, (const uint8_t *)fn, 256, l);
++    /* Compare lengths in UCS-2 characters, as the long name entries hold them:
++       strlen(fn) counts UTF-8 bytes, more than the characters for any name
++       outside ASCII, so such a name was never found. */
++    if(fat_utf8_to_ucs2(longname_buf2, (const uint8_t *)fn, 256, l))
++        return -ENOENT;
+ 
++    l = fat_strlen_ucs2(longname_buf2);
++
+     while(!done) {
+         if(!(cl = fat_cluster_read(fs, cluster, &err))) {
+             dbglog(DBG_ERROR, "Error reading directory at cluster %" PRIu32
+--- a/addons/libkosfat/fs_fat.c
++++ b/addons/libkosfat/fs_fat.c
+@@ -943,11 +943,12 @@
+     }
+ 
+     /* We now have a dentry to work with... Fill in the static dirent_t. */
+-    if(!has_longname)
++    /* A long name that doesn't fit in NAME_MAX bytes of UTF-8 (up to 3 bytes a
++       character) is returned as its short name, which still opens it. */
++    if(!has_longname ||
++       fat_ucs2_to_utf8((uint8_t *)fh[fd].dent.name, longname_buf, NAME_MAX,
++                        fat_strlen_ucs2(longname_buf)))
+         copy_shortname(dent, fh[fd].dent.name);
+-    else
+-        fat_ucs2_to_utf8((uint8_t *)fh[fd].dent.name, longname_buf, 256,
+-                         fat_strlen_ucs2(longname_buf));
+ 
+     fh[fd].dent.size = dent->size;
+     fh[fd].dent.time = fat_time_to_stat(dent->mdate, dent->mtime);
+--- a/addons/libkosfat/ucs.c
++++ b/addons/libkosfat/ucs.c
+@@ -50,7 +50,7 @@
+             if((in[i] & 0xC0) != 0x80)
+                 return -1;
+ 
+-            out[j] |= (uint16_t)(in[i++] & 0x3F);
++            out[j++] |= (uint16_t)(in[i++] & 0x3F);
+         }
+         /* 4 byte sequences can't be encoded as UCS-2. */
+         else {

@@ -1,13 +1,23 @@
+.DS_Store
 .vscode
-*.DS_Store
-*.o
-*.img
-*.sh
-
 release
 debug
+*.img
+*.o
+tools/__pycache__/
 
-romdisk/*.nes
-romdisk/ROMS
-romdisk/tests
+# battery saves, movies and sound captures written while testing
+*.wav
 
+# make frontend
+frontend_build/
+
+# box art and manual textures made by tools/frnes_assets.py
+tools/assets
+
+# the disc (make cdi): iso/ is what goes on it, cdi/ the images
+/iso/
+/cdi/
+
+# build output of the old test harness target
+/accuracycoin/

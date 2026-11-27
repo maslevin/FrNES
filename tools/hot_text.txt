@@ -1,0 +1,19 @@
+# Functions the PC sample profiles show hot (>= 0.3 % of the samples on either core, the 6 A/B windows and Lagrange EN,
+# 2026-10-26) that have to be in a hot slot (tools/hot_slots.py): tools/hot_text_check.py fails the link when one that
+# the build has is outside them, so a function that matters can't drift with the cold code around it (the C core's
+# cpu_run, 43 % of its samples, sat in ordinary .text, and a mapper's cold helpers moved it 0x34: MM3 +3.5 % on the C
+# core). One name per line; a function the build doesn't have (the C core's in the assembly core's builds) is skipped.
+cpu_run
+read_word_6502_c
+set_6502_bank_pointer
+vrc7_span_fill
+opll_envelope
+chr_slot_map
+__ctzsi2
+__udivsi3_i4i
+mmc3_write
+apu_run_events
+video_frame_begin
+video_frame_end
+stream_callback
+ppu_vram_page_fill

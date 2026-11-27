@@ -1,0 +1,35 @@
+diff --git a/kernel/arch/dreamcast/kernel/mmu.c b/kernel/arch/dreamcast/kernel/mmu.c
+index 6ced07ba..982aa2de 100644
+--- a/kernel/arch/dreamcast/kernel/mmu.c
++++ b/kernel/arch/dreamcast/kernel/mmu.c
+@@ -832,11 +832,28 @@ bool mmu_enabled(void) {
+     return *mmucr & 0x1;
+ }
+ 
++/* Reloads static UTLB entry 'entry' with PTEH / PTEL through LDTLB (MMUCR.URC selects the entry), like
++   mmu_page_map_static does. The memory mapped UTLB arrays are not accessed at all: writing them directly, and
++   also reading them, from cached code was followed by stray 8 byte writes of TLB values into whatever line
++   was in one operand cache set. */
++static void mmu_reload_utlb_entry(unsigned int entry, uint32_t ptehv, uint32_t ptelv) {
++    uint32_t old_mmucr;
++
++    irq_disable_scoped();
++
++    old_mmucr = *mmucr;
++    *mmucr = (old_mmucr & ~(63 << 10)) | ((entry & 63) << 10);
++    mmu_ldtlb_quick(ptehv, ptelv);
++    mmu_ldtlb_wait();
++    *mmucr = old_mmucr;
++}
++
+ void mmu_set_sq_addr(void *addr) {
+     uint32_t ppn1 = (uint32_t)addr & 0x1ff00000;
+     uint32_t ppn2 = ppn1 + 0x00100000;
+ 
+     /* Reset the base target address for the SQs */
+-    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3e << 8)) = ppn1 | 0x1fe;
+-    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3f << 8)) = ppn2 | 0x1fe;
++    /* The entries mmu_init_basic reserved: 0x3e maps 0xe0000000, 0x3f maps 0xe0100000 (ASID 0) */
++    mmu_reload_utlb_entry(0x3e, 0xe0000000, ppn1 | 0x1fc);
++    mmu_reload_utlb_entry(0x3f, 0xe0100000, ppn2 | 0x1fc);
+ }

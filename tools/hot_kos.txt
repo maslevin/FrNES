@@ -1,0 +1,106 @@
+# The "kos" slot's functions (tools/hot_slots.py): code that runs every frame but sits outside the emulator's hot
+# groups, so its place followed whatever came before it in ordinary .text (land9b's 0xc4 bytes of board code in
+# mapper.c moved the 348 functions after it, KOS's interrupt and frame code among them, 0xc8: asm SMB +1 %, C MM3 +3 %
+# in its gate). Each is placed by its -ffunction-sections section (.text.NAME, and .text.NAME.* for LTO's clones), which
+# names a function whichever LTO partition or library it comes from, so nothing in the sources marks them; the slot's
+# order is this file's. tools/hot_text_check.py fails the link when one the build has is outside the slots.
+# The PC sample profiles don't see interrupt context (the sampler is an interrupt), so KOS's handlers are listed from
+# its sources: what the exception entry runs at each timer / vblank / ASIC interrupt and what the frame loop calls.
+
+# KOS: the exception entry's C side, the timer interrupt and the scheduler
+irq_handle_exception
+handle_exception
+asic_thirq_dispatch
+handler_irq9
+irq_def_timer
+timer_ms_handler
+thd_timer_hnd
+thd_schedule
+thd_choose_new
+thd_pslist_queue
+genwait_wake_all
+genwait_wake_thd_cnt
+genwait_wait
+__dreamcast_get_ticks
+# KOS: the vblank / ASIC handlers (PVR, maple, G2 / PVR DMA)
+vblank_handler
+pvr_int_handler
+pvr_vblank_handler
+pvr_dma_irq_hnd
+maple_vbl_irq_hnd
+maple_dma_irq_hnd
+g2_dma_irq_hnd
+# KOS: what the frame loop calls (video, sound stream, store queues, locks)
+pvr_list_begin
+pvr_list_finish
+pvr_prim
+pvr_poly_compile
+pvr_render_lists
+pvr_start_ta_rendering
+sq_cpy
+sq_set32
+mmu_set_sq_addr
+snd_stream_fill
+snd_stream_transfer
+snd_sh4_to_aica
+spu_memload_sq
+mutex_lock_irqsafe
+mutex_lock_timed
+mutex_unlock
+sem_wait_timed
+vid_waitvbl
+thd_pass
+maple_wait_frame_lock
+g2_fifo_wait
+g2_read_32
+g2_write_32
+__newlib_lock_acquire_recursive
+__newlib_lock_release_recursive
+# the emulator: per-frame helpers outside the hot groups that every game runs
+cpu_cycles_to_next_event
+cpu_boundary_poll
+cpu_irq_clear
+cpu_irq_raise_at
+cpu_irq_update_line
+cpu_sync_devices_io
+dmc_clock
+apu_read_status
+update_levels
+ppu_output_line
+ppu_output_fill_line
+ppu_rendering_switched
+ppu_rendering_bus_address
+ppu_mapper_clocks_resumed
+set_ppu_nametable_mirroring
+set_ppu_nametable_pages
+set_ppu_pattern_table_bank_pointer
+set_wram_bank_pointer
+mapper_clocks_to_irq
+mapper_timer_start
+input_for_frame
+auto_insert_frames
+# the emulator: the common boards' register writes and bank switching (NROM, UxROM, CNROM, AxROM, MMC1) and the
+# A/B set's Konami boards (VRC4 Gradius 2, VRC6 Castlevania 3, VRC7 Lagrange Point)
+uxrom_write
+cnrom_write
+axrom_write
+axrom_bank
+mmc1_write
+mmc1_apply
+prg_16k
+prg_32k
+chr_8k
+chr_4k
+vrc4_write
+vrc4_apply_prg
+vrc6_write
+vrc7_write
+vrc_irq_acknowledge
+vrc_irq_write_control
+# (last, so they move nothing above) KOS's assembly the frame code calls (not LTO, no function sections: whole archive members, a line starting with *
+# is an input section statement as it stands): the context switch, the store queue copy, the sound stream's
+# stereo split, the cache range operations
+*libkallisti.a:thdswitch.o(.text)
+*libkallisti.a:sq_fast_cpy.o(.text)
+*libkallisti.a:snd_pcm_split.o(.text)
+*libkallisti.a:cache.o(.text)

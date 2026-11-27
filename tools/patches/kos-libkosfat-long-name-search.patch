@@ -1,0 +1,44 @@
+--- a/addons/libkosfat/directory.c
++++ b/addons/libkosfat/directory.c
+@@ -309,8 +309,9 @@
+ 
+             if(!memcmp(longname_buf, longname_buf2, fnlen * sizeof(uint16_t))) {
+                 /* The next entry should be the dentry we want (that is to say,
+-                   the short name entry for this long name). */
+-                if(i < max) {
++                   the short name entry for this long name), if it's in this
++                   cluster (the last long name entry may be its last). */
++                if(i + 1 < max) {
+                     if(cluster != cluster2) {
+                         if(!(cl = fat_cluster_read(fs, cluster, &err))) {
+                             dbglog(DBG_ERROR, "Error reading directory at "
+@@ -380,8 +381,17 @@
+             else {
+                 skip = 1;
+ 
+-                if(cluster2 != cluster)
+-                    break;
++                /* The long name ran on into the next cluster (read_longname
++                   moved cluster and i there): carry on from there, rather
++                   than breaking out and moving on yet another cluster. */
++                if(cluster2 != cluster) {
++                    if(!(cl = fat_cluster_read(fs, cluster, &err))) {
++                        dbglog(DBG_ERROR, "Error reading directory at "
++                               "cluster %" PRIu32 ": %s\n", cluster,
++                               strerror(err));
++                        return -EIO;
++                    }
++                }
+             }
+         }
+ 
+@@ -400,6 +410,9 @@
+             if(max2 <= 0)
+                 done = 1;
+         }
++
++        /* The next cluster's entries start at its first. */
++        i = 0;
+     }
+ 
+     return -ENOENT;
